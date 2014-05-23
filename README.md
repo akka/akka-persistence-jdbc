@@ -13,8 +13,4 @@
 ### What's new?
 
 #### 0.0.1
- - Cross compile to 2.11 (Issue #9)
- - Update to 2.11 compatible versions of libraries (scalatest, casbah); Mark akka dependencies `provided`
- - Update to support 0.3.1 of [TCK](https://github.com/krasserm/akka-persistence-testkit), which supports Scala 2.11
- - Eliminate publish message from root project
- - Remove build and publish of rxmongo project for now
+ - Initial commit

@@ -12,5 +12,8 @@
 
 ### What's new?
 
+#### 0.0.2
+ - Using [ScalikeJdbc](http://scalikejdbc.org/) as the JDBC access library instead of my home-brew one. 
+
 #### 0.0.1
  - Initial commit

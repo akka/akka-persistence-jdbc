@@ -1,44 +1,20 @@
 package akka.persistence.jdbc.util
 
-import akka.persistence.jdbc.common.JdbcConnection
+import scalikejdbc._
 
-trait JdbcInit { this: JdbcConnection =>
+trait JdbcInit {
+  implicit def session: DBSession
 
-  val createTableQuery = """CREATE TABLE IF NOT EXISTS public.event_store (
-                           |  processor_id VARCHAR(255) NOT NULL,
-                           |  sequence_number BIGINT NOT NULL,
-                           |  marker VARCHAR(255) NOT NULL,
-                           |  message TEXT NOT NULL,
-                           |  created TIMESTAMP NOT NULL,
-                           |  PRIMARY KEY(processor_id, sequence_number)
-                           |)""".stripMargin
+  def createTable(): Unit = sql"""CREATE TABLE IF NOT EXISTS public.event_store (
+                           processor_id VARCHAR(255) NOT NULL,
+                           sequence_number BIGINT NOT NULL,
+                           marker VARCHAR(255) NOT NULL,
+                           message TEXT NOT NULL,
+                           created TIMESTAMP NOT NULL,
+                           PRIMARY KEY(processor_id, sequence_number)
+                           )""".update.apply
 
-  val dropTableQuery = "DROP TABLE IF EXISTS public.event_store"
+  def dropTable(): Unit = sql"DROP TABLE IF EXISTS public.event_store".update.apply
 
-  val clearTableQuery = "DELETE FROM public.event_store"
-
-  def createTable(): Unit =
-    withStatement { statement =>
-      statement.executeUpdate(createTableQuery)
-    } match {
-      case Left(errors) => println("create errors: " + errors.toString())
-      case _ =>
-    }
-
-
-  def clearTable(): Unit =
-    withStatement { statement =>
-      statement.executeUpdate(clearTableQuery)
-    } match {
-      case Left(errors) => println("clear errors: " + errors.toString())
-      case _ =>
-    }
-
-  def dropTable(): Unit =
-    withStatement { statement =>
-      statement.executeUpdate(dropTableQuery)
-    } match {
-      case Left(errors) => println("drop errors: " + errors.toString())
-      case _ =>
-    }
+  def clearTable(): Unit = sql"DELETE FROM public.event_store".update.apply
 }

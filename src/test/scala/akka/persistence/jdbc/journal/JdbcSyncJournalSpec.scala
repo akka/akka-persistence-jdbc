@@ -1,13 +1,12 @@
 package akka.persistence.jdbc.journal
 
+import akka.actor.{Actor, ActorSystem, Props}
 import akka.persistence._
-import akka.testkit.{TestProbe, ImplicitSender, TestKit}
-import akka.actor.{Actor, Props, ActorSystem}
+import akka.persistence.jdbc.common.{Config, ActorConfig, ScalikeConnection}
+import akka.persistence.jdbc.util.JdbcInit
+import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import org.scalatest._
 import scala.concurrent.duration._
-import akka.persistence.jdbc.util.JdbcInit
-import akka.persistence.jdbc.common.JdbcConnection
-import akka.persistence.postgresql.common.PostgresqlConfig
 
 object JdbcSyncJournalSpec {
 
@@ -44,17 +43,14 @@ object JdbcSyncJournalSpec {
   }
 }
 
-class JdbcSyncJournalSpec extends TestKit(ActorSystem("test")) with ImplicitSender with FlatSpecLike with Matchers with BeforeAndAfterAll with PostgresqlConfig with JdbcConnection with JdbcInit {
+class JdbcSyncJournalSpec extends TestKit(ActorSystem("test")) with ImplicitSender with FlatSpecLike with Matchers with BeforeAndAfterAll with ScalikeConnection with JdbcInit {
+  import akka.persistence.jdbc.journal.JdbcSyncJournalSpec._
 
-  import JdbcSyncJournalSpec._
-
-  val config = system.settings.config
+  override def config: Config = Config(system)
 
   behavior of "JdbcJournal"
 
   val timeout = 5.seconds
-
-
 
   it should "write and replay messages" in {
     val processor1 = system.actorOf(Props(classOf[ProcessorA], "p1"))
@@ -83,7 +79,7 @@ class JdbcSyncJournalSpec extends TestKit(ActorSystem("test")) with ImplicitSend
     processor1 ! Persistent("b")
     expectMsgAllOf(max = timeout, "a", 1L, false)
     expectMsgAllOf(max = timeout, "b", 2L, false)
-    processor1 ! Delete(1L, false)
+    processor1 ! Delete(1L, permanent = false)
 
     awaitDeletion(deleteProbe)
 
@@ -100,7 +96,7 @@ class JdbcSyncJournalSpec extends TestKit(ActorSystem("test")) with ImplicitSend
     processor1 ! Persistent("b")
     expectMsgAllOf(max = timeout, "a", 1L, false)
     expectMsgAllOf(max = timeout, "b", 2L, false)
-    processor1 ! Delete(1L, true)
+    processor1 ! Delete(1L, permanent = true)
     awaitDeletion(deleteProbe)
 
     system.actorOf(Props(classOf[ProcessorA], "p3"))
@@ -112,7 +108,7 @@ class JdbcSyncJournalSpec extends TestKit(ActorSystem("test")) with ImplicitSend
     subscribeToConfirmation(confirmProbe)
 
     val processor1 = system.actorOf(Props(classOf[ProcessorB], "p4"))
-    1L to 8L foreach { i =>
+    1L to 2L foreach { i =>
       processor1 ! Persistent("a")
       awaitConfirmation(confirmProbe)
       expectMsg(s"a-$i")
@@ -121,15 +117,7 @@ class JdbcSyncJournalSpec extends TestKit(ActorSystem("test")) with ImplicitSend
     val processor2 = system.actorOf(Props(classOf[ProcessorB], "p4"))
     processor2 ! Persistent("b")
     awaitConfirmation(confirmProbe)
-    expectMsg("b-9")
-  }
-
-  // is assured, but no test yet
-  it should "don't apply snapshots the same way as messages" in pending
-
-  override protected def beforeAll(): Unit = {
-    createTable()
-    clearTable()
+    expectMsgAllOf("a-1", "a-2", "b-3")
   }
 
   def subscribeToConfirmation(probe: TestProbe): Unit =
@@ -146,5 +134,10 @@ class JdbcSyncJournalSpec extends TestKit(ActorSystem("test")) with ImplicitSend
 
   override protected def afterAll() {
     system.shutdown()
+  }
+
+  override protected def beforeAll(): Unit = {
+    dropTable()
+    createTable()
   }
 }

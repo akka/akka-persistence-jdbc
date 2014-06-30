@@ -1,36 +1,29 @@
 package akka.persistence.jdbc.common
 
-import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}
-import akka.persistence.jdbc.util.JdbcInit
+import akka.actor.ActorSystem
 import akka.persistence.jdbc.journal.RowTypeMarkers._
-import akka.persistence.postgresql.common.PostgresqlConfig
+import akka.persistence.jdbc.util.JdbcInit
+import akka.testkit.TestKit
+import org.scalatest.{BeforeAndAfterAll, FlatSpecLike}
+import scalikejdbc._
 
-class JdbcConnectionTest extends FlatSpec with Matchers with BeforeAndAfterAll with PostgresqlConfig with JdbcConnection with JdbcInit {
+class JdbcConnectionTest extends TestKit(ActorSystem("test")) with FlatSpecLike with BeforeAndAfterAll with ScalikeConnection with JdbcInit {
 
   "Insert a record" should "have a new record" in {
-    executeUpdate(
-      s"""INSERT INTO public.event_store (processor_id, sequence_number, marker, message, created)
-         | VALUES ('abcdefg', 1, '$AcceptedMarker', 'abcdefg', current_timestamp)""".stripMargin) match {
-      case Left(msg) => fail(msg.toString())
-      case Right(numRecords) => assert(numRecords === 1)
-    }
+      sql"""INSERT INTO public.event_store
+              (processor_id, sequence_number, marker, message, created)
+            VALUES ('abcdefg', 1, ${AcceptedMarker}, 'abcdefg', current_timestamp)""".update.apply
 
-    withResultSet("SELECT count(*) FROM event_store") { rs =>
-      assert(rs.next())
-      assert(rs.getInt(1) === 1)
-    } match {
-      case Left(msg) => fail(msg.toString())
-      case _ =>
-    }
+      sql"SELECT count(*) FROM event_store".map(_.long(1)).single.apply match {
+        case Some(1) =>
+        case msg @ _ => fail("Number of records is:" + msg)
+      }
   }
+
+  override def config: Config = Config(system)
 
   override protected def beforeAll(): Unit = {
     dropTable()
     createTable()
-    clearTable()
   }
-
-  override protected def afterAll(): Unit = {
-  }
-
 }

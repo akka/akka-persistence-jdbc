@@ -1,0 +1,13 @@
+package akka.persistence.jdbc.journal
+
+class PostgresqlSyncWriteJournal extends JdbcSyncWriteJournal with PostgresqlStatements
+
+class MysqlSyncWriteJournal extends JdbcSyncWriteJournal with MySqlStatements
+
+class H2SyncWriteJournal extends JdbcSyncWriteJournal with H2Statements
+
+class OracleSyncWriteJournal extends JdbcSyncWriteJournal with OracleStatements
+
+class MSSqlServerSyncWriteJournal extends JdbcSyncWriteJournal with MSSqlServerStatements
+
+class DB2SyncWriteJournal extends JdbcSyncWriteJournal with DB2Statements

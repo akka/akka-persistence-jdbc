@@ -2,11 +2,11 @@ package akka.persistence.jdbc.common
 
 import akka.actor.{Actor, ActorSystem}
 
-object Config {
-  def apply(system: ActorSystem) = new Config(system)
+object PluginConfig {
+  def apply(system: ActorSystem) = new PluginConfig(system)
 }
 
-class Config(system: ActorSystem) {
+class PluginConfig(system: ActorSystem) {
   val config = system.settings.config.getConfig("jdbc-connection")
 
   def username = config.getString("username")
@@ -16,5 +16,5 @@ class Config(system: ActorSystem) {
 }
 
 trait ActorConfig { this: Actor =>
-  val config = Config(context.system)
+  val pluginConfig = PluginConfig(context.system)
 }

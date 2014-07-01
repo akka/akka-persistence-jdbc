@@ -17,18 +17,34 @@ class JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
   val serialization = SerializationExtension(context.system)
   implicit val executionContext = context.system.dispatcher
 
+  def selectMessage(processorId: String, sequenceNr: Long): Option[PersistentRepr] =
+    sql"SELECT message FROM event_store WHERE processor_id = ${processorId} AND sequence_number = ${sequenceNr}"
+      .map(rs => fromBytes(Base64.decodeBinary(rs.string(1))))
+      .single()
+      .apply()
+
+  def insertMessage(processorId: String, sequenceNr: Long, marker: String = "A", message: Persistent) {
+    val msgToWrite = Base64.encodeString(toBytes(message))
+    sql"""INSERT INTO event_store (processor_id, sequence_number, marker, message, created) VALUES
+            (${processorId},
+            ${sequenceNr},
+            ${marker},
+            ${msgToWrite},
+            current_timestamp)""".update.apply
+  }
+
+  def updateMessage(processorId: String, sequenceNr: Long, marker: String, message: Persistent) {
+    log.debug("Updating message for processorId: {}, sequenceNr: {}, marker: {} ", processorId, sequenceNr, marker)
+    val msgToWrite = Base64.encodeString(toBytes(message))
+    sql"UPDATE event_store SET message = ${msgToWrite}, marker = ${marker} WHERE processor_id = ${processorId} and sequence_number = ${sequenceNr}".update.apply
+  }
+
   override def writeMessages(messages: Seq[PersistentRepr]): Unit = {
     log.debug(s"writeMessages for ${messages.size} presistent messages")
 
     messages.foreach { message =>
       import message._
-      val msgToWrite = Base64.encodeString(persistentToBytes(message))
-      sql"""INSERT INTO event_store (processor_id, sequence_number, marker, message, created) VALUES
-            (${processorId},
-            ${sequenceNr},
-            ${AcceptedMarker},
-            ${msgToWrite},
-            current_timestamp)""".update.apply
+      insertMessage(processorId, sequenceNr, AcceptedMarker, message)
     }
   }
 
@@ -37,8 +53,14 @@ class JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
 
     confirmations.foreach { confirmation =>
       import confirmation._
-      val marker = confirmedMarker(channelId)
-      sql"UPDATE event_store SET marker = ${marker} WHERE processor_id = ${processorId} and sequence_number = ${sequenceNr}".update.apply
+      selectMessage(processorId, sequenceNr) match {
+        case Some(msg) =>
+          val confirmationIds = msg.confirms :+ confirmation.channelId
+          val marker = confirmedMarker(confirmationIds)
+          val updatedMessage = msg.update(confirms = confirmationIds)
+          updateMessage(processorId, sequenceNr, marker, updatedMessage)
+        case _ => log.error("Could not write configuration message for confirmations: {}", confirmations)
+      }
     }
   }
 
@@ -48,7 +70,14 @@ class JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
      if(permanent)
        sql"DELETE FROM event_store WHERE sequence_number <= ${toSequenceNr} and processor_id = ${processorId}".update.apply
      else
-       sql"UPDATE event_store SET marker = ${DeletedMarker} WHERE sequence_number < ${toSequenceNr} and processor_id = ${processorId}".update.apply
+       (1 to toSequenceNr.toInt).toList.map(_.toLong).foreach { sequenceNr =>
+         selectMessage(processorId, sequenceNr) match {
+           case Some(msg) =>
+             val deletedMsg = msg.update(deleted = true)
+             updateMessage(processorId, sequenceNr, DeletedMarker, deletedMsg)
+           case _ => log.error("Could not delete messages with processorId: {} and sequenceNr: {}" , processorId, sequenceNr)
+         }
+       }
   }
 
   override def deleteMessages(messageIds: Seq[PersistentId], permanent: Boolean): Unit = {
@@ -59,7 +88,12 @@ class JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
       if (permanent)
         sql"DELETE FROM event_store WHERE sequence_number = ${sequenceNr} and processor_id = ${processorId}".update.apply
       else
-        sql"UPDATE event_store SET marker = ${DeletedMarker} WHERE sequence_number = ${sequenceNr} and processor_id = ${processorId}".update.apply
+        selectMessage(processorId, sequenceNr) match {
+          case Some(msg) =>
+          val deletedMsg = msg.update(deleted = true)
+            updateMessage(processorId, sequenceNr, DeletedMarker, deletedMsg)
+          case _ => log.error("Could not delete messages with ids: {}", messageIds)
+        }
     }
   }
 
@@ -78,7 +112,7 @@ class JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
   }
 
   override def asyncReplayMessages(processorId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(replayCallback: (PersistentRepr) => Unit): Future[Unit] = {
-    log.debug(s"Async replay for processorId [$processorId], from sequenceNr: [$fromSequenceNr], to sequenceNr: [$toSequenceNr]")
+    log.debug(s"Async replay for processorId [$processorId], from sequenceNr: [$fromSequenceNr], to sequenceNr: [$toSequenceNr] with max records: [$max]")
 
     Future[Unit] {
       val pid = processorId
@@ -86,17 +120,15 @@ class JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
       val tsnr = toSequenceNr
       val mx = max
       val replay = replayCallback
-      sql"SELECT message FROM event_store WHERE processor_id = ${pid} and (sequence_number >= ${fsnr} and sequence_number <= ${tsnr}) and marker != 'D' ORDER BY sequence_number limit ${mx}"
-        .map(_.string(1))
+      val result = sql"SELECT message FROM event_store WHERE processor_id = ${pid} and (sequence_number >= ${fsnr} and sequence_number <= ${tsnr}) ORDER BY sequence_number limit ${mx}"
+        .map(rs => fromBytes(Base64.decodeBinary(rs.string(1))))
         .list()
         .apply
-        .foreach { msg =>
-          replay(persistentFromBytes(Base64.decodeBinary(msg)))
-        }
+        .foreach(replay)
     }
   }
 
-  def persistentToBytes(msg: Persistent): Array[Byte] = serialization.serialize(msg).get
+  def toBytes(msg: Persistent): Array[Byte] = serialization.serialize(msg).get
 
-  def persistentFromBytes(bytes: Array[Byte]): PersistentRepr = serialization.deserialize(bytes, classOf[PersistentRepr]).get
+  def fromBytes(bytes: Array[Byte]): PersistentRepr = serialization.deserialize(bytes, classOf[PersistentRepr]).get
 }

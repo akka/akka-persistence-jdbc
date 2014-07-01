@@ -4,8 +4,8 @@ import scalikejdbc.{AutoSession, ConnectionPool}
 
 trait ScalikeConnection {
   implicit val session = AutoSession
-  def config: Config
+  def pluginConfig: PluginConfig
 
-  Class.forName(config.driverClassName)
-  ConnectionPool.singleton(config.url, config.username, config.password)
+  Class.forName(pluginConfig.driverClassName)
+  ConnectionPool.singleton(pluginConfig.url, pluginConfig.username, pluginConfig.password)
 }

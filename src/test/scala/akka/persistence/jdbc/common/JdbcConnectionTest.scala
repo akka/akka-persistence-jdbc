@@ -20,7 +20,7 @@ class JdbcConnectionTest extends TestKit(ActorSystem("test")) with FlatSpecLike 
       }
   }
 
-  override def config: Config = Config(system)
+  override def pluginConfig: PluginConfig = PluginConfig(system)
 
   override protected def beforeAll(): Unit = {
     dropTable()

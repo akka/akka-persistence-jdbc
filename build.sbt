@@ -20,6 +20,7 @@ libraryDependencies ++= {
     "org.slf4j"            % "slf4j-nop"                     % "1.6.4",
     "postgresql"           % "postgresql"                    % "9.1-901.jdbc4" % "test",
     "com.h2database"       % "h2"                            % "1.4.179"       % "test",
+    "mysql"                % "mysql-connector-java"          % "5.1.31"        % "test",
     "com.typesafe.akka"   %% "akka-testkit"                  % akkaVersion     % "test",
     "org.scalatest"       %% "scalatest"                     % "2.1.4"         % "test"
   )

@@ -49,3 +49,30 @@ trait GenericJdbcInit extends JdbcInit {
 trait PostgresqlJdbcInit extends GenericJdbcInit
 
 trait H2JdbcInit extends GenericJdbcInit
+
+trait MysqlJdbcInit extends GenericJdbcInit {
+  override def createJournalTable(): Unit = sql"""
+                           CREATE TABLE IF NOT EXISTS journal (
+                           persistence_id VARCHAR(255) NOT NULL,
+                           sequence_number BIGINT NOT NULL,
+                           marker VARCHAR(255) NOT NULL,
+                           message TEXT NOT NULL,
+                           created TIMESTAMP NOT NULL,
+                           PRIMARY KEY(persistence_id, sequence_number))""".update.apply
+
+  override def dropJournalTable(): Unit = sql"DROP TABLE IF EXISTS journal".update.apply
+
+  override def clearJournalTable(): Unit = sql"DELETE FROM journal".update.apply
+
+  override def createSnapshotTable(): Unit = sql"""
+                            CREATE TABLE IF NOT EXISTS snapshot (
+                            persistence_id VARCHAR(255) NOT NULL,
+                            sequence_nr BIGINT NOT NULL,
+                            snapshot TEXT NOT NULL,
+                            created BIGINT NOT NULL,
+                            PRIMARY KEY (persistence_id, sequence_nr))""".update.apply
+
+  override def dropSnapshotTable(): Unit = sql"DROP TABLE IF EXISTS snapshot".update.apply
+
+  override def clearSnapshotTable(): Unit = sql"DELETE FROM snapshot".update.apply
+}

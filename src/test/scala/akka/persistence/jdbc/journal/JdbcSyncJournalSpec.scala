@@ -1,7 +1,7 @@
 package akka.persistence.jdbc.journal
 
 import akka.persistence.jdbc.common.{PluginConfig, ScalikeConnection}
-import akka.persistence.jdbc.util.{H2JdbcInit, PostgresqlJdbcInit, JdbcInit, GenericJdbcInit}
+import akka.persistence.jdbc.util._
 import akka.persistence.journal.LegacyJournalSpec
 import com.typesafe.config.ConfigFactory
 
@@ -24,3 +24,6 @@ abstract class JdbcSyncJournalSpec extends LegacyJournalSpec with ScalikeConnect
 class PostgresqlSyncJournalSpec extends JdbcSyncJournalSpec with PostgresqlJdbcInit
 
 class H2SyncJournalSpec extends JdbcSyncJournalSpec with H2JdbcInit
+
+class MysqlSyncJournalSpec extends JdbcSyncJournalSpec with MysqlJdbcInit
+

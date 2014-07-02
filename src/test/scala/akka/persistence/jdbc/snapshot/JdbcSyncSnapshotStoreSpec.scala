@@ -1,7 +1,7 @@
 package akka.persistence.jdbc.snapshot
 
 import akka.persistence.jdbc.common.{PluginConfig, ScalikeConnection}
-import akka.persistence.jdbc.util.{H2JdbcInit, PostgresqlJdbcInit, JdbcInit, GenericJdbcInit}
+import akka.persistence.jdbc.util._
 import akka.persistence.snapshot.SnapshotStoreSpec
 import com.typesafe.config.ConfigFactory
 
@@ -25,3 +25,5 @@ abstract class JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with ScalikeC
 class PostgresqlJdbcSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with PostgresqlJdbcInit
 
 class H2JdbcSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with H2JdbcInit
+
+class MysqlSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with MysqlJdbcInit

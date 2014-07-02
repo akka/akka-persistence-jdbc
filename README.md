@@ -8,13 +8,9 @@ By setting the appropriate Journal and SnapshotStore classes in the application.
 * Postgresql  (tested, works on v9.3.1)
 * MySql       (tested, works on 5.6.19 MySQL Community Server (GPL))
 * H2          (tested, works on 1.4.179)
-* MSSqlServer (untested, but should work)
-* Oracle      (untested, but should work) 
-* DB2         (untested, but should work)
 
-# Todo:
-
- - Test more databases
+Note: The plugin should work on other databases too. When you wish to have support for a database, contact me and we can work
+something out.
 
 # Usage
 In application.conf place the following:
@@ -62,18 +58,12 @@ To alter the database dialect for the journal, change the class to:
     class = "akka.persistence.jdbc.journal.PostgresqlSyncWriteJournal"
     class = "akka.persistence.jdbc.journal.MysqlSyncWriteJournal"
     class = "akka.persistence.jdbc.journal.H2SyncWriteJournal"
-    class = "akka.persistence.jdbc.journal.OracleSyncWriteJournal"
-    class = "akka.persistence.jdbc.journal.MSSqlServerSyncWriteJournal"
-    class = "akka.persistence.jdbc.journal.DB2SyncWriteJournal"
 
 To alter the database dialect of the snapshot-store, change the class to:
 
       class = "akka.persistence.jdbc.snapshot.PostgresqlSyncSnapshotStore"
       class = "akka.persistence.jdbc.journal.MysqlSyncSnapshotStore"
       class = "akka.persistence.jdbc.journal.H2SyncSnapshotStore"
-      class = "akka.persistence.jdbc.journal.OracleSyncSnapshotStore"
-      class = "akka.persistence.jdbc.journal.MSSqlServerSyncSnapshotStore"
-      class = "akka.persistence.jdbc.journal.DB2SyncSnapshotStore"
 
 # Table schema
 The following schema works on Postgresql and H2:

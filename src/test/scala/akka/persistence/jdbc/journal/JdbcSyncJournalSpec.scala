@@ -1,11 +1,11 @@
 package akka.persistence.jdbc.journal
 
 import akka.persistence.jdbc.common.{PluginConfig, ScalikeConnection}
-import akka.persistence.jdbc.util.JdbcInit
+import akka.persistence.jdbc.util.{H2JdbcInit, PostgresqlJdbcInit, JdbcInit, GenericJdbcInit}
 import akka.persistence.journal.LegacyJournalSpec
 import com.typesafe.config.ConfigFactory
 
-class JdbcSyncJournalSpec extends LegacyJournalSpec with ScalikeConnection with JdbcInit {
+abstract class JdbcSyncJournalSpec extends LegacyJournalSpec with ScalikeConnection with JdbcInit {
   override def pluginConfig: PluginConfig = PluginConfig(system)
 
   lazy val config = ConfigFactory.load("application.conf")
@@ -20,3 +20,7 @@ class JdbcSyncJournalSpec extends LegacyJournalSpec with ScalikeConnection with 
     super.afterAll()
   }
 }
+
+class PostgresqlSyncJournalSpec extends JdbcSyncJournalSpec with PostgresqlJdbcInit
+
+class H2SyncJournalSpec extends JdbcSyncJournalSpec with H2JdbcInit

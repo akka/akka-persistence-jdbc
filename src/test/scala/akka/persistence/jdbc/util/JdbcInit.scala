@@ -5,6 +5,21 @@ import scalikejdbc._
 trait JdbcInit {
   implicit def session: DBSession
 
+  def createJournalTable(): Unit
+
+  def dropJournalTable(): Unit
+
+  def clearJournalTable(): Unit
+
+  def createSnapshotTable(): Unit
+
+  def dropSnapshotTable(): Unit
+
+  def clearSnapshotTable(): Unit
+}
+
+trait GenericJdbcInit extends JdbcInit {
+
   def createJournalTable(): Unit = sql"""
                            CREATE TABLE IF NOT EXISTS public.journal (
                            persistence_id VARCHAR(255) NOT NULL,
@@ -30,3 +45,7 @@ trait JdbcInit {
 
   def clearSnapshotTable(): Unit = sql"DELETE FROM public.snapshot".update.apply
 }
+
+trait PostgresqlJdbcInit extends GenericJdbcInit
+
+trait H2JdbcInit extends GenericJdbcInit

@@ -2,12 +2,12 @@ package akka.persistence.jdbc.common
 
 import akka.actor.ActorSystem
 import akka.persistence.jdbc.journal.RowTypeMarkers._
-import akka.persistence.jdbc.util.JdbcInit
+import akka.persistence.jdbc.util.{H2JdbcInit, JdbcInit, PostgresqlJdbcInit}
 import akka.testkit.TestKit
 import org.scalatest.{BeforeAndAfterAll, FlatSpecLike}
 import scalikejdbc._
 
-class JdbcConnectionTest extends TestKit(ActorSystem("test")) with FlatSpecLike with BeforeAndAfterAll with ScalikeConnection with JdbcInit {
+abstract class JdbcConnectionTest extends TestKit(ActorSystem("test")) with FlatSpecLike with BeforeAndAfterAll with ScalikeConnection with JdbcInit {
 
   "Insert a record" should "have a new record" in {
       sql"""INSERT INTO journal
@@ -27,3 +27,7 @@ class JdbcConnectionTest extends TestKit(ActorSystem("test")) with FlatSpecLike 
     createJournalTable()
   }
 }
+
+class PostgresqlConnectionTest extends JdbcConnectionTest with PostgresqlJdbcInit
+
+class H2ConnectionTest extends JdbcConnectionTest with H2JdbcInit

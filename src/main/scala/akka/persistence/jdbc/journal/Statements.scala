@@ -75,7 +75,15 @@ trait PostgresqlStatements extends GenericStatements
 
 trait MySqlStatements extends GenericStatements
 
-trait H2Statements extends GenericStatements
+trait H2Statements extends GenericStatements {
+  override def selectMessagesFor(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): List[PersistentRepr] = {
+    val maxRecords = if(max == java.lang.Long.MAX_VALUE) java.lang.Integer.MAX_VALUE.toLong else max
+    sql"SELECT message FROM journal WHERE persistence_id = ${persistenceId} and (sequence_number >= ${fromSequenceNr} and sequence_number <= ${toSequenceNr}) ORDER BY sequence_number limit ${maxRecords}"
+      .map(rs => Journal.fromBytes(Base64.decodeBinary(rs.string(1))))
+      .list()
+      .apply
+  }
+}
 
 trait OracleStatements extends GenericStatements {
   override def selectMessagesFor(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): List[PersistentRepr] = {

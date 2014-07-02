@@ -1,7 +1,18 @@
 # akka-persistence-jdbc
-A JDBC plugin for [akka-persistence](http://akka.io), a great extension to Akka created by [Martin Krasser](https://github.com/krasserm)
-It is only tested against Postgresql/9.3.1, so when you have any problems with other databases, drop me a mail and maybe
-we can work something out.
+Akka-persistence-jdbc is a persistence plugin for [akka-persistence](http://doc.akka.io/docs/akka/snapshot/scala/persistence.html) 
+that writes journal entries to a configured JDBC database. It supports writing journal messages and snapshots to two tables, 
+the journal table and the snapshot table. 
+
+By setting the appropriate Journal and SnapshotStore classes in the application.conf, you can choose the following databases
+
+* Postgresql (default, and the only one tested)
+* H2
+* MySQL
+* Oracle
+* MSSqlServer
+* DB2
+
+It is currently only tested against Postgresql/9.3.1 and H2/1.4.179
 
 ### Todo:
 
@@ -86,7 +97,48 @@ The following schema works on Postgresql:
       PRIMARY KEY (persistence_id, sequence_nr)
     );
 
+### H2 Configuration
+The application.conf for H2 should be:
+
+    akka {
+      loglevel = "DEBUG"
+    
+      persistence {
+        journal.plugin = "jdbc-journal"
+    
+        snapshot-store.plugin = "jdbc-snapshot-store"
+    
+        # we need event publishing for tests
+        publish-confirmations = on
+        publish-plugin-commands = on
+    
+        # disable leveldb (default store impl)
+        journal.leveldb.native = off
+      }
+    
+      log-dead-letters = 10
+      log-dead-letters-during-shutdown = on
+    }
+    
+    jdbc-journal {
+      class = "akka.persistence.jdbc.journal.H2SyncWriteJournal"
+    }
+    
+    jdbc-snapshot-store {
+      class = "akka.persistence.jdbc.snapshot.H2SyncSnapshotStore"
+    }
+    
+    jdbc-connection {
+       username ="sa"
+       password = ""
+       driverClassName = "org.h2.Driver"
+       url = "jdbc:h2:mem:test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1"
+    }
+    
 ### What's new?
+
+### 0.0.6
+ - Tested against H2/1.4.179
 
 ### 0.0.5
  - Added the snapshot store
@@ -94,8 +146,8 @@ The following schema works on Postgresql:
 ### 0.0.4
  -  Refactored the JdbcSyncWriteJournal so it supports the following databases:
     - Postgresql  (tested, works on v9.3.1)
+    - H2          (tested, works on 1.4.179)
     - MySql       (untested, but should work)
-    - H2          (untested, but should work) 
     - MSSqlServer (untested, but should work)
     - Oracle      (untested, but should work) 
     - DB2         (untested, but should work)

@@ -1,7 +1,7 @@
 # akka-persistence-jdbc
-Akka-persistence-jdbc is a persistence plugin for [akka-persistence](http://doc.akka.io/docs/akka/snapshot/scala/persistence.html) 
-that writes journal entries to a configured JDBC database. It supports writing journal messages and snapshots to two tables, 
-the journal table and the snapshot table. 
+Akka-persistence-jdbc is a plugin for [akka-persistence](http://doc.akka.io/docs/akka/snapshot/scala/persistence.html) 
+that writes journal entries to a configured JDBC database. It supports writing journal messages and snapshots to two tables: 
+the 'journal' table and the 'snapshot' table. 
 
 By setting the appropriate Journal and SnapshotStore classes in the application.conf, you can choose the following databases
 
@@ -146,10 +146,10 @@ The application.conf for Postgresql should be:
     }
     
     jdbc-connection {
-       username ="propositionengine"
-       password = "propositionengine"
+       username ="admin"
+       password = "admin"
        driverClassName = "org.postgresql.Driver"
-       url = "jdbc:postgresql://localhost:5432/propositionengine"
+       url = "jdbc:postgresql://localhost:5432/mydb"
     }    
 
 # MySQL Configuration

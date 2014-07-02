@@ -1,0 +1,13 @@
+package akka.persistence.jdbc.snapshot
+
+class PostgresqlSyncSnapshotStore extends JdbcSyncSnapshotStore with PostgresqlStatements
+
+class MysqlSyncSnapshotStore extends JdbcSyncSnapshotStore with MySqlStatements
+
+class H2SyncSnapshotStore extends JdbcSyncSnapshotStore with H2Statements
+
+class OracleSyncSnapshotStore extends JdbcSyncSnapshotStore with OracleStatements
+
+class MSSqlServerSyncSnapshotStore extends JdbcSyncSnapshotStore with MSSqlServerStatements
+
+class DB2SyncSnapshotStore extends JdbcSyncSnapshotStore with DB2Statements

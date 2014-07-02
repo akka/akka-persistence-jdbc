@@ -44,17 +44,15 @@ trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
   override def deleteMessagesTo(processorId: String, toSequenceNr: Long, permanent: Boolean): Unit = {
     log.debug(s"deleteMessagesTo for processorId: $processorId to sequenceNr: $toSequenceNr, permanent: $permanent")
 
-     if(permanent)
-       deleteMessageRange(processorId, toSequenceNr)
-     else
-       (1 to toSequenceNr.toInt).toList.map(_.toLong).foreach { sequenceNr =>
+     permanent match {
+       case true => deleteMessageRange(processorId, toSequenceNr)
+       case false => (1 to toSequenceNr.toInt).toList.map(_.toLong).foreach { sequenceNr =>
          selectMessage(processorId, sequenceNr) match {
-           case Some(msg) =>
-             val deletedMsg = msg.update(deleted = true)
-             updateMessage(processorId, sequenceNr, DeletedMarker, deletedMsg)
-           case _ => log.error("Could not delete messages with processorId: {} and sequenceNr: {}" , processorId, sequenceNr)
+           case Some(msg) => updateMessage(processorId, sequenceNr, DeletedMarker, msg.update(deleted = true))
+           case _ => log.error("Could not delete messages with processorId: {} and sequenceNr: {}", processorId, sequenceNr)
          }
        }
+     }
   }
 
   override def deleteMessages(messageIds: Seq[PersistentId], permanent: Boolean): Unit = {
@@ -62,15 +60,13 @@ trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
 
     messageIds.foreach { persistentId =>
       import persistentId._
-      if (permanent)
-        deleteMessageSingle(processorId, sequenceNr)
-      else
-        selectMessage(processorId, sequenceNr) match {
-          case Some(msg) =>
-          val deletedMsg = msg.update(deleted = true)
-            updateMessage(processorId, sequenceNr, DeletedMarker, deletedMsg)
+      permanent match {
+        case true => deleteMessageSingle(processorId, sequenceNr)
+        case false => selectMessage(processorId, sequenceNr) match {
+          case Some(msg) => updateMessage(processorId, sequenceNr, DeletedMarker, msg.update(deleted = true))
           case _ => log.error("Could not delete messages with ids: {}", messageIds)
         }
+      }
     }
   }
 
@@ -83,12 +79,7 @@ trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
     log.debug(s"Async replay for processorId [$processorId], from sequenceNr: [$fromSequenceNr], to sequenceNr: [$toSequenceNr] with max records: [$max]")
 
     Future[Unit] {
-      val pid = processorId
-      val fsnr = fromSequenceNr
-      val tsnr = toSequenceNr
-      val mx = max
-      val replay = replayCallback
-      selectMessagesFor(processorId, fromSequenceNr, toSequenceNr, max).foreach(replay)
+      selectMessagesFor(processorId, fromSequenceNr, toSequenceNr, max).foreach(replayCallback)
     }
   }
 }

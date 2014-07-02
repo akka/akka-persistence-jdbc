@@ -11,8 +11,8 @@ class JdbcSyncJournalSpec extends LegacyJournalSpec with ScalikeConnection with 
   lazy val config = ConfigFactory.load("application.conf")
 
   override def beforeAll() {
-    dropTable()
-    createTable()
+    dropJournalTable()
+    createJournalTable()
     super.beforeAll()
   }
 

@@ -12,8 +12,8 @@ class JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with ScalikeConnection
   lazy val config = ConfigFactory.load("application.conf")
 
   override def beforeAll() {
-    dropTable()
-    createTable()
+    dropSnapshotTable()
+    createSnapshotTable()
     super.beforeAll()
   }
 

@@ -1,8 +1,10 @@
 name := """akka-persistence-jdbc"""
 
-version := "0.0.6"
+version := "1.0.0"
 
 scalaVersion := "2.10.4"
+
+crossScalaVersions := Seq("2.10.4", "2.11.1")
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
@@ -29,3 +31,39 @@ libraryDependencies ++= {
 libraryDependencies += "com.github.krasserm" %% "akka-persistence-testkit" % "0.3.3" % "test"
 
 testOptions += Tests.Argument(TestFrameworks.JUnit, "-v")
+
+publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  if (isSnapshot.value)
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases" at nexus + "service/local/staging/deploy/maven2")
+}
+
+publishMavenStyle := true
+
+publishArtifact in Test := false
+
+pomIncludeRepository := { _ => false }
+
+pomExtra := (
+  <url>https://github.com/dnvriend/akka-persistence-jdbc</url>
+  <licenses>
+    <license>
+      <name>BSD-style</name>
+      <url>http://www.opensource.org/licenses/bsd-license.php</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>git@github.com/dnvriend/akka-persistence-jdbc.git</url>
+    <connection>scm:git:git@github.com/dnvriend/akka-persistence-jdbc.git</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>you</id>
+      <name>Dennis Vriend</name>
+      <url>https://github.com/dnvriend</url>
+    </developer>
+  </developers>
+)

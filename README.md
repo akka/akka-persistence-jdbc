@@ -220,6 +220,9 @@ The application.conf for H2 should be:
     
 ### What's new?
 
+### 1.0.0
+ - Release to Maven Central
+
 ### 0.0.6
  - Tested against MySQL/5.6.19 MySQL Community Server (GPL) 
  - Tested against H2/1.4.179

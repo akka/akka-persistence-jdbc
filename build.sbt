@@ -1,4 +1,8 @@
-name := """akka-persistence-jdbc"""
+import SonatypeKeys._
+
+organization := "com.github.dnvriend"
+
+name := "akka-persistence-jdbc"
 
 version := "1.0.0"
 
@@ -9,6 +13,8 @@ crossScalaVersions := Seq("2.10.4", "2.11.1")
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
 resolvers += "krasserm at bintray" at "http://dl.bintray.com/krasserm/maven"
+
+profileName := "com.github.dnvriend"
 
 libraryDependencies ++= {
     val akkaVersion = "2.3.4"
@@ -24,11 +30,10 @@ libraryDependencies ++= {
     "com.h2database"       % "h2"                            % "1.4.179"       % "test",
     "mysql"                % "mysql-connector-java"          % "5.1.31"        % "test",
     "com.typesafe.akka"   %% "akka-testkit"                  % akkaVersion     % "test",
-    "org.scalatest"       %% "scalatest"                     % "2.1.4"         % "test"
+    "org.scalatest"       %% "scalatest"                     % "2.1.4"         % "test",
+    "com.github.krasserm" %% "akka-persistence-testkit"      % "0.3.3"         % "test"
   )
 }
-
-libraryDependencies += "com.github.krasserm" %% "akka-persistence-testkit" % "0.3.3" % "test"
 
 testOptions += Tests.Argument(TestFrameworks.JUnit, "-v")
 
@@ -67,3 +72,5 @@ pomExtra := (
     </developer>
   </developers>
 )
+
+xerial.sbt.Sonatype.sonatypeSettings

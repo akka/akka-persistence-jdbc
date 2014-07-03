@@ -37,6 +37,8 @@ libraryDependencies ++= {
 
 testOptions += Tests.Argument(TestFrameworks.JUnit, "-v")
 
+// publish settings
+
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
   if (isSnapshot.value)

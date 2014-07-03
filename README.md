@@ -12,6 +12,27 @@ By setting the appropriate Journal and SnapshotStore classes in the application.
 Note: The plugin should work on other databases too. When you wish to have support for a database, contact me and we can work
 something out.
 
+# Installation
+To include the JDBC plugin into your sbt project, add the following lines to your build.sbt file:
+
+    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.0.0"
+
+For Maven users, add the following to the pom.xml
+
+    <dependency>
+        <groupId>com.github.dnvriend</groupId>
+        <artifactId>akka-persistence-jdbc_2.10</artifactId>
+        <version>1.0.0</version>
+    </dependency>
+    
+    <dependency>
+        <groupId>com.github.dnvriend</groupId>
+        <artifactId>akka-persistence-jdbc_2.11</artifactId>
+        <version>1.0.0</version>
+    </dependency>
+
+This version of akka-persistence-jdbc depends on Akka 2.3.4 and is cross-built against Scala 2.10.4 and 2.11.0
+
 # Usage
 In application.conf place the following:
 

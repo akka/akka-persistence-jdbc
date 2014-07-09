@@ -37,23 +37,10 @@ This version of akka-persistence-jdbc depends on Akka 2.3.4 and is cross-built a
 In application.conf place the following:
 
     akka {
-      loglevel = "DEBUG"
-    
       persistence {
         journal.plugin = "jdbc-journal"
-    
         snapshot-store.plugin = "jdbc-snapshot-store"
-    
-        # we need event publishing for tests
-        publish-confirmations = on
-        publish-plugin-commands = on
-    
-        # disable leveldb (default store impl)
-        journal.leveldb.native = off
       }
-    
-      log-dead-letters = 10
-      log-dead-letters-during-shutdown = on
     }
     
     jdbc-journal {
@@ -83,8 +70,8 @@ To alter the database dialect for the journal, change the class to:
 To alter the database dialect of the snapshot-store, change the class to:
 
       class = "akka.persistence.jdbc.snapshot.PostgresqlSyncSnapshotStore"
-      class = "akka.persistence.jdbc.journal.MysqlSyncSnapshotStore"
-      class = "akka.persistence.jdbc.journal.H2SyncSnapshotStore"
+      class = "akka.persistence.jdbc.snapshot.MysqlSyncSnapshotStore"
+      class = "akka.persistence.jdbc.snapshot.H2SyncSnapshotStore"
 
 # Table schema
 The following schema works on Postgresql and H2:
@@ -129,23 +116,10 @@ The following schema works on MySQL
 The application.conf for Postgresql should be:
 
     akka {
-      loglevel = "DEBUG"
-    
       persistence {
         journal.plugin = "jdbc-journal"
-    
         snapshot-store.plugin = "jdbc-snapshot-store"
-    
-        # we need event publishing for tests
-        publish-confirmations = on
-        publish-plugin-commands = on
-    
-        # disable leveldb (default store impl)
-        journal.leveldb.native = off
       }
-    
-      log-dead-letters = 10
-      log-dead-letters-during-shutdown = on
     }
     
     jdbc-journal {
@@ -167,31 +141,18 @@ The application.conf for Postgresql should be:
 The application.conf for MySQL should be:
 
     akka {
-      loglevel = "DEBUG"
-    
       persistence {
         journal.plugin = "jdbc-journal"
-    
         snapshot-store.plugin = "jdbc-snapshot-store"
-    
-        # we need event publishing for tests
-        publish-confirmations = on
-        publish-plugin-commands = on
-    
-        # disable leveldb (default store impl)
-        journal.leveldb.native = off
       }
-    
-      log-dead-letters = 10
-      log-dead-letters-during-shutdown = on
     }
     
     jdbc-journal {
-      class = "akka.persistence.jdbc.journal.PostgresqlSyncWriteJournal"
+      class = "akka.persistence.jdbc.journal.MysqlSyncWriteJournal"
     }
     
     jdbc-snapshot-store {
-      class = "akka.persistence.jdbc.snapshot.PostgresqlSyncSnapshotStore"
+      class = "akka.persistence.jdbc.snapshot.MysqlSyncSnapshotStore"
     }
     
     jdbc-connection {
@@ -205,23 +166,10 @@ The application.conf for MySQL should be:
 The application.conf for H2 should be:
 
     akka {
-      loglevel = "DEBUG"
-    
       persistence {
         journal.plugin = "jdbc-journal"
-    
         snapshot-store.plugin = "jdbc-snapshot-store"
-    
-        # we need event publishing for tests
-        publish-confirmations = on
-        publish-plugin-commands = on
-    
-        # disable leveldb (default store impl)
-        journal.leveldb.native = off
       }
-    
-      log-dead-letters = 10
-      log-dead-letters-during-shutdown = on
     }
     
     jdbc-journal {

@@ -4,7 +4,7 @@ organization := "com.github.dnvriend"
 
 name := "akka-persistence-jdbc"
 
-version := "1.0.1"
+version := "1.0.2"
 
 scalaVersion := "2.11.1"
 

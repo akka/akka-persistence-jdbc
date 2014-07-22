@@ -34,6 +34,39 @@ For Maven users, add the following to the pom.xml
 
 This version of akka-persistence-jdbc depends on Akka 2.3.4 and is cross-built against Scala 2.10.4 and 2.11.0
 
+### What's new?
+
+### 1.0.2
+ - Oracle XE 11g supported
+
+### 1.0.1
+ - scalikejdbc 2.0.4 -> 2.0.5
+ - akka-persistence-testkit 0.3.3 -> 0.3.4
+
+### 1.0.0
+ - Release to Maven Central
+
+### 0.0.6
+ - Tested against MySQL/5.6.19 MySQL Community Server (GPL) 
+ - Tested against H2/1.4.179
+
+### 0.0.5
+ - Added the snapshot store
+
+### 0.0.4
+ -  Refactored the JdbcSyncWriteJournal so it supports the following databases:
+
+### 0.0.3
+ - Using [Martin Krasser's](https://github.com/krasserm) [akka-persistence-testkit](https://github.com/krasserm/akka-persistence-testkit)
+  to test the akka-persistence-jdbc plugin. 
+ - Upgrade to Akka 2.3.4
+
+#### 0.0.2
+ - Using [ScalikeJdbc](http://scalikejdbc.org/) as the JDBC access library instead of my home-brew one. 
+
+#### 0.0.1
+ - Initial commit
+
 # Usage
 In application.conf place the following:
 
@@ -237,48 +270,121 @@ The application.conf for Oracle should be:
         driverClassName = "oracle.jdbc.OracleDriver"
         url = "jdbc:oracle:thin:@//192.168.99.99:49161/xe"
         }
-    
-### What's new?
-
-### 1.0.2
- - Oracle XE 11g supported
-
-### 1.0.1
- - scalikejdbc 2.0.4 -> 2.0.5
- - akka-persistence-testkit 0.3.3 -> 0.3.4
-
-### 1.0.0
- - Release to Maven Central
-
-### 0.0.6
- - Tested against MySQL/5.6.19 MySQL Community Server (GPL) 
- - Tested against H2/1.4.179
-
-### 0.0.5
- - Added the snapshot store
-
-### 0.0.4
- -  Refactored the JdbcSyncWriteJournal so it supports the following databases:
-
-### 0.0.3
- - Using [Martin Krasser's](https://github.com/krasserm) [akka-persistence-testkit](https://github.com/krasserm/akka-persistence-testkit)
-  to test the akka-persistence-jdbc plugin. 
- - Upgrade to Akka 2.3.4
-
-#### 0.0.2
- - Using [ScalikeJdbc](http://scalikejdbc.org/) as the JDBC access library instead of my home-brew one. 
-
-#### 0.0.1
- - Initial commit
 
 # Testing
+## PostgreSQL
+For more information about the Postgres docker image, please view [training/postgres](https://registry.hub.docker.com/u/training/postgres/)
+
+    sudo docker run --name postgres -d -p 49432:5432 training/postgres
+    sudo docker run -ti -v /akka-persistence-jdbc:/akka-persistence-jdbc --link postgres:postgres --name test murad/java8 /bin/bash 
+
+Connect database with following setting and create the database schema:  
+
+    hostname: 192.168.99.99 
+    port: 49432    
+    username: docker 
+    password: docker
+    database: docker
+
+The test application.conf should be:
+
+     akka {
+      loglevel = "DEBUG"
+    
+      persistence {
+        journal.plugin = "jdbc-journal"
+    
+        snapshot-store.plugin = "jdbc-snapshot-store"
+    
+        # we need event publishing for tests
+        publish-confirmations = on
+        publish-plugin-commands = on
+    
+        # disable leveldb (default store impl)
+        journal.leveldb.native = off
+      }
+    
+      log-dead-letters = 10
+      log-dead-letters-during-shutdown = on
+    }
+    
+    jdbc-connection {
+      username ="docker"
+      password = "docker"
+      driverClassName = "org.postgresql.Driver"
+      url = "jdbc:postgresql://"${DB_PORT_5432_TCP_ADDR}":"${DB_PORT_5432_TCP_PORT}"/docker"
+    }
+    
+In the container named 'test', type:
+
+    cd /akka-persistence-jdbc
+    ./activator "test-only akka.persistence.jdbc.journal.PostgresqlSyncJournalSpec"
+    ./activator "test-only akka.persistence.jdbc.snapshot.PostgresqlSyncSnapshotStoreSpec"
+
+## MySQL
+For more information about the MySQL docker image, please view [mysql](https://registry.hub.docker.com/_/mysql/)
+
+    sudo docker run --name mysql -e MYSQL_ROOT_PASSWORD=root -d -p 49306:3306 mysql
+    sudo docker run -ti -v /akka-persistence-jdbc:/akka-persistence-jdbc --link mysql:mysql --name test murad/java8 /bin/bash 
+
+Connect database with following setting and create the database schema:  
+
+    hostname: 192.168.99.99 
+    port: 49306    
+    username: root 
+    password: root
+    database: mysql
+
+The test application.conf should be:
+
+    akka {
+      loglevel = "DEBUG"
+    
+      persistence {
+        journal.plugin = "jdbc-journal"
+    
+        snapshot-store.plugin = "jdbc-snapshot-store"
+    
+        # we need event publishing for tests
+        publish-confirmations = on
+        publish-plugin-commands = on
+    
+        # disable leveldb (default store impl)
+        journal.leveldb.native = off
+      }
+    
+      log-dead-letters = 10
+      log-dead-letters-during-shutdown = on
+    }
+    
+    jdbc-journal {
+      class = "akka.persistence.jdbc.journal.MysqlSyncWriteJournal"
+    }
+    
+    jdbc-snapshot-store {
+      class = "akka.persistence.jdbc.snapshot.MysqlSyncSnapshotStore"
+    }
+    
+    jdbc-connection {
+       username ="root"
+       password = "root"
+       driverClassName = "com.mysql.jdbc.Driver"
+       url = "jdbc:mysql://"${MYSQL_PORT_3306_TCP_ADDR}":"${MYSQL_PORT_3306_TCP_PORT}"/mysql"
+    }   
+    
+In the container named 'test', type:
+
+    cd /akka-persistence-jdbc
+    ./activator "test-only akka.persistence.jdbc.journal.MysqlSyncJournalSpec"
+    ./activator "test-only akka.persistence.jdbc.snapshot.MysqlSyncSnapshotStoreSpec"
+
 ## Oracle
-For more information about the oracle docker image, please view [alexeiled / docker-oracle-xe-11g](https://registry.hub.docker.com/u/alexeiled/docker-oracle-xe-11g/)
+For more information about the Oracle XE docker image, please view [alexeiled / docker-oracle-xe-11g](https://registry.hub.docker.com/u/alexeiled/docker-oracle-xe-11g/)
 
     sudo docker run -d --name oracle -p 49160:22 -p 49161:1521 -p 49162:8080 alexeiled/docker-oracle-xe-11g
     sudo docker run -ti -v /akka-persistence-jdbc:/akka-persistence-jdbc --link oracle:oracle --name test murad/java8 /bin/bash 
 
-Connect database with following setting:  
+Connect database with following setting and create the database schema:  
 
     hostname: 192.168.99.99 
     port: 49161

@@ -8,6 +8,7 @@ By setting the appropriate Journal and SnapshotStore classes in the application.
 * Postgresql  (tested, works on v9.3.1)
 * MySql       (tested, works on 5.6.19 MySQL Community Server (GPL))
 * H2          (tested, works on 1.4.179)
+* Oracle XE   (tested, works on Oracle XE 11g r2)
 
 Note: The plugin should work on other databases too. When you wish to have support for a database, contact me and we can work
 something out.
@@ -15,20 +16,20 @@ something out.
 # Installation
 To include the JDBC plugin into your sbt project, add the following lines to your build.sbt file:
 
-    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.0.0"
+    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.0.2"
 
 For Maven users, add the following to the pom.xml
 
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.10</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.2</version>
     </dependency>
     
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.11</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.2</version>
     </dependency>
 
 This version of akka-persistence-jdbc depends on Akka 2.3.4 and is cross-built against Scala 2.10.4 and 2.11.0
@@ -66,15 +67,18 @@ To alter the database dialect for the journal, change the class to:
     class = "akka.persistence.jdbc.journal.PostgresqlSyncWriteJournal"
     class = "akka.persistence.jdbc.journal.MysqlSyncWriteJournal"
     class = "akka.persistence.jdbc.journal.H2SyncWriteJournal"
+    class = "akka.persistence.jdbc.journal.OracleSyncWriteJournal"
 
 To alter the database dialect of the snapshot-store, change the class to:
 
       class = "akka.persistence.jdbc.snapshot.PostgresqlSyncSnapshotStore"
       class = "akka.persistence.jdbc.snapshot.MysqlSyncSnapshotStore"
       class = "akka.persistence.jdbc.snapshot.H2SyncSnapshotStore"
+      class = "akka.persistence.jdbc.snapshot.OracleSyncSnapshotStore"
 
 # Table schema
-The following schema works on Postgresql and H2:
+## Postgresql and H2
+The following schema works on both Postgresql and H2
 
     CREATE TABLE IF NOT EXISTS public.journal (
       persistence_id VARCHAR(255) NOT NULL,
@@ -93,6 +97,8 @@ The following schema works on Postgresql and H2:
       PRIMARY KEY (persistence_id, sequence_nr)
     );
 
+
+## MySQL
 The following schema works on MySQL
 
     CREATE TABLE IF NOT EXISTS journal (
@@ -109,6 +115,26 @@ The following schema works on MySQL
       sequence_nr BIGINT NOT NULL,
       snapshot TEXT NOT NULL,
       created BIGINT NOT NULL,
+      PRIMARY KEY (persistence_id, sequence_nr)
+    );
+
+## Oracle
+The following schema works on Oracle
+    
+    CREATE TABLE journal (
+      persistence_id VARCHAR(255) NOT NULL,
+      sequence_number NUMERIC NOT NULL,
+      marker VARCHAR(255) NOT NULL,
+      message CLOB NOT NULL,
+      created TIMESTAMP NOT NULL,
+      PRIMARY KEY(persistence_id, sequence_number)
+    );
+        
+    CREATE TABLE snapshot (
+      persistence_id VARCHAR(255) NOT NULL,
+      sequence_nr NUMERIC NOT NULL,
+      snapshot CLOB NOT NULL,
+      created NUMERIC NOT NULL,
       PRIMARY KEY (persistence_id, sequence_nr)
     );
 
@@ -187,7 +213,39 @@ The application.conf for H2 should be:
        url = "jdbc:h2:mem:test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1"
     }
     
+# Oracle Configuration
+The application.conf for Oracle should be:
+    
+    akka {
+          persistence {
+            journal.plugin = "jdbc-journal"
+            snapshot-store.plugin = "jdbc-snapshot-store"
+          }
+        }
+        
+        jdbc-journal {
+          class = "akka.persistence.jdbc.journal.OracleSyncWriteJournal"
+        }
+        
+        jdbc-snapshot-store {
+          class = "akka.persistence.jdbc.snapshot.OracleSyncSnapshotStore"
+        }
+        
+        jdbc-connection {
+        username ="system"
+        password = "oracle"
+        driverClassName = "oracle.jdbc.OracleDriver"
+        url = "jdbc:oracle:thin:@//192.168.99.99:49161/xe"
+        }
+    
 ### What's new?
+
+### 1.0.2
+ - Oracle XE 11g supported
+
+### 1.0.1
+ - scalikejdbc 2.0.4 -> 2.0.5
+ - akka-persistence-testkit 0.3.3 -> 0.3.4
 
 ### 1.0.0
  - Release to Maven Central
@@ -212,3 +270,77 @@ The application.conf for H2 should be:
 
 #### 0.0.1
  - Initial commit
+
+# Testing
+## Oracle
+For more information about the oracle docker image, please view [alexeiled / docker-oracle-xe-11g](https://registry.hub.docker.com/u/alexeiled/docker-oracle-xe-11g/)
+
+    sudo docker run -d --name oracle -p 49160:22 -p 49161:1521 -p 49162:8080 alexeiled/docker-oracle-xe-11g
+    sudo docker run -ti -v /akka-persistence-jdbc:/akka-persistence-jdbc --link oracle:oracle --name test murad/java8 /bin/bash 
+
+Connect database with following setting:  
+
+    hostname: 192.168.99.99 
+    port: 49161
+    sid: xe 
+    username: system 
+    password: oracle 
+
+Password for SYS  
+
+    oracle 
+
+Connect to Oracle Application Express web management console with following settings:  
+
+    url: http://localhost:49162/apex 
+    workspace: INTERNAL 
+    user: ADMIN 
+    password: oracle 
+
+Login by SSH  
+
+    ssh root@localhost -p 49160 
+    password: admin
+    
+The test application.conf should be:
+
+    akka {
+      loglevel = "DEBUG"
+    
+      persistence {
+        journal.plugin = "jdbc-journal"
+    
+        snapshot-store.plugin = "jdbc-snapshot-store"
+    
+        # we need event publishing for tests
+        publish-confirmations = on
+        publish-plugin-commands = on
+    
+        # disable leveldb (default store impl)
+        journal.leveldb.native = off
+      }
+    
+      log-dead-letters = 10
+      log-dead-letters-during-shutdown = on
+    }
+    
+    jdbc-journal {
+      class = "akka.persistence.jdbc.journal.OracleSyncWriteJournal"
+    }
+    
+    jdbc-snapshot-store {
+      class = "akka.persistence.jdbc.snapshot.OracleSyncSnapshotStore"
+    }
+    
+    jdbc-connection {
+       username ="system"
+       password = "oracle"
+       driverClassName = "oracle.jdbc.OracleDriver"
+       url = "jdbc:oracle:thin:@//"${ORACLE_PORT_1521_TCP_ADDR}":"${ORACLE_PORT_1521_TCP_PORT}"/xe"
+    }
+    
+In the container named 'test', type:
+
+    cd /akka-persistence-jdbc
+    ./activator "test-only akka.persistence.jdbc.journal.OracleSyncJournalSpec"
+    ./activator "test-only akka.persistence.jdbc.snapshot.OracleSyncSnapshotStoreSpec"

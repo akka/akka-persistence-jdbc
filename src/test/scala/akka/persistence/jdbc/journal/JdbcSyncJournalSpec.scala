@@ -27,3 +27,4 @@ class H2SyncJournalSpec extends JdbcSyncJournalSpec with H2JdbcInit
 
 class MysqlSyncJournalSpec extends JdbcSyncJournalSpec with MysqlJdbcInit
 
+class OracleSyncJournalSpec extends JdbcSyncJournalSpec with OracleJdbcInit

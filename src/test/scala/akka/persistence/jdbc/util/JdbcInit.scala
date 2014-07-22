@@ -76,3 +76,31 @@ trait MysqlJdbcInit extends GenericJdbcInit {
 
   override def clearSnapshotTable(): Unit = sql"DELETE FROM snapshot".update.apply
 }
+
+trait OracleJdbcInit extends GenericJdbcInit {
+  override def createJournalTable(): Unit = sql"""
+                           CREATE TABLE journal (
+                            persistence_id VARCHAR(255) NOT NULL,
+                            sequence_number NUMERIC NOT NULL,
+                            marker VARCHAR(255) NOT NULL,
+                            message CLOB NOT NULL,
+                            created TIMESTAMP NOT NULL,
+                            PRIMARY KEY(persistence_id, sequence_number))""".update.apply
+
+  override def dropJournalTable(): Unit = sql"DROP TABLE journal CASCADE CONSTRAINT".update.apply
+
+  override def clearJournalTable(): Unit = sql"DELETE FROM journal".update.apply
+
+  override def createSnapshotTable(): Unit = sql"""
+                               CREATE TABLE snapshot (
+                                persistence_id VARCHAR(255) NOT NULL,
+                                sequence_nr NUMERIC NOT NULL,
+                                snapshot CLOB NOT NULL,
+                                created NUMERIC NOT NULL,
+                                PRIMARY KEY (persistence_id, sequence_nr))""".update.apply
+
+  override def dropSnapshotTable(): Unit = sql"DROP TABLE snapshot CASCADE CONSTRAINT".update.apply
+
+  override def clearSnapshotTable(): Unit = sql"DELETE FROM snapshot".update.apply
+
+}

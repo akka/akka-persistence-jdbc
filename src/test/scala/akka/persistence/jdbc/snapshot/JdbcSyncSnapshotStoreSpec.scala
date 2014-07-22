@@ -27,3 +27,5 @@ class PostgresqlJdbcSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with
 class H2JdbcSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with H2JdbcInit
 
 class MysqlSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with MysqlJdbcInit
+
+class OracleSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with OracleJdbcInit

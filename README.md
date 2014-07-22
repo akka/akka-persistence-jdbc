@@ -289,31 +289,31 @@ Connect database with following setting and create the database schema:
 The test application.conf should be:
 
      akka {
-      loglevel = "DEBUG"
-    
-      persistence {
-        journal.plugin = "jdbc-journal"
-    
-        snapshot-store.plugin = "jdbc-snapshot-store"
-    
-        # we need event publishing for tests
-        publish-confirmations = on
-        publish-plugin-commands = on
-    
-        # disable leveldb (default store impl)
-        journal.leveldb.native = off
-      }
-    
-      log-dead-letters = 10
-      log-dead-letters-during-shutdown = on
-    }
-    
-    jdbc-connection {
-      username ="docker"
-      password = "docker"
-      driverClassName = "org.postgresql.Driver"
-      url = "jdbc:postgresql://"${DB_PORT_5432_TCP_ADDR}":"${DB_PORT_5432_TCP_PORT}"/docker"
-    }
+       loglevel = "DEBUG"
+     
+       persistence {
+         journal.plugin = "jdbc-journal"
+     
+         snapshot-store.plugin = "jdbc-snapshot-store"
+     
+         # we need event publishing for tests
+         publish-confirmations = on
+         publish-plugin-commands = on
+     
+         # disable leveldb (default store impl)
+         journal.leveldb.native = off
+       }
+     
+       log-dead-letters = 10
+       log-dead-letters-during-shutdown = on
+     }
+     
+     jdbc-connection {
+       username ="docker"
+       password = "docker"
+       driverClassName = "org.postgresql.Driver"
+       url = "jdbc:postgresql://"${POSTGRES_PORT_5432_TCP_ADDR}":"${POSTGRES_PORT_5432_TCP_PORT}"/docker"
+     }
     
 In the container named 'test', type:
 

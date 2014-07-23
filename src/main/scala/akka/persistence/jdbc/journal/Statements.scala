@@ -1,5 +1,8 @@
 package akka.persistence.jdbc.journal
 
+import java.io.ByteArrayInputStream
+import java.sql.ResultSet
+
 import akka.persistence.jdbc.common.ScalikeConnection
 import akka.persistence.{Persistent, PersistentRepr}
 import akka.persistence.jdbc.util.{EncodeDecode, Base64}
@@ -22,6 +25,7 @@ trait JdbcStatements {
 
   def selectMessagesFor(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): List[PersistentRepr]
 }
+
 trait GenericStatements extends JdbcStatements with ScalikeConnection with EncodeDecode {
   implicit def executionContext: ExecutionContext
 
@@ -64,7 +68,7 @@ trait GenericStatements extends JdbcStatements with ScalikeConnection with Encod
   }
 
   def selectMessagesFor(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): List[PersistentRepr] = {
-    sql"SELECT message FROM journal WHERE persistence_id = ${persistenceId} and (sequence_number >= ${fromSequenceNr} and sequence_number <= ${toSequenceNr}) ORDER BY sequence_number limit ${max}"
+    sql"SELECT message FROM journal WHERE persistence_id = ${persistenceId} and (sequence_number >= ${fromSequenceNr} and sequence_number <= ${toSequenceNr}) ORDER BY sequence_number LIMIT ${max}"
       .map(rs => Journal.fromBytes(Base64.decodeBinary(rs.string(1))))
       .list()
       .apply
@@ -77,7 +81,7 @@ trait MySqlStatements extends GenericStatements
 
 trait H2Statements extends GenericStatements {
   override def selectMessagesFor(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): List[PersistentRepr] = {
-    val maxRecords = if(max == java.lang.Long.MAX_VALUE) java.lang.Integer.MAX_VALUE.toLong else max
+    val maxRecords = if (max == java.lang.Long.MAX_VALUE) java.lang.Integer.MAX_VALUE.toLong else max
     sql"SELECT message FROM journal WHERE persistence_id = ${persistenceId} and (sequence_number >= ${fromSequenceNr} and sequence_number <= ${toSequenceNr}) ORDER BY sequence_number limit ${maxRecords}"
       .map(rs => Journal.fromBytes(Base64.decodeBinary(rs.string(1))))
       .list()
@@ -109,5 +113,68 @@ trait DB2Statements extends GenericStatements {
       .map(rs => Journal.fromBytes(Base64.decodeBinary(rs.string(1))))
       .list()
       .apply
+  }
+}
+
+trait InformixStatements extends GenericStatements {
+  override def selectMessage(persistenceId: String, sequenceNr: Long): Option[PersistentRepr] = {
+    using(ConnectionPool.borrow()) { conn =>
+      val str = s"SELECT message FROM journal WHERE persistence_id = '$persistenceId' AND sequence_number = $sequenceNr"
+      val rs = conn.createStatement().executeQuery(str)
+      if(rs.next()) {
+        val is = rs.getAsciiStream(1)
+        val base64Str = scala.io.Source.fromInputStream(is).mkString
+        Some(Journal.fromBytes(Base64.decodeBinary(base64Str)))
+      }
+      else None
+    }
+  }
+
+  override def insertMessage(persistenceId: String, sequenceNr: Long, marker: String = "A", message: Persistent) {
+    val arr = Base64.encodeString(Journal.toBytes(message))
+    val msgToWrite = new ByteArrayInputStream(arr.getBytes)
+    using(ConnectionPool.borrow()) { conn =>
+      val stmt = conn.prepareStatement("INSERT INTO journal (persistence_id, sequence_number, marker, message, created) VALUES (?, ?, ?, ?, CURRENT YEAR TO FRACTION(5))")
+      stmt.setString(1, persistenceId)
+      stmt.setLong(2, sequenceNr)
+      stmt.setString(3, marker)
+      stmt.setAsciiStream(4, msgToWrite, arr.getBytes.length)
+      stmt.executeUpdate()
+      stmt.close()
+    }
+  }
+
+  override def updateMessage(persistenceId: String, sequenceNr: Long, marker: String, message: Persistent) {
+    val arr = Base64.encodeString(Journal.toBytes(message))
+    val msgToWrite = new ByteArrayInputStream(arr.getBytes)
+    using(ConnectionPool.borrow()) { conn =>
+      val stmt = conn.prepareStatement("UPDATE journal SET message = ?, marker = ? WHERE persistence_id = ? and sequence_number = ?")
+      stmt.setAsciiStream(1, msgToWrite)
+      stmt.setString(2, marker)
+      stmt.setString(3, persistenceId)
+      stmt.setLong(4, sequenceNr)
+      stmt.executeUpdate()
+      stmt.close()
+    }
+  }
+
+  override def selectMessagesFor(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): List[PersistentRepr] = {
+    def toList(rs: ResultSet, list: List[PersistentRepr]): List[PersistentRepr] = {
+      if (rs.next()) {
+        val is = rs.getAsciiStream(1)
+        val base64Str = scala.io.Source.fromInputStream(is).mkString
+        toList(rs, Journal.fromBytes(Base64.decodeBinary(base64Str)) :: list)
+      }
+      else list.reverse
+    }
+
+    if (max == 0) Nil
+    else {
+      using(ConnectionPool.borrow()) { conn =>
+        val str = s"SELECT message FROM journal WHERE persistence_id = '$persistenceId' and (sequence_number >= $fromSequenceNr and sequence_number <= $toSequenceNr) ORDER BY sequence_number LIMIT $max"
+        val rs = conn.createStatement().executeQuery(str)
+        toList(rs, Nil)
+      }
+    }
   }
 }

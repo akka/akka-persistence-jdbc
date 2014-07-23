@@ -10,4 +10,4 @@ class OracleSyncWriteJournal extends JdbcSyncWriteJournal with OracleStatements
 
 class MSSqlServerSyncWriteJournal extends JdbcSyncWriteJournal with MSSqlServerStatements
 
-class DB2SyncWriteJournal extends JdbcSyncWriteJournal with DB2Statements
+class InformixSyncWriteJournal extends JdbcSyncWriteJournal with InformixStatements

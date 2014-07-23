@@ -5,10 +5,11 @@ the 'journal' table and the 'snapshot' table.
 
 By setting the appropriate Journal and SnapshotStore classes in the application.conf, you can choose the following databases
 
-* Postgresql  (tested, works on v9.3.1)
-* MySql       (tested, works on 5.6.19 MySQL Community Server (GPL))
-* H2          (tested, works on 1.4.179)
-* Oracle XE   (tested, works on Oracle XE 11g r2)
+* H2           (tested, works on 1.4.179)
+* Postgresql   (tested, works on v9.3.1)
+* MySql        (tested, works on 5.6.19 MySQL Community Server (GPL))
+* Oracle XE    (tested, works on Oracle XE 11g r2)
+* IBM Informix (tested, works on v12.10)
 
 Note: The plugin should work on other databases too. When you wish to have support for a database, contact me and we can work
 something out.
@@ -16,25 +17,28 @@ something out.
 # Installation
 To include the JDBC plugin into your sbt project, add the following lines to your build.sbt file:
 
-    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.0.2"
+    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.0.3"
 
 For Maven users, add the following to the pom.xml
 
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.10</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
     </dependency>
     
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.11</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
     </dependency>
 
-This version of akka-persistence-jdbc depends on Akka 2.3.4 and is cross-built against Scala 2.10.4 and 2.11.0
+This version of akka-persistence-jdbc depends on Akka 2.3.4 and is cross-built against Scala 2.10.4 and 2.11.1
 
 ### What's new?
+
+### 1.0.3
+ - IBM Informix 12.10 supported 
 
 ### 1.0.2
  - Oracle XE 11g supported
@@ -101,6 +105,7 @@ To alter the database dialect for the journal, change the class to:
     class = "akka.persistence.jdbc.journal.MysqlSyncWriteJournal"
     class = "akka.persistence.jdbc.journal.H2SyncWriteJournal"
     class = "akka.persistence.jdbc.journal.OracleSyncWriteJournal"
+    class = "akka.persistence.jdbc.journal.InformixSyncWriteJournal"
 
 To alter the database dialect of the snapshot-store, change the class to:
 
@@ -108,6 +113,7 @@ To alter the database dialect of the snapshot-store, change the class to:
       class = "akka.persistence.jdbc.snapshot.MysqlSyncSnapshotStore"
       class = "akka.persistence.jdbc.snapshot.H2SyncSnapshotStore"
       class = "akka.persistence.jdbc.snapshot.OracleSyncSnapshotStore"
+      class = "akka.persistence.jdbc.snapshot.InformixSyncSnapshotStore"
 
 # Table schema
 ## Postgresql and H2
@@ -164,6 +170,26 @@ The following schema works on Oracle
     );
         
     CREATE TABLE snapshot (
+      persistence_id VARCHAR(255) NOT NULL,
+      sequence_nr NUMERIC NOT NULL,
+      snapshot CLOB NOT NULL,
+      created NUMERIC NOT NULL,
+      PRIMARY KEY (persistence_id, sequence_nr)
+    );
+
+# IBM Informix
+The following schema works on Informix 12.10
+
+    CREATE TABLE IF NOT EXISTS journal (
+      persistence_id VARCHAR(255) NOT NULL,
+      sequence_number NUMERIC NOT NULL,
+      marker VARCHAR(255) NOT NULL,
+      message CLOB NOT NULL,
+      created DATETIME YEAR TO FRACTION(5) NOT NULL,
+      PRIMARY KEY(persistence_id, sequence_number)
+    );
+    
+    CREATE TABLE IF NOT EXISTS snapshot (
       persistence_id VARCHAR(255) NOT NULL,
       sequence_nr NUMERIC NOT NULL,
       snapshot CLOB NOT NULL,
@@ -271,6 +297,31 @@ The application.conf for Oracle should be:
         url = "jdbc:oracle:thin:@//192.168.99.99:49161/xe"
         }
 
+# IBM Informix configuration
+The application.conf for Informix should be:
+
+    akka {
+      persistence {
+        journal.plugin = "jdbc-journal"
+        snapshot-store.plugin = "jdbc-snapshot-store"
+      }
+    }
+    
+    jdbc-journal {
+      class = "akka.persistence.jdbc.journal.InformixSyncWriteJournal"
+    }
+    
+    jdbc-snapshot-store {
+      class = "akka.persistence.jdbc.snapshot.InformixSyncSnapshotStore"
+    }
+        
+    jdbc-connection {
+      username ="informix"
+      password = "informix"
+      driverClassName = "com.informix.jdbc.IfxDriver"
+      url = "jdbc:informix-sqli://192.168.99.99:9088/test:INFORMIXSERVER=ol_cyklo"
+    }
+    
 # Testing
 ## PostgreSQL
 For more information about the Postgres docker image, please view [training/postgres](https://registry.hub.docker.com/u/training/postgres/)
@@ -450,3 +501,76 @@ In the container named 'test', type:
     cd /akka-persistence-jdbc
     ./activator "test-only akka.persistence.jdbc.journal.OracleSyncJournalSpec"
     ./activator "test-only akka.persistence.jdbc.snapshot.OracleSyncSnapshotStoreSpec"
+    
+## IBM Informix
+IBM does not yet have docker images for there products, so I have created one.
+
+    sudo docker run -ti --name informix -p 9088:9088 dnvriend/ibm-informix /bin/bash
+    
+In the informix container run:
+
+    su informix
+    oninit -v
+    onstat -l
+
+### Creating the sbspace file
+The sbspace file has already been created, but this is what I did:
+
+    su informix
+    cd ~
+    touch sbspace
+    chmod 660 sbspace
+    onspaces -c -S sbsp -p /home/informix/sbspace -o 500 -s 20480
+
+Now run the test container     
+    
+    sudo docker run -ti -v /akka-persistence-jdbc:/akka-persistence-jdbc --link informix:informix --name test murad/java8 /bin/bash 
+
+### Connect to the database
+I used IntelliJ, added the Informix JDBC driver and used the following URL to connect:
+  
+    jdbc:informix-sqli://192.168.99.99:9088/test:informixserver=ol_cyklo
+    
+Credentials like the following:    
+
+    hostname: 192.168.99.99 
+    port: 9088    
+    username: informix 
+    password: informix
+    database: test
+
+The test application.conf should be:
+
+    akka {
+      loglevel = "DEBUG"
+    
+      persistence {
+        journal.plugin = "jdbc-journal"
+    
+        snapshot-store.plugin = "jdbc-snapshot-store"
+    
+        # we need event publishing for tests
+        publish-confirmations = on
+        publish-plugin-commands = on
+    
+        # disable leveldb (default store impl)
+        journal.leveldb.native = off
+      }
+    
+      log-dead-letters = 10
+      log-dead-letters-during-shutdown = on
+    }
+    
+    jdbc-connection {
+      username ="informix"
+      password = "informix"
+      driverClassName = "com.informix.jdbc.IfxDriver"
+      url = "jdbc:informix-sqli://"${INFORMIX_PORT_9088_TCP_ADDR}":"${INFORMIX_PORT_9088_TCP_PORT}"/test:INFORMIXSERVER=ol_cyklo"
+    }
+    
+In the container named 'test', type:
+
+    cd /akka-persistence-jdbc
+    ./activator "test-only akka.persistence.jdbc.journal.InformixSyncJournalSpec"
+    ./activator "test-only akka.persistence.jdbc.snapshot.InformixSyncSnapshotStoreSpec"
+    

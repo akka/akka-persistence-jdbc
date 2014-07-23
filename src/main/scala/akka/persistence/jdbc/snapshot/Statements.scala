@@ -49,3 +49,5 @@ trait OracleStatements extends GenericStatements
 trait MSSqlServerStatements extends GenericStatements
 
 trait DB2Statements extends GenericStatements
+
+trait InformixStatements extends GenericStatements

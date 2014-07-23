@@ -22,10 +22,20 @@ abstract class JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with ScalikeC
   }
 }
 
-class PostgresqlJdbcSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with PostgresqlJdbcInit
-
 class H2JdbcSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with H2JdbcInit
 
-class MysqlSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with MysqlJdbcInit
+class PostgresqlJdbcSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with PostgresqlJdbcInit {
+  override lazy val config = ConfigFactory.load("postgres-application.conf")
+}
 
-class OracleSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with OracleJdbcInit
+class MysqlSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with MysqlJdbcInit {
+  override lazy val config = ConfigFactory.load("mysql-application.conf")
+}
+
+class OracleSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with OracleJdbcInit {
+  override lazy val config = ConfigFactory.load("oracle-application.conf")
+}
+
+class InformixSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with InformixJdbcInit {
+  override lazy val config = ConfigFactory.load("informix-application.conf")
+}

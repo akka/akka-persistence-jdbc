@@ -102,5 +102,31 @@ trait OracleJdbcInit extends GenericJdbcInit {
   override def dropSnapshotTable(): Unit = sql"DROP TABLE snapshot CASCADE CONSTRAINT".update.apply
 
   override def clearSnapshotTable(): Unit = sql"DELETE FROM snapshot".update.apply
+}
 
+trait InformixJdbcInit extends GenericJdbcInit {
+  override def createJournalTable(): Unit = sql"""
+                                CREATE TABLE IF NOT EXISTS journal (
+                                 persistence_id VARCHAR(255) NOT NULL,
+                                 sequence_number NUMERIC NOT NULL,
+                                 marker VARCHAR(255) NOT NULL,
+                                 message CLOB NOT NULL,
+                                 created DATETIME YEAR TO FRACTION(5) NOT NULL,
+                                PRIMARY KEY(persistence_id, sequence_number))""".update.apply
+
+  override def dropJournalTable(): Unit = sql"DROP TABLE journal".update.apply
+
+  override def clearJournalTable(): Unit = sql"DELETE FROM journal".update.apply
+
+  override def createSnapshotTable(): Unit = sql"""
+                                CREATE TABLE IF NOT EXISTS snapshot (
+                                 persistence_id VARCHAR(255) NOT NULL,
+                                 sequence_nr NUMERIC NOT NULL,
+                                 snapshot CLOB NOT NULL,
+                                 created NUMERIC NOT NULL,
+                                PRIMARY KEY (persistence_id, sequence_nr))""".update.apply
+
+  override def dropSnapshotTable(): Unit = sql"DROP TABLE snapshot".update.apply
+
+  override def clearSnapshotTable(): Unit = sql"DELETE FROM snapshot".update.apply
 }

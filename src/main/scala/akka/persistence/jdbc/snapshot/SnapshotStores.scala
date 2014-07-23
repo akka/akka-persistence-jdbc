@@ -10,4 +10,4 @@ class OracleSyncSnapshotStore extends JdbcSyncSnapshotStore with OracleStatement
 
 class MSSqlServerSyncSnapshotStore extends JdbcSyncSnapshotStore with MSSqlServerStatements
 
-class DB2SyncSnapshotStore extends JdbcSyncSnapshotStore with DB2Statements
+class InformixSyncSnapshotStore extends JdbcSyncSnapshotStore with InformixStatements

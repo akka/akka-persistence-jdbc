@@ -21,10 +21,20 @@ abstract class JdbcSyncJournalSpec extends LegacyJournalSpec with ScalikeConnect
   }
 }
 
-class PostgresqlSyncJournalSpec extends JdbcSyncJournalSpec with PostgresqlJdbcInit
-
 class H2SyncJournalSpec extends JdbcSyncJournalSpec with H2JdbcInit
 
-class MysqlSyncJournalSpec extends JdbcSyncJournalSpec with MysqlJdbcInit
+class PostgresqlSyncJournalSpec extends JdbcSyncJournalSpec with PostgresqlJdbcInit {
+  override lazy val config = ConfigFactory.load("postgres-application.conf")
+}
 
-class OracleSyncJournalSpec extends JdbcSyncJournalSpec with OracleJdbcInit
+class MysqlSyncJournalSpec extends JdbcSyncJournalSpec with MysqlJdbcInit {
+  override lazy val config = ConfigFactory.load("mysql-application.conf")
+}
+
+class OracleSyncJournalSpec extends JdbcSyncJournalSpec with OracleJdbcInit {
+  override lazy val config = ConfigFactory.load("oracle-application.conf")
+}
+
+class InformixSyncJournalSpec extends JdbcSyncJournalSpec with InformixJdbcInit {
+  override lazy val config = ConfigFactory.load("informix-application.conf")
+}

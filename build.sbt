@@ -4,7 +4,7 @@ organization := "com.github.dnvriend"
 
 name := "akka-persistence-jdbc"
 
-version := "1.0.2"
+version := "1.0.3"
 
 scalaVersion := "2.11.1"
 
@@ -24,7 +24,8 @@ libraryDependencies ++= {
     "commons-dbcp"         % "commons-dbcp"                  % "1.4",
     "commons-codec"        % "commons-codec"                 % "1.9",
     "commons-io"           % "commons-io"                    % "2.4",
-    "org.scalikejdbc"     %% "scalikejdbc"                   % "2.0.5",
+    "org.scalikejdbc"     %% "scalikejdbc"                   % "2.0.6",
+    "ch.qos.logback"       %  "logback-classic"              % "1.1.2",
     "org.slf4j"            % "slf4j-nop"                     % "1.6.4",
     "postgresql"           % "postgresql"                    % "9.1-901.jdbc4" % "test",
     "com.h2database"       % "h2"                            % "1.4.179"       % "test",

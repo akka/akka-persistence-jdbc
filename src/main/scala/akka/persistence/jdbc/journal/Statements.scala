@@ -4,7 +4,7 @@ import java.io.ByteArrayInputStream
 import java.sql.ResultSet
 
 import akka.persistence.jdbc.common.ScalikeConnection
-import akka.persistence.{Persistent, PersistentRepr}
+import akka.persistence.{PersistentActor, Persistent, PersistentRepr}
 import akka.persistence.jdbc.util.{EncodeDecode, Base64}
 import scalikejdbc._
 
@@ -13,9 +13,9 @@ import scala.concurrent.{ExecutionContext, Future}
 trait JdbcStatements {
   def selectMessage(persistenceId: String, sequenceNr: Long): Option[PersistentRepr]
 
-  def insertMessage(persistenceId: String, sequenceNr: Long, marker: String = "A", message: Persistent)
+  def insertMessage(persistenceId: String, sequenceNr: Long, marker: String = "A", message: PersistentRepr)
 
-  def updateMessage(persistenceId: String, sequenceNr: Long, marker: String, message: Persistent)
+  def updateMessage(persistenceId: String, sequenceNr: Long, marker: String, message: PersistentRepr)
 
   def deleteMessageSingle(persistenceId: String, sequenceNr: Long)
 
@@ -35,7 +35,7 @@ trait GenericStatements extends JdbcStatements with ScalikeConnection with Encod
       .single()
       .apply()
 
-  def insertMessage(persistenceId: String, sequenceNr: Long, marker: String = "A", message: Persistent) {
+  def insertMessage(persistenceId: String, sequenceNr: Long, marker: String = "A", message: PersistentRepr) {
     val msgToWrite = Base64.encodeString(Journal.toBytes(message))
     sql"""INSERT INTO journal (persistence_id, sequence_number, marker, message, created) VALUES
             (${persistenceId},
@@ -45,7 +45,7 @@ trait GenericStatements extends JdbcStatements with ScalikeConnection with Encod
             current_timestamp)""".update.apply
   }
 
-  def updateMessage(persistenceId: String, sequenceNr: Long, marker: String, message: Persistent) {
+  def updateMessage(persistenceId: String, sequenceNr: Long, marker: String, message: PersistentRepr) {
     val msgToWrite = Base64.encodeString(Journal.toBytes(message))
     sql"UPDATE journal SET message = ${msgToWrite}, marker = ${marker} WHERE persistence_id = ${persistenceId} and sequence_number = ${sequenceNr}".update.apply
   }
@@ -130,7 +130,7 @@ trait InformixStatements extends GenericStatements {
     }
   }
 
-  override def insertMessage(persistenceId: String, sequenceNr: Long, marker: String = "A", message: Persistent) {
+  override def insertMessage(persistenceId: String, sequenceNr: Long, marker: String = "A", message: PersistentRepr) {
     val arr = Base64.encodeString(Journal.toBytes(message))
     val msgToWrite = new ByteArrayInputStream(arr.getBytes)
     using(ConnectionPool.borrow()) { conn =>
@@ -144,7 +144,7 @@ trait InformixStatements extends GenericStatements {
     }
   }
 
-  override def updateMessage(persistenceId: String, sequenceNr: Long, marker: String, message: Persistent) {
+  override def updateMessage(persistenceId: String, sequenceNr: Long, marker: String, message: PersistentRepr) {
     val arr = Base64.encodeString(Journal.toBytes(message))
     val msgToWrite = new ByteArrayInputStream(arr.getBytes)
     using(ConnectionPool.borrow()) { conn =>

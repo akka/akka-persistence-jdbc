@@ -22,7 +22,9 @@ abstract class JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with ScalikeC
   }
 }
 
-class H2JdbcSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with H2JdbcInit
+class H2JdbcSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with H2JdbcInit {
+  override lazy val config = ConfigFactory.load("h2-application.conf")
+}
 
 class PostgresqlJdbcSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with PostgresqlJdbcInit {
   override lazy val config = ConfigFactory.load("postgres-application.conf")

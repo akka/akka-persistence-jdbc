@@ -21,7 +21,9 @@ abstract class JdbcSyncJournalSpec extends LegacyJournalSpec with ScalikeConnect
   }
 }
 
-class H2SyncJournalSpec extends JdbcSyncJournalSpec with H2JdbcInit
+class H2SyncJournalSpec extends JdbcSyncJournalSpec with H2JdbcInit {
+  override lazy val config = ConfigFactory.load("h2-application.conf")
+}
 
 class PostgresqlSyncJournalSpec extends JdbcSyncJournalSpec with PostgresqlJdbcInit {
   override lazy val config = ConfigFactory.load("postgres-application.conf")

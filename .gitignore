@@ -1,3 +1,4 @@
+.vagrant/
 target/
 .idea
 *.iml

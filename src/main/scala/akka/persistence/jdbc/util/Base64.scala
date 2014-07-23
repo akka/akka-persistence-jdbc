@@ -1,8 +1,8 @@
 package akka.persistence.jdbc.util
 
 import akka.persistence.serialization.Snapshot
-import akka.persistence.{serialization, PersistentRepr, Persistent}
-import akka.serialization.{Serialization, SerializationExtension}
+import akka.persistence.PersistentRepr
+import akka.serialization.Serialization
 import org.apache.commons.codec.binary.{Base64 => B64}
 
 object Base64 {
@@ -44,7 +44,7 @@ trait EncodeDecode {
   def serialization: Serialization
 
   object Journal {
-    def toBytes(msg: Persistent): Array[Byte] = serialization.serialize(msg).get
+    def toBytes(msg: PersistentRepr): Array[Byte] = serialization.serialize(msg).get
 
     def fromBytes(bytes: Array[Byte]): PersistentRepr = serialization.deserialize(bytes, classOf[PersistentRepr]).get
   }

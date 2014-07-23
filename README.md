@@ -329,7 +329,7 @@ For more information about the Postgres docker image, please view [training/post
     sudo docker run --name postgres -d -p 49432:5432 training/postgres
     sudo docker run -ti -v /akka-persistence-jdbc:/akka-persistence-jdbc --link postgres:postgres --name test murad/java8 /bin/bash 
 
-Connect database with following setting and create the database schema:  
+Connect to the database with following settings and create the database schema:  
 
     hostname: 192.168.99.99 
     port: 49432    
@@ -372,13 +372,78 @@ In the container named 'test', type:
     ./activator "test-only akka.persistence.jdbc.journal.PostgresqlSyncJournalSpec"
     ./activator "test-only akka.persistence.jdbc.snapshot.PostgresqlSyncSnapshotStoreSpec"
 
+## H2
+For more information about the H2 docker image, please view [viliusl / ubuntu-h2-server](https://registry.hub.docker.com/u/viliusl/ubuntu-h2-server/)
+
+    sudo docker run --name h2 -d -p 1522:1521 -P viliusl/ubuntu-h2-server
+    sudo docker run -ti -v /akka-persistence-jdbc:/akka-persistence-jdbc --link h2:h2 --name test murad/java8 /bin/bash
+
+Connect to the database with the following settings:
+
+    hostname: 192.168.99.99 
+    port: 1522    
+    username: sa 
+    password: 
+    database: test
+
+The test application.conf should be:
+
+    akka {
+      loglevel = "DEBUG"
+    
+      persistence {
+        journal.plugin = "jdbc-journal"
+    
+        snapshot-store.plugin = "jdbc-snapshot-store"
+    
+        # we need event publishing for tests
+        publish-confirmations = on
+        publish-plugin-commands = on
+    
+        # disable leveldb (default store impl)
+        journal.leveldb.native = off
+      }
+    
+      log-dead-letters = 10
+      log-dead-letters-during-shutdown = on
+    }
+    
+    jdbc-journal {
+      class = "akka.persistence.jdbc.journal.H2SyncWriteJournal"
+    }
+    
+    jdbc-snapshot-store {
+      class = "akka.persistence.jdbc.snapshot.H2SyncSnapshotStore"
+    }
+    
+    h2 {
+      host = "192.168.99.99"
+      host = ${?H2_PORT_1521_TCP_ADDR}
+      port = "1522"
+      port = ${?H2_PORT_1521_TCP_PORT}
+    }
+    
+    jdbc-connection {
+      username ="sa"
+      password = ""
+      driverClassName = "org.h2.Driver"
+      url = "jdbc:h2:mem:test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1"
+    //  url = "jdbc:h2:tcp://"${h2.host}":"${h2.port}"/test"
+    }
+    
+In the container named 'test', type:
+
+    cd /akka-persistence-jdbc
+    ./activator "test-only akka.persistence.jdbc.journal.H2SyncJournalSpec"
+    ./activator "test-only akka.persistence.jdbc.snapshot.H2SyncSnapshotStoreSpec"
+
 ## MySQL
 For more information about the MySQL docker image, please view [mysql](https://registry.hub.docker.com/_/mysql/)
 
     sudo docker run --name mysql -e MYSQL_ROOT_PASSWORD=root -d -p 49306:3306 mysql
     sudo docker run -ti -v /akka-persistence-jdbc:/akka-persistence-jdbc --link mysql:mysql --name test murad/java8 /bin/bash 
 
-Connect database with following setting and create the database schema:  
+Connect to the database with following settings and create the database schema:  
 
     hostname: 192.168.99.99 
     port: 49306    
@@ -574,3 +639,23 @@ In the container named 'test', type:
     ./activator "test-only akka.persistence.jdbc.journal.InformixSyncJournalSpec"
     ./activator "test-only akka.persistence.jdbc.snapshot.InformixSyncSnapshotStoreSpec"
     
+# My own test setup
+I use the vagrant configuration in the vagrant subdirectory:
+
+    vagrant up
+    vagrant ssh
+    
+Then I launch all the containers:
+    
+    sudo docker run --name postgres -d -p 5432:5432 training/postgres
+    sudo docker run --name h2 -d -p 1522:1521 -P viliusl/ubuntu-h2-server
+    sudo docker run --name mysql -e MYSQL_ROOT_PASSWORD=root -d -p 3306:3306 mysql
+    sudo docker run --name oracle -d -p 49160:22 -p 1521:1521 -p 49162:8080 alexeiled/docker-oracle-xe-11g
+    sudo docker run --name informix -ti -p 9088:9088 dnvriend/ibm-informix /bin/bash
+
+I configure the databases, launch the database service and create the schemas when necessary, then I just launch the test suite from 
+IntelliJ IDEA and/or use Activator to test. All databases in one go without installing DB services on my OSX. 
+ 
+Gotta love Docker! :-)
+
+Have fun!

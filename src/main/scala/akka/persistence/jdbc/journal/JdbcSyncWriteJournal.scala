@@ -30,12 +30,12 @@ trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
 
     confirmations.foreach { confirmation =>
       import confirmation._
-      selectMessage(processorId, sequenceNr) match {
+      selectMessage(persistenceId, sequenceNr) match {
         case Some(msg) =>
           val confirmationIds = msg.confirms :+ confirmation.channelId
           val marker = confirmedMarker(confirmationIds)
           val updatedMessage = msg.update(confirms = confirmationIds)
-          updateMessage(processorId, sequenceNr, marker, updatedMessage)
+          updateMessage(persistenceId, sequenceNr, marker, updatedMessage)
         case _ => log.error("Could not write configuration message for confirmations: {}", confirmations)
       }
     }

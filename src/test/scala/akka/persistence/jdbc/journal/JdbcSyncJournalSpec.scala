@@ -6,8 +6,7 @@ import akka.persistence.journal.LegacyJournalSpec
 import com.typesafe.config.ConfigFactory
 
 abstract class JdbcSyncJournalSpec extends LegacyJournalSpec with ScalikeConnection with JdbcInit {
-  override def pluginConfig: PluginConfig = PluginConfig(system)
-
+  override def cfg: PluginConfig = PluginConfig(system)
   lazy val config = ConfigFactory.load("application.conf")
 
   override def beforeAll() {

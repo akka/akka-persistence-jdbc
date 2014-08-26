@@ -1,5 +1,6 @@
 package akka.persistence.jdbc.util
 
+import akka.persistence.jdbc.common.PluginConfig
 import scalikejdbc._
 
 trait JdbcInit {
@@ -19,31 +20,32 @@ trait JdbcInit {
 }
 
 trait GenericJdbcInit extends JdbcInit {
+  def cfg: PluginConfig
 
-  def createJournalTable(): Unit = sql"""
-                           CREATE TABLE IF NOT EXISTS public.journal (
+  def createJournalTable(): Unit = SQL( s"""
+                           CREATE TABLE IF NOT EXISTS ${cfg.journalSchemaName}${cfg.journalTableName} (
                            persistence_id VARCHAR(255) NOT NULL,
                            sequence_number BIGINT NOT NULL,
                            marker VARCHAR(255) NOT NULL,
                            message TEXT NOT NULL,
                            created TIMESTAMP NOT NULL,
-                           PRIMARY KEY(persistence_id, sequence_number))""".update.apply
+                           PRIMARY KEY(persistence_id, sequence_number))""").update().apply
 
-  def dropJournalTable(): Unit = sql"DROP TABLE IF EXISTS public.journal".update.apply
+  def dropJournalTable(): Unit = SQL(s"DROP TABLE IF EXISTS ${cfg.journalSchemaName}${cfg.journalTableName}").update().apply
 
-  def clearJournalTable(): Unit = sql"DELETE FROM public.journal".update.apply
+  def clearJournalTable(): Unit = SQL(s"DELETE FROM ${cfg.journalSchemaName}${cfg.journalTableName}").update().apply
 
-  def createSnapshotTable(): Unit = sql"""
-                            CREATE TABLE IF NOT EXISTS public.snapshot (
+  def createSnapshotTable(): Unit = SQL( s"""
+                            CREATE TABLE IF NOT EXISTS ${cfg.snapshotSchemaName}${cfg.snapshotTableName} (
                             persistence_id VARCHAR(255) NOT NULL,
                             sequence_nr BIGINT NOT NULL,
                             snapshot TEXT NOT NULL,
                             created BIGINT NOT NULL,
-                            PRIMARY KEY (persistence_id, sequence_nr))""".update.apply
+                            PRIMARY KEY (persistence_id, sequence_nr))""").update().apply
 
-  def dropSnapshotTable(): Unit = sql"DROP TABLE IF EXISTS public.snapshot".update.apply
+  def dropSnapshotTable(): Unit = SQL(s"DROP TABLE IF EXISTS ${cfg.snapshotSchemaName}${cfg.snapshotTableName} ").update().apply
 
-  def clearSnapshotTable(): Unit = sql"DELETE FROM public.snapshot".update.apply
+  def clearSnapshotTable(): Unit = SQL(s"DELETE FROM ${cfg.snapshotSchemaName}${cfg.snapshotTableName} ").update().apply
 }
 
 trait PostgresqlJdbcInit extends GenericJdbcInit
@@ -51,82 +53,82 @@ trait PostgresqlJdbcInit extends GenericJdbcInit
 trait H2JdbcInit extends GenericJdbcInit
 
 trait MysqlJdbcInit extends GenericJdbcInit {
-  override def createJournalTable(): Unit = sql"""
-                           CREATE TABLE IF NOT EXISTS journal (
+  override def createJournalTable(): Unit = SQL(s"""
+                           CREATE TABLE IF NOT EXISTS ${cfg.journalSchemaName}${cfg.journalTableName} (
                            persistence_id VARCHAR(255) NOT NULL,
                            sequence_number BIGINT NOT NULL,
                            marker VARCHAR(255) NOT NULL,
                            message TEXT NOT NULL,
                            created TIMESTAMP NOT NULL,
-                           PRIMARY KEY(persistence_id, sequence_number))""".update.apply
+                           PRIMARY KEY(persistence_id, sequence_number))""").update().apply
 
-  override def dropJournalTable(): Unit = sql"DROP TABLE IF EXISTS journal".update.apply
+  override def dropJournalTable(): Unit = SQL(s"DROP TABLE IF EXISTS ${cfg.journalSchemaName}${cfg.journalTableName}").update().apply
 
-  override def clearJournalTable(): Unit = sql"DELETE FROM journal".update.apply
+  override def clearJournalTable(): Unit = SQL(s"DELETE FROM ${cfg.journalSchemaName}${cfg.journalTableName}").update().apply
 
-  override def createSnapshotTable(): Unit = sql"""
-                            CREATE TABLE IF NOT EXISTS snapshot (
+  override def createSnapshotTable(): Unit = SQL(s"""
+                            CREATE TABLE IF NOT EXISTS ${cfg.snapshotSchemaName}${cfg.snapshotTableName}  (
                             persistence_id VARCHAR(255) NOT NULL,
                             sequence_nr BIGINT NOT NULL,
                             snapshot TEXT NOT NULL,
                             created BIGINT NOT NULL,
-                            PRIMARY KEY (persistence_id, sequence_nr))""".update.apply
+                            PRIMARY KEY (persistence_id, sequence_nr))""").update().apply
 
-  override def dropSnapshotTable(): Unit = sql"DROP TABLE IF EXISTS snapshot".update.apply
+  override def dropSnapshotTable(): Unit = SQL(s"DROP TABLE IF EXISTS ${cfg.snapshotSchemaName}${cfg.snapshotTableName} ").update().apply
 
-  override def clearSnapshotTable(): Unit = sql"DELETE FROM snapshot".update.apply
+  override def clearSnapshotTable(): Unit = SQL(s"DELETE FROM ${cfg.snapshotSchemaName}${cfg.snapshotTableName} ").update().apply
 }
 
 trait OracleJdbcInit extends GenericJdbcInit {
-  override def createJournalTable(): Unit = sql"""
-                           CREATE TABLE journal (
+  override def createJournalTable(): Unit = SQL(s"""
+                           CREATE TABLE ${cfg.journalSchemaName}${cfg.journalTableName} (
                             persistence_id VARCHAR(255) NOT NULL,
                             sequence_number NUMERIC NOT NULL,
                             marker VARCHAR(255) NOT NULL,
                             message CLOB NOT NULL,
                             created TIMESTAMP NOT NULL,
-                            PRIMARY KEY(persistence_id, sequence_number))""".update.apply
+                            PRIMARY KEY(persistence_id, sequence_number))""").update().apply
 
-  override def dropJournalTable(): Unit = sql"DROP TABLE journal CASCADE CONSTRAINT".update.apply
+  override def dropJournalTable(): Unit = SQL(s"DROP TABLE ${cfg.journalSchemaName}${cfg.journalTableName} CASCADE CONSTRAINT").update().apply
 
-  override def clearJournalTable(): Unit = sql"DELETE FROM journal".update.apply
+  override def clearJournalTable(): Unit = SQL(s"DELETE FROM ${cfg.journalSchemaName}${cfg.journalTableName}").update().apply
 
-  override def createSnapshotTable(): Unit = sql"""
-                               CREATE TABLE snapshot (
+  override def createSnapshotTable(): Unit = SQL(s"""
+                               CREATE TABLE ${cfg.snapshotSchemaName}${cfg.snapshotTableName}  (
                                 persistence_id VARCHAR(255) NOT NULL,
                                 sequence_nr NUMERIC NOT NULL,
                                 snapshot CLOB NOT NULL,
                                 created NUMERIC NOT NULL,
-                                PRIMARY KEY (persistence_id, sequence_nr))""".update.apply
+                                PRIMARY KEY (persistence_id, sequence_nr))""").update().apply
 
-  override def dropSnapshotTable(): Unit = sql"DROP TABLE snapshot CASCADE CONSTRAINT".update.apply
+  override def dropSnapshotTable(): Unit = SQL(s"DROP TABLE ${cfg.snapshotSchemaName}${cfg.snapshotTableName}  CASCADE CONSTRAINT").update().apply
 
-  override def clearSnapshotTable(): Unit = sql"DELETE FROM snapshot".update.apply
+  override def clearSnapshotTable(): Unit = SQL(s"DELETE FROM ${cfg.snapshotSchemaName}${cfg.snapshotTableName} ").update().apply
 }
 
 trait InformixJdbcInit extends GenericJdbcInit {
-  override def createJournalTable(): Unit = sql"""
-                                CREATE TABLE IF NOT EXISTS journal (
+  override def createJournalTable(): Unit = SQL(s"""
+                                CREATE TABLE IF NOT EXISTS ${cfg.journalSchemaName}${cfg.journalTableName} (
                                  persistence_id VARCHAR(255) NOT NULL,
                                  sequence_number NUMERIC NOT NULL,
                                  marker VARCHAR(255) NOT NULL,
                                  message CLOB NOT NULL,
                                  created DATETIME YEAR TO FRACTION(5) NOT NULL,
-                                PRIMARY KEY(persistence_id, sequence_number))""".update.apply
+                                PRIMARY KEY(persistence_id, sequence_number))""").update().apply
 
-  override def dropJournalTable(): Unit = sql"DROP TABLE journal".update.apply
+  override def dropJournalTable(): Unit = SQL(s"DROP TABLE ${cfg.journalSchemaName}${cfg.journalTableName}").update().apply
 
-  override def clearJournalTable(): Unit = sql"DELETE FROM journal".update.apply
+  override def clearJournalTable(): Unit = SQL(s"DELETE FROM ${cfg.journalSchemaName}${cfg.journalTableName}").update().apply
 
-  override def createSnapshotTable(): Unit = sql"""
-                                CREATE TABLE IF NOT EXISTS snapshot (
+  override def createSnapshotTable(): Unit = SQL( s"""
+                                CREATE TABLE IF NOT EXISTS ${cfg.snapshotSchemaName}${cfg.snapshotTableName}  (
                                  persistence_id VARCHAR(255) NOT NULL,
                                  sequence_nr NUMERIC NOT NULL,
                                  snapshot CLOB NOT NULL,
                                  created NUMERIC NOT NULL,
-                                PRIMARY KEY (persistence_id, sequence_nr))""".update.apply
+                                PRIMARY KEY (persistence_id, sequence_nr))""").update().apply
 
-  override def dropSnapshotTable(): Unit = sql"DROP TABLE snapshot".update.apply
+  override def dropSnapshotTable(): Unit = SQL(s"DROP TABLE ${cfg.snapshotSchemaName}${cfg.snapshotTableName}").update().apply
 
-  override def clearSnapshotTable(): Unit = sql"DELETE FROM snapshot".update.apply
+  override def clearSnapshotTable(): Unit = SQL(s"DELETE FROM ${cfg.snapshotSchemaName}${cfg.snapshotTableName} ").update().apply
 }

@@ -5,10 +5,8 @@ import akka.persistence.jdbc.util._
 import akka.persistence.snapshot.SnapshotStoreSpec
 import com.typesafe.config.ConfigFactory
 
-abstract class JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with ScalikeConnection with JdbcInit {
-
-  override def pluginConfig: PluginConfig = PluginConfig(system)
-
+trait JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with ScalikeConnection with JdbcInit {
+  override def cfg: PluginConfig = PluginConfig(system)
   lazy val config = ConfigFactory.load("application.conf")
 
   override def beforeAll() {

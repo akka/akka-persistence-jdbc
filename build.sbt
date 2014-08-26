@@ -4,11 +4,11 @@ organization := "com.github.dnvriend"
 
 name := "akka-persistence-jdbc"
 
-version := "1.0.3"
+version := "1.0.4-SNAPSHOT"
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.11.2"
 
-crossScalaVersions := Seq("2.10.4", "2.11.1")
+crossScalaVersions := Seq("2.10.4", "2.11.2")
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
@@ -17,14 +17,14 @@ resolvers += "krasserm at bintray" at "http://dl.bintray.com/krasserm/maven"
 profileName := "com.github.dnvriend"
 
 libraryDependencies ++= {
-    val akkaVersion = "2.3.4"
+    val akkaVersion = "2.3.5"
     Seq(
     "com.typesafe.akka"   %% "akka-actor"                    % akkaVersion,
     "com.typesafe.akka"   %% "akka-persistence-experimental" % akkaVersion,
     "commons-dbcp"         % "commons-dbcp"                  % "1.4",
     "commons-codec"        % "commons-codec"                 % "1.9",
     "commons-io"           % "commons-io"                    % "2.4",
-    "org.scalikejdbc"     %% "scalikejdbc"                   % "2.0.6",
+    "org.scalikejdbc"     %% "scalikejdbc"                   % "2.1.0",
     "ch.qos.logback"       %  "logback-classic"              % "1.1.2",
     "org.slf4j"            % "slf4j-nop"                     % "1.6.4",
     "postgresql"           % "postgresql"                    % "9.1-901.jdbc4" % "test",

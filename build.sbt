@@ -17,16 +17,17 @@ resolvers += "krasserm at bintray" at "http://dl.bintray.com/krasserm/maven"
 profileName := "com.github.dnvriend"
 
 libraryDependencies ++= {
-    val akkaVersion = "2.3.5"
+    val akkaVersion = "2.3.6"
     Seq(
     "com.typesafe.akka"   %% "akka-actor"                    % akkaVersion,
     "com.typesafe.akka"   %% "akka-persistence-experimental" % akkaVersion,
     "commons-dbcp"         % "commons-dbcp"                  % "1.4",
     "commons-codec"        % "commons-codec"                 % "1.9",
     "commons-io"           % "commons-io"                    % "2.4",
-    "org.scalikejdbc"     %% "scalikejdbc"                   % "2.1.0",
-    "ch.qos.logback"       %  "logback-classic"              % "1.1.2",
-    "org.slf4j"            % "slf4j-nop"                     % "1.6.4",
+    "org.scalikejdbc"     %% "scalikejdbc"                   % "2.1.1",
+    "ch.qos.logback"       % "logback-classic"               % "1.1.2"         % "test",
+    "com.typesafe.akka"   %% "akka-slf4j"                    % akkaVersion     % "test",
+    "ch.qos.logback"       % "logback-classic"               % "1.1.2"         % "test",
     "postgresql"           % "postgresql"                    % "9.1-901.jdbc4" % "test",
     "com.h2database"       % "h2"                            % "1.4.179"       % "test",
     "mysql"                % "mysql-connector-java"          % "5.1.31"        % "test",

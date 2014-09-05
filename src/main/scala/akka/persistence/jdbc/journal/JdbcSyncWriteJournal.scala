@@ -30,13 +30,11 @@ trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
 
     confirmations.foreach { confirmation =>
       import confirmation._
-      selectMessage(persistenceId, sequenceNr) match {
-        case Some(msg) =>
-          val confirmationIds = msg.confirms :+ confirmation.channelId
-          val marker = confirmedMarker(confirmationIds)
-          val updatedMessage = msg.update(confirms = confirmationIds)
-          updateMessage(persistenceId, sequenceNr, marker, updatedMessage)
-        case _ => log.error("Could not write configuration message for confirmations: {}", confirmations)
+      selectMessage(persistenceId, sequenceNr).map { msg =>
+        val confirmationIds = msg.confirms :+ confirmation.channelId
+        val marker = confirmedMarker(confirmationIds)
+        val updatedMessage = msg.update(confirms = confirmationIds)
+        updateMessage(persistenceId, sequenceNr, marker, updatedMessage)
       }
     }
   }
@@ -47,9 +45,8 @@ trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
      permanent match {
        case true => deleteMessageRange(processorId, toSequenceNr)
        case false => (1 to toSequenceNr.toInt).toList.map(_.toLong).foreach { sequenceNr =>
-         selectMessage(processorId, sequenceNr) match {
-           case Some(msg) => updateMessage(processorId, sequenceNr, DeletedMarker, msg.update(deleted = true))
-           case _ => log.error("Could not delete messages with processorId: {} and sequenceNr: {}", processorId, sequenceNr)
+         selectMessage(processorId, sequenceNr).map { msg =>
+           updateMessage(processorId, sequenceNr, DeletedMarker, msg.update(deleted = true))
          }
        }
      }
@@ -62,9 +59,8 @@ trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
       import persistentId._
       permanent match {
         case true => deleteMessageSingle(processorId, sequenceNr)
-        case false => selectMessage(processorId, sequenceNr) match {
-          case Some(msg) => updateMessage(processorId, sequenceNr, DeletedMarker, msg.update(deleted = true))
-          case _ => log.error("Could not delete messages with ids: {}", messageIds)
+        case false => selectMessage(processorId, sequenceNr).map { msg =>
+          updateMessage(processorId, sequenceNr, DeletedMarker, msg.update(deleted = true))
         }
       }
     }

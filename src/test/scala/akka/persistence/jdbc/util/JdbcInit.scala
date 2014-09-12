@@ -6,8 +6,6 @@ import scalikejdbc._
 import scala.util.Try
 
 trait JdbcInit {
-  implicit def session: DBSession
-
   def createJournalTable(): Unit
 
   def dropJournalTable(): Unit
@@ -22,7 +20,8 @@ trait JdbcInit {
 }
 
 trait GenericJdbcInit extends JdbcInit {
-  def cfg: PluginConfig
+  val cfg: PluginConfig
+  implicit val session: DBSession
 
   def createJournalTable(): Unit = SQL( s"""
                            CREATE TABLE IF NOT EXISTS ${cfg.journalSchemaName}${cfg.journalTableName} (

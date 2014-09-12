@@ -1,13 +1,20 @@
 package akka.persistence.jdbc.snapshot
 
-class PostgresqlSyncSnapshotStore extends JdbcSyncSnapshotStore with PostgresqlStatements
+import akka.persistence.jdbc.extension.ScalikeExtension
+import scalikejdbc.DBSession
 
-class MysqlSyncSnapshotStore extends JdbcSyncSnapshotStore with MySqlStatements
+trait GenericSyncSnapshotStore extends JdbcSyncSnapshotStore with GenericStatements {
+  override implicit val session: DBSession = ScalikeExtension(system).session
+}
 
-class H2SyncSnapshotStore extends JdbcSyncSnapshotStore with H2Statements
+class PostgresqlSyncSnapshotStore extends GenericSyncSnapshotStore with PostgresqlStatements
 
-class OracleSyncSnapshotStore extends JdbcSyncSnapshotStore with OracleStatements
+class MysqlSyncSnapshotStore extends GenericSyncSnapshotStore with MySqlStatements
 
-class MSSqlServerSyncSnapshotStore extends JdbcSyncSnapshotStore with MSSqlServerStatements
+class H2SyncSnapshotStore extends GenericSyncSnapshotStore with H2Statements
 
-class InformixSyncSnapshotStore extends JdbcSyncSnapshotStore with InformixStatements
+class OracleSyncSnapshotStore extends GenericSyncSnapshotStore with OracleStatements
+
+class MSSqlServerSyncSnapshotStore extends GenericSyncSnapshotStore with MSSqlServerStatements
+
+class InformixSyncSnapshotStore extends GenericSyncSnapshotStore with InformixStatements

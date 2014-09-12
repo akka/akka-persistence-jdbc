@@ -1,7 +1,7 @@
 package akka.persistence.jdbc.journal
 
 import akka.persistence.PersistentRepr
-import akka.persistence.jdbc.common.{PluginConfig, ScalikeConnection}
+import akka.persistence.jdbc.common.PluginConfig
 import akka.persistence.jdbc.util.{Base64, EncodeDecode}
 import scalikejdbc._
 
@@ -23,9 +23,10 @@ trait JdbcStatements {
   def selectMessagesFor(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): List[PersistentRepr]
 }
 
-trait GenericStatements extends JdbcStatements with ScalikeConnection with EncodeDecode {
-  implicit def executionContext: ExecutionContext
-  def cfg: PluginConfig
+trait GenericStatements extends JdbcStatements with EncodeDecode {
+  implicit val executionContext: ExecutionContext
+  implicit val session: DBSession
+  val cfg: PluginConfig
 
   val schema = cfg.journalSchemaName
   val table = cfg.journalTableName

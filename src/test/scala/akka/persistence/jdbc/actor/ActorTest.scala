@@ -1,13 +1,14 @@
 package akka.persistence.jdbc.actor
 
 import akka.actor.{ActorLogging, ActorRef, ActorSystem, Props}
-import akka.persistence.jdbc.common.{PluginConfig, ScalikeConnection}
+import akka.persistence.jdbc.common.PluginConfig
+import akka.persistence.jdbc.extension.ScalikeExtension
 import akka.persistence.jdbc.util._
 import akka.persistence.{SnapshotOffer, PersistentActor, SaveSnapshotFailure, SaveSnapshotSuccess}
 import akka.testkit.{TestKit, TestProbe}
 import com.typesafe.config.ConfigFactory
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpecLike}
-
+import scalikejdbc.DBSession
 
 object TestActor {
   case object Snap
@@ -52,10 +53,10 @@ class TestActor(testProbe: ActorRef) extends PersistentActor with ActorLogging {
   }
 }
 
-trait ActorTest extends FlatSpecLike with BeforeAndAfterEach with BeforeAndAfterAll with ScalikeConnection with JdbcInit {
+trait ActorTest extends FlatSpecLike with BeforeAndAfterEach with BeforeAndAfterAll with JdbcInit {
   import TestActor._
   implicit val system: ActorSystem
-  override def cfg: PluginConfig = PluginConfig(system)
+  val cfg  = PluginConfig(system)
 
   val testProbe = TestProbe()
 
@@ -125,12 +126,16 @@ trait ActorTest extends FlatSpecLike with BeforeAndAfterEach with BeforeAndAfter
   }
 }
 
-class PostgresActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("postgres-application.conf"))) with ActorTest with PostgresqlJdbcInit
+trait GenericActorTest extends ActorTest with GenericJdbcInit {
+  override implicit val session: DBSession = ScalikeExtension(system).session
+}
 
-class OracleActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("oracle-application.conf"))) with ActorTest with OracleJdbcInit
+class PostgresActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("postgres-application.conf"))) with GenericActorTest with PostgresqlJdbcInit
 
-class MySqlActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("mysql-application.conf"))) with ActorTest with MysqlJdbcInit
+class OracleActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("oracle-application.conf"))) with GenericActorTest with OracleJdbcInit
 
-class H2ActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("h2-application.conf"))) with ActorTest with H2JdbcInit
+class MySqlActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("mysql-application.conf"))) with GenericActorTest with MysqlJdbcInit
 
-class InformixActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("informix-application.conf"))) with ActorTest with InformixJdbcInit
+class H2ActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("h2-application.conf"))) with GenericActorTest with H2JdbcInit
+
+class InformixActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("informix-application.conf"))) with GenericActorTest with InformixJdbcInit

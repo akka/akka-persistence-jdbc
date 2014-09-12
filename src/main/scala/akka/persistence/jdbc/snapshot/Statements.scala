@@ -1,7 +1,7 @@
 package akka.persistence.jdbc.snapshot
 
 import akka.persistence.{SelectedSnapshot, SnapshotSelectionCriteria, SnapshotMetadata}
-import akka.persistence.jdbc.common.{PluginConfig, ScalikeConnection}
+import akka.persistence.jdbc.common.PluginConfig
 import akka.persistence.jdbc.util.{EncodeDecode, Base64}
 import akka.persistence.serialization.Snapshot
 import scalikejdbc._
@@ -17,9 +17,10 @@ trait JdbcStatements {
   def selectSnapshotsFor(persistenceId: String, criteria: SnapshotSelectionCriteria): List[SelectedSnapshot]
 }
 
-trait GenericStatements extends JdbcStatements with ScalikeConnection with EncodeDecode {
-  implicit def executionContext: ExecutionContext
-  def cfg: PluginConfig
+trait GenericStatements extends JdbcStatements with EncodeDecode {
+  implicit val executionContext: ExecutionContext
+  implicit val session: DBSession
+  val cfg: PluginConfig
 
   val schema = cfg.snapshotSchemaName
   val table = cfg.snapshotTableName

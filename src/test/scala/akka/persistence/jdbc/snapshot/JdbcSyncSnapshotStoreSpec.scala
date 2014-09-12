@@ -1,15 +1,17 @@
 package akka.persistence.jdbc.snapshot
 
+import akka.persistence.jdbc.extension.ScalikeExtension
 import akka.persistence.{SaveSnapshotSuccess, SnapshotMetadata}
 import akka.persistence.SnapshotProtocol.SaveSnapshot
-import akka.persistence.jdbc.common.{PluginConfig, ScalikeConnection}
+import akka.persistence.jdbc.common.PluginConfig
 import akka.persistence.jdbc.util._
 import akka.persistence.snapshot.SnapshotStoreSpec
 import akka.testkit.TestProbe
 import com.typesafe.config.ConfigFactory
+import scalikejdbc.DBSession
 
-trait JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with ScalikeConnection with JdbcInit {
-  override def cfg: PluginConfig = PluginConfig(system)
+trait JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with JdbcInit {
+  val cfg = PluginConfig(system)
   lazy val config = ConfigFactory.load("application.conf")
 
   "The snapshot store must also" must {
@@ -34,22 +36,26 @@ trait JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with ScalikeConnection
   }
 }
 
-class H2JdbcSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with H2JdbcInit {
+trait GenericSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec {
+  implicit val session: DBSession = ScalikeExtension(system).session
+}
+
+class H2JdbcSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with H2JdbcInit {
   override lazy val config = ConfigFactory.load("h2-application.conf")
 }
 
-class PostgresqlJdbcSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with PostgresqlJdbcInit {
+class PostgresqlJdbcSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with PostgresqlJdbcInit {
   override lazy val config = ConfigFactory.load("postgres-application.conf")
 }
 
-class MysqlSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with MysqlJdbcInit {
+class MysqlSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with MysqlJdbcInit {
   override lazy val config = ConfigFactory.load("mysql-application.conf")
 }
 
-class OracleSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with OracleJdbcInit {
+class OracleSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with OracleJdbcInit {
   override lazy val config = ConfigFactory.load("oracle-application.conf")
 }
 
-class InformixSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec with InformixJdbcInit {
+class InformixSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with InformixJdbcInit {
   override lazy val config = ConfigFactory.load("informix-application.conf")
 }

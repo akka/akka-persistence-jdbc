@@ -1,13 +1,20 @@
 package akka.persistence.jdbc.journal
 
-class PostgresqlSyncWriteJournal extends JdbcSyncWriteJournal with PostgresqlStatements
+import akka.persistence.jdbc.extension.ScalikeExtension
+import scalikejdbc.DBSession
 
-class MysqlSyncWriteJournal extends JdbcSyncWriteJournal with MySqlStatements
+trait GenericJdbcSyncWriteJournal extends JdbcSyncWriteJournal with GenericStatements {
+  override implicit val session: DBSession = ScalikeExtension(system).session
+}
 
-class H2SyncWriteJournal extends JdbcSyncWriteJournal with H2Statements
+class PostgresqlSyncWriteJournal extends GenericJdbcSyncWriteJournal with PostgresqlStatements
 
-class OracleSyncWriteJournal extends JdbcSyncWriteJournal with OracleStatements
+class MysqlSyncWriteJournal extends GenericJdbcSyncWriteJournal with MySqlStatements
 
-class MSSqlServerSyncWriteJournal extends JdbcSyncWriteJournal with MSSqlServerStatements
+class H2SyncWriteJournal extends GenericJdbcSyncWriteJournal with H2Statements
 
-class InformixSyncWriteJournal extends JdbcSyncWriteJournal with InformixStatements
+class OracleSyncWriteJournal extends GenericJdbcSyncWriteJournal with OracleStatements
+
+class MSSqlServerSyncWriteJournal extends GenericJdbcSyncWriteJournal with MSSqlServerStatements
+
+class InformixSyncWriteJournal extends GenericJdbcSyncWriteJournal with InformixStatements

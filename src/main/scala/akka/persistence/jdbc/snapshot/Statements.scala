@@ -7,11 +7,12 @@ import akka.persistence.serialization.Snapshot
 import scalikejdbc._
 
 import scala.concurrent.ExecutionContext
+import scala.util.Try
 
 trait JdbcStatements {
-  def deleteSnapshot(metadata: SnapshotMetadata)
+  def deleteSnapshot(metadata: SnapshotMetadata): Unit
 
-  def writeSnapshot(metadata: SnapshotMetadata, snapshot: Snapshot)
+  def writeSnapshot(metadata: SnapshotMetadata, snapshot: Snapshot): Unit
 
   def selectSnapshotsFor(persistenceId: String, criteria: SnapshotSelectionCriteria): List[SelectedSnapshot]
 }
@@ -29,8 +30,14 @@ trait GenericStatements extends JdbcStatements with ScalikeConnection with Encod
 
   def writeSnapshot(metadata: SnapshotMetadata, snapshot: Snapshot): Unit = {
     val snapshotData = Base64.encodeString(Snapshot.toBytes(snapshot))
-    SQL(s"INSERT INTO $schema$table (persistence_id, sequence_nr, created, snapshot) VALUES (?, ?, ?, ?)")
-      .bind(metadata.persistenceId, metadata.sequenceNr, metadata.timestamp, snapshotData).update().apply
+    import metadata._
+    Try {
+      SQL(s"INSERT INTO $schema$table (persistence_id, sequence_nr, created, snapshot) VALUES (?, ?, ?, ?)")
+        .bind(persistenceId, sequenceNr, timestamp, snapshotData).update().apply
+    } recover {
+      case ex: Exception => SQL(s"UPDATE $schema$table SET snapshot = ?, created = ? WHERE persistence_id = ? AND sequence_nr = ?")
+        .bind(snapshotData, timestamp, persistenceId, sequenceNr).update().apply
+    }
   }
 
   def selectSnapshotsFor(persistenceId: String, criteria: SnapshotSelectionCriteria): List[SelectedSnapshot] =

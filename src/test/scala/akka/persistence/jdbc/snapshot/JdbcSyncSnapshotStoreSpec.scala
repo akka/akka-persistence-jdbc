@@ -1,13 +1,27 @@
 package akka.persistence.jdbc.snapshot
 
+import akka.persistence.{SaveSnapshotSuccess, SnapshotMetadata}
+import akka.persistence.SnapshotProtocol.SaveSnapshot
 import akka.persistence.jdbc.common.{PluginConfig, ScalikeConnection}
 import akka.persistence.jdbc.util._
 import akka.persistence.snapshot.SnapshotStoreSpec
+import akka.testkit.TestProbe
 import com.typesafe.config.ConfigFactory
 
 trait JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with ScalikeConnection with JdbcInit {
   override def cfg: PluginConfig = PluginConfig(system)
   lazy val config = ConfigFactory.load("application.conf")
+
+  "The snapshot store must also" must {
+    "be able to store a snapshot when the state has not changed" in {
+      val senderProbe = TestProbe()
+      val metadata = SnapshotMetadata("same-pid", 1)
+      snapshotStore.tell(SaveSnapshot(metadata, "data"), senderProbe.ref)
+      senderProbe.expectMsgPF() { case SaveSnapshotSuccess(md) => md }
+      snapshotStore.tell(SaveSnapshot(metadata, "data"), senderProbe.ref)
+      senderProbe.expectMsgPF() { case SaveSnapshotSuccess(md) => md }
+    }
+  }
 
   override def beforeAll() {
     dropSnapshotTable()

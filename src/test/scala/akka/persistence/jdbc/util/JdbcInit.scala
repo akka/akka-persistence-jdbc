@@ -3,6 +3,8 @@ package akka.persistence.jdbc.util
 import akka.persistence.jdbc.common.PluginConfig
 import scalikejdbc._
 
+import scala.util.Try
+
 trait JdbcInit {
   implicit def session: DBSession
 
@@ -116,7 +118,10 @@ trait InformixJdbcInit extends GenericJdbcInit {
                                  created DATETIME YEAR TO FRACTION(5) NOT NULL,
                                 PRIMARY KEY(persistence_id, sequence_number))""").update().apply
 
-  override def dropJournalTable(): Unit = SQL(s"DROP TABLE ${cfg.journalSchemaName}${cfg.journalTableName}").update().apply
+  override def dropJournalTable(): Unit =
+    Try(SQL(s"DROP TABLE ${cfg.journalSchemaName}${cfg.journalTableName}").update().apply).recover {
+      case ex: Exception => createJournalTable()
+    }
 
   override def clearJournalTable(): Unit = SQL(s"DELETE FROM ${cfg.journalSchemaName}${cfg.journalTableName}").update().apply
 
@@ -128,7 +133,10 @@ trait InformixJdbcInit extends GenericJdbcInit {
                                  created NUMERIC NOT NULL,
                                 PRIMARY KEY (persistence_id, sequence_nr))""").update().apply
 
-  override def dropSnapshotTable(): Unit = SQL(s"DROP TABLE ${cfg.snapshotSchemaName}${cfg.snapshotTableName}").update().apply
+  override def dropSnapshotTable(): Unit =
+    Try(SQL(s"DROP TABLE ${cfg.snapshotSchemaName}${cfg.snapshotTableName}").update().apply).recover {
+      case ex: Exception => createSnapshotTable()
+    }
 
   override def clearSnapshotTable(): Unit = SQL(s"DELETE FROM ${cfg.snapshotSchemaName}${cfg.snapshotTableName} ").update().apply
 }

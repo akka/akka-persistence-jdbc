@@ -18,19 +18,13 @@ trait JdbcSyncSnapshotStore extends SnapshotStore with ActorLogging with ActorCo
   override def loadAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] = {
     log.debug("loading for persistenceId: {}, criteria: {}", persistenceId, criteria)
     Future[Option[SelectedSnapshot]] {
-      val snapshotEntries = selectSnapshotsFor(persistenceId, criteria)
-      snapshotEntries match {
-        case Nil => None
-        case head :: tail => Some(head)
-        }
-      }
+      selectSnapshotsFor(persistenceId, criteria).headOption
     }
+  }
 
-  override def saveAsync(metadata: SnapshotMetadata, snapshot: Any): Future[Unit] = {
+  override def saveAsync(metadata: SnapshotMetadata, snapshot: Any): Future[Unit] = Future {
     log.debug("Saving metadata: {}, snapshot: {}", metadata, snapshot)
-    Future[Unit] {
-      writeSnapshot(metadata, Snapshot(snapshot))
-    }
+    writeSnapshot(metadata, Snapshot(snapshot))
   }
 
   override def saved(metadata: SnapshotMetadata): Unit = log.debug("Saved: {}", metadata)

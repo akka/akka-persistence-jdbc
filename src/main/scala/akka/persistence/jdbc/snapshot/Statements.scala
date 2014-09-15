@@ -1,9 +1,9 @@
 package akka.persistence.jdbc.snapshot
 
-import akka.persistence.{SelectedSnapshot, SnapshotSelectionCriteria, SnapshotMetadata}
 import akka.persistence.jdbc.common.PluginConfig
-import akka.persistence.jdbc.util.{EncodeDecode, Base64}
+import akka.persistence.jdbc.util.{Base64, EncodeDecode}
 import akka.persistence.serialization.Snapshot
+import akka.persistence.{SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria}
 import scalikejdbc._
 
 import scala.concurrent.ExecutionContext
@@ -45,9 +45,9 @@ trait GenericStatements extends JdbcStatements with EncodeDecode {
     SQL(s"SELECT * FROM $schema$table WHERE persistence_id = ? AND sequence_nr <= ? ORDER BY sequence_nr DESC")
       .bind(persistenceId, criteria.maxSequenceNr)
       .map { rs =>
-        SelectedSnapshot(SnapshotMetadata(rs.string("persistence_id"), rs.long("sequence_nr"), rs.long("created")),
+      SelectedSnapshot(SnapshotMetadata(rs.string("persistence_id"), rs.long("sequence_nr"), rs.long("created")),
         Snapshot.fromBytes(Base64.decodeBinary(rs.string("snapshot"))).data)
-      }
+    }
       .list()
       .apply()
       .filterNot(snap => snap.metadata.timestamp > criteria.maxTimestamp)
@@ -59,7 +59,21 @@ trait MySqlStatements extends GenericStatements
 
 trait H2Statements extends GenericStatements
 
-trait OracleStatements extends GenericStatements
+trait OracleStatements extends GenericStatements {
+  override def writeSnapshot(metadata: SnapshotMetadata, snapshot: Snapshot): Unit = {
+    val snapshotData = Base64.encodeString(Snapshot.toBytes(snapshot))
+    import metadata._
+
+    SQL( s"""merge into $schema$table  snapshot USING
+          (SELECT {persistenceId} as persistence_id, {sequenceNr} as seq_nr from DUAL)  val
+          On (snapshot.persistence_id = val.persistence_id and snapshot.sequence_nr = val.seq_nr)
+          When Matched Then
+          Update Set snapshot={snap}
+          When Not Matched Then
+          Insert (PERSISTENCE_ID, SEQUENCE_NR, SNAPSHOT, CREATED) VALUES ({persistenceId}, {sequenceNr}, {snap}, {created})""")
+      .bindByName('persistenceId -> persistenceId, 'sequenceNr -> sequenceNr, 'created -> timestamp, 'snap -> snapshotData).execute().apply
+  }
+}
 
 trait MSSqlServerStatements extends GenericStatements
 

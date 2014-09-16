@@ -112,6 +112,10 @@ trait ActorTest extends FlatSpecLike with BeforeAndAfterEach with BeforeAndAfter
 
 
   override protected def beforeAll(): Unit = {
+    dropJournalTable()
+    createJournalTable()
+    dropSnapshotTable()
+    createSnapshotTable()
     super.beforeAll()
   }
 

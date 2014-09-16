@@ -64,13 +64,13 @@ trait OracleStatements extends GenericStatements {
     val snapshotData = Base64.encodeString(Snapshot.toBytes(snapshot))
     import metadata._
 
-    SQL( s"""merge into $schema$table  snapshot USING
-          (SELECT {persistenceId} as persistence_id, {sequenceNr} as seq_nr from DUAL)  val
-          On (snapshot.persistence_id = val.persistence_id and snapshot.sequence_nr = val.seq_nr)
-          When Matched Then
-          Update Set snapshot={snap}
-          When Not Matched Then
-          Insert (PERSISTENCE_ID, SEQUENCE_NR, SNAPSHOT, CREATED) VALUES ({persistenceId}, {sequenceNr}, {snap}, {created})""")
+    SQL( s"""MERGE INTO $schema$table snapshot
+              USING (SELECT {persistenceId} AS persistence_id, {sequenceNr} AS seq_nr from DUAL) val
+              ON (snapshot.persistence_id = val.persistence_id and snapshot.sequence_nr = val.seq_nr)
+              WHEN MATCHED THEN
+                UPDATE SET snapshot={snap}
+              WHEN NOT MATCHED THEN
+                INSERT (PERSISTENCE_ID, SEQUENCE_NR, SNAPSHOT, CREATED) VALUES ({persistenceId}, {sequenceNr}, {snap}, {created})""")
       .bindByName('persistenceId -> persistenceId, 'sequenceNr -> sequenceNr, 'created -> timestamp, 'snap -> snapshotData).execute().apply
   }
 }

@@ -26,6 +26,8 @@ trait JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with JdbcInit {
   }
 
   override def beforeAll() {
+    dropJournalTable()
+    createJournalTable()
     dropSnapshotTable()
     createSnapshotTable()
     super.beforeAll()

@@ -14,6 +14,8 @@ abstract class JdbcSyncJournalSpec extends LegacyJournalSpec with JdbcInit {
   override def beforeAll() {
     dropJournalTable()
     createJournalTable()
+    dropSnapshotTable()
+    createSnapshotTable()
     super.beforeAll()
   }
 

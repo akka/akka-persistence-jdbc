@@ -17,25 +17,26 @@ something out.
 # Installation
 To include the JDBC plugin into your sbt project, add the following lines to your build.sbt file:
 
-    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.0.6"
+    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.0.7"
 
 For Maven users, add the following to the pom.xml
 
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.10</artifactId>
-        <version>1.0.6</version>
+        <version>1.0.7</version>
     </dependency>
     
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.11</artifactId>
-        <version>1.0.6</version>
+        <version>1.0.7</version>
     </dependency>
 
-This version of akka-persistence-jdbc depends on Akka 2.3.4 and is cross-built against Scala 2.10.4 and 2.11.1
-
 ## What's new?
+
+### 1.0.7
+ - Merged [mwkohout](https://github.com/mwkohout) fix using Oracle's MERGE on issue #3, thanks! 
 
 ### 1.0.6
  - Fixed - Issue3: Handling save attempts with duplicate snapshot ids and persistence ids

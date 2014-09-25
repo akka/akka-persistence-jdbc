@@ -1,80 +1,49 @@
-import SonatypeKeys._
+import bintray.Plugin._
+
+seq(bintraySettings:_*)
 
 organization := "com.github.dnvriend"
 
 name := "akka-persistence-jdbc"
 
-version := "1.0.7"
+version := "1.0.8"
 
 scalaVersion := "2.11.2"
 
 crossScalaVersions := Seq("2.10.4", "2.11.2")
 
-scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
-
 resolvers += "krasserm at bintray" at "http://dl.bintray.com/krasserm/maven"
-
-profileName := "com.github.dnvriend"
 
 libraryDependencies ++= {
     val akkaVersion = "2.3.6"
-    Seq(
+    Seq(    
     "com.typesafe.akka"   %% "akka-actor"                    % akkaVersion,
     "com.typesafe.akka"   %% "akka-persistence-experimental" % akkaVersion,
-    "commons-dbcp"         % "commons-dbcp"                  % "1.4",
     "commons-codec"        % "commons-codec"                 % "1.9",
-    "commons-io"           % "commons-io"                    % "2.4",
-    "org.scalikejdbc"     %% "scalikejdbc"                   % "2.1.1",
-    "ch.qos.logback"       % "logback-classic"               % "1.1.2"         % "test",
-    "com.typesafe.akka"   %% "akka-slf4j"                    % akkaVersion     % "test",
-    "ch.qos.logback"       % "logback-classic"               % "1.1.2"         % "test",
-    "postgresql"           % "postgresql"                    % "9.1-901.jdbc4" % "test",
-    "com.h2database"       % "h2"                            % "1.4.179"       % "test",
-    "mysql"                % "mysql-connector-java"          % "5.1.31"        % "test",
-    "com.typesafe.akka"   %% "akka-testkit"                  % akkaVersion     % "test",
-    "org.scalatest"       %% "scalatest"                     % "2.1.4"         % "test",
-    "com.github.krasserm" %% "akka-persistence-testkit"      % "0.3.4"         % "test"
+    "org.scalikejdbc"     %% "scalikejdbc"                   % "2.1.2",
+    "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % "test",
+    "com.typesafe.akka"   %% "akka-slf4j"                    % akkaVersion       % "test",
+    "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % "test",
+    "org.postgresql"       % "postgresql"                    % "9.3-1102-jdbc41" % "test",   
+    "com.h2database"       % "h2"                            % "1.4.181"         % "test",
+    "mysql"                % "mysql-connector-java"          % "5.1.33"          % "test",
+    "com.typesafe.akka"   %% "akka-testkit"                  % akkaVersion       % "test",
+    "org.scalatest"       %% "scalatest"                     % "2.1.4"           % "test",
+    "com.github.krasserm" %% "akka-persistence-testkit"      % "0.3.4"           % "test"
   )
 }
 
-testOptions += Tests.Argument(TestFrameworks.JUnit, "-v")
+autoCompilerPlugins := true
 
-// publish settings
-
-publishTo := {
-  val nexus = "https://oss.sonatype.org/"
-  if (isSnapshot.value)
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases" at nexus + "service/local/staging/deploy/maven2")
-}
+scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
 publishMavenStyle := true
 
-publishArtifact in Test := false
+net.virtualvoid.sbt.graph.Plugin.graphSettings
 
-pomIncludeRepository := { _ => false }
+licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php"))
 
-pomExtra := (
-  <url>https://github.com/dnvriend/akka-persistence-jdbc</url>
-  <licenses>
-    <license>
-      <name>BSD-style</name>
-      <url>http://www.opensource.org/licenses/bsd-license.php</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-  <scm>
-    <url>git@github.com/dnvriend/akka-persistence-jdbc.git</url>
-    <connection>scm:git:git@github.com/dnvriend/akka-persistence-jdbc.git</connection>
-  </scm>
-  <developers>
-    <developer>
-      <id>you</id>
-      <name>Dennis Vriend</name>
-      <url>https://github.com/dnvriend</url>
-    </developer>
-  </developers>
-)
+bintray.Keys.packageLabels in bintray.Keys.bintray := Seq("akka", "jdbc", "persistence")
 
-xerial.sbt.Sonatype.sonatypeSettings
+bintray.Keys.packageAttributes in bintray.Keys.bintray ~=
+  ((_: bintray.AttrMap) ++ Map("website_url" -> Seq(bintry.StringAttr("https://github.com/dnvriend/akka-persistence-jdbc")), "github_repo" -> Seq(bintry.StringAttr("https://github.com/dnvriend/akka-persistence-jdbc.git")), "issue_tracker_url" -> Seq(bintry.StringAttr("https://github.com/dnvriend/akka-persistence-jdbc/issues/"))))

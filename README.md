@@ -35,6 +35,10 @@ For Maven users, add the following to the pom.xml
 
 ## What's new?
 
+### 1.0.8
+ - ScalikeJDBC 2.1.1 -> 2.1.2
+ - Moved to bintray
+
 ### 1.0.7
  - Merged [mwkohout](https://github.com/mwkohout) fix using Oracle's MERGE on issue #3, thanks! 
 

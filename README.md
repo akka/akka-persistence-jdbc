@@ -17,9 +17,9 @@ something out.
 # Dependency
 To include the JDBC plugin into your sbt project, add the following lines to your build.sbt file:
 
-  resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
+    resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-  libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.0.8"
+    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.0.8"
 
 For Maven users, add the following to the pom.xml
 
@@ -37,12 +37,12 @@ For Maven users, add the following to the pom.xml
 
 Add the following to the repositories section of the pom:
 
-  <repository>
-    <snapshots><enabled>false</enabled></snapshots>
-    <id>central</id>
-    <name>bintray</name>
-    <url>http://dl.bintray.com/dnvriend/maven</url>
-  </repository>
+    <repository>
+      <snapshots><enabled>false</enabled></snapshots>
+      <id>central</id>
+      <name>bintray</name>
+      <url>http://dl.bintray.com/dnvriend/maven</url>
+    </repository>
 
 ## What's new?
 

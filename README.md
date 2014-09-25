@@ -14,24 +14,35 @@ By setting the appropriate Journal and SnapshotStore classes in the application.
 Note: The plugin should work on other databases too. When you wish to have support for a database, contact me and we can work
 something out.
 
-# Installation
+# Dependency
 To include the JDBC plugin into your sbt project, add the following lines to your build.sbt file:
 
-    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.0.7"
+  resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
+
+  libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.0.8"
 
 For Maven users, add the following to the pom.xml
 
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.10</artifactId>
-        <version>1.0.7</version>
+        <version>1.0.8</version>
     </dependency>
     
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.11</artifactId>
-        <version>1.0.7</version>
+        <version>1.0.8</version>
     </dependency>
+
+Add the following to the repositories section of the pom:
+
+  <repository>
+    <snapshots><enabled>false</enabled></snapshots>
+    <id>central</id>
+    <name>bintray</name>
+    <url>http://dl.bintray.com/dnvriend/maven</url>
+  </repository>
 
 ## What's new?
 

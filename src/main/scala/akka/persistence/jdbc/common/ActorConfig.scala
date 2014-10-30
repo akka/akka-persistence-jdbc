@@ -27,6 +27,8 @@ class PluginConfig(system: ActorSystem) {
   def journalTableName = config.getString("journalTableName")
   def snapshotSchemaName: String = config.getString("snapshotSchemaName").toOption.map(_ + ".").getOrElse("")
   def snapshotTableName = config.getString("snapshotTableName")
+
+  def base64 = system.settings.config.getBoolean("jdbc-event-encoding.base64")
 }
 
 trait ActorConfig { this: Actor =>

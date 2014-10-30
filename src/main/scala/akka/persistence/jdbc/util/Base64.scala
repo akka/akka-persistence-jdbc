@@ -1,5 +1,7 @@
 package akka.persistence.jdbc.util
 
+import java.nio.charset.Charset
+
 import akka.persistence.serialization.Snapshot
 import akka.persistence.PersistentRepr
 import akka.serialization.Serialization
@@ -40,6 +42,13 @@ object Base64 {
   def decodeBinary(in: Array[Byte]): Array[Byte] = (new B64).decode(in)
 }
 
+object ByteString {
+  val UTF8 = Charset.forName("UTF-8")
+
+  def encodeBinary(in: Array[Byte]): String = new String(in, UTF8)
+  def decodeBinary(in: String): Array[Byte] = in.getBytes(UTF8)
+}
+
 trait EncodeDecode {
   def serialization: Serialization
 
@@ -53,5 +62,15 @@ trait EncodeDecode {
     def toBytes(msg: Snapshot): Array[Byte] = serialization.serialize(msg).get
 
     def fromBytes(bytes: Array[Byte]): Snapshot = serialization.deserialize(bytes, classOf[Snapshot]).get
+  }
+
+  def encodeString(in: Array[Byte])(implicit base64: Boolean = true): String = base64 match {
+    case true => Base64.encodeString(in)
+    case false => ByteString.encodeBinary(in)
+  }
+
+  def decodeBinary(in: String)(implicit base64: Boolean = true): Array[Byte] = base64 match {
+    case true => Base64.decodeBinary(in)
+    case false => ByteString.decodeBinary(in)
   }
 }

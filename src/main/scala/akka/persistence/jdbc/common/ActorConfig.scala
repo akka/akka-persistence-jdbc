@@ -27,6 +27,7 @@ class PluginConfig(system: ActorSystem) {
   def journalTableName = config.getString("journalTableName")
   def snapshotSchemaName: String = config.getString("snapshotSchemaName").toOption.map(_ + ".").getOrElse("")
   def snapshotTableName = config.getString("snapshotTableName")
+  def validationQuery = if(config.hasPath("validationQuery")) config.getString("validationQuery") else null
 }
 
 trait ActorConfig { this: Actor =>

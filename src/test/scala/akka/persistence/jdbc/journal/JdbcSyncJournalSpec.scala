@@ -44,6 +44,6 @@ class OracleSyncJournalSpec extends GenericJdbcJournalSpec with OracleJdbcInit {
   override lazy val config = ConfigFactory.load("oracle-application.conf")
 }
 
-class InformixSyncJournalSpec extends GenericJdbcJournalSpec with InformixJdbcInit {
-  override lazy val config = ConfigFactory.load("informix-application.conf")
-}
+//class InformixSyncJournalSpec extends GenericJdbcJournalSpec with InformixJdbcInit {
+//  override lazy val config = ConfigFactory.load("informix-application.conf")
+//}

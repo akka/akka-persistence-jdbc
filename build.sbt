@@ -6,7 +6,7 @@ organization := "com.github.dnvriend"
 
 name := "akka-persistence-jdbc"
 
-version := "1.0.8"
+version := "1.0.9"
 
 scalaVersion := "2.11.2"
 
@@ -20,7 +20,7 @@ libraryDependencies ++= {
     "com.typesafe.akka"   %% "akka-actor"                    % akkaVersion,
     "com.typesafe.akka"   %% "akka-persistence-experimental" % akkaVersion,
     "commons-codec"        % "commons-codec"                 % "1.9",
-    "org.scalikejdbc"     %% "scalikejdbc"                   % "2.1.2",
+    "org.scalikejdbc"     %% "scalikejdbc"                   % "2.2.2",
     "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % "test",
     "com.typesafe.akka"   %% "akka-slf4j"                    % akkaVersion       % "test",
     "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % "test",
@@ -29,11 +29,14 @@ libraryDependencies ++= {
     "mysql"                % "mysql-connector-java"          % "5.1.33"          % "test",
     "com.typesafe.akka"   %% "akka-testkit"                  % akkaVersion       % "test",
     "org.scalatest"       %% "scalatest"                     % "2.1.4"           % "test",
-    "com.github.krasserm" %% "akka-persistence-testkit"      % "0.3.4"           % "test"
+      "org.pegdown"        % "pegdown"                       % "1.4.2"           % "test",
+      "com.github.krasserm" %% "akka-persistence-testkit"      % "0.3.4"           % "test"
   )
 }
 
 autoCompilerPlugins := true
+
+parallelExecution in Test := false
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
@@ -47,3 +50,5 @@ bintray.Keys.packageLabels in bintray.Keys.bintray := Seq("akka", "jdbc", "persi
 
 bintray.Keys.packageAttributes in bintray.Keys.bintray ~=
   ((_: bintray.AttrMap) ++ Map("website_url" -> Seq(bintry.StringAttr("https://github.com/dnvriend/akka-persistence-jdbc")), "github_repo" -> Seq(bintry.StringAttr("https://github.com/dnvriend/akka-persistence-jdbc.git")), "issue_tracker_url" -> Seq(bintry.StringAttr("https://github.com/dnvriend/akka-persistence-jdbc/issues/"))))
+
+testOptions in ThisBuild += Tests.Argument(TestFrameworks.ScalaTest, "-h", "target/test-reports")

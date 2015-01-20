@@ -138,8 +138,8 @@ class PostgresActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory
 
 class OracleActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("oracle-application.conf"))) with GenericActorTest with OracleJdbcInit
 
-class MySqlActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("mysql-application.conf"))) with GenericActorTest with MysqlJdbcInit
+class MysqlActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("mysql-application.conf"))) with GenericActorTest with MysqlJdbcInit
 
 class H2ActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("h2-application.conf"))) with GenericActorTest with H2JdbcInit
 
-class InformixActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("informix-application.conf"))) with GenericActorTest with InformixJdbcInit
+//class InformixActorTest extends TestKit(ActorSystem("TestCluster", ConfigFactory.load("informix-application.conf"))) with GenericActorTest with InformixJdbcInit

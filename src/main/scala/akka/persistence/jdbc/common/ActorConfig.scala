@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorSystem}
 
 object OptionString {
   def apply(s: String) = new OptionString(s)
-  implicit def stringToOptionString(s: String) = new OptionString(s)
+  implicit def stringToOptionString(s: String): OptionString = new OptionString(s)
 }
 
 class OptionString(s: String) {

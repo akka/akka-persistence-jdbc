@@ -1,0 +1,21 @@
+mysql:
+  image: mysql:5.6
+  environment:
+    - MYSQL_ROOT_PASSWORD=root
+  ports:
+    - "3306:3306"
+
+oracle:
+  image: alexeiled/docker-oracle-xe-11g
+  ports:
+    - "1521:1521"
+
+postgres:
+  image: training/postgres
+  ports:
+    - "5432:5432"
+
+h2:
+  image: viliusl/ubuntu-h2-server
+  ports:
+    - "1522:1521"

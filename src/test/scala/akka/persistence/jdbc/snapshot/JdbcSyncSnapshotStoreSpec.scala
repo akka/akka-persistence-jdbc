@@ -58,6 +58,6 @@ class OracleSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with Orac
   override lazy val config = ConfigFactory.load("oracle-application.conf")
 }
 
-class InformixSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with InformixJdbcInit {
-  override lazy val config = ConfigFactory.load("informix-application.conf")
-}
+//class InformixSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with InformixJdbcInit {
+//  override lazy val config = ConfigFactory.load("informix-application.conf")
+//}

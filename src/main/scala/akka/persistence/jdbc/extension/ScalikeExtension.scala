@@ -2,7 +2,7 @@ package akka.persistence.jdbc.extension
 
 import akka.actor.{ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
 import akka.persistence.jdbc.common.PluginConfig
-import scalikejdbc.{AutoSession, ConnectionPool, ConnectionPoolSettings}
+import scalikejdbc._
 
 object ScalikeExtension extends ExtensionId[ScalikeExtensionImpl] with ExtensionIdProvider {
   override def createExtension(system: ExtendedActorSystem): ScalikeExtensionImpl = new ScalikeExtensionImpl(system)
@@ -11,11 +11,29 @@ object ScalikeExtension extends ExtensionId[ScalikeExtensionImpl] with Extension
 }
 
 class ScalikeExtensionImpl(system: ExtendedActorSystem) extends Extension {
+
+  GlobalSettings.loggingSQLAndTime = LoggingSQLAndTimeSettings (
+    enabled = true,
+    singleLineMode = false,
+    printUnprocessedStackTrace = false,
+    stackTraceDepth= 15,
+    logLevel = 'debug,
+    warningEnabled = false,
+    warningThresholdMillis = 3000L,
+    warningLogLevel = 'warn
+  )
+
   implicit val session = AutoSession
   val cfg = PluginConfig(system)
   val poolName = "akka-persistence-jdbc"
 
   Class.forName(cfg.driverClassName)
-  val connectionPoolSettings = new ConnectionPoolSettings(validationQuery = cfg.validationQuery)
+  val connectionPoolSettings = new ConnectionPoolSettings(
+    validationQuery = cfg.validationQuery,
+    initialSize = 1,
+    maxSize = 8,
+    connectionTimeoutMillis = 5000L,
+    connectionPoolFactoryName = "commons-dbcp"
+  )
   ConnectionPool.singleton(cfg.url, cfg.username, cfg.password, connectionPoolSettings)
 }

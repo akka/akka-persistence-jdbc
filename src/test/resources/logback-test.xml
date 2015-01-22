@@ -12,13 +12,13 @@
         </encoder>
     </appender>
 
-    <logger name="akka.persistence.jdbc" level="info" additivity="false">
+    <logger name="akka.persistence.jdbc" level="debug" additivity="false">
         <appender-ref ref="console" />
     </logger>
 
     <logger name="akka" level="INFO" />
 
-    <root level="info">
+    <root level="debug">
         <appender-ref ref="console"/>
     </root>
 

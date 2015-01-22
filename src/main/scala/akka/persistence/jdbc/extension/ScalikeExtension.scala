@@ -23,17 +23,21 @@ class ScalikeExtensionImpl(system: ExtendedActorSystem) extends Extension {
     warningLogLevel = 'warn
   )
 
-  implicit val session = AutoSession
+  val session = AutoSession
   val cfg = PluginConfig(system)
-  val poolName = "akka-persistence-jdbc"
 
   Class.forName(cfg.driverClassName)
-  val connectionPoolSettings = new ConnectionPoolSettings(
-    validationQuery = cfg.validationQuery,
-    initialSize = 1,
-    maxSize = 8,
-    connectionTimeoutMillis = 5000L,
-    connectionPoolFactoryName = "commons-dbcp"
+
+  ConnectionPool.singleton (
+    cfg.url,
+    cfg.username,
+    cfg.password,
+    ConnectionPoolSettings (
+      validationQuery = cfg.validationQuery,
+      initialSize = 1,
+      maxSize = 8,
+      connectionTimeoutMillis = 5000L,
+      connectionPoolFactoryName = "commons-dbcp"
+    )
   )
-  ConnectionPool.singleton(cfg.url, cfg.username, cfg.password, connectionPoolSettings)
 }

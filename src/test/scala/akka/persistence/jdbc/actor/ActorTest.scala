@@ -27,10 +27,10 @@ class TestActor(testProbe: ActorRef) extends PersistentActor with ActorLogging {
 
   override def receiveRecover: Receive = {
     case SnapshotOffer(_, snap: TheState) =>
-      log.info("Recovering snapshot: {}", snap)
+      log.debug("Recovering snapshot: {}", snap)
       state = snap
     case m: Alter =>
-      log.info("Recovering journal: {}", m)
+      log.debug("Recovering journal: {}", m)
       state = state.copy(id = m.id)
   }
 
@@ -68,7 +68,7 @@ trait ActorTest extends FlatSpecLike with BeforeAndAfterEach with BeforeAndAfter
     test ! Snap
     test ! Snap
 
-    testProbe.expectMsgAllOf("s", "s")
+    testProbe.expectMsgAllOf(20.seconds, "s", "s")
 
     // kill the actor
     system.stop(test)
@@ -93,7 +93,7 @@ trait ActorTest extends FlatSpecLike with BeforeAndAfterEach with BeforeAndAfter
     test ! Alter("b") // note the stored snapshot = TheState("a"),
                       // the journal entry will be used to get to "b"
 
-    testProbe.expectMsgAllOf("s", "s")
+    testProbe.expectMsgAllOf(20.seconds, "s", "s")
 
     // kill the actor
     system.stop(test)
@@ -114,15 +114,15 @@ trait ActorTest extends FlatSpecLike with BeforeAndAfterEach with BeforeAndAfter
   it should "be able to save snapshot states and recover after some seconds" in {
     val test = system.actorOf(Props(new TestActor(testProbe.ref)))
 
-    (1 to 100).map { i =>
+    (1 to 100).foreach { i =>
       test ! Alter(i.toString) // note the stored snapshot = TheState("")
     }
-    testProbe.expectMsgAllOf((1 to 100).map(_ => "s"):_*)
+    testProbe.expectMsgAllOf(20.seconds, (1 to 100).map(_ => "s"):_*)
     system.stop(test)
     testProbe watch test
     testProbe.expectTerminated(test)
 
-    Thread.sleep(30.seconds.toMillis)
+    Thread.sleep(3.seconds.toMillis)
 
     // get persisted state
     val test2 = system.actorOf(Props(new TestActor(testProbe.ref)))
@@ -140,12 +140,12 @@ trait ActorTest extends FlatSpecLike with BeforeAndAfterEach with BeforeAndAfter
 
     test ! Alter(MacBeth.text) // note the stored snapshot = TheState("")
 
-    testProbe.expectMsgAllOf("s")
+    testProbe.expectMsgAllOf(20.seconds, "s")
     system.stop(test)
     testProbe watch test
     testProbe.expectTerminated(test)
 
-    Thread.sleep(30.seconds.toMillis)
+    Thread.sleep(3.seconds.toMillis)
 
     // get persisted state
     val test2 = system.actorOf(Props(new TestActor(testProbe.ref)))

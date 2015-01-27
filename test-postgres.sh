@@ -1,18 +1,7 @@
 #!/bin/bash
-fig --file fig-postgres.yml up -d --allow-insecure-ssl
+source include.sh
 
-while true; do
-  if ! nc -z boot2docker 5432
-  then
-    echo "Postgresql not running yet, retrying..."
-    sleep 1
-  else
-    echo "Postgresql is running"
-    break;
-  fi
-done;
-
+start postgres
+wait 5432 Postgres
 sbt "test-only *Postgres*"
-
-fig stop
-fig rm --force
+stop postgres

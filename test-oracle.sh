@@ -1,18 +1,7 @@
 #!/bin/bash
-fig --file fig-oracle.yml up -d --allow-insecure-ssl
+source include.sh
 
-while true; do
-  if ! nc -z boot2docker 1521
-  then
-    echo "Oracle not running yet, retrying..."
-    sleep 1
-  else
-    echo "Oracle is running"
-    break;
-  fi
-done;
-
+start oracle
+wait 1521 Oracle-XE
 sbt "test-only *Oracle*"
-
-fig stop
-fig rm --force
+stop oracle

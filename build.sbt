@@ -6,7 +6,7 @@ organization := "com.github.dnvriend"
 
 name := "akka-persistence-jdbc"
 
-version := "1.0.9-SNAPSHOT"
+version := "1.1.0-SNAPSHOT"
 
 scalaVersion := "2.11.2"
 
@@ -16,7 +16,7 @@ resolvers += "krasserm at bintray" at "http://dl.bintray.com/krasserm/maven"
 
 libraryDependencies ++= {
     val akkaVersion = "2.3.6"
-    Seq(    
+    Seq(
     "com.typesafe.akka"   %% "akka-actor"                    % akkaVersion,
     "com.typesafe.akka"   %% "akka-persistence-experimental" % akkaVersion,
     "commons-codec"        % "commons-codec"                 % "1.9",
@@ -24,7 +24,7 @@ libraryDependencies ++= {
     "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % "test",
     "com.typesafe.akka"   %% "akka-slf4j"                    % akkaVersion       % "test",
     "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % "test",
-    "org.postgresql"       % "postgresql"                    % "9.3-1102-jdbc41" % "test",   
+    "org.postgresql"       % "postgresql"                    % "9.3-1102-jdbc41" % "test",
     "com.h2database"       % "h2"                            % "1.4.181"         % "test",
     "mysql"                % "mysql-connector-java"          % "5.1.33"          % "test",
     "com.typesafe.akka"   %% "akka-testkit"                  % akkaVersion       % "test",
@@ -51,4 +51,4 @@ bintray.Keys.packageLabels in bintray.Keys.bintray := Seq("akka", "jdbc", "persi
 bintray.Keys.packageAttributes in bintray.Keys.bintray ~=
   ((_: bintray.AttrMap) ++ Map("website_url" -> Seq(bintry.StringAttr("https://github.com/dnvriend/akka-persistence-jdbc")), "github_repo" -> Seq(bintry.StringAttr("https://github.com/dnvriend/akka-persistence-jdbc.git")), "issue_tracker_url" -> Seq(bintry.StringAttr("https://github.com/dnvriend/akka-persistence-jdbc/issues/"))))
 
-testOptions in ThisBuild += Tests.Argument(TestFrameworks.ScalaTest, "-h", "target/test-reports")
+//testOptions in ThisBuild += Tests.Argument(TestFrameworks.ScalaTest, "-h", "target/test-reports")

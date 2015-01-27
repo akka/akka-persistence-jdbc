@@ -1,51 +1,10 @@
 #!/bin/bash
-fig --file fig.yml up -d --allow-insecure-ssl
+source include.sh
 
-while true; do
-  if ! nc -z boot2docker 3306
-  then
-    echo "Mysql not running yet, retrying..."
-    sleep 1
-  else
-    echo "MySQL is running"
-    break;
-  fi
-done;
-
-while true; do
-  if ! nc -z boot2docker 1521
-  then
-    echo "Oracle not running yet, retrying..."
-    sleep 1
-  else
-    echo "Oracle is running"
-    break;
-  fi
-done;
-
-while true; do
-  if ! nc -z boot2docker 5432
-  then
-    echo "Postgresql not running yet, retrying..."
-    sleep 1
-  else
-    echo "Postgresql is running"
-    break;
-  fi
-done;
-
-while true; do
-  if ! nc -z boot2docker 1522
-  then
-    echo "H2 not running yet, retrying..."
-    sleep 1
-  else
-    echo "H2 is running"
-    break;
-  fi
-done;
-
+start
+wait 3306 Mysql
+wait 1521 Oracle
+wait 5432 Postgres
+wait 1522 H2
 sbt test
-
-fig stop
-fig rm --force
+stop

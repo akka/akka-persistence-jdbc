@@ -1,18 +1,7 @@
 #!/bin/bash
-fig --file fig-mysql.yml up -d --allow-insecure-ssl
+source include.sh
 
-while true; do
-  if ! nc -z boot2docker 3306
-  then
-    echo "Mysql not running yet, retrying..."
-    sleep 1
-  else
-    echo "MySQL is running"
-    break;
-  fi
-done;
-
+start mysql
+wait 3306 MySQL
 sbt "test-only *Mysql*"
-
-fig stop
-fig rm --force
+stop mysql

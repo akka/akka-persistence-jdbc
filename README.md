@@ -18,20 +18,20 @@ To include the JDBC plugin into your sbt project, add the following lines to you
 
     resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.0.9"
+    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.0"
 
 For Maven users, add the following to the pom.xml
 
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.10</artifactId>
-        <version>1.0.9</version>
+        <version>1.1.0</version>
     </dependency>
     
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.11</artifactId>
-        <version>1.0.9</version>
+        <version>1.1.0</version>
     </dependency>
 
 Add the following to the repositories section of the pom:
@@ -44,6 +44,10 @@ Add the following to the repositories section of the pom:
     </repository>
 
 ## What's new?
+
+### 1.1.0
+ - Merged [Pavel Boldyrev](https://github.com/bpg) Fix Oracle SQL `MERGE` statement usage #13 which fixes issue #9 (java.sql.SQLRecoverableException: No more data to read from socket #9), thanks!
+ - Change to the Oracle schema, it needs a stored procedure definition.
 
 ### 1.0.9
  - ScalikeJDBC 2.1.2 -> 2.2.2
@@ -281,7 +285,7 @@ The following schema works on Oracle
         WHERE persistence_id = p_persistence_id AND sequence_nr = p_sequence_nr;
       END;
 
-__Node1:__
+__Note1:__
 Name of the "snapshots" table is also specified in `sp_save_snapshot` body. If you change table names don't forget to update SP as well.
 
 __Note2:__

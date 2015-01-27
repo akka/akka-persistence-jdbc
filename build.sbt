@@ -6,7 +6,7 @@ organization := "com.github.dnvriend"
 
 name := "akka-persistence-jdbc"
 
-version := "1.0.10-SNAPSHOT"
+version := "1.1.0-SNAPSHOT"
 
 scalaVersion := "2.11.2"
 
@@ -51,4 +51,4 @@ bintray.Keys.packageLabels in bintray.Keys.bintray := Seq("akka", "jdbc", "persi
 bintray.Keys.packageAttributes in bintray.Keys.bintray ~=
   ((_: bintray.AttrMap) ++ Map("website_url" -> Seq(bintry.StringAttr("https://github.com/dnvriend/akka-persistence-jdbc")), "github_repo" -> Seq(bintry.StringAttr("https://github.com/dnvriend/akka-persistence-jdbc.git")), "issue_tracker_url" -> Seq(bintry.StringAttr("https://github.com/dnvriend/akka-persistence-jdbc/issues/"))))
 
-testOptions in ThisBuild += Tests.Argument(TestFrameworks.ScalaTest, "-h", "target/test-reports")
+//testOptions in ThisBuild += Tests.Argument(TestFrameworks.ScalaTest, "-h", "target/test-reports")

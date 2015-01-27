@@ -126,6 +126,25 @@ trait OracleJdbcInit extends GenericJdbcInit {
             snapshot CLOB NOT NULL,
             created NUMERIC NOT NULL,
             PRIMARY KEY (persistence_id, sequence_nr))""").update().apply
+
+    SQL(s"""CREATE OR REPLACE PROCEDURE sp_save_snapshot(
+        |  p_persistence_id IN VARCHAR,
+        |  p_sequence_nr    IN NUMERIC,
+        |  p_snapshot       IN CLOB,
+        |  p_created        IN NUMERIC
+        |) IS
+        |
+        |  BEGIN
+        |    INSERT INTO ${cfg.snapshotSchemaName}${cfg.snapshotTableName} (persistence_id, sequence_nr, snapshot, created)
+        |    VALUES
+        |      (p_persistence_id, p_sequence_nr, p_snapshot, p_created);
+        |    EXCEPTION
+        |    WHEN DUP_VAL_ON_INDEX THEN
+        |    UPDATE ${cfg.snapshotSchemaName}${cfg.snapshotTableName}
+        |    SET snapshot = p_snapshot, created = p_created
+        |    WHERE persistence_id = p_persistence_id AND sequence_nr = p_sequence_nr;
+        |  END;
+      """.stripMargin).update().apply
   }
 
   override def dropSnapshotTable() = Try {

@@ -59,19 +59,16 @@ trait MySqlStatements extends GenericStatements
 
 trait H2Statements extends GenericStatements
 
+
 trait OracleStatements extends GenericStatements {
   override def writeSnapshot(metadata: SnapshotMetadata, snapshot: Snapshot): Unit = {
     val snapshotData = Base64.encodeString(Snapshot.toBytes(snapshot))
     import metadata._
 
-    SQL( s"""MERGE INTO $schema$table snapshot
-              USING (SELECT {persistenceId} AS persistence_id, {sequenceNr} AS seq_nr from DUAL) val
-              ON (snapshot.persistence_id = val.persistence_id and snapshot.sequence_nr = val.seq_nr)
-              WHEN MATCHED THEN
-                UPDATE SET snapshot={snap}
-              WHEN NOT MATCHED THEN
-                INSERT (PERSISTENCE_ID, SEQUENCE_NR, SNAPSHOT, CREATED) VALUES ({persistenceId}, {sequenceNr}, {snap}, {created})""")
-      .bindByName('persistenceId -> persistenceId, 'sequenceNr -> sequenceNr, 'created -> timestamp, 'snap -> snapshotData).execute().apply
+    SQL("call sp_save_snapshot(?, ?, ?, ?)")
+      .bind(persistenceId, sequenceNr, snapshotData, timestamp)
+      .execute()
+      .apply()
   }
 }
 

@@ -12,6 +12,9 @@ while true; do
   fi
 done;
 
+# give Oracle DB some time to fully initialize
+sleep 10
+
 sbt "test-only *Oracle*"
 
 fig stop

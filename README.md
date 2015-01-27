@@ -262,8 +262,29 @@ The following schema works on Oracle
       created NUMERIC NOT NULL,
       PRIMARY KEY (persistence_id, sequence_nr)
     );
+    
+    CREATE OR REPLACE PROCEDURE sp_save_snapshot(
+      p_persistence_id IN VARCHAR,
+      p_sequence_nr    IN NUMERIC,
+      p_snapshot       IN CLOB,
+      p_created        IN NUMERIC
+    ) IS
 
-__Note:__
+      BEGIN
+        INSERT INTO public.snapshot (persistence_id, sequence_nr, snapshot, created)
+        VALUES
+          (p_persistence_id, p_sequence_nr, p_snapshot, p_created);
+        EXCEPTION
+        WHEN DUP_VAL_ON_INDEX THEN
+        UPDATE public.snapshot
+        SET snapshot = p_snapshot, created = p_created
+        WHERE persistence_id = p_persistence_id AND sequence_nr = p_sequence_nr;
+      END;
+
+__Node1:__
+Name of the "snapshots" table is also specified in `sp_save_snapshot` body. If you change table names don't forget to update SP as well.
+
+__Note2:__
 Oracle schemas are users really. To use a username for the schema name, 
 set the configuration like:
 

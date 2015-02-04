@@ -17,7 +17,7 @@ trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
   implicit val executionContext = context.system.dispatcher
 
   override def writeMessages(messages: Seq[PersistentRepr]): Unit = {
-    log.debug(s"writeMessages for ${messages.size} presistent messages")
+    log.debug(s"writeMessages for ${messages.size} persistent messages")
 
     messages.foreach { message =>
       import message._

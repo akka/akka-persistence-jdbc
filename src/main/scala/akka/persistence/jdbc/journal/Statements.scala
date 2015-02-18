@@ -105,7 +105,7 @@ trait OracleStatements extends GenericStatements {
 
 trait MSSqlServerStatements extends GenericStatements {
   override def selectMessagesFor(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): List[PersistentRepr] = {
-    SQL(s"SELECT TOP ? message FROM $schema$table WHERE persistence_id = ? AND (sequence_number >= ${} AND sequence_number <= ?) ORDER BY sequence_number")
+    SQL(s"SELECT TOP(?) message FROM $schema$table WHERE persistence_id = ? AND (sequence_number >= ? AND sequence_number <= ?) ORDER BY sequence_number")
       .bind(max, persistenceId, fromSequenceNr, toSequenceNr)
       .map(rs => Journal.fromBytes(Base64.decodeBinary(rs.string(1))))
       .list()

@@ -31,7 +31,7 @@ trait GenericJdbcInit extends JdbcInit {
              message TEXT NOT NULL,
              created TIMESTAMP NOT NULL,
              PRIMARY KEY(persistence_id, sequence_number))""").update().apply
-}
+  }
 
   def dropJournalTable() = Try {
     SQL(s"DROP TABLE IF EXISTS ${cfg.journalSchemaName}${cfg.journalTableName}").update().apply
@@ -42,7 +42,7 @@ trait GenericJdbcInit extends JdbcInit {
   }
 
   def createSnapshotTable() = Try {
-    SQL(s"""CREATE TABLE IF NOT EXISTS ${cfg.snapshotSchemaName}${cfg.snapshotTableName} (
+    SQL( s"""CREATE TABLE IF NOT EXISTS ${cfg.snapshotSchemaName}${cfg.snapshotTableName} (
             persistence_id VARCHAR(255) NOT NULL,
             sequence_nr BIGINT NOT NULL,
             snapshot TEXT NOT NULL,
@@ -62,6 +62,40 @@ trait GenericJdbcInit extends JdbcInit {
 trait PostgresqlJdbcInit extends GenericJdbcInit
 
 trait H2JdbcInit extends GenericJdbcInit
+
+trait MssqlJdbcInit extends GenericJdbcInit {
+  override def createJournalTable() = Try {
+    SQL( s"""IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${cfg.journalSchemaName}${cfg.journalTableName}') AND type in (N'U'))
+             CREATE TABLE ${cfg.journalSchemaName}${cfg.journalTableName} (
+             persistence_id  VARCHAR(255)  NOT NULL,
+             sequence_number BIGINT        NOT NULL,
+             marker          VARCHAR(255)  NOT NULL,
+             message         NVARCHAR(MAX) NOT NULL,
+             created         DATETIME      NOT NULL,
+             PRIMARY KEY (persistence_id, sequence_number))""").update().apply
+  }
+
+  override def dropJournalTable() = Try {
+    SQL(s"""IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${cfg.journalSchemaName}${cfg.journalTableName}') AND type in (N'U'))
+            DROP TABLE ${cfg.journalSchemaName}${cfg.journalTableName}""").update().apply
+  }
+
+  override def createSnapshotTable() = Try {
+    SQL( s"""IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${cfg.snapshotSchemaName}${cfg.snapshotTableName}') AND type in (N'U'))
+             CREATE TABLE ${cfg.snapshotSchemaName}${cfg.snapshotTableName} (
+             persistence_id VARCHAR(255)  NOT NULL,
+             sequence_nr    BIGINT        NOT NULL,
+             snapshot       NVARCHAR(MAX) NOT NULL,
+             created        BIGINT        NOT NULL,
+             PRIMARY KEY (persistence_id, sequence_nr))""").update().apply
+  }
+
+  override def dropSnapshotTable() = Try {
+    SQL(s"""IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${cfg.snapshotSchemaName}${cfg.snapshotTableName}') AND type in (N'U'))
+            DROP TABLE ${cfg.snapshotSchemaName}${cfg.snapshotTableName}""").update().apply
+  }
+
+}
 
 trait MysqlJdbcInit extends GenericJdbcInit {
   override def createJournalTable() = Try {

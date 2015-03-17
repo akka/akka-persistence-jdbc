@@ -16,14 +16,7 @@ trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
   val serialization = SerializationExtension(context.system)
   implicit val executionContext = context.system.dispatcher
 
-  override def writeMessages(messages: Seq[PersistentRepr]): Unit = {
-    log.debug(s"writeMessages for ${messages.size} persistent messages")
-
-    messages.foreach { message =>
-      import message._
-      insertMessage(processorId, sequenceNr, AcceptedMarker, message)
-    }
-  }
+  override def writeMessages(messages: Seq[PersistentRepr]): Unit = insertMessages(messages)
 
   override def writeConfirmations(confirmations: Seq[PersistentConfirmation]): Unit = {
     log.debug(s"writeConfirmations for ${confirmations.size} messages")

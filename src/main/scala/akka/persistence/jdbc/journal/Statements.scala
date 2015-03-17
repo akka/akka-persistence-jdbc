@@ -2,16 +2,20 @@ package akka.persistence.jdbc.journal
 
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.common.PluginConfig
+import akka.persistence.jdbc.journal.RowTypeMarkers._
 import akka.persistence.jdbc.util.EncodeDecode
 import scalikejdbc._
 import java.util.Base64
 
+import scala.collection.immutable.Seq
 import scala.concurrent.{ExecutionContext, Future}
 
 trait JdbcStatements {
   def selectMessage(persistenceId: String, sequenceNr: Long): Option[PersistentRepr]
 
-  def insertMessage(persistenceId: String, sequenceNr: Long, marker: String = "A", message: PersistentRepr)
+  def insertMessage(message: PersistentRepr)
+
+  def insertMessages(messages: Seq[PersistentRepr]): Unit
 
   def updateMessage(persistenceId: String, sequenceNr: Long, marker: String, message: PersistentRepr)
 
@@ -38,10 +42,21 @@ trait GenericStatements extends JdbcStatements with EncodeDecode {
       .single()
       .apply()
 
-  def insertMessage(persistenceId: String, sequenceNr: Long, marker: String = "A", message: PersistentRepr) {
-    val msgToWrite = Base64.getEncoder.encodeToString(Journal.toBytes(message))
+  def insertMessage(message: PersistentRepr) {
+    import message._
     SQL(s"INSERT INTO $schema$table (persistence_id, sequence_number, marker, message, created) VALUES (?,?,?,?, current_timestamp)")
-      .bind(persistenceId, sequenceNr, marker, msgToWrite).update().apply
+      .bind(processorId, sequenceNr, AcceptedMarker, Base64.getEncoder.encodeToString(Journal.toBytes(message))).update().apply
+  }
+
+  override def insertMessages(messages: Seq[PersistentRepr]): Unit = {
+      val sql = s"INSERT INTO $schema$table (persistence_id, sequence_number, marker, message, created) VALUES " +
+        messages.map { _ =>
+          "(?,?,?,?, current_timestamp)"
+        }.mkString(",")
+      val args = messages.flatMap { repr =>
+        List(repr.processorId, repr.sequenceNr, AcceptedMarker, Base64.getEncoder.encodeToString(Journal.toBytes(repr)))
+      }
+    SQL(sql).bind(args:_*).update().apply
   }
 
   def updateMessage(persistenceId: String, sequenceNr: Long, marker: String, message: PersistentRepr) {
@@ -102,6 +117,8 @@ trait OracleStatements extends GenericStatements {
       .list()
       .apply
   }
+
+  override def insertMessages(messages: Seq[PersistentRepr]): Unit = messages.foreach(insertMessage)
 }
 
 trait MSSqlServerStatements extends GenericStatements {

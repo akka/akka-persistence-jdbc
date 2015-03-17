@@ -13,12 +13,21 @@ By setting the appropriate Journal and SnapshotStore classes in the application.
 Note: The plugin should work on other databases too. When you wish to have support for a database, contact me and we can work
 something out.
 
+**Start of Disclaimer:**
+
+This plugin should not be used in production, ever! For a good, stable and scalable solution use
+[Apache Cassandra](http://cassandra.apache.org/) with the [akka-persistence-cassandra plugin](https://github.com/krasserm/akka-persistence-cassandra/)
+Only use this plug-in for study projects and proof of concepts. Please use Docker and [spotify/cassandra](https://registry.hub.docker.com/u/spotify/cassandra/dockerfile/)
+You have been warned! 
+
+**End of Disclaimer**
+
 # Dependency
 To include the JDBC plugin into your sbt project, add the following lines to your build.sbt file:
 
     resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.0"
+    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.1"
 
 For Maven users, add the following to the pom.xml
 
@@ -47,12 +56,12 @@ Add the following to the repositories section of the pom:
 
 ### 1.1.1
  - ScalikeJDBC 2.2.2 -> 2.2.4
- - Java 8 compilation
+ - Java 8 binary, so it needs Java 8, you still use Java 6 or 7, upgrade! :P
  - Using the much faster Java8 java.util.Base64 encoder/decoder
  - Bulk insert for journal entries (non-oracle only, sorry)
  - Initial support for JNDI, needs testing though
- - Merged [Paul Roman](https://github.com/romusz) Fix typo in journal log message
- - 
+ - Merged [Paul Roman](https://github.com/romusz) Fix typo in journal log message #14, thanks!
+ - Merged [Pavel Boldyrev](https://github.com/bpg) Fix MS SQL Server support #15 (can not test it though, needs Vagrant), thanks!
 
 ### 1.1.0
  - Merged [Pavel Boldyrev](https://github.com/bpg) Fix Oracle SQL `MERGE` statement usage #13 which fixes issue #9 (java.sql.SQLRecoverableException: No more data to read from socket #9), thanks!

@@ -776,9 +776,9 @@ class PostgresqlJdbcSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec w
   override lazy val config = ConfigFactory.load("postgres-application.conf")
 }
 
-class MssqlSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with MssqlJdbcInit {
-  override lazy val config = ConfigFactory.load("mssql-application.conf")
-}
+//class MssqlSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with MssqlJdbcInit {
+//  override lazy val config = ConfigFactory.load("mssql-application.conf")
+//}
 
 class MysqlSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with MysqlJdbcInit {
   override lazy val config = ConfigFactory.load("mysql-application.conf")

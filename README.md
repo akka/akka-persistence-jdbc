@@ -225,6 +225,39 @@ The following schema works on Postgresql
       PRIMARY KEY (persistence_id, sequence_nr)
     );
 
+## MS SQL Server
+The following schema works on MS SQL Server
+
+    IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'dbo.journal') AND type in (N'U'))
+    CREATE TABLE dbo.journal (
+      persistence_id  VARCHAR(255)  NOT NULL,
+      sequence_number BIGINT        NOT NULL,
+      marker          VARCHAR(255)  NOT NULL,
+      message         NVARCHAR(MAX) NOT NULL,
+      created         DATETIME      NOT NULL,
+      PRIMARY KEY (persistence_id, sequence_number)
+    )
+    GO
+
+    IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'dbo.snapshot') AND type in (N'U'))
+    CREATE TABLE dbo.snapshot (
+      persistence_id VARCHAR(255)  NOT NULL,
+      sequence_nr    BIGINT        NOT NULL,
+      snapshot       NVARCHAR(MAX) NOT NULL,
+      created        BIGINT        NOT NULL,
+      PRIMARY KEY (persistence_id, sequence_nr)
+    )
+    GO
+
+__Note:__
+Please set the schema names to "dbo" like so:
+
+    journalSchemaName  = "dbo"
+    journalTableName   = "journal"
+    snapshotSchemaName = "dbo"
+    snapshotTableName  = "snapshot"
+
+
 ## MySQL
 The following schema works on MySQL
 
@@ -250,8 +283,8 @@ Please set the schema names to "" like so:
 
     journalSchemaName  = ""
     journalTableName   = "journal"
-    snapshotSchemaName = "public"
-    snapshotTableName  = ""
+    snapshotSchemaName = ""
+    snapshotTableName  = "snapshot"
 
 When you wish to use the schemaName for the database name, then fill the
 schema names to be the database name
@@ -342,6 +375,42 @@ The application.conf for Postgresql should be:
        snapshotSchemaName = "public"
        snapshotTableName  = "snapshot"
     }    
+
+# MS SQL Server Configuration
+The application.conf for MS SQL Server should be:
+
+    akka {
+      persistence {
+        journal.plugin = "jdbc-journal"
+        snapshot-store.plugin = "jdbc-snapshot-store"
+      }
+    }
+
+    jdbc-journal {
+      class = "akka.persistence.jdbc.journal.MSSqlServerSyncWriteJournal"
+    }
+
+    jdbc-snapshot-store {
+      class = "akka.persistence.jdbc.snapshot.MSSqlServerSyncSnapshotStore"
+    }
+
+    mssql {
+      host = "localhost"
+      port = "1433"
+      database = "master"
+    }
+
+    jdbc-connection {
+      username           = "sa"
+      password           = "password"
+      driverClassName    = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+      url                = "jdbc:sqlserver://"${mssql.host}":"${mssql.port}";databaseName=${mssql.database}"
+      journalSchemaName  = "dbo"
+      journalTableName   = "journal"
+      snapshotSchemaName = "dbo"
+      snapshotTableName  = "snapshot"
+      validationQuery    = "select 1"
+    }
 
 # MySQL Configuration
 The application.conf for MySQL should be:

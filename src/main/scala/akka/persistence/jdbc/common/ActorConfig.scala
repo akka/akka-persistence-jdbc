@@ -28,6 +28,8 @@ class PluginConfig(system: ActorSystem) {
   def snapshotSchemaName: String = config.getString("snapshotSchemaName").toOption.map(_ + ".").getOrElse("")
   def snapshotTableName = config.getString("snapshotTableName")
   def validationQuery = if(config.hasPath("validationQuery")) config.getString("validationQuery") else null
+  def jndiPath        = config.getString("jndiPath").toOption
+  def dataSourceName  = config.getString("dataSourceName").toOption
 }
 
 trait ActorConfig { this: Actor =>

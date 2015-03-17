@@ -17,7 +17,7 @@ trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
   implicit val executionContext = context.system.dispatcher
 
   override def writeMessages(messages: Seq[PersistentRepr]): Unit = {
-    log.debug(s"writeMessages for ${messages.size} presistent messages")
+    log.debug(s"writeMessages for ${messages.size} persistent messages")
 
     messages.foreach { message =>
       import message._
@@ -53,7 +53,7 @@ trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
   }
 
   override def deleteMessages(messageIds: Seq[PersistentId], permanent: Boolean): Unit = {
-    log.debug(s"Async delete [${messageIds.size}] messages, premanent: $permanent")
+    log.debug(s"Async delete [${messageIds.size}] messages, permanent: $permanent")
 
     messageIds.foreach { persistentId =>
       import persistentId._

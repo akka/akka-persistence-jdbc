@@ -25,13 +25,13 @@ For Maven users, add the following to the pom.xml
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.10</artifactId>
-        <version>1.1.0</version>
+        <version>1.1.1</version>
     </dependency>
     
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.11</artifactId>
-        <version>1.1.0</version>
+        <version>1.1.1</version>
     </dependency>
 
 Add the following to the repositories section of the pom:
@@ -44,6 +44,15 @@ Add the following to the repositories section of the pom:
     </repository>
 
 ## What's new?
+
+### 1.1.1
+ - ScalikeJDBC 2.2.2 -> 2.2.4
+ - Java 8 compilation
+ - Using the much faster Java8 java.util.Base64 encoder/decoder
+ - Bulk insert for journal entries (non-oracle only, sorry)
+ - Initial support for JNDI, needs testing though
+ - Merged [Paul Roman](https://github.com/romusz) Fix typo in journal log message
+ - 
 
 ### 1.1.0
  - Merged [Pavel Boldyrev](https://github.com/bpg) Fix Oracle SQL `MERGE` statement usage #13 which fixes issue #9 (java.sql.SQLRecoverableException: No more data to read from socket #9), thanks!

@@ -192,6 +192,20 @@ To alter the database dialect of the snapshot-store, change the class to:
       class = "akka.persistence.jdbc.snapshot.H2SyncSnapshotStore"
       class = "akka.persistence.jdbc.snapshot.OracleSyncSnapshotStore"
 
+__JNDI (UNTESTED):__
+
+[ScalikeJDBC has support for JNDI connections](http://scalikejdbc.org/documentation/configuration.html), and using that
+example it should be as easy as adding the jndiPath to the configuration with the dataSourceName, and off you go:
+
+    jdbc-connection {
+      journalSchemaName  = "public"
+      journalTableName   = "journal"
+      snapshotSchemaName = "public"
+      snapshotTableName  = "snapshot"
+      jndiPath           = ""
+      dataSourceName     = ""
+    }
+
 # Table schema
 ## H2
 The following schema works on H2

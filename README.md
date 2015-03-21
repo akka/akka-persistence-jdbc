@@ -27,20 +27,20 @@ To include the JDBC plugin into your sbt project, add the following lines to you
 
     resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.1"
+    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.2"
 
 For Maven users, add the following to the pom.xml
 
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.10</artifactId>
-        <version>1.1.1</version>
+        <version>1.1.2</version>
     </dependency>
     
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.11</artifactId>
-        <version>1.1.1</version>
+        <version>1.1.2</version>
     </dependency>
 
 Add the following to the repositories section of the pom:
@@ -55,10 +55,10 @@ Add the following to the repositories section of the pom:
 ## What's new?
 
 ### 1.1.2
- - Initial support for a pluggable serialization architecture. out of the box the plugin uses the
+ - Initial support for a pluggable serialization architecture. Out of the box the plugin uses the
    `Base64JournalConverter` and `Base64SnapshotConverter` as serializers. For more information
    see the [akka-persistence-jdbc-play](https://github.com/dnvriend/akka-persistence-jdbc-play) example
-   project that shows how to create your own serialization format for your data store.
+   project that uses its own JSON serialization format to write journal entries to the data store.
 
 ### 1.1.1
  - ScalikeJDBC 2.2.2 -> 2.2.4

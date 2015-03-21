@@ -1,11 +1,15 @@
 package akka.persistence.jdbc.extension
 
+import javax.naming._
+import javax.sql._
+
 import akka.actor.{ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
 import akka.event.Logging
 import akka.persistence.jdbc.common.PluginConfig
+import akka.persistence.jdbc.serialization.{JournalTypeConverter, SnapshotTypeConverter}
 import scalikejdbc._
-import javax.naming._
-import javax.sql._
+
+import scala.util.Try
 
 object ScalikeExtension extends ExtensionId[ScalikeExtensionImpl] with ExtensionIdProvider {
   override def createExtension(system: ExtendedActorSystem): ScalikeExtensionImpl = new ScalikeExtensionImpl(system)
@@ -16,6 +20,16 @@ object ScalikeExtension extends ExtensionId[ScalikeExtensionImpl] with Extension
 class ScalikeExtensionImpl(val system: ExtendedActorSystem) extends Extension {
 
   val log = Logging(system, this.getClass)
+
+  def journalConverterOf(journalConverterFQN: String): Try[JournalTypeConverter] =
+    system.dynamicAccess.createInstanceFor[JournalTypeConverter](journalConverterFQN, Nil)
+
+  def snapshotConverterOf(snapshotConverterFQN: String): Try[SnapshotTypeConverter] =
+    system.dynamicAccess.createInstanceFor[SnapshotTypeConverter](snapshotConverterFQN, Nil)
+
+  val journalConverter = journalConverterOf(system.settings.config.getString("jdbc-connection.journal-converter")).get
+
+  val snapshotConverter = snapshotConverterOf(system.settings.config.getString("jdbc-connection.snapshot-converter")).get
 
   GlobalSettings.loggingSQLAndTime = LoggingSQLAndTimeSettings (
     enabled = true,

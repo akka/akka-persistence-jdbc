@@ -11,8 +11,6 @@ import scala.concurrent.Future
 
 trait JdbcSyncSnapshotStore extends SnapshotStore with ActorLogging with ActorConfig with JdbcStatements {
   implicit val system = context.system
-  val extension = Persistence(context.system)
-  val serialization = SerializationExtension(context.system)
   implicit val executionContext = context.system.dispatcher
 
   override def loadAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] = {

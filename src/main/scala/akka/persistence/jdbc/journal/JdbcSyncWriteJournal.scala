@@ -5,16 +5,13 @@ import akka.persistence._
 import akka.persistence.jdbc.common.ActorConfig
 import akka.persistence.jdbc.journal.RowTypeMarkers._
 import akka.persistence.journal.SyncWriteJournal
-import akka.serialization.SerializationExtension
 
 import scala.collection.immutable.Seq
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with ActorConfig with JdbcStatements {
-  implicit val system = context.system
-  val extension = Persistence(context.system)
-  val serialization = SerializationExtension(context.system)
-  implicit val executionContext = context.system.dispatcher
+
+  implicit def executionContext: ExecutionContext
 
   override def writeMessages(messages: Seq[PersistentRepr]): Unit = insertMessages(messages)
 
@@ -23,7 +20,7 @@ trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
 
     confirmations.foreach { confirmation =>
       import confirmation._
-      selectMessage(persistenceId, sequenceNr).map { msg =>
+      selectMessage(persistenceId, sequenceNr).toStream.foreach { msg =>
         val confirmationIds = msg.confirms :+ confirmation.channelId
         val marker = confirmedMarker(confirmationIds)
         val updatedMessage = msg.update(confirms = confirmationIds)
@@ -38,7 +35,7 @@ trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
      permanent match {
        case true => deleteMessageRange(processorId, toSequenceNr)
        case false => (1 to toSequenceNr.toInt).toList.map(_.toLong).foreach { sequenceNr =>
-         selectMessage(processorId, sequenceNr).map { msg =>
+         selectMessage(processorId, sequenceNr).foreach { msg =>
            updateMessage(processorId, sequenceNr, DeletedMarker, msg.update(deleted = true))
          }
        }
@@ -52,7 +49,7 @@ trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
       import persistentId._
       permanent match {
         case true => deleteMessageSingle(processorId, sequenceNr)
-        case false => selectMessage(processorId, sequenceNr).map { msg =>
+        case false => selectMessage(processorId, sequenceNr).foreach { msg =>
           updateMessage(processorId, sequenceNr, DeletedMarker, msg.update(deleted = true))
         }
       }

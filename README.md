@@ -54,6 +54,12 @@ Add the following to the repositories section of the pom:
 
 ## What's new?
 
+### 1.1.2
+ - Initial support for a pluggable serialization architecture. out of the box the plugin uses the
+   `Base64JournalConverter` and `Base64SnapshotConverter` as serializers. For more information
+   see the [akka-persistence-jdbc-play](https://github.com/dnvriend/akka-persistence-jdbc-play) example
+   project that shows how to create your own serialization format for your data store.
+
 ### 1.1.1
  - ScalikeJDBC 2.2.2 -> 2.2.4
  - Java 8 binary, so it needs Java 8, you still use Java 6 or 7, upgrade! :P
@@ -154,6 +160,10 @@ In application.conf place the following:
        journalTableName   = "journal"
        snapshotSchemaName = "public"
        snapshotTableName  = "snapshot"
+       jndiPath           = ""
+       dataSourceName     = ""
+       journal-converter  = "akka.persistence.jdbc.serialization.journal.Base64JournalConverter"
+       snapshot-converter = "akka.persistence.jdbc.serialization.snapshot.Base64SnapshotConverter"
     }
 
 __Note:__
@@ -204,6 +214,18 @@ example it should be as easy as adding the jndiPath to the configuration with th
       snapshotTableName  = "snapshot"
       jndiPath           = ""
       dataSourceName     = ""
+    }
+
+__Custom Journal and Event serialization__
+akka-persistence has support for your own journal and snapshot formats. Out of the box it comes with an implementation
+that serializes to Base64. Just extend the `JournalTypeConverter` and `SnapshotTypeConverter`, and register your 
+serializer in the application.conf, and your off serializing with your own format. For more information please see
+the [example play application](https://github.com/dnvriend/akka-persistence-jdbc-play) that uses JSON to serialize 
+the payload to the database. 
+
+    jdbc-connection {
+       journal-converter  = "akka.persistence.jdbc.serialization.journal.Base64JournalConverter"
+       snapshot-converter = "akka.persistence.jdbc.serialization.snapshot.Base64SnapshotConverter"
     }
 
 # Table schema

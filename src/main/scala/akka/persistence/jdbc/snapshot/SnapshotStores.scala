@@ -1,10 +1,15 @@
 package akka.persistence.jdbc.snapshot
 
 import akka.persistence.jdbc.extension.ScalikeExtension
+import akka.serialization.SerializationExtension
 import scalikejdbc.DBSession
 
 trait GenericSyncSnapshotStore extends JdbcSyncSnapshotStore with GenericStatements {
   override implicit val session: DBSession = ScalikeExtension(system).session
+
+  implicit val snapshotConverter = ScalikeExtension(context.system).snapshotConverter
+
+  implicit val serialization = SerializationExtension(context.system)
 }
 
 class PostgresqlSyncSnapshotStore extends GenericSyncSnapshotStore with PostgresqlStatements

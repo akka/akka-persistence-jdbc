@@ -1,10 +1,19 @@
 package akka.persistence.jdbc.journal
 
 import akka.persistence.jdbc.extension.ScalikeExtension
+import akka.serialization.SerializationExtension
 import scalikejdbc.DBSession
 
+import scala.concurrent.ExecutionContext
+
 trait GenericJdbcSyncWriteJournal extends JdbcSyncWriteJournal with GenericStatements {
-  override implicit val session: DBSession = ScalikeExtension(system).session
+  implicit val session: DBSession = ScalikeExtension(context.system).session
+
+  implicit val executionContext: ExecutionContext = context.system.dispatcher
+
+  implicit val journalConverter = ScalikeExtension(context.system).journalConverter
+
+  implicit val serialization = SerializationExtension(context.system)
 }
 
 class PostgresqlSyncWriteJournal extends GenericJdbcSyncWriteJournal with PostgresqlStatements

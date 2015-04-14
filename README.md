@@ -27,20 +27,20 @@ To include the JDBC plugin into your sbt project, add the following lines to you
 
     resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.2"
+    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.3"
 
 For Maven users, add the following to the pom.xml
 
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.10</artifactId>
-        <version>1.1.2</version>
+        <version>1.1.3</version>
     </dependency>
     
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.11</artifactId>
-        <version>1.1.2</version>
+        <version>1.1.3</version>
     </dependency>
 
 Add the following to the repositories section of the pom:
@@ -53,6 +53,10 @@ Add the following to the repositories section of the pom:
     </repository>
 
 ## What's new?
+
+### 1.1.3
+ - ScalikeJDBC 2.2.4 -> 2.2.5
+ - Fixed: 'OutOfMemory error when recovering with a large number of snapshots #17'
 
 ### 1.1.2
  - Initial support for a pluggable serialization architecture. Out of the box the plugin uses the
@@ -545,6 +549,34 @@ The application.conf for Oracle should be:
     }
     
 # Testing
- - Install [boot2docker](http://boot2docker.io/) for your operating system (I use OSX)
- - Add the shell integration configuration
+ - Install [brew](http://brew.sh/)
+ - Install [docker](https://github.com/docker/machine) 
+
+``` 
+ brew install docker
+```
+
+ - Install [docker-machine](https://github.com/docker/machine)
+
+```
+brew install docker-machine
+```
+
+ - Install [docker-compose](https://github.com/docker/compose)
+ 
+```
+brew install docker-compose
+```
+ 
+ - Create a docker machine
+
+```
+docker-machine create -d virtualbox --virtualbox-disk-size "20000" --virtualbox-memory "4096" dev
+$(docker-machine env dev)
+```
+ 
  - Execute the appropriate test shell script
+
+```
+./test-all.sh
+```

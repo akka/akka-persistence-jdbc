@@ -1,12 +1,14 @@
 import bintray.Plugin._
 
-seq(bintraySettings:_*)
+net.virtualvoid.sbt.graph.Plugin.graphSettings
+
+bintraySettings
 
 organization := "com.github.dnvriend"
 
 name := "akka-persistence-jdbc"
 
-version := "1.1.2"
+version := "1.1.3"
 
 scalaVersion := "2.11.6"
 
@@ -19,17 +21,17 @@ libraryDependencies ++= {
     Seq(
     "com.typesafe.akka"   %% "akka-actor"                    % akkaVersion,
     "com.typesafe.akka"   %% "akka-persistence-experimental" % akkaVersion,
-    "org.scalikejdbc"     %% "scalikejdbc"                   % "2.2.4",
-    "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % "test",
-    "com.typesafe.akka"   %% "akka-slf4j"                    % akkaVersion       % "test",
-    "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % "test",
-    "org.postgresql"       % "postgresql"                    % "9.4-1201-jdbc41" % "test",
-    "com.h2database"       % "h2"                            % "1.4.181"         % "test",
-    "mysql"                % "mysql-connector-java"          % "5.1.33"          % "test",
-    "com.typesafe.akka"   %% "akka-testkit"                  % akkaVersion       % "test",
-    "org.scalatest"       %% "scalatest"                     % "2.1.4"           % "test",
-    "org.pegdown"          % "pegdown"                       % "1.4.2"           % "test",
-    "com.github.krasserm" %% "akka-persistence-testkit"      % "0.3.4"           % "test"
+    "org.scalikejdbc"     %% "scalikejdbc"                   % "2.2.5",
+    "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % Test,
+    "com.typesafe.akka"   %% "akka-slf4j"                    % akkaVersion       % Test,
+    "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % Test,
+    "org.postgresql"       % "postgresql"                    % "9.4-1201-jdbc41" % Test,
+    "com.h2database"       % "h2"                            % "1.4.181"         % Test,
+    "mysql"                % "mysql-connector-java"          % "5.1.33"          % Test,
+    "com.typesafe.akka"   %% "akka-testkit"                  % akkaVersion       % Test,
+    "org.scalatest"       %% "scalatest"                     % "2.1.4"           % Test,
+    "org.pegdown"          % "pegdown"                       % "1.4.2"           % Test,
+    "com.github.krasserm" %% "akka-persistence-testkit"      % "0.3.4"           % Test
   )
 }
 
@@ -40,8 +42,6 @@ parallelExecution in Test := false
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
 publishMavenStyle := true
-
-net.virtualvoid.sbt.graph.Plugin.graphSettings
 
 licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php"))
 

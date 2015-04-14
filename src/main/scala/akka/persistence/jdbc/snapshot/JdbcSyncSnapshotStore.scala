@@ -16,7 +16,7 @@ trait JdbcSyncSnapshotStore extends SnapshotStore with ActorLogging with ActorCo
   override def loadAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] = {
     log.debug("loading for persistenceId: {}, criteria: {}", persistenceId, criteria)
     Future[Option[SelectedSnapshot]] {
-      selectSnapshotsFor(persistenceId, criteria).headOption
+      selectSnapshotFor(persistenceId, criteria).headOption
     }
   }
 
@@ -25,7 +25,8 @@ trait JdbcSyncSnapshotStore extends SnapshotStore with ActorLogging with ActorCo
     writeSnapshot(metadata, Snapshot(snapshot))
   }
 
-  override def saved(metadata: SnapshotMetadata): Unit = log.debug("Saved: {}", metadata)
+  override def saved(metadata: SnapshotMetadata): Unit =
+    log.debug("Saved: {}", metadata)
 
   override def delete(metadata: SnapshotMetadata): Unit = {
     log.debug("Deleting: {}", metadata)
@@ -34,8 +35,6 @@ trait JdbcSyncSnapshotStore extends SnapshotStore with ActorLogging with ActorCo
 
   override def delete(persistenceId: String, criteria: SnapshotSelectionCriteria): Unit = {
     log.debug("Deleting for persistenceId: {} and criteria: {}", persistenceId, criteria)
-    selectSnapshotsFor(persistenceId, criteria).foreach { selectedSnapshot =>
-      deleteSnapshot(selectedSnapshot.metadata)
-    }
+    deleteSnapshots(persistenceId, criteria)
   }
 }

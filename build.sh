@@ -1,2 +1,3 @@
 #!/bin/bash
-sbt clean compile
+rm ./bintray.sbt
+sbt "test-only *Mysql*"

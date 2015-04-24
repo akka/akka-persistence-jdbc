@@ -13,3 +13,6 @@ before_script:
 addons:
   postgresql: "9.3"
 script: "./build.sh"
+notifications:
+  email:
+    - dnvriend@gmail.com

@@ -1,2 +1,2 @@
 #!/bin/bash
-sbt clean compile
+sbt "clean test-only *Mysql*"

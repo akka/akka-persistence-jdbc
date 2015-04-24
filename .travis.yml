@@ -9,5 +9,7 @@ branches:
   only:
     - master
 before_script:
-  - mysql -e "create database IF NOT EXISTS test;" -uroot
+  - psql -c 'create database docker;' -U postgres
+addons:
+  postgresql: "9.3"
 script: "./build.sh"

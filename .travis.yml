@@ -8,6 +8,6 @@ jdk:
 branches:
   only:
     - master
-#before_script:
-#  - mysql -e 'create database mysql;'
+before_script:
+  - mysql -e "create database IF NOT EXISTS test;" -uroot
 script: "./build.sh"

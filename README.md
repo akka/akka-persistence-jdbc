@@ -59,8 +59,8 @@ Add the following to the repositories section of the pom:
 ### 1.1.4
  - ScalikeJDBC 2.2.5 -> 2.2.6
  - Akka 2.3.9 -> 2.3.10
+ - Switched back to a Java 7 binary, to support Java 7 and higher based projects, we need a strategy though when [Scala 2.12](http://www.scala-lang.org/news/2.12-roadmap) will be released. 
  - Merged Issue #20 [mwkohout](https://github.com/mwkohout) Use apache commons codec Base64 vs the java8-only java.util.Base64 for Java 7 based projects, thanks!
- 
 
 ### 1.1.3
  - ScalikeJDBC 2.2.4 -> 2.2.5

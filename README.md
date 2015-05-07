@@ -29,20 +29,20 @@ To include the JDBC plugin into your sbt project, add the following lines to you
 
     resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.3"
+    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.4"
 
 For Maven users, add the following to the pom.xml
 
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.10</artifactId>
-        <version>1.1.3</version>
+        <version>1.1.4</version>
     </dependency>
     
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.11</artifactId>
-        <version>1.1.3</version>
+        <version>1.1.4</version>
     </dependency>
 
 Add the following to the repositories section of the pom:
@@ -55,6 +55,12 @@ Add the following to the repositories section of the pom:
     </repository>
 
 ## What's new?
+
+### 1.1.4
+ - ScalikeJDBC 2.2.5 -> 2.2.6
+ - Akka 2.3.9 -> 2.3.10
+ - Merged Issue #20 [mwkohout](https://github.com/mwkohout) Use apache commons codec Base64 vs the java8-only java.util.Base64 for Java 7 based projects, thanks!
+ 
 
 ### 1.1.3
  - ScalikeJDBC 2.2.4 -> 2.2.5

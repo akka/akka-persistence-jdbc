@@ -107,11 +107,6 @@ trait H2Statements extends GenericStatements
 trait OracleStatements extends GenericStatements {
   override def writeSnapshot(metadata: SnapshotMetadata, snapshot: Snapshot): Unit = {
     import metadata._
-    /*    SQL("call sp_save_snapshot(?, ?, ?, ?)")
-      .bind(persistenceId, sequenceNr, marshal(snapshot), timestamp)
-      .execute()
-      .apply()*/
-
 
     DB autoCommit { session =>
 

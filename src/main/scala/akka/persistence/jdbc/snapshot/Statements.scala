@@ -1,5 +1,8 @@
 package akka.persistence.jdbc.snapshot
 
+import java.io.{StringReader, ByteArrayInputStream, StringWriter, InputStream}
+import java.sql.PreparedStatement
+
 import akka.persistence.jdbc.common.PluginConfig
 import akka.persistence.jdbc.serialization.{SnapshotSerializer, SnapshotTypeConverter}
 import akka.persistence.serialization.Snapshot
@@ -104,10 +107,29 @@ trait H2Statements extends GenericStatements
 trait OracleStatements extends GenericStatements {
   override def writeSnapshot(metadata: SnapshotMetadata, snapshot: Snapshot): Unit = {
     import metadata._
-    SQL("call sp_save_snapshot(?, ?, ?, ?)")
+    /*    SQL("call sp_save_snapshot(?, ?, ?, ?)")
       .bind(persistenceId, sequenceNr, marshal(snapshot), timestamp)
       .execute()
-      .apply()
+      .apply()*/
+
+
+    DB autoCommit { session =>
+
+      val clobBinder = ParameterBinder[StringReader](
+        value = new StringReader(marshal(snapshot)),
+        binder = (stmt: PreparedStatement, idx: Int) =>
+          stmt.setClob(idx, new StringReader((marshal(snapshot))))
+      )
+
+      SQL( s"""MERGE INTO $schema$table snapshot
+              USING (SELECT {persistenceId} AS persistence_id, {sequenceNr} AS seq_nr from DUAL) val
+              ON (snapshot.persistence_id = val.persistence_id and snapshot.sequence_nr = val.seq_nr)
+              WHEN MATCHED THEN
+                UPDATE SET snapshot={snap}
+              WHEN NOT MATCHED THEN
+                INSERT (PERSISTENCE_ID, SEQUENCE_NR, SNAPSHOT, CREATED) VALUES ({persistenceId}, {sequenceNr}, {snap}, {created})""")
+        .bindByName('persistenceId -> persistenceId, 'sequenceNr -> sequenceNr, 'created -> timestamp, 'snap -> clobBinder).execute().apply()(session)
+    }
   }
 }
 

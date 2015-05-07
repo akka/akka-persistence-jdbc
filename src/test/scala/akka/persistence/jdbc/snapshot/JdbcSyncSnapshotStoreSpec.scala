@@ -35,7 +35,11 @@ trait JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with JdbcInit {
         if(seqNo % 100 == 0) log.info("{}", seqNo)
         val metadata = SnapshotMetadata(persistenceId = pid, sequenceNr = seqNo, timestamp = System.currentTimeMillis())
         snapshotStore.tell(SaveSnapshot(metadata, MacBeth.text), senderProbe.ref)
-        senderProbe.expectMsgPF(1.minute) { case SaveSnapshotSuccess(md) => md }
+        senderProbe.expectMsgPF(10.minute) {
+          case SaveSnapshotSuccess(md) => md
+          case notSucess:Object=>
+            log.error(notSucess.toString)
+        }
       }
       snapshotStore.tell(LoadSnapshot(pid, SnapshotSelectionCriteria.Latest, Long.MaxValue), senderProbe.ref)
       senderProbe.expectMsgPF() {
@@ -49,10 +53,10 @@ trait JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with JdbcInit {
       (1 to 1000).toStream.foreach { seqNo =>
         val metadata = SnapshotMetadata(persistenceId = pid, sequenceNr = seqNo, timestamp = System.currentTimeMillis())
         snapshotStore.tell(SaveSnapshot(metadata, MacBeth.text), senderProbe.ref)
-        senderProbe.expectMsgPF() { case SaveSnapshotSuccess(md) => md }
+        senderProbe.expectMsgPF(1.minute) { case SaveSnapshotSuccess(md) => md }
       }
       snapshotStore.tell(LoadSnapshot(pid, SnapshotSelectionCriteria(999, Long.MaxValue), Long.MaxValue), senderProbe.ref)
-      senderProbe.expectMsgPF(1.minute) {
+      senderProbe.expectMsgPF(3.minute) {
         case lssr @ LoadSnapshotResult(Some(SelectedSnapshot(SnapshotMetadata(`pid`, 999, _), _)), _) => lssr
       }
     }

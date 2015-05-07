@@ -17,6 +17,7 @@ libraryDependencies ++= {
     "com.typesafe.akka"   %% "akka-actor"                    % akkaVersion,
     "com.typesafe.akka"   %% "akka-persistence-experimental" % akkaVersion,
     "org.scalikejdbc"     %% "scalikejdbc"                   % "2.2.5",
+    "commons-codec"        % "commons-codec"                 % "1.10",
     "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % Test,
     "com.typesafe.akka"   %% "akka-slf4j"                    % akkaVersion       % Test,
     "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % Test,

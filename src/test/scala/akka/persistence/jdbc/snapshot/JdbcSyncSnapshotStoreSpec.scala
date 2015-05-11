@@ -43,7 +43,7 @@ trait JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with JdbcInit {
       }
       snapshotStore.tell(LoadSnapshot(pid, SnapshotSelectionCriteria.Latest, Long.MaxValue), senderProbe.ref)
       senderProbe.expectMsgPF() {
-        case lssr @ LoadSnapshotResult(Some(SelectedSnapshot(SnapshotMetadata(`pid`, 1000, _), _)), _) => lssr
+        case lssr @ LoadSnapshotResult(Some(SelectedSnapshot(SnapshotMetadata(`pid`, 1000, _), MacBeth.text)), _) => lssr
       }
     }
 
@@ -57,7 +57,7 @@ trait JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with JdbcInit {
       }
       snapshotStore.tell(LoadSnapshot(pid, SnapshotSelectionCriteria(999, Long.MaxValue), Long.MaxValue), senderProbe.ref)
       senderProbe.expectMsgPF(3.minute) {
-        case lssr @ LoadSnapshotResult(Some(SelectedSnapshot(SnapshotMetadata(`pid`, 999, _), _)), _) => lssr
+        case lssr @ LoadSnapshotResult(Some(SelectedSnapshot(SnapshotMetadata(`pid`, 999, _), MacBeth.text)), _) => lssr
       }
     }
   }

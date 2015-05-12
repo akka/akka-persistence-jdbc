@@ -56,6 +56,11 @@ Add the following to the repositories section of the pom:
 
 ## What's new?
 
+### 1.1.5
+  - Akka 2.3.10 -> 2.3.11
+  - Mysql snapshot statement now uses `INSERT INTO .. ON DUPLICATE UPDATE` for `upserts`
+  - Merged Issue #21 [mwkohout](https://github.com/mwkohout) Use a ParameterBinder to pass snapshot into the merge statement and get rid of the stored procedure, thanks!
+
 ### 1.1.4
  - ScalikeJDBC 2.2.5 -> 2.2.6
  - Akka 2.3.9 -> 2.3.10

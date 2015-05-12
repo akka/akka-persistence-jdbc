@@ -97,7 +97,18 @@ trait GenericStatements extends JdbcStatements with SnapshotSerializer {
 
 trait PostgresqlStatements extends GenericStatements
 
-trait MySqlStatements extends GenericStatements
+trait MySqlStatements extends GenericStatements {
+  override def writeSnapshot(metadata: SnapshotMetadata, snapshot: Snapshot): Unit = {
+    val snapshotData = marshal(snapshot)
+    import metadata._
+    SQL(
+      s"""
+         |INSERT INTO $schema$table (persistence_id, sequence_nr, created, snapshot)
+         | VALUES (?, ?, ?, ?)
+         | ON DUPLICATE KEY UPDATE snapshot = (?)""".stripMargin
+     ).bind(persistenceId, sequenceNr, timestamp, snapshotData, snapshotData).update().apply
+  }
+}
 
 trait H2Statements extends GenericStatements
 

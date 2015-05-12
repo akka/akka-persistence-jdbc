@@ -17,10 +17,7 @@ something out.
 
 **Start of Disclaimer:**
 
-This plugin should not be used in production, ever! For a good, stable and scalable solution use
-[Apache Cassandra](http://cassandra.apache.org/) with the [akka-persistence-cassandra plugin](https://github.com/krasserm/akka-persistence-cassandra/)
-Only use this plug-in for study projects and proof of concepts. Please use Docker and [spotify/cassandra](https://registry.hub.docker.com/u/spotify/cassandra/dockerfile/)
-You have been warned! 
+> This plugin should not be used in production, ever! For a good, stable and scalable solution use [Apache Cassandra](http://cassandra.apache.org/) with the [akka-persistence-cassandra plugin](https://github.com/krasserm/akka-persistence-cassandra/) Only use this plug-in for study projects and proof of concepts. Please use Docker and [library/cassandra](https://registry.hub.docker.com/u/library/cassandra/) You have been warned! 
 
 **End of Disclaimer**
 

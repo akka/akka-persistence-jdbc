@@ -9,7 +9,7 @@ By setting the appropriate Journal and SnapshotStore classes in the application.
 
 * H2           (tested, works on 1.4.179)
 * Postgresql   (tested, works on v9.3.1)
-* MySql        (tested, works on 5.6.19 MySQL Community Server (GPL))
+* MySQL        (tested, works on 5.6.19 MySQL Community Server (GPL))
 * Oracle XE    (tested, works on Oracle XE 11g r2)
 
 Note: The plugin should work on other databases too. When you wish to have support for a database, contact me and we can work
@@ -29,20 +29,20 @@ To include the JDBC plugin into your sbt project, add the following lines to you
 
     resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.4"
+    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.5"
 
 For Maven users, add the following to the pom.xml
 
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.10</artifactId>
-        <version>1.1.4</version>
+        <version>1.1.5</version>
     </dependency>
     
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.11</artifactId>
-        <version>1.1.4</version>
+        <version>1.1.5</version>
     </dependency>
 
 Add the following to the repositories section of the pom:
@@ -56,28 +56,28 @@ Add the following to the repositories section of the pom:
 
 ## What's new?
 
-### 1.1.5
+### 1.1.5 (2015-05-12)
   - Akka 2.3.10 -> 2.3.11
-  - Mysql snapshot statement now uses `INSERT INTO .. ON DUPLICATE UPDATE` for `upserts`
+  - MySQL snapshot statement now uses `INSERT INTO .. ON DUPLICATE UPDATE` for `upserts`
   - Merged Issue #21 [mwkohout](https://github.com/mwkohout) Use a ParameterBinder to pass snapshot into the merge statement and get rid of the stored procedure, thanks!
 
-### 1.1.4
+### 1.1.4 (2015-05-06)
  - ScalikeJDBC 2.2.5 -> 2.2.6
  - Akka 2.3.9 -> 2.3.10
  - Switched back to a Java 7 binary, to support Java 7 and higher based projects, we need a strategy though when [Scala 2.12](http://www.scala-lang.org/news/2.12-roadmap) will be released. 
  - Merged Issue #20 [mwkohout](https://github.com/mwkohout) Use apache commons codec Base64 vs the java8-only java.util.Base64 for Java 7 based projects, thanks!
 
-### 1.1.3
+### 1.1.3 (2015-04-15)
  - ScalikeJDBC 2.2.4 -> 2.2.5
  - Fixed: 'OutOfMemory error when recovering with a large number of snapshots #17'
 
-### 1.1.2
+### 1.1.2 (2015-03-21)
  - Initial support for a pluggable serialization architecture. Out of the box the plugin uses the
    `Base64JournalConverter` and `Base64SnapshotConverter` as serializers. For more information
    see the [akka-persistence-jdbc-play](https://github.com/dnvriend/akka-persistence-jdbc-play) example
    project that uses its own JSON serialization format to write journal entries to the data store.
 
-### 1.1.1
+### 1.1.1 (2015-03-17)
  - ScalikeJDBC 2.2.2 -> 2.2.4
  - Java 8 binary, so it needs Java 8, you still use Java 6 or 7, upgrade! :P
  - Using the much faster Java8 java.util.Base64 encoder/decoder
@@ -90,7 +90,7 @@ Add the following to the repositories section of the pom:
  - Merged [Pavel Boldyrev](https://github.com/bpg) Fix Oracle SQL `MERGE` statement usage #13 which fixes issue #9 (java.sql.SQLRecoverableException: No more data to read from socket #9), thanks!
  - Change to the Oracle schema, it needs a stored procedure definition.
 
-### 1.0.9
+### 1.0.9 (2015-01-20)
  - ScalikeJDBC 2.1.2 -> 2.2.2
  - Merged [miguel-vila](https://github.com/miguel-vila) Adds ´validationQuery´ configuration parameter #10, thanks!
  - Removed Informix support: I just don't have a working Informix docker image (maybe someone can create one and publish it?)
@@ -99,34 +99,34 @@ Add the following to the repositories section of the pom:
  - ScalikeJDBC 2.1.1 -> 2.1.2
  - Moved to bintray
 
-### 1.0.7
+### 1.0.7 (2014-09-16)
  - Merged [mwkohout](https://github.com/mwkohout) fix using Oracle's MERGE on issue #3, thanks! 
 
-### 1.0.6
+### 1.0.6 
  - Fixed - Issue3: Handling save attempts with duplicate snapshot ids and persistence ids
  - Fixed - Issue5: Connection pool is being redefined when using journal and snapshot store
 
-### 1.0.5
+### 1.0.5 (2014-08-26)
  - Akka 2.3.5 -> 2.3.6
  - ScalikeJDBC 2.1.0 -> 2.1.1
 
-### 1.0.4
+### 1.0.4 
  - Added schema name configuration for the journal and snapshot
  - Added table name configuration for the journal and snapshot
  - ScalikeJDBC 2.0.5 -> 2.1.0 
  - Akka 2.3.4 -> 2.3.5 
 
-### 1.0.3
+### 1.0.3 (2014-07-23)
  - IBM Informix 12.10 supported 
 
-### 1.0.2
+### 1.0.2 
  - Oracle XE 11g supported
 
 ### 1.0.1
  - scalikejdbc 2.0.4 -> 2.0.5
  - akka-persistence-testkit 0.3.3 -> 0.3.4
 
-### 1.0.0
+### 1.0.0 (2014-07-03)
  - Release to Maven Central
 
 ### 0.0.6

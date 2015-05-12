@@ -1,19 +1,14 @@
 # akka-persistence-jdbc
-Akka-persistence-jdbc is a plugin for [akka-persistence](http://doc.akka.io/docs/akka/snapshot/scala/persistence.html) 
-that writes journal entries to a configured JDBC database. It supports writing journal messages and snapshots to two tables: 
-the 'journal' table and the 'snapshot' table. 
+The akka-persistence-jdbc is a plugin for [akka-persistence](http://doc.akka.io/docs/akka/snapshot/scala/persistence.html) that writes journal entries to a configured JDBC database. It supports writing journal messages and snapshots to two tables:  the `journal` table and the `snapshot` table. 
 
 [![Build Status](https://travis-ci.org/dnvriend/akka-persistence-jdbc.svg?branch=master)](https://travis-ci.org/dnvriend/akka-persistence-jdbc)
 
-By setting the appropriate Journal and SnapshotStore classes in the application.conf, you can choose the following databases
+By setting the appropriate Journal and SnapshotStore classes in the application.conf, you can choose the following databases:
 
 * H2           (tested, works on 1.4.179)
 * Postgresql   (tested, works on v9.3.1)
 * MySQL        (tested, works on 5.6.19 MySQL Community Server (GPL))
 * Oracle XE    (tested, works on Oracle XE 11g r2)
-
-Note: The plugin should work on other databases too. When you wish to have support for a database, contact me and we can work
-something out.
 
 **Start of Disclaimer:**
 

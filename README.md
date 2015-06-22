@@ -28,13 +28,13 @@ For Maven users, add the following to the pom.xml
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.10</artifactId>
-        <version>1.1.5</version>
+        <version>1.1.6</version>
     </dependency>
     
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.11</artifactId>
-        <version>1.1.5</version>
+        <version>1.1.6</version>
     </dependency>
 
 Add the following to the repositories section of the pom:
@@ -47,6 +47,10 @@ Add the following to the repositories section of the pom:
     </repository>
 
 ## What's new?
+
+### 1.1.6 (2015-06-22)
+  - ScalikeJdbc 2.2.6 -> 2.2.7
+  - Issue #22 `persistenceId` missing in `JournalTypeConverter.unmarshal(value: String)` signature; added a second parameter `persistenceId: String`, note this breaks the serialization API.
 
 ### 1.1.5 (2015-05-12)
   - Akka 2.3.10 -> 2.3.11

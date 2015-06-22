@@ -6,5 +6,5 @@ import akka.serialization.Serialization
 trait SnapshotTypeConverter {
   def marshal(value: Snapshot)(implicit serialization: Serialization): String
 
-  def unmarshal(value: String)(implicit serialization: Serialization): Snapshot
+  def unmarshal(value: String, persistenceId: String)(implicit serialization: Serialization): Snapshot
 }

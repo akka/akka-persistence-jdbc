@@ -10,6 +10,6 @@ class Base64SnapshotConverter extends SnapshotTypeConverter {
    override def marshal(value: Snapshot)(implicit serialization: Serialization): String =
      serialization.serialize(value).map(new Base64().encodeToString).get
 
-   override def unmarshal(value: String)(implicit serialization: Serialization): Snapshot =
+   override def unmarshal(value: String, persistenceId: String)(implicit serialization: Serialization): Snapshot =
      serialization.deserialize(new Base64().decode(value), classOf[Snapshot]).get
  }

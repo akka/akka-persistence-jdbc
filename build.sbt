@@ -3,7 +3,7 @@ organization := "com.github.dnvriend"
 
 name := "akka-persistence-jdbc"
 
-version := "1.1.5"
+version := "1.1.6"
 
 scalaVersion := "2.11.6"
 
@@ -16,7 +16,7 @@ libraryDependencies ++= {
     Seq(
     "com.typesafe.akka"   %% "akka-actor"                    % akkaVersion,
     "com.typesafe.akka"   %% "akka-persistence-experimental" % akkaVersion,
-    "org.scalikejdbc"     %% "scalikejdbc"                   % "2.2.6",
+    "org.scalikejdbc"     %% "scalikejdbc"                   % "2.2.7",
     "commons-codec"        % "commons-codec"                 % "1.10",
     "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % Test,
     "com.typesafe.akka"   %% "akka-slf4j"                    % akkaVersion       % Test,

@@ -65,25 +65,29 @@ trait GenericStatements extends JdbcStatements with SnapshotSerializer {
     }
   }
 
-  def selectSnapshotFor(persistenceId: String, criteria: SnapshotSelectionCriteria): Option[SelectedSnapshot] = criteria match {
+  def selectSnapshotFor(persistenceId: String, criteria: SnapshotSelectionCriteria): Option[SelectedSnapshot] = {
+    def marshalSelectedSnapshot(rs: WrappedResultSet, persistenceId: String): SelectedSnapshot =
+      SelectedSnapshot(SnapshotMetadata(rs.string("persistence_id"), rs.long("sequence_nr"), rs.long("created")), unmarshal(rs.string("snapshot"), persistenceId).data)
+
+    criteria match {
       case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue) =>
         SQL(s"SELECT * FROM $schema$table WHERE persistence_id = ? AND sequence_nr = (SELECT MAX(sequence_nr) FROM $schema$table WHERE persistence_id = ?)")
-         .bind(persistenceId, persistenceId)
-          .map { rs => SelectedSnapshot(SnapshotMetadata(rs.string("persistence_id"), rs.long("sequence_nr"), rs.long("created")), unmarshal(rs.string("snapshot")).data) }
+          .bind(persistenceId, persistenceId)
+          .map(marshalSelectedSnapshot(_, persistenceId))
           .single()
           .apply()
 
       case SnapshotSelectionCriteria(maxSeqNo, Long.MaxValue) =>
         SQL(s"SELECT * FROM $schema$table WHERE persistence_id = ? AND sequence_nr = ? ORDER BY sequence_nr DESC")
           .bind(persistenceId, maxSeqNo)
-          .map { rs => SelectedSnapshot(SnapshotMetadata(rs.string("persistence_id"), rs.long("sequence_nr"), rs.long("created")), unmarshal(rs.string("snapshot")).data) }
+          .map(marshalSelectedSnapshot(_, persistenceId))
           .single()
           .apply()
 
       case SnapshotSelectionCriteria(Long.MaxValue, maxTimestamp) =>
         SQL(s"SELECT * FROM $schema$table WHERE persistence_id = ? AND created <= ? ORDER BY sequence_nr DESC")
           .bind(persistenceId, maxTimestamp)
-          .map { rs => SelectedSnapshot(SnapshotMetadata(rs.string("persistence_id"), rs.long("sequence_nr"), rs.long("created")), unmarshal(rs.string("snapshot")).data) }
+          .map(marshalSelectedSnapshot(_, persistenceId))
           .single()
           .apply()
 
@@ -91,11 +95,12 @@ trait GenericStatements extends JdbcStatements with SnapshotSerializer {
         SQL(s"SELECT * FROM $schema$table WHERE persistence_id = ? AND sequence_nr <= ? AND created <= ? ORDER BY sequence_nr DESC")
           .fetchSize(1)
           .bind(persistenceId, maxSeqNo, maxTimestamp)
-          .map { rs => SelectedSnapshot(SnapshotMetadata(rs.string("persistence_id"), rs.long("sequence_nr"), rs.long("created")), unmarshal(rs.string("snapshot")).data) }
+          .map(marshalSelectedSnapshot(_, persistenceId))
           .list()
           .apply()
           .headOption
     }
+  }
 }
 
 trait PostgresqlStatements extends GenericStatements

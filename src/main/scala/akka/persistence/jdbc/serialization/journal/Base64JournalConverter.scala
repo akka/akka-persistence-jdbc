@@ -10,6 +10,6 @@ class Base64JournalConverter extends JournalTypeConverter {
   override def marshal(value: PersistentRepr)(implicit serialization: Serialization): String =
     serialization.serialize(value).map(new Base64().encodeToString).get
 
-  override def unmarshal(value: String)(implicit serialization: Serialization): PersistentRepr =
+  override def unmarshal(value: String, persistenceId: String)(implicit serialization: Serialization): PersistentRepr =
     serialization.deserialize(new Base64().decode(value), classOf[PersistentRepr]).get
 }

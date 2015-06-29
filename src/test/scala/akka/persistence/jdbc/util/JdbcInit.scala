@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 Dennis Vriend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package akka.persistence.jdbc.util
 
 import akka.persistence.jdbc.common.PluginConfig
@@ -24,7 +40,7 @@ trait GenericJdbcInit extends JdbcInit {
   implicit val session: DBSession
 
   def createJournalTable() = Try {
-    SQL( s"""CREATE TABLE IF NOT EXISTS ${cfg.journalSchemaName}${cfg.journalTableName} (
+    SQL(s"""CREATE TABLE IF NOT EXISTS ${cfg.journalSchemaName}${cfg.journalTableName} (
              persistence_id VARCHAR(255) NOT NULL,
              sequence_number BIGINT NOT NULL,
              marker VARCHAR(255) NOT NULL,
@@ -42,7 +58,7 @@ trait GenericJdbcInit extends JdbcInit {
   }
 
   def createSnapshotTable() = Try {
-    SQL( s"""CREATE TABLE IF NOT EXISTS ${cfg.snapshotSchemaName}${cfg.snapshotTableName} (
+    SQL(s"""CREATE TABLE IF NOT EXISTS ${cfg.snapshotSchemaName}${cfg.snapshotTableName} (
             persistence_id VARCHAR(255) NOT NULL,
             sequence_nr BIGINT NOT NULL,
             snapshot TEXT NOT NULL,
@@ -65,7 +81,7 @@ trait H2JdbcInit extends GenericJdbcInit
 
 trait MssqlJdbcInit extends GenericJdbcInit {
   override def createJournalTable() = Try {
-    SQL( s"""IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${cfg.journalSchemaName}${cfg.journalTableName}') AND type in (N'U'))
+    SQL(s"""IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${cfg.journalSchemaName}${cfg.journalTableName}') AND type in (N'U'))
              CREATE TABLE ${cfg.journalSchemaName}${cfg.journalTableName} (
              persistence_id  VARCHAR(255)  NOT NULL,
              sequence_number BIGINT        NOT NULL,
@@ -81,7 +97,7 @@ trait MssqlJdbcInit extends GenericJdbcInit {
   }
 
   override def createSnapshotTable() = Try {
-    SQL( s"""IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${cfg.snapshotSchemaName}${cfg.snapshotTableName}') AND type in (N'U'))
+    SQL(s"""IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${cfg.snapshotSchemaName}${cfg.snapshotTableName}') AND type in (N'U'))
              CREATE TABLE ${cfg.snapshotSchemaName}${cfg.snapshotTableName} (
              persistence_id VARCHAR(255)  NOT NULL,
              sequence_nr    BIGINT        NOT NULL,
@@ -99,7 +115,7 @@ trait MssqlJdbcInit extends GenericJdbcInit {
 
 trait MysqlJdbcInit extends GenericJdbcInit {
   override def createJournalTable() = Try {
-    SQL( s"""CREATE TABLE IF NOT EXISTS ${cfg.journalSchemaName}${cfg.journalTableName} (
+    SQL(s"""CREATE TABLE IF NOT EXISTS ${cfg.journalSchemaName}${cfg.journalTableName} (
              persistence_id VARCHAR(255) NOT NULL,
              sequence_number BIGINT NOT NULL,
              marker VARCHAR(255) NOT NULL,
@@ -117,7 +133,7 @@ trait MysqlJdbcInit extends GenericJdbcInit {
   }
 
   override def createSnapshotTable() = Try {
-    SQL( s"""CREATE TABLE IF NOT EXISTS ${cfg.snapshotSchemaName}${cfg.snapshotTableName}  (
+    SQL(s"""CREATE TABLE IF NOT EXISTS ${cfg.snapshotSchemaName}${cfg.snapshotTableName}  (
               persistence_id VARCHAR(255) NOT NULL,
               sequence_nr BIGINT NOT NULL,
               snapshot TEXT NOT NULL,
@@ -136,7 +152,7 @@ trait MysqlJdbcInit extends GenericJdbcInit {
 
 trait OracleJdbcInit extends GenericJdbcInit {
   override def createJournalTable() = Try {
-    SQL( s"""CREATE TABLE ${cfg.journalSchemaName}${cfg.journalTableName} (
+    SQL(s"""CREATE TABLE ${cfg.journalSchemaName}${cfg.journalTableName} (
             persistence_id VARCHAR(255) NOT NULL,
             sequence_number NUMERIC NOT NULL,
             marker VARCHAR(255) NOT NULL,
@@ -154,7 +170,7 @@ trait OracleJdbcInit extends GenericJdbcInit {
   }
 
   override def createSnapshotTable() = Try {
-    SQL( s"""CREATE TABLE ${cfg.snapshotSchemaName}${cfg.snapshotTableName}  (
+    SQL(s"""CREATE TABLE ${cfg.snapshotSchemaName}${cfg.snapshotTableName}  (
             persistence_id VARCHAR(255) NOT NULL,
             sequence_nr NUMERIC NOT NULL,
             snapshot CLOB NOT NULL,
@@ -192,7 +208,7 @@ trait OracleJdbcInit extends GenericJdbcInit {
 
 trait InformixJdbcInit extends GenericJdbcInit {
   override def createJournalTable() = Try {
-    SQL( s"""CREATE TABLE IF NOT EXISTS ${cfg.journalSchemaName}${cfg.journalTableName} (
+    SQL(s"""CREATE TABLE IF NOT EXISTS ${cfg.journalSchemaName}${cfg.journalTableName} (
              persistence_id VARCHAR(255) NOT NULL,
              sequence_number NUMERIC NOT NULL,
              marker VARCHAR(255) NOT NULL,
@@ -210,7 +226,7 @@ trait InformixJdbcInit extends GenericJdbcInit {
   }
 
   override def createSnapshotTable() = Try {
-    SQL( s"""CREATE TABLE IF NOT EXISTS ${cfg.snapshotSchemaName}${cfg.snapshotTableName}  (
+    SQL(s"""CREATE TABLE IF NOT EXISTS ${cfg.snapshotSchemaName}${cfg.snapshotTableName}  (
              persistence_id VARCHAR(255) NOT NULL,
              sequence_nr NUMERIC NOT NULL,
              snapshot CLOB NOT NULL,

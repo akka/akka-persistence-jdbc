@@ -1,14 +1,30 @@
+/*
+ * Copyright 2015 Dennis Vriend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package akka.persistence.jdbc.journal
 
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.common.PluginConfig
 import akka.persistence.jdbc.journal.RowTypeMarkers._
-import akka.persistence.jdbc.serialization.{JournalSerializer, JournalTypeConverter}
+import akka.persistence.jdbc.serialization.{ JournalSerializer, JournalTypeConverter }
 import akka.serialization.Serialization
 import scalikejdbc._
 
 import scala.collection.immutable.Seq
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 trait JdbcStatements {
   def selectMessage(persistenceId: String, sequenceNr: Long): Option[PersistentRepr]
@@ -45,7 +61,7 @@ trait GenericStatements extends JdbcStatements with JournalSerializer {
 
   def selectMessage(persistenceId: String, sequenceNr: Long): Option[PersistentRepr] =
     SQL(s"SELECT message FROM $schema$table WHERE persistence_id = ? AND sequence_number = ?").bind(persistenceId, sequenceNr)
-      .map(rs => unmarshal(rs.string(1), persistenceId))
+      .map(rs ⇒ unmarshal(rs.string(1), persistenceId))
       .single()
       .apply()
 
@@ -56,14 +72,14 @@ trait GenericStatements extends JdbcStatements with JournalSerializer {
   }
 
   override def insertMessages(messages: Seq[PersistentRepr]): Int = {
-      val sql = s"INSERT INTO $schema$table (persistence_id, sequence_number, marker, message, created) VALUES " +
-        messages.map { _ =>
-          "(?,?,?,?, current_timestamp)"
-        }.mkString(",")
-      val args = messages.flatMap { repr =>
-        List(repr.processorId, repr.sequenceNr, AcceptedMarker, marshal(repr))
-      }
-    SQL(sql).bind(args:_*).update().apply
+    val sql = s"INSERT INTO $schema$table (persistence_id, sequence_number, marker, message, created) VALUES " +
+      messages.map { _ ⇒
+        "(?,?,?,?, current_timestamp)"
+      }.mkString(",")
+    val args = messages.flatMap { repr ⇒
+      List(repr.processorId, repr.sequenceNr, AcceptedMarker, marshal(repr))
+    }
+    SQL(sql).bind(args: _*).update().apply
   }
 
   def updateMessage(persistenceId: String, sequenceNr: Long, marker: String, message: PersistentRepr): Int = {
@@ -94,7 +110,7 @@ trait GenericStatements extends JdbcStatements with JournalSerializer {
   def selectMessagesFor(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): List[PersistentRepr] = {
     SQL(s"SELECT message FROM $schema$table WHERE persistence_id = ? and (sequence_number >= ? and sequence_number <= ?) ORDER BY sequence_number LIMIT ?")
       .bind(persistenceId, fromSequenceNr, toSequenceNr, max)
-      .map(rs => unmarshal(rs.string(1), persistenceId))
+      .map(rs ⇒ unmarshal(rs.string(1), persistenceId))
       .list()
       .apply
   }
@@ -109,7 +125,7 @@ trait H2Statements extends GenericStatements {
     val maxRecords = if (max == java.lang.Long.MAX_VALUE) java.lang.Integer.MAX_VALUE.toLong else max
     SQL(s"SELECT message FROM $schema$table WHERE persistence_id = ? and (sequence_number >= ? and sequence_number <= ?) ORDER BY sequence_number limit ?")
       .bind(persistenceId, fromSequenceNr, toSequenceNr, maxRecords)
-      .map(rs => unmarshal(rs.string(1), persistenceId))
+      .map(rs ⇒ unmarshal(rs.string(1), persistenceId))
       .list()
       .apply
   }
@@ -119,7 +135,7 @@ trait OracleStatements extends GenericStatements {
   override def selectMessagesFor(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): List[PersistentRepr] = {
     SQL(s"SELECT message FROM $schema$table WHERE persistence_id = ? AND (sequence_number >= ? AND sequence_number <= ?) AND ROWNUM <= ? ORDER BY sequence_number")
       .bind(persistenceId, fromSequenceNr, toSequenceNr, max)
-      .map(rs => unmarshal(rs.string(1), persistenceId))
+      .map(rs ⇒ unmarshal(rs.string(1), persistenceId))
       .list()
       .apply
   }
@@ -131,7 +147,7 @@ trait MSSqlServerStatements extends GenericStatements {
   override def selectMessagesFor(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): List[PersistentRepr] = {
     SQL(s"SELECT TOP(?) message FROM $schema$table WHERE persistence_id = ? AND (sequence_number >= ? AND sequence_number <= ?) ORDER BY sequence_number")
       .bind(max, persistenceId, fromSequenceNr, toSequenceNr)
-      .map(rs => unmarshal(rs.string(1), persistenceId))
+      .map(rs ⇒ unmarshal(rs.string(1), persistenceId))
       .list()
       .apply
   }
@@ -141,7 +157,7 @@ trait DB2Statements extends GenericStatements {
   override def selectMessagesFor(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): List[PersistentRepr] = {
     SQL(s"SELECT message FROM $schema$table WHERE persistence_id = ? AND (sequence_number >= ? AND sequence_number <= ?) ORDER BY sequence_number FETCH FIRST ? ROWS ONLY")
       .bind(persistenceId, fromSequenceNr, toSequenceNr, max)
-      .map(rs => unmarshal(rs.string(1), persistenceId))
+      .map(rs ⇒ unmarshal(rs.string(1), persistenceId))
       .list()
       .apply
   }

@@ -1,13 +1,29 @@
+/*
+ * Copyright 2015 Dennis Vriend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package akka.persistence.jdbc.actor
 
-import akka.actor.{ActorLogging, ActorRef, ActorSystem, Props}
+import akka.actor.{ ActorLogging, ActorRef, ActorSystem, Props }
 import akka.persistence.jdbc.common.PluginConfig
 import akka.persistence.jdbc.extension.ScalikeExtension
 import akka.persistence.jdbc.util._
-import akka.persistence.{SnapshotOffer, PersistentActor, SaveSnapshotFailure, SaveSnapshotSuccess}
-import akka.testkit.{TestKit, TestProbe}
+import akka.persistence.{ SnapshotOffer, PersistentActor, SaveSnapshotFailure, SaveSnapshotSuccess }
+import akka.testkit.{ TestKit, TestProbe }
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpecLike}
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach, FlatSpecLike }
 import scalikejdbc.DBSession
 import scala.concurrent.duration._
 
@@ -26,41 +42,40 @@ class TestActor(testProbe: ActorRef) extends PersistentActor with ActorLogging {
   var state = TheState()
 
   override def receiveRecover: Receive = {
-    case SnapshotOffer(_, snap: TheState) =>
+    case SnapshotOffer(_, snap: TheState) ⇒
       log.debug("Recovering snapshot: {}", snap)
       state = snap
-    case m: Alter =>
+    case m: Alter ⇒
       log.debug("Recovering journal: {}", m)
       state = state.copy(id = m.id)
   }
 
   override def receiveCommand: Receive = {
-    case Snap =>
+    case Snap ⇒
       saveSnapshot(state)
-    case m: Alter =>
+    case m: Alter ⇒
       // save journal entry first (alter state)
       persist(m) {
-        case Alter(m) => state = state.copy(id = m)
+        case Alter(m) ⇒ state = state.copy(id = m)
       }
       saveSnapshot(state) // note: first the snapshot will be created = TheState("")
-                          // later, but *before* dispatcher will get the next message,
-                          // the event handler will be executed, a journal entry "a" will be
-                          // written.. thus the snapshot will *not* hold "a", but ""
-    case msg: SaveSnapshotFailure =>
+    // later, but *before* dispatcher will get the next message,
+    // the event handler will be executed, a journal entry "a" will be
+    // written.. thus the snapshot will *not* hold "a", but ""
+    case msg: SaveSnapshotFailure ⇒
       testProbe ! "f"
-    case msg: SaveSnapshotSuccess =>
+    case msg: SaveSnapshotSuccess ⇒
       testProbe ! "s"
-    case GetState => sender ! state
+    case GetState ⇒ sender ! state
   }
 }
 
 trait ActorTest extends FlatSpecLike with BeforeAndAfterEach with BeforeAndAfterAll with JdbcInit {
   import TestActor._
   implicit val system: ActorSystem
-  val cfg  = PluginConfig(system)
+  val cfg = PluginConfig(system)
 
   val testProbe = TestProbe()
-
 
   "snapshot store" should "be able to save multiple snapshots with the same state" in {
     val test = system.actorOf(Props(new TestActor(testProbe.ref)))
@@ -91,7 +106,7 @@ trait ActorTest extends FlatSpecLike with BeforeAndAfterEach with BeforeAndAfter
 
     test ! Alter("a") // note the stored snapshot = TheState("")
     test ! Alter("b") // note the stored snapshot = TheState("a"),
-                      // the journal entry will be used to get to "b"
+    // the journal entry will be used to get to "b"
 
     testProbe.expectMsgAllOf(20.seconds, "s", "s")
 
@@ -114,10 +129,10 @@ trait ActorTest extends FlatSpecLike with BeforeAndAfterEach with BeforeAndAfter
   it should "be able to save snapshot states and recover after some seconds" in {
     val test = system.actorOf(Props(new TestActor(testProbe.ref)))
 
-    (1 to 100).foreach { i =>
+    (1 to 100).foreach { i ⇒
       test ! Alter(i.toString) // note the stored snapshot = TheState("")
     }
-    testProbe.expectMsgAllOf(20.seconds, (1 to 100).map(_ => "s"):_*)
+    testProbe.expectMsgAllOf(20.seconds, (1 to 100).map(_ ⇒ "s"): _*)
     system.stop(test)
     testProbe watch test
     testProbe.expectTerminated(test)
@@ -137,7 +152,6 @@ trait ActorTest extends FlatSpecLike with BeforeAndAfterEach with BeforeAndAfter
   it should "be able to save a lot of data and recover after some seconds" in {
     val test = system.actorOf(Props(new TestActor(testProbe.ref)))
 
-
     test ! Alter(MacBeth.text) // note the stored snapshot = TheState("")
 
     testProbe.expectMsgAllOf(20.seconds, "s")
@@ -156,7 +170,6 @@ trait ActorTest extends FlatSpecLike with BeforeAndAfterEach with BeforeAndAfter
     testProbe watch test2
     testProbe.expectTerminated(test2)
   }
-
 
   override protected def beforeAll(): Unit = {
     dropJournalTable()

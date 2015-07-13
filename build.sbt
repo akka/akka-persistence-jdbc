@@ -3,16 +3,16 @@ organization := "com.github.dnvriend"
 
 name := "akka-persistence-jdbc"
 
-version := "1.1.6"
+version := "1.1.7"
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.7"
 
-crossScalaVersions := Seq("2.10.5", "2.11.6")
+crossScalaVersions := Seq("2.10.5", "2.11.7")
 
 resolvers += "krasserm at bintray" at "http://dl.bintray.com/krasserm/maven"
 
 libraryDependencies ++= {
-    val akkaVersion = "2.3.11"
+    val akkaVersion = "2.3.12"
     Seq(
     "com.typesafe.akka"   %% "akka-actor"                    % akkaVersion,
     "com.typesafe.akka"   %% "akka-persistence-experimental" % akkaVersion,

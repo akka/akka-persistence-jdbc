@@ -48,6 +48,11 @@ Add the following to the repositories section of the pom:
 
 ## What's new?
 
+### 1.1.7 (2015-07-13)
+  - Scala 2.11.6 -> 2.11.7
+  - Akka 2.3.11 -> 2.3.12
+  - ScalaTest 2.1.4 -> 2.2.4
+
 ### 1.1.6 (2015-06-22)
   - ScalikeJdbc 2.2.6 -> 2.2.7
   - Issue #22 `persistenceId` missing in `JournalTypeConverter.unmarshal(value: String)` signature; added a second parameter `persistenceId: String`, note this breaks the serialization API.

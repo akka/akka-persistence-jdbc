@@ -1,4 +1,0 @@
-oracle:
-  image: alexeiled/docker-oracle-xe-11g
-  ports:
-    - "1521:1521"

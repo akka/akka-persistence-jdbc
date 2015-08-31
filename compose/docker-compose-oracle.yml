@@ -1,0 +1,4 @@
+oracle:
+  extends:
+    file: "docker-compose-all.yml"
+    service: oracle

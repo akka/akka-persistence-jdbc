@@ -1,0 +1,4 @@
+mysql:
+  extends:
+    file: "docker-compose-all.yml"
+    service: mysql

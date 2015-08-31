@@ -25,13 +25,12 @@ import akka.persistence.jdbc.util._
 import akka.persistence.snapshot.SnapshotStoreSpec
 import akka.persistence.{ SelectedSnapshot, SnapshotSelectionCriteria, SaveSnapshotSuccess, SnapshotMetadata }
 import akka.testkit.TestProbe
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{ Config, ConfigFactory }
 import scalikejdbc.DBSession
 import scala.concurrent.duration._
 
-trait JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with JdbcInit {
+abstract class JdbcSyncSnapshotStoreSpec(config: Config) extends SnapshotStoreSpec(config) with JdbcInit {
   val cfg = PluginConfig(system)
-  lazy val config = ConfigFactory.load("application.conf")
   val log = Logging(system, this.getClass)
 
   "The snapshot store must also" must {
@@ -91,30 +90,15 @@ trait JdbcSyncSnapshotStoreSpec extends SnapshotStoreSpec with JdbcInit {
   }
 }
 
-trait GenericSyncSnapshotStoreSpec extends JdbcSyncSnapshotStoreSpec {
+// config = ConfigFactory.load("application.conf")
+abstract class GenericSyncSnapshotStoreSpec(config: Config) extends JdbcSyncSnapshotStoreSpec(config) {
   implicit val session: DBSession = ScalikeExtension(system).session
 }
 
-class H2JdbcSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with H2JdbcInit {
-  override lazy val config = ConfigFactory.load("h2-application.conf")
-}
+class H2JdbcSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec(config = ConfigFactory.load("h2-application.conf")) with H2JdbcInit
 
-class PostgresqlJdbcSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with PostgresqlJdbcInit {
-  override lazy val config = ConfigFactory.load("postgres-application.conf")
-}
+class PostgresqlJdbcSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec(config = ConfigFactory.load("postgres-application.conf")) with PostgresqlJdbcInit
 
-//class MssqlSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with MssqlJdbcInit {
-//  override lazy val config = ConfigFactory.load("mssql-application.conf")
-//}
+class MysqlSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec(config = ConfigFactory.load("mysql-application.conf")) with MysqlJdbcInit
 
-class MysqlSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with MysqlJdbcInit {
-  override lazy val config = ConfigFactory.load("mysql-application.conf")
-}
-
-class OracleSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with OracleJdbcInit {
-  override lazy val config = ConfigFactory.load("oracle-application.conf")
-}
-
-//class InformixSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec with InformixJdbcInit {
-//  override lazy val config = ConfigFactory.load("informix-application.conf")
-//}
+class OracleSyncSnapshotStoreSpec extends GenericSyncSnapshotStoreSpec(config = ConfigFactory.load("oracle-application.conf")) with OracleJdbcInit

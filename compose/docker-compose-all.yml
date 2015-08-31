@@ -1,0 +1,30 @@
+mysql:
+  image: mysql:latest
+  environment:
+    - "MYSQL_ROOT_PASSWORD=root"
+    - "TZ=Europe/Amsterdam"
+  ports:
+    - "3306:3306"
+
+oracle:
+  image: alexeiled/docker-oracle-xe-11g
+  environment:
+    - "TZ=Europe/Amsterdam"
+  ports:
+    - "1521:1521"
+
+postgres:
+  image: postgres:latest
+  environment:
+    - "POSTGRES_USER=docker"
+    - "POSTGRES_PASSWORD=docker"
+    - "TZ=Europe/Amsterdam"
+  ports:
+    - "5432:5432"
+
+h2:
+  image: viliusl/ubuntu-h2-server
+  environment:
+    - "TZ=Europe/Amsterdam"
+  ports:
+    - "1522:1521"

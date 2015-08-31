@@ -40,32 +40,31 @@ trait JdbcStatements {
 }
 
 trait GenericStatements extends JdbcStatements with SnapshotSerializer {
-  implicit val executionContext: ExecutionContext
-  implicit val session: DBSession
-  val cfg: PluginConfig
-
-  val schema = cfg.snapshotSchemaName
-  val table = cfg.snapshotTableName
-
+  implicit def executionContext: ExecutionContext
+  implicit def session: DBSession
   implicit def snapshotConverter: SnapshotTypeConverter
-
   implicit def serialization: Serialization
 
-  override def deleteSnapshot(metadata: SnapshotMetadata): Unit =
+  def cfg: PluginConfig
+  def schema = cfg.snapshotSchemaName
+  def table = cfg.snapshotTableName
+
+  override def deleteSnapshot(metadata: SnapshotMetadata): Unit = {
     SQL(s"DELETE FROM $schema$table WHERE persistence_id = ? AND sequence_nr = ?")
       .bind(metadata.persistenceId, metadata.sequenceNr).update().apply()
+  }
 
   override def deleteSnapshots(persistenceId: String, criteria: SnapshotSelectionCriteria): Unit = criteria match {
-    case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue) ⇒
+    case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue, 0, 0) ⇒
       SQL(s"DELETE FROM $schema$table WHERE persistence_id = ?").bind(persistenceId).update().apply()
 
-    case SnapshotSelectionCriteria(upToSeqNo, Long.MaxValue) ⇒
+    case SnapshotSelectionCriteria(upToSeqNo, Long.MaxValue, 0, 0) ⇒
       SQL(s"DELETE FROM $schema$table WHERE persistence_id = ? AND sequence_nr <= ?").bind(persistenceId, upToSeqNo).update().apply()
 
-    case SnapshotSelectionCriteria(Long.MaxValue, maxTimeStamp) ⇒
+    case SnapshotSelectionCriteria(Long.MaxValue, maxTimeStamp, 0, 0) ⇒
       SQL(s"DELETE FROM $schema$table WHERE persistence_id = ? AND created <= ?").bind(persistenceId, maxTimeStamp).update().apply()
 
-    case SnapshotSelectionCriteria(upToSeqNo, maxTimeStamp) ⇒
+    case SnapshotSelectionCriteria(upToSeqNo, maxTimeStamp, 0, 0) ⇒
       SQL(s"DELETE FROM $schema$table WHERE persistence_id = ? AND sequence_nr <= ? AND created <= ?").bind(persistenceId, upToSeqNo, maxTimeStamp).update().apply()
   }
 
@@ -81,32 +80,35 @@ trait GenericStatements extends JdbcStatements with SnapshotSerializer {
   }
 
   def selectSnapshotFor(persistenceId: String, criteria: SnapshotSelectionCriteria): Option[SelectedSnapshot] = {
-    def marshalSelectedSnapshot(rs: WrappedResultSet, persistenceId: String): SelectedSnapshot =
+    def marshalSelectedSnapshot(rs: WrappedResultSet, persistenceId: String): SelectedSnapshot = {
       SelectedSnapshot(SnapshotMetadata(rs.string("persistence_id"), rs.long("sequence_nr"), rs.long("created")), unmarshal(rs.string("snapshot"), persistenceId).data)
+    }
 
     criteria match {
-      case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue) ⇒
+      case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue, _, _) ⇒
         SQL(s"SELECT * FROM $schema$table WHERE persistence_id = ? AND sequence_nr = (SELECT MAX(sequence_nr) FROM $schema$table WHERE persistence_id = ?)")
           .bind(persistenceId, persistenceId)
           .map(marshalSelectedSnapshot(_, persistenceId))
           .single()
           .apply()
 
-      case SnapshotSelectionCriteria(maxSeqNo, Long.MaxValue) ⇒
-        SQL(s"SELECT * FROM $schema$table WHERE persistence_id = ? AND sequence_nr = ? ORDER BY sequence_nr DESC")
+      case SnapshotSelectionCriteria(maxSeqNo, Long.MaxValue, _, _) ⇒
+        SQL(s"SELECT * FROM $schema$table WHERE persistence_id = ? AND sequence_nr <= ? ORDER BY sequence_nr DESC")
           .bind(persistenceId, maxSeqNo)
           .map(marshalSelectedSnapshot(_, persistenceId))
-          .single()
+          .list()
           .apply()
+          .headOption
 
-      case SnapshotSelectionCriteria(Long.MaxValue, maxTimestamp) ⇒
+      case SnapshotSelectionCriteria(Long.MaxValue, maxTimestamp, _, _) ⇒
         SQL(s"SELECT * FROM $schema$table WHERE persistence_id = ? AND created <= ? ORDER BY sequence_nr DESC")
           .bind(persistenceId, maxTimestamp)
           .map(marshalSelectedSnapshot(_, persistenceId))
-          .single()
+          .list()
           .apply()
+          .headOption
 
-      case SnapshotSelectionCriteria(maxSeqNo, maxTimestamp) ⇒
+      case SnapshotSelectionCriteria(maxSeqNo, maxTimestamp, _, _) ⇒
         SQL(s"SELECT * FROM $schema$table WHERE persistence_id = ? AND sequence_nr <= ? AND created <= ? ORDER BY sequence_nr DESC")
           .fetchSize(1)
           .bind(persistenceId, maxSeqNo, maxTimestamp)
@@ -118,7 +120,37 @@ trait GenericStatements extends JdbcStatements with SnapshotSerializer {
   }
 }
 
-trait PostgresqlStatements extends GenericStatements
+trait PostgresqlStatements extends GenericStatements {
+  override def selectSnapshotFor(persistenceId: String, criteria: SnapshotSelectionCriteria): Option[SelectedSnapshot] = {
+    def marshalSelectedSnapshot(rs: WrappedResultSet, persistenceId: String): SelectedSnapshot = {
+      SelectedSnapshot(SnapshotMetadata(rs.string("persistence_id"), rs.long("sequence_nr"), rs.long("created")), unmarshal(rs.string("snapshot"), persistenceId).data)
+    }
+
+    criteria match {
+      case SnapshotSelectionCriteria(maxSeqNo, Long.MaxValue, minSequenceNr, _) ⇒
+        SQL(s"SELECT * FROM $schema$table WHERE persistence_id = ? AND sequence_nr <= ? ORDER BY sequence_nr DESC LIMIT 1 OFFSET ?")
+          .bind(persistenceId, maxSeqNo, minSequenceNr)
+          .map(marshalSelectedSnapshot(_, persistenceId))
+          .single()
+          .apply()
+
+      case SnapshotSelectionCriteria(Long.MaxValue, maxTimestamp, minSequenceNr, _) ⇒
+        SQL(s"SELECT * FROM $schema$table WHERE persistence_id = ? AND created <= ? ORDER BY sequence_nr DESC LIMIT 1 OFFSET ?")
+          .bind(persistenceId, maxTimestamp, minSequenceNr)
+          .map(marshalSelectedSnapshot(_, persistenceId))
+          .single()
+          .apply()
+
+      case SnapshotSelectionCriteria(maxSeqNo, maxTimestamp, minSequenceNr, _) ⇒
+        SQL(s"SELECT * FROM $schema$table WHERE persistence_id = ? AND sequence_nr <= ? AND created <= ? ORDER BY sequence_nr DESC LIMIT 1 OFFSET ?")
+          .fetchSize(1)
+          .bind(persistenceId, maxSeqNo, maxTimestamp, minSequenceNr)
+          .map(marshalSelectedSnapshot(_, persistenceId))
+          .single()
+          .apply()
+    }
+  }
+}
 
 trait MySqlStatements extends GenericStatements {
   override def writeSnapshot(metadata: SnapshotMetadata, snapshot: Snapshot): Unit = {

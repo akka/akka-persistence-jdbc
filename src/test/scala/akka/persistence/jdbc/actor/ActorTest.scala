@@ -186,7 +186,7 @@ trait ActorTest extends FlatSpecLike with BeforeAndAfterEach with BeforeAndAfter
   }
 
   override def afterAll() = {
-    system.shutdown()
+    system.terminate()
   }
 }
 

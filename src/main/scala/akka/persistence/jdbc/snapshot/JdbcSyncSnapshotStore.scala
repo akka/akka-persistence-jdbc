@@ -23,33 +23,21 @@ import akka.persistence.snapshot.SnapshotStore
 import akka.persistence.{ SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria }
 
 import scala.concurrent.Future
+import scala.util.Try
 
 trait JdbcSyncSnapshotStore extends SnapshotStore with ActorLogging with ActorConfig with JdbcStatements {
   implicit val system = context.system
   implicit val executionContext = context.system.dispatcher
 
-  override def loadAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] = {
-    log.debug("loading for persistenceId: {}, criteria: {}", persistenceId, criteria)
-    Future[Option[SelectedSnapshot]] {
-      selectSnapshotFor(persistenceId, criteria)
-    }
-  }
+  override def loadAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] =
+    Future.fromTry(Try(selectSnapshotFor(persistenceId, criteria)))
 
-  override def saveAsync(metadata: SnapshotMetadata, snapshot: Any): Future[Unit] = Future {
-    log.debug("Saving metadata: {}, snapshot: {}", metadata, snapshot)
-    writeSnapshot(metadata, Snapshot(snapshot))
-  }
+  override def saveAsync(metadata: SnapshotMetadata, snapshot: Any): Future[Unit] =
+    Future.fromTry(Try(writeSnapshot(metadata, Snapshot(snapshot))))
 
-  override def saved(metadata: SnapshotMetadata): Unit =
-    log.debug("Saved: {}", metadata)
+  override def deleteAsync(metadata: SnapshotMetadata): Future[Unit] =
+    Future.fromTry(Try(deleteSnapshot(metadata)))
 
-  override def delete(metadata: SnapshotMetadata): Unit = {
-    log.debug("Deleting: {}", metadata)
-    deleteSnapshot(metadata)
-  }
-
-  override def delete(persistenceId: String, criteria: SnapshotSelectionCriteria): Unit = {
-    log.debug("Deleting for persistenceId: {} and criteria: {}", persistenceId, criteria)
-    deleteSnapshots(persistenceId, criteria)
-  }
+  override def deleteAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Unit] =
+    Future.fromTry(Try(deleteSnapshots(persistenceId, criteria)))
 }

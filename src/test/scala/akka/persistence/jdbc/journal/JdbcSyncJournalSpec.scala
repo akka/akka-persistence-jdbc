@@ -19,13 +19,12 @@ package akka.persistence.jdbc.journal
 import akka.persistence.jdbc.common.PluginConfig
 import akka.persistence.jdbc.extension.ScalikeExtension
 import akka.persistence.jdbc.util._
-import akka.persistence.journal.LegacyJournalSpec
-import com.typesafe.config.ConfigFactory
+import akka.persistence.journal.JournalSpec
+import com.typesafe.config.{ Config, ConfigFactory }
 import scalikejdbc.DBSession
 
-abstract class JdbcSyncJournalSpec extends LegacyJournalSpec with JdbcInit {
+abstract class JdbcSyncJournalSpec(config: Config) extends JournalSpec(config) with JdbcInit {
   val cfg = PluginConfig(system)
-  lazy val config = ConfigFactory.load("application.conf")
 
   override def beforeAll() {
     dropJournalTable()
@@ -40,26 +39,14 @@ abstract class JdbcSyncJournalSpec extends LegacyJournalSpec with JdbcInit {
   }
 }
 
-trait GenericJdbcJournalSpec extends JdbcSyncJournalSpec {
+abstract class GenericJdbcJournalSpec(config: Config) extends JdbcSyncJournalSpec(config) {
   implicit val session: DBSession = ScalikeExtension(system).session
 }
 
-class H2SyncJournalSpec extends GenericJdbcJournalSpec with H2JdbcInit {
-  override lazy val config = ConfigFactory.load("h2-application.conf")
-}
+class H2SyncJournalSpec extends GenericJdbcJournalSpec(config = ConfigFactory.load("h2-application.conf")) with H2JdbcInit
 
-class PostgresqlSyncJournalSpec extends GenericJdbcJournalSpec with PostgresqlJdbcInit {
-  override lazy val config = ConfigFactory.load("postgres-application.conf")
-}
+class PostgresqlSyncJournalSpec extends GenericJdbcJournalSpec(config = ConfigFactory.load("postgres-application.conf")) with PostgresqlJdbcInit
 
-class MysqlSyncJournalSpec extends GenericJdbcJournalSpec with MysqlJdbcInit {
-  override lazy val config = ConfigFactory.load("mysql-application.conf")
-}
+class MysqlSyncJournalSpec extends GenericJdbcJournalSpec(config = ConfigFactory.load("mysql-application.conf")) with MysqlJdbcInit
 
-class OracleSyncJournalSpec extends GenericJdbcJournalSpec with OracleJdbcInit {
-  override lazy val config = ConfigFactory.load("oracle-application.conf")
-}
-
-//class InformixSyncJournalSpec extends GenericJdbcJournalSpec with InformixJdbcInit {
-//  override lazy val config = ConfigFactory.load("informix-application.conf")
-//}
+class OracleSyncJournalSpec extends GenericJdbcJournalSpec(config = ConfigFactory.load("oracle-application.conf")) with OracleJdbcInit

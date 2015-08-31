@@ -120,7 +120,7 @@ trait GenericStatements extends JdbcStatements with SnapshotSerializer {
   }
 }
 
-trait PostgresqlStatements extends GenericStatements {
+trait SelectSnapshotFromLimitOffsetStyle extends GenericStatements {
   override def selectSnapshotFor(persistenceId: String, criteria: SnapshotSelectionCriteria): Option[SelectedSnapshot] = {
     def marshalSelectedSnapshot(rs: WrappedResultSet, persistenceId: String): SelectedSnapshot = {
       SelectedSnapshot(SnapshotMetadata(rs.string("persistence_id"), rs.long("sequence_nr"), rs.long("created")), unmarshal(rs.string("snapshot"), persistenceId).data)
@@ -152,7 +152,9 @@ trait PostgresqlStatements extends GenericStatements {
   }
 }
 
-trait MySqlStatements extends GenericStatements {
+trait PostgresqlStatements extends GenericStatements with SelectSnapshotFromLimitOffsetStyle
+
+trait MySqlStatements extends GenericStatements with SelectSnapshotFromLimitOffsetStyle {
   override def writeSnapshot(metadata: SnapshotMetadata, snapshot: Snapshot): Unit = {
     val snapshotData = marshal(snapshot)
     import metadata._
@@ -165,9 +167,10 @@ trait MySqlStatements extends GenericStatements {
   }
 }
 
-trait H2Statements extends GenericStatements
+trait H2Statements extends GenericStatements with SelectSnapshotFromLimitOffsetStyle
 
 trait OracleStatements extends GenericStatements {
+
   override def writeSnapshot(metadata: SnapshotMetadata, snapshot: Snapshot): Unit = {
     import metadata._
 

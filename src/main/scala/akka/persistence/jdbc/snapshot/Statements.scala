@@ -40,12 +40,12 @@ trait JdbcStatements {
 }
 
 trait GenericStatements extends JdbcStatements with SnapshotSerializer {
-  implicit val executionContext: ExecutionContext
-  implicit val session: DBSession
-  val cfg: PluginConfig
+  implicit def executionContext: ExecutionContext
+  implicit def session: DBSession
 
-  val schema = cfg.snapshotSchemaName
-  val table = cfg.snapshotTableName
+  def cfg: PluginConfig
+  def schema = cfg.snapshotSchemaName
+  def table = cfg.snapshotTableName
 
   implicit def snapshotConverter: SnapshotTypeConverter
 

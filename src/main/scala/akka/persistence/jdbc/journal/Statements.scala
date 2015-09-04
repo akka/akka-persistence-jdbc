@@ -24,7 +24,6 @@ import akka.serialization.Serialization
 import scalikejdbc._
 
 import scala.collection.immutable.Seq
-import scala.concurrent.{ ExecutionContext, Future }
 
 trait JdbcStatements {
   def selectMessage(persistenceId: String, sequenceNr: Long): Option[PersistentRepr]
@@ -39,25 +38,19 @@ trait JdbcStatements {
 
   def deleteMessageRange(persistenceId: String, toSequenceNr: Long)
 
-  def selectMaxSequenceNr(persistenceId: String): Future[Long]
+  def selectMaxSequenceNr(persistenceId: String): Long
 
   def selectMessagesFor(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): List[PersistentRepr]
 }
 
 trait GenericStatements extends JdbcStatements with JournalSerializer {
-  implicit def executionContext: ExecutionContext
-
   implicit def session: DBSession
-
-  def cfg: PluginConfig
-
   implicit def journalConverter: JournalTypeConverter
-
   implicit def serialization: Serialization
 
-  val schema = cfg.journalSchemaName
-
-  val table = cfg.journalTableName
+  def cfg: PluginConfig
+  def schema = cfg.journalSchemaName
+  def table = cfg.journalTableName
 
   def selectMessage(persistenceId: String, sequenceNr: Long): Option[PersistentRepr] =
     SQL(s"SELECT message FROM $schema$table WHERE persistence_id = ? AND sequence_number = ?").bind(persistenceId, sequenceNr)
@@ -82,22 +75,19 @@ trait GenericStatements extends JdbcStatements with JournalSerializer {
     SQL(sql).bind(args: _*).update().apply
   }
 
-  def updateMessage(persistenceId: String, sequenceNr: Long, marker: String, message: PersistentRepr): Int = {
+  def updateMessage(persistenceId: String, sequenceNr: Long, marker: String, message: PersistentRepr): Int =
     SQL(s"UPDATE $schema$table SET message = ?, marker = ? WHERE persistence_id = ? and sequence_number = ?")
       .bind(marshal(message), marker, persistenceId, sequenceNr).update().apply
-  }
 
-  def deleteMessageSingle(persistenceId: String, sequenceNr: Long) {
+  def deleteMessageSingle(persistenceId: String, sequenceNr: Long): Unit =
     SQL(s"DELETE FROM $schema$table WHERE sequence_number = ? and persistence_id = ?")
       .bind(sequenceNr, persistenceId).update().apply
-  }
 
-  def deleteMessageRange(persistenceId: String, toSequenceNr: Long) {
+  def deleteMessageRange(persistenceId: String, toSequenceNr: Long): Unit =
     SQL(s"DELETE FROM $schema$table WHERE sequence_number <= ? and persistence_id = ?")
       .bind(toSequenceNr, persistenceId).update().apply
-  }
 
-  def selectMaxSequenceNr(persistenceId: String): Future[Long] = Future[Long] {
+  def selectMaxSequenceNr(persistenceId: String): Long =
     SQL(s"SELECT MAX(sequence_number) FROM $schema$table WHERE persistence_id = ?")
       .bind(persistenceId)
       .map(_.longOpt(1))
@@ -105,15 +95,13 @@ trait GenericStatements extends JdbcStatements with JournalSerializer {
       .apply()
       .flatMap(identity)
       .getOrElse(0)
-  }
 
-  def selectMessagesFor(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): List[PersistentRepr] = {
+  def selectMessagesFor(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): List[PersistentRepr] =
     SQL(s"SELECT message FROM $schema$table WHERE persistence_id = ? and (sequence_number >= ? and sequence_number <= ?) ORDER BY sequence_number LIMIT ?")
       .bind(persistenceId, fromSequenceNr, toSequenceNr, max)
       .map(rs ⇒ unmarshal(rs.string(1), persistenceId))
       .list()
       .apply
-  }
 }
 
 trait PostgresqlStatements extends GenericStatements

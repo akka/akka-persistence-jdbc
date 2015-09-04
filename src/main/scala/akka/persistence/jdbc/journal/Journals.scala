@@ -23,13 +23,13 @@ import scalikejdbc.DBSession
 import scala.concurrent.ExecutionContext
 
 trait GenericJdbcSyncWriteJournal extends JdbcSyncWriteJournal with GenericStatements {
-  implicit val session: DBSession = ScalikeExtension(context.system).session
+  implicit def session: DBSession = ScalikeExtension(context.system).session
 
-  implicit val executionContext: ExecutionContext = context.system.dispatcher
+  implicit def executionContext: ExecutionContext = context.system.dispatcher
 
-  implicit val journalConverter = ScalikeExtension(context.system).journalConverter
+  implicit def journalConverter = ScalikeExtension(context.system).journalConverter
 
-  implicit val serialization = SerializationExtension(context.system)
+  implicit def serialization = SerializationExtension(context.system)
 }
 
 class PostgresqlSyncWriteJournal extends GenericJdbcSyncWriteJournal with PostgresqlStatements

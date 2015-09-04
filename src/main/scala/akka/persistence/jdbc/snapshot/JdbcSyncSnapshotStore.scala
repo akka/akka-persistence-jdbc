@@ -16,40 +16,30 @@
 
 package akka.persistence.jdbc.snapshot
 
-import akka.actor.ActorLogging
+import akka.actor.{ ActorLogging, ActorSystem }
 import akka.persistence.jdbc.common.ActorConfig
 import akka.persistence.serialization.Snapshot
 import akka.persistence.snapshot.SnapshotStore
 import akka.persistence.{ SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria }
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.Try
 
 trait JdbcSyncSnapshotStore extends SnapshotStore with ActorLogging with ActorConfig with JdbcStatements {
-  implicit val system = context.system
-  implicit val executionContext = context.system.dispatcher
+  def system: ActorSystem
+  implicit def executionContext: ExecutionContext
 
-  override def loadAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] = {
-    log.debug("loading for persistenceId: {}, criteria: {}", persistenceId, criteria)
-    Future[Option[SelectedSnapshot]] {
-      selectSnapshotFor(persistenceId, criteria)
-    }
-  }
+  override def loadAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] =
+    Future.fromTry(Try(selectSnapshotFor(persistenceId, criteria)))
 
-  override def saveAsync(metadata: SnapshotMetadata, snapshot: Any): Future[Unit] = Future {
-    log.debug("Saving metadata: {}, snapshot: {}", metadata, snapshot)
-    writeSnapshot(metadata, Snapshot(snapshot))
-  }
+  override def saveAsync(metadata: SnapshotMetadata, snapshot: Any): Future[Unit] =
+    Future.fromTry(Try(writeSnapshot(metadata, Snapshot(snapshot))))
 
-  override def saved(metadata: SnapshotMetadata): Unit =
-    log.debug("Saved: {}", metadata)
+  override def saved(metadata: SnapshotMetadata): Unit = ()
 
-  override def delete(metadata: SnapshotMetadata): Unit = {
-    log.debug("Deleting: {}", metadata)
+  override def delete(metadata: SnapshotMetadata): Unit =
     deleteSnapshot(metadata)
-  }
 
-  override def delete(persistenceId: String, criteria: SnapshotSelectionCriteria): Unit = {
-    log.debug("Deleting for persistenceId: {} and criteria: {}", persistenceId, criteria)
+  override def delete(persistenceId: String, criteria: SnapshotSelectionCriteria): Unit =
     deleteSnapshots(persistenceId, criteria)
-  }
 }

@@ -52,6 +52,7 @@ Add the following to the repositories section of the pom:
 ## 1.1.8 (2015-09-04)
  - Compatibility with Akka 2.3.13
  - Akka 2.3.12 -> 2.3.13
+ - Dropping Scala 2.10 support, let me know if that's a problem.
 
 ## 1.1.7 (2015-07-13)
  - Scala 2.11.6 -> 2.11.7

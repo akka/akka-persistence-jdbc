@@ -18,6 +18,7 @@ package akka.persistence.jdbc.snapshot
 
 import akka.actor.{ ActorLogging, ActorSystem }
 import akka.persistence.jdbc.common.ActorConfig
+import akka.persistence.jdbc.future.PimpedFuture
 import akka.persistence.serialization.Snapshot
 import akka.persistence.snapshot.SnapshotStore
 import akka.persistence.{ SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria }
@@ -30,10 +31,10 @@ trait JdbcSyncSnapshotStore extends SnapshotStore with ActorLogging with ActorCo
   implicit def executionContext: ExecutionContext
 
   override def loadAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] =
-    Future.fromTry(Try(selectSnapshotFor(persistenceId, criteria)))
+    PimpedFuture.fromTry(Try(selectSnapshotFor(persistenceId, criteria)))
 
   override def saveAsync(metadata: SnapshotMetadata, snapshot: Any): Future[Unit] =
-    Future.fromTry(Try(writeSnapshot(metadata, Snapshot(snapshot))))
+    PimpedFuture.fromTry(Try(writeSnapshot(metadata, Snapshot(snapshot))))
 
   override def saved(metadata: SnapshotMetadata): Unit = ()
 

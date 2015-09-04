@@ -1,2 +1,2 @@
 #!/bin/bash
-sbt clean publish
+sbt clean +publish

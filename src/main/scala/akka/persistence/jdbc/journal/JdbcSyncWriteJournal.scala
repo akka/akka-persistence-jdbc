@@ -19,6 +19,7 @@ package akka.persistence.jdbc.journal
 import akka.actor.ActorLogging
 import akka.persistence._
 import akka.persistence.jdbc.common.ActorConfig
+import akka.persistence.jdbc.future.PimpedFuture
 import akka.persistence.jdbc.journal.RowTypeMarkers._
 import akka.persistence.journal.SyncWriteJournal
 
@@ -70,8 +71,8 @@ trait JdbcSyncWriteJournal extends SyncWriteJournal with ActorLogging with Actor
     }
 
   override def asyncReadHighestSequenceNr(processorId: String, fromSequenceNr: Long): Future[Long] =
-    Future.fromTry(Try(selectMaxSequenceNr(processorId)))
+    PimpedFuture.fromTry(Try(selectMaxSequenceNr(processorId)))
 
   override def asyncReplayMessages(processorId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(replayCallback: (PersistentRepr) ⇒ Unit): Future[Unit] =
-    Future.fromTry(Try(selectMessagesFor(processorId, fromSequenceNr, toSequenceNr, max).foreach(replayCallback)))
+    PimpedFuture.fromTry(Try(selectMessagesFor(processorId, fromSequenceNr, toSequenceNr, max).foreach(replayCallback)))
 }

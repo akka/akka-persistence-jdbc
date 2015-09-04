@@ -24,13 +24,16 @@ import scala.collection.immutable.Seq
 import scala.concurrent.Future
 import scala.util.Try
 
-trait JdbcAsyncWriteJournal extends AsyncWriteJournal with ActorConfig with JdbcStatements {
+trait JdbcSyncWriteJournal extends AsyncWriteJournal with ActorConfig with JdbcStatements {
+  override def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] =
+    Future.fromTry(Try(writeMessages(messages)))
 
-  override def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] = ???
+  override def asyncDeleteMessagesTo(persistenceId: String, toSequenceNr: Long): Future[Unit] =
+    Future.fromTry(Try(deleteMessagesTo(persistenceId, toSequenceNr)))
 
-  override def asyncDeleteMessagesTo(persistenceId: String, toSequenceNr: Long): Future[Unit] = ???
+  override def asyncReadHighestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] =
+    Future.fromTry(Try(readHighestSequenceNr(persistenceId)))
 
-  override def asyncReadHighestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] = ???
-
-  override def asyncReplayMessages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(replayCallback: (PersistentRepr) ⇒ Unit): Future[Unit] = ???
+  override def asyncReplayMessages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(replayCallback: (PersistentRepr) ⇒ Unit): Future[Unit] =
+    Future.fromTry(Try(replayMessages(persistenceId, fromSequenceNr, toSequenceNr, max).foreach(replayCallback)))
 }

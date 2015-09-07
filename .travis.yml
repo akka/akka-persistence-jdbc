@@ -1,17 +1,16 @@
 language: scala
 sudo: false
 scala:
-  - "2.10.5"
-  - "2.11.6"
+  - "2.11.7"
 jdk:
   - oraclejdk8
 branches:
   only:
-    - master
+    - akka-2.4.0-xx
 before_script:
   - psql -c 'create database docker;' -U postgres
 addons:
-  postgresql: "9.3"
+  postgresql: "9.4"
 script: "./build.sh"
 notifications:
   email:

@@ -48,6 +48,9 @@ Add the following to the repositories section of the pom:
       <url>http://dl.bintray.com/dnvriend/maven</url>
     </repository>
 
+# Usage
+The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-persistence-jdbc/wiki)
+
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
 

@@ -49,6 +49,13 @@ Add the following to the repositories section of the pom:
 
 # What's new?
 
+## 1.2.0-RC2 (2015-09-07) 
+ - Compatibility with Akka 2.4.0-RC2
+ - No obvious optimalizations are applied, and no schema refactorings are needed (for now)
+ - Please note; schema, serialization (strategy) and code refactoring will be iteratively applied on newer release of the 2.4.0-xx branch, but for each step, a migration guide and SQL scripts will be made available.
+ - Use the following library dependency: "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.0-RC2"
+ - Fully backwards compatible with akka-persistence-jdbc v1.1.7's schema and configuration 
+
 ## 1.1.8 (2015-09-04)
  - Compatibility with Akka 2.3.13
  - Akka 2.3.12 -> 2.3.13

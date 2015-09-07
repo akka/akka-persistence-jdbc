@@ -461,36 +461,3 @@ The application.conf for Oracle should be:
         snapshotSchemaName = "system"
         snapshotTableName  = "snapshot"
     }
-    
-# Testing
- - Install [brew](http://brew.sh/)
- - Install [docker](https://github.com/docker/machine) 
-
-``` 
- brew install docker
-```
-
- - Install [docker-machine](https://github.com/docker/machine)
-
-```
-brew install docker-machine
-```
-
- - Install [docker-compose](https://github.com/docker/compose)
- 
-```
-brew install docker-compose
-```
- 
- - Create a docker machine
-
-```
-docker-machine create -d virtualbox --virtualbox-disk-size "20000" --virtualbox-memory "4096" dev
-$(docker-machine env dev)
-```
- 
- - Execute the appropriate test shell script
-
-```
-./test-all.sh
-```

@@ -7,21 +7,19 @@ version := "1.2.0-SNAPSHOT"
 
 scalaVersion := "2.11.7"
 
-crossScalaVersions := Seq("2.10.5", "2.11.7")
-
 libraryDependencies ++= {
-    val akkaVersion = "2.4.0-RC1"
+    val akkaVersion = "2.4.0-RC2"
     Seq(
     "com.typesafe.akka"   %% "akka-actor"                        % akkaVersion,
     "com.typesafe.akka"   %% "akka-persistence"                  % akkaVersion,
     "org.scalikejdbc"     %% "scalikejdbc"                       % "2.2.7",
-    "commons-codec"        % "commons-codec"                     % "1.10",
     "ch.qos.logback"       % "logback-classic"                   % "1.1.2"           % Test,
+    "commons-codec"        % "commons-codec"                     % "1.10",
     "com.typesafe.akka"   %% "akka-slf4j"                        % akkaVersion       % Test,
     "ch.qos.logback"       % "logback-classic"                   % "1.1.2"           % Test,
-    "org.postgresql"       % "postgresql"                        % "9.4-1201-jdbc41" % Test,
-    "com.h2database"       % "h2"                                % "1.4.181"         % Test,
-    "mysql"                % "mysql-connector-java"              % "5.1.33"          % Test,
+    "org.postgresql"       % "postgresql"                        % "9.4-1202-jdbc42" % Test,
+    "com.h2database"       % "h2"                                % "1.4.188"         % Test,
+    "mysql"                % "mysql-connector-java"              % "5.1.36"          % Test,
     "com.typesafe.akka"   %% "akka-testkit"                      % akkaVersion       % Test,
     "org.scalatest"       %% "scalatest"                         % "2.1.4"           % Test,
     "com.typesafe.akka"   %% "akka-persistence-tck"              % akkaVersion       % Test

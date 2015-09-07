@@ -1,5 +1,5 @@
 # akka-persistence-jdbc
-The akka-persistence-jdbc is a plugin for [akka-persistence](http://doc.akka.io/docs/akka/snapshot/scala/persistence.html) that writes journal entries to a configured JDBC database. It supports writing journal messages and snapshots to two tables:  the `journal` table and the `snapshot` table. 
+Akka-persistence-jdbc is a plugin for akka-persistence that synchronously writes journal and snapshot entries entries to a configured JDBC store. It supports writing journal messages and snapshots to two tables: the `journal` table and the `snapshot` table.
 
 Master branch | Akka 2.4.0-xx branch | License | Latest Version
 ------------- | -------------------- | ------- | --------------

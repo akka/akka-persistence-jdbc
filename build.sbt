@@ -3,12 +3,12 @@ organization := "com.github.dnvriend"
 
 name := "akka-persistence-jdbc"
 
-version := "1.2.0-RC2"
+version := "1.2.0-RC3"
 
 scalaVersion := "2.11.7"
 
 libraryDependencies ++= {
-    val akkaVersion = "2.4.0-RC2"
+    val akkaVersion = "2.4.0-RC3"
     Seq(
     "com.typesafe.akka"   %% "akka-actor"                        % akkaVersion,
     "com.typesafe.akka"   %% "akka-persistence"                  % akkaVersion,

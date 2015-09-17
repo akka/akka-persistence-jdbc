@@ -22,14 +22,14 @@ To include the JDBC plugin into your sbt project, add the following lines to you
 
     resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.0-RC2"
+    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.0-RC3"
 
 For Maven users, add the following to the pom.xml
     
     <dependency>
         <groupId>com.github.dnvriend</groupId>
         <artifactId>akka-persistence-jdbc_2.11</artifactId>
-        <version>1.2.0-RC2</version>
+        <version>1.2.0-RC3</version>
     </dependency>
 
 Add the following to the repositories section of the pom:
@@ -43,8 +43,8 @@ Add the following to the repositories section of the pom:
 
 # What's new?
 
-## 1.2.0-RC2 (2015-09-07)
- - Compatibility with Akka 2.4.0-RC2 
- - Use the following library dependency: "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.0-RC2"
- - Fully backwards compatible with akka-persistence-jdbc v1.1.7's schema and configuration
+## 1.2.0-RC3 (2015-09-17)
+ - Compatibility with Akka 2.4.0-RC3 
+ - Use the following library dependency: "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.0-RC3"
+ - Fully backwards compatible with akka-persistence-jdbc v1.1.8's schema and configuration
  - Please note; a schema, serialization and code refactoring will be iteratively applied on newer release, but for each step, a migration guide will be available.

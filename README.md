@@ -74,5 +74,7 @@ For the full list of what's new see [this wiki page] (https://github.com/dnvrien
 
 If you want to take action, feel free to contact Dennis Vriend <dnvriend@gmail.com>. You can also contact W3C Staff as explained in [W3C Procedures](http://www.w3.org/Consortium/pwe/#Procedures).
 
-# Licence
-This source code is made available under the [Apache 2.0 Licence](http://www.apache.org/licenses/LICENSE-2.0). The [quick summary of what this licence means is available here](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0))
+# License
+This source code is made available under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0). The [quick summary of what this license means is available here](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0))
+
+Have fun!

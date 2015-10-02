@@ -3,20 +3,19 @@ organization := "com.github.dnvriend"
 
 name := "akka-persistence-jdbc"
 
-version := "1.2.0-RC3"
+version := "1.2.0"
 
 scalaVersion := "2.11.7"
 
 libraryDependencies ++= {
-    val akkaVersion = "2.4.0-RC3"
+    val akkaVersion = "2.4.0"
     Seq(
     "com.typesafe.akka"   %% "akka-actor"                        % akkaVersion,
     "com.typesafe.akka"   %% "akka-persistence"                  % akkaVersion,
-    "org.scalikejdbc"     %% "scalikejdbc"                       % "2.2.7",
-    "ch.qos.logback"       % "logback-classic"                   % "1.1.2"           % Test,
+    "org.scalikejdbc"     %% "scalikejdbc"                       % "2.2.8",
     "commons-codec"        % "commons-codec"                     % "1.10",
+    "ch.qos.logback"       % "logback-classic"                   % "1.1.3"           % Test,
     "com.typesafe.akka"   %% "akka-slf4j"                        % akkaVersion       % Test,
-    "ch.qos.logback"       % "logback-classic"                   % "1.1.2"           % Test,
     "org.postgresql"       % "postgresql"                        % "9.4-1202-jdbc42" % Test,
     "com.h2database"       % "h2"                                % "1.4.188"         % Test,
     "mysql"                % "mysql-connector-java"              % "5.1.36"          % Test,

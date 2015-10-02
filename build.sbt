@@ -18,7 +18,6 @@ libraryDependencies ++= {
     "com.typesafe.akka"   %% "akka-persistence-experimental" % akkaVersion,
     "org.scalikejdbc"     %% "scalikejdbc"                   % "2.2.7",
     "commons-codec"        % "commons-codec"                 % "1.10",
-    "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % Test,
     "com.typesafe.akka"   %% "akka-slf4j"                    % akkaVersion       % Test,
     "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % Test,
     "org.postgresql"       % "postgresql"                    % "9.4-1201-jdbc41" % Test,

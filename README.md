@@ -22,35 +22,67 @@ By setting the appropriate Journal and SnapshotStore classes in the application.
 
 **End of Disclaimer**
 
-# Dependency
+# Repository
 To include the JDBC plugin into your sbt project, add the following lines to your build.sbt file:
 
-    resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
+## SBT
 
-    libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.8"
+```
+resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
+```
 
-For Maven users, add the following to the pom.xml
+## Maven
 
-    <dependency>
-        <groupId>com.github.dnvriend</groupId>
-        <artifactId>akka-persistence-jdbc_2.10</artifactId>
-        <version>1.1.8</version>
-    </dependency>
-    
-    <dependency>
-        <groupId>com.github.dnvriend</groupId>
-        <artifactId>akka-persistence-jdbc_2.11</artifactId>
-        <version>1.1.8</version>
-    </dependency>
+```
+<repository>
+  <snapshots><enabled>false</enabled></snapshots>
+  <id>central</id>
+  <name>bintray</name>
+  <url>http://dl.bintray.com/dnvriend/maven</url>
+</repository>
+```
 
-Add the following to the repositories section of the pom:
+## Latest stable release for Akka 2.3.x  
 
-    <repository>
-      <snapshots><enabled>false</enabled></snapshots>
-      <id>central</id>
-      <name>bintray</name>
-      <url>http://dl.bintray.com/dnvriend/maven</url>
-    </repository>
+### SBT
+
+```
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.8"
+```
+
+### Maven
+
+```
+<dependency>
+    <groupId>com.github.dnvriend</groupId>
+    <artifactId>akka-persistence-jdbc_2.10</artifactId>
+    <version>1.1.8</version>
+</dependency>
+
+<dependency>
+    <groupId>com.github.dnvriend</groupId>
+    <artifactId>akka-persistence-jdbc_2.11</artifactId>
+    <version>1.1.8</version>
+</dependency>
+```
+
+## Latest stable release for Akka 2.4.x
+
+### SBT
+
+```
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.0"
+```
+
+### Maven
+
+```
+<dependency>
+    <groupId>com.github.dnvriend</groupId>
+    <artifactId>akka-persistence-jdbc_2.11</artifactId>
+    <version>1.2.0</version>
+</dependency>
+```
 
 # Usage
 The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-persistence-jdbc/wiki)
@@ -58,13 +90,13 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
 
-## 1.2.0-RC3 (2015-09-17) 
- - Compatibility with Akka 2.4.0-RC3
+## 1.2.0 (2015-10-02)
+ - Compatibility with Akka 2.4.0
+ - Akka 2.4.0-RC3 -> 2.4.0
+ - scalikejdbc 2.2.7 -> 2.2.8
  - No obvious optimalizations are applied, and no schema refactorings are needed (for now)
- - Please note; schema, serialization (strategy) and code refactoring will be iteratively applied on newer release of the 2.4.0-xx branch, but for each step, a migration guide and SQL scripts will be made available.
- - Use the following library dependency: "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.0-RC3"
  - Fully backwards compatible with akka-persistence-jdbc v1.1.8's schema and configuration 
-
+ 
 ## 1.1.8 (2015-09-04)
  - Compatibility with Akka 2.3.13
  - Akka 2.3.12 -> 2.3.13

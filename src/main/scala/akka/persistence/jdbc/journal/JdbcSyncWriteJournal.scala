@@ -26,7 +26,10 @@ import scala.util.Try
 
 trait JdbcSyncWriteJournal extends AsyncWriteJournal with ActorConfig with JdbcStatements {
   override def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] =
-    Future.fromTry(Try(writeMessages(messages)))
+    if (messages.nonEmpty)
+      Future.fromTry(Try(writeMessages(messages)))
+    else
+      Future.successful(Seq.empty)
 
   override def asyncDeleteMessagesTo(persistenceId: String, toSequenceNr: Long): Future[Unit] =
     Future.fromTry(Try(deleteMessagesTo(persistenceId, toSequenceNr)))

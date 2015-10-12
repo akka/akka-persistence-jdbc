@@ -9,11 +9,13 @@ services:
 branches:
   only:
     - master
+#  https://github.com/travis-ci/travis-ci/issues/4778
 before_script:
   - curl -L https://github.com/docker/compose/releases/download/1.4.0/docker-compose-`uname -s`-`uname -m` > docker-compose
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
   - psql -c 'create database docker;' -U postgres
+  - sudo service docker restart ; sleep 10
 addons:
   postgresql: "9.3"
 script: "./build.sh"

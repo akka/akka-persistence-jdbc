@@ -71,7 +71,7 @@ libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.8
 ### SBT
 
 ```
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.0"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.1"
 ```
 
 ### Maven
@@ -80,7 +80,7 @@ libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.0
 <dependency>
     <groupId>com.github.dnvriend</groupId>
     <artifactId>akka-persistence-jdbc_2.11</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
 </dependency>
 ```
 
@@ -90,14 +90,10 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
 
-## 1.2.0 (2015-10-02)
- - Compatibility with Akka 2.4.0
- - Akka 2.4.0-RC3 -> 2.4.0
- - scalikejdbc 2.2.7 -> 2.2.8
- - No obvious optimalizations are applied, and no schema refactorings are needed (for now)
- - Fully backwards compatible with akka-persistence-jdbc v1.1.8's schema and configuration 
+## 1.2.1 (2015-10-12) -> Akka v2.4.x
+ - Merged PR #27 [Andrey Kouznetsov](https://github.com/prettynatty) don't fail on asyncWrite with empty messages, thanks! 
  
-## 1.1.8 (2015-09-04)
+## 1.1.8 (2015-09-04) - Akka v2.3.x
  - Compatibility with Akka 2.3.13
  - Akka 2.3.12 -> 2.3.13
 

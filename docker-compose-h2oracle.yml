@@ -7,3 +7,10 @@ h2:
   image: viliusl/ubuntu-h2-server
   ports:
     - "1522:1521"
+
+mysql:
+  image: mysql:5.7
+  environment:
+    - MYSQL_ROOT_PASSWORD=root
+  ports:
+    - "3306:3306"

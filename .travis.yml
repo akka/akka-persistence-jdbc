@@ -1,14 +1,18 @@
+sudo: required
 language: scala
-sudo: false
 scala:
-  - "2.10.5"
+  - "2.10.6"
   - "2.11.7"
-jdk:
-  - oraclejdk8
+jdk: oraclejdk7
+services:
+  - docker
 branches:
   only:
     - master
 before_script:
+  - curl -L https://github.com/docker/compose/releases/download/1.4.0/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
   - psql -c 'create database docker;' -U postgres
 addons:
   postgresql: "9.3"

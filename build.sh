@@ -1,3 +1,5 @@
 #!/bin/bash
 rm ./bintray.sbt
-sbt "test-only *Mysql* *Postgres*"
+wait 1521 Oracle
+wait 1522 H2
+sbt test

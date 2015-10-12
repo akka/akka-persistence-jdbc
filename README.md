@@ -47,7 +47,7 @@ resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 ### SBT
 
 ```
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.8"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.9"
 ```
 
 ### Maven
@@ -90,13 +90,14 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
 
-## 1.2.1 (2015-10-12) -> Akka v2.4.x
+## 1.2.1 (2015-10-12) - Akka v2.4.x
  - Merged PR #27 [Andrey Kouznetsov](https://github.com/prettynatty) don't fail on asyncWrite with empty messages, thanks! 
  
-## 1.1.8 (2015-09-04) - Akka v2.3.x
- - Compatibility with Akka 2.3.13
- - Akka 2.3.12 -> 2.3.13
-
+## 1.1.9 (2015-10-12) - Akka v2.3.x
+ - scala 2.10.5 -> 2.10.6
+ - akka 2.3.13 -> 2.3.14
+ - scalikejdbc 2.2.7 -> 2.2.8
+ 
 # Code of Conduct
 **Contributors all agree to follow the [W3C Code of Ethics and Professional Conduct](http://www.w3.org/Consortium/cepc/).**
 

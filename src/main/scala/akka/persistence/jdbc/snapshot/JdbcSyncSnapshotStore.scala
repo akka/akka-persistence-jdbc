@@ -27,7 +27,6 @@ import scala.util.Try
 
 trait JdbcSyncSnapshotStore extends SnapshotStore with ActorLogging with ActorConfig with JdbcStatements {
   implicit val system = context.system
-  implicit val executionContext = context.system.dispatcher
 
   override def loadAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] =
     Future.fromTry(Try(selectSnapshotFor(persistenceId, criteria)))

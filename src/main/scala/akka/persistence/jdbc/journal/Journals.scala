@@ -20,12 +20,8 @@ import akka.persistence.jdbc.extension.ScalikeExtension
 import akka.serialization.SerializationExtension
 import scalikejdbc.DBSession
 
-import scala.concurrent.ExecutionContext
-
 trait GenericJdbcSyncWriteJournal extends JdbcSyncWriteJournal with GenericStatements {
   implicit val session: DBSession = ScalikeExtension(context.system).session
-
-  implicit val executionContext: ExecutionContext = context.system.dispatcher
 
   implicit val journalConverter = ScalikeExtension(context.system).journalConverter
 

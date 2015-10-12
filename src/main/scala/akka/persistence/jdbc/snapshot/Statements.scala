@@ -26,7 +26,6 @@ import akka.persistence.{ SelectedSnapshot, SnapshotMetadata, SnapshotSelectionC
 import akka.serialization.Serialization
 import scalikejdbc._
 
-import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 trait JdbcStatements {
@@ -40,7 +39,6 @@ trait JdbcStatements {
 }
 
 trait GenericStatements extends JdbcStatements with SnapshotSerializer {
-  implicit def executionContext: ExecutionContext
   implicit def session: DBSession
   implicit def snapshotConverter: SnapshotTypeConverter
   implicit def serialization: Serialization

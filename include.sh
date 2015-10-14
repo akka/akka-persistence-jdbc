@@ -1,19 +1,13 @@
 #!/usr/bin/env bash
-# Stops, removes all services and creates new ones, fig likes to reuse ones, even when they are rebuild
-
-evalMachine() {
-  eval "$(docker-machine env dev)"
-}
+# I have added an alias for the VM IP address 'boot2docker' in /etc/hosts
+export VM_HOST=boot2docker
 
 start() {
-  evalMachine
   compose_file=compose/docker-compose-${1:-all}.yml
-  stop $1 && docker-compose --file $compose_file up -d --allow-insecure-ssl
+  stop $1 && docker-compose --file $compose_file up -d
 }
 
-# Stop and removes all services defined by fig
 stop() {
-  eval "$(docker-machine env dev)"
   compose_file=compose/docker-compose-${1:-all}.yml
   docker-compose --file $compose_file stop && docker-compose --file $compose_file rm --force
 }
@@ -21,7 +15,7 @@ stop() {
 # Wait for a certain service to become available
 wait() {
 while true; do
-  if ! nc -z boot2docker $1
+  if ! nc -z $VM_HOST $1
   then
     echo "$2 not available, retrying..."
     sleep 1

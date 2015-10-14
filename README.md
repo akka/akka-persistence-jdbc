@@ -92,8 +92,8 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
 
-## 1.2.1 (2015-10-12) - Akka v2.4.x
- - Merged PR #27 [Andrey Kouznetsov](https://github.com/prettynatty) don't fail on asyncWrite with empty messages, thanks! 
+## 1.2.2 (2015-10-14) - Akka v2.4.x
+ - Merged PR #28 [Andrey Kouznetsov](https://github.com/prettynatty) Removing Unused ExecutionContext, thanks!
  
 ## 1.1.9 (2015-10-12) - Akka v2.3.x
  - scala 2.10.5 -> 2.10.6

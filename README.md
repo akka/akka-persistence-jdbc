@@ -73,7 +73,7 @@ libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.9
 ### SBT
 
 ```
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.1"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.2"
 ```
 
 ### Maven
@@ -82,7 +82,7 @@ libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.1
 <dependency>
     <groupId>com.github.dnvriend</groupId>
     <artifactId>akka-persistence-jdbc_2.11</artifactId>
-    <version>1.2.1</version>
+    <version>1.2.2</version>
 </dependency>
 ```
 

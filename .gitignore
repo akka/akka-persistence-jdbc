@@ -1,5 +1,8 @@
-.vagrant/
-target/
-.idea
+/RUNNING_PID
+/logs/
+/project/*-shim.sbt
+/project/project/
+/project/target/
+/target/
+.idea/
 *.iml
-.DS_Store

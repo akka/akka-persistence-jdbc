@@ -1,89 +1,66 @@
 # akka-persistence-jdbc
 Akka-persistence-jdbc is a plugin for akka-persistence that synchronously writes journal and snapshot entries entries to a configured JDBC store. It supports writing journal messages and snapshots to two tables: the `journal` table and the `snapshot` table.
 
-> The build fails, this is because I am busy with Travis so it runs tests against all databases. Apologies.
-
 Service | Status | Description
 ------- | ------ | -----------
 License | [![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt) | Apache 2.0
-Travis (master) | [![Build Status: Master](https://travis-ci.org/dnvriend/akka-persistence-jdbc.svg?branch=master)](https://travis-ci.org/dnvriend/akka-persistence-jdbc) | master branch test
-Travis (2.4.0-xx) | [![Build Status: 2.4.0-xx](https://travis-ci.org/dnvriend/akka-persistence-jdbc.svg?branch=akka-2.4.0-xx)](https://travis-ci.org/dnvriend/akka-persistence-jdbc) | 2.4.0-xx branch test
-Codacy | [![Codacy Badge](https://api.codacy.com/project/badge/a5d8576c2a56479ab1c40d87c78bba58)](https://www.codacy.com/app/dnvriend/akka-persistence-jdbc) | Code Quality
 Bintray | [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-persistence-jdbc/images/download.svg) ](https://bintray.com/dnvriend/maven/akka-persistence-jdbc/_latestVersion) | Latest Version on Bintray
-
-By setting the appropriate Journal and SnapshotStore classes in the application.conf, you can choose the following databases:
-
-* H2           (tested, works on 1.4.179)
-* Postgresql   (tested, works on v9.4)
-* MySQL        (tested, works on 5.7 MySQL Community Server (GPL))
-* Oracle XE    (tested, works on Oracle XE 11g r2)
 
 **Start of Disclaimer:**
 
-> This plugin should not be used in production, ever! For a good, stable and scalable solution use [Apache Cassandra](http://cassandra.apache.org/) with the [akka-persistence-cassandra plugin](https://github.com/krasserm/akka-persistence-cassandra/) Only use this plug-in for study projects and proof of concepts. Please use Docker and [library/cassandra](https://registry.hub.docker.com/u/library/cassandra/) You have been warned! 
+> This plugin should not be used in production, ever! For a good, stable and scalable solution use [Apache Cassandra](http://cassandra.apache.org/) with the [akka-persistence-cassandra plugin](https://github.com/akka/akka-persistence-cassandra) Only use this plug-in for study projects and proof of concepts. Please use Docker and [library/cassandra](https://registry.hub.docker.com/u/library/cassandra/) You have been warned! 
 
 **End of Disclaimer**
 
-# Repository
-To include the JDBC plugin into your sbt project, add the following lines to your build.sbt file:
+## New release
+The latest version is `v2.0.0` and breaks backwards compatibility in a big way. New features:
 
-## SBT
+- It uses [Typesafe Slick](http://slick.typesafe.com/) as the database backend,
+- It uses a new database schema, dropping some columns and changing the column types,
+- It writes the journal and snapshot entries as byte arrays,
+- It relies on [Akka Serialization](http://doc.akka.io/docs/akka/2.4.1/scala/serialization.html),
+- For serializing, please split the domain model from the storage model, and use a binary format for the storage model that support schema versioning like [Google's protocol buffers](https://developers.google.com/protocol-buffers/docs/overview), as it is used by Akka Persistence, and is available as a dependent library. For an example on how to use Akka Serialization with protocol buffers, you can examine the [akka-serialization-test](https://github.com/dnvriend/akka-serialization-test) study project,
+- It supports the `Persistence Query` interface thus providing a universal asynchronous stream based query interface,
+- It has been tested against MySQL and Postgres only.
 
-```
-resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
-```
+## Configuration
+The new plugin relies on Slick to do create the SQL dialect for the database in use, therefor the following must be
+configured in `application.conf`
 
-## Maven
+Configure `akka-persistence`:
+- instruct akka persistence to use the `jdbc-journal` plugin,
+- instruct akka persistence to use the `jdbc-snapshot-store` plugin,
 
-```
-<repository>
-  <snapshots><enabled>false</enabled></snapshots>
-  <id>central</id>
-  <name>bintray</name>
-  <url>http://dl.bintray.com/dnvriend/maven</url>
-</repository>
-```
+Configure `slick`:
+- the slick `driver` to use: `slick.driver.PostgresDriver` and `slick.driver.MySQLDriver` are supported,
+- the `jdbcDriverClass`, eg: `org.postgresql.ds.PGSimpleDataSource`,
+- the `url` which is the JDBC URL,
+- the `user` to to use when creating a database connection,
+- the `password` to use when creating a database connection,
+- Slick uses an `executor` that manages the thread pool for asynchronous execution of Database I/O Actions. The values below are default.
+   
+```bash
+akka {
+  persistence {
+    journal.plugin = "jdbc-journal"
+    snapshot-store.plugin = "jdbc-snapshot-store"
+  }
+}
 
-## Latest stable release for Akka 2.3.x  
-
-### SBT
-
-```
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.1.9"
-```
-
-### Maven
-
-```
-<dependency>
-    <groupId>com.github.dnvriend</groupId>
-    <artifactId>akka-persistence-jdbc_2.10</artifactId>
-    <version>1.1.8</version>
-</dependency>
-
-<dependency>
-    <groupId>com.github.dnvriend</groupId>
-    <artifactId>akka-persistence-jdbc_2.11</artifactId>
-    <version>1.1.8</version>
-</dependency>
-```
-
-## Latest stable release for Akka 2.4.x
-
-### SBT
-
-```
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.2"
-```
-
-### Maven
-
-```
-<dependency>
-    <groupId>com.github.dnvriend</groupId>
-    <artifactId>akka-persistence-jdbc_2.11</artifactId>
-    <version>1.2.2</version>
-</dependency>
+akka-persistence-jdbc {
+  slick {
+    driver = "slick.driver.PostgresDriver"
+    jdbcDriverClass = "org.postgresql.ds.PGSimpleDataSource"
+    url = "jdbc:postgresql://localhost:5432"/docker"
+    user = "docker"
+    password = "docker"
+    executor {
+      name = "slick-executor"
+      numThreads = 10
+      queueSize = 1000
+    }
+  }
+}
 ```
 
 # Usage
@@ -91,6 +68,9 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
+
+## 2.0.0 (2016-01-16)
+ - A complete rewrite using [slick](http://slick.typesafe.com/) as the database backend, breaking backwards compatibility in a big way.
 
 ## 1.2.2 (2015-10-14) - Akka v2.4.x
  - Merged PR #28 [Andrey Kouznetsov](https://github.com/prettynatty) Removing Unused ExecutionContext, thanks!

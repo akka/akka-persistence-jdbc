@@ -1,46 +1,45 @@
+name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-name := "akka-persistence-jdbc"
-
-version := "1.1.9"
+version := "2.0.0"
 
 scalaVersion := "2.11.7"
 
-crossScalaVersions := Seq("2.10.6", "2.11.7")
-
-resolvers += "krasserm at bintray" at "http://dl.bintray.com/krasserm/maven"
+resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-releases/"
 
 libraryDependencies ++= {
-    val akkaVersion = "2.3.14"
-    Seq(
-    "com.typesafe.akka"   %% "akka-actor"                    % akkaVersion,
-    "com.typesafe.akka"   %% "akka-persistence-experimental" % akkaVersion,
-    "org.scalikejdbc"     %% "scalikejdbc"                   % "2.2.8",
-    "commons-codec"        % "commons-codec"                 % "1.10",
-    "com.typesafe.akka"   %% "akka-slf4j"                    % akkaVersion       % Test,
-    "ch.qos.logback"       % "logback-classic"               % "1.1.2"           % Test,
-    "org.postgresql"       % "postgresql"                    % "9.4-1201-jdbc41" % Test,
-    "com.h2database"       % "h2"                            % "1.4.181"         % Test,
-    "mysql"                % "mysql-connector-java"          % "5.1.33"          % Test,
-    "com.typesafe.akka"   %% "akka-testkit"                  % akkaVersion       % Test,
-    "org.scalatest"       %% "scalatest"                     % "2.1.4"           % Test,
-    "org.pegdown"          % "pegdown"                       % "1.4.2"           % Test,
-    "com.github.krasserm" %% "akka-persistence-testkit"      % "0.3.4"           % Test
+  val akkaVersion = "2.4.1"
+  val slickVersion = "3.1.1"
+  val akkaStreamAndHttpVersion = "2.0.1"
+  Seq(
+    "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+    "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
+    "com.typesafe.akka" %% "akka-persistence-query-experimental" % akkaVersion,
+    "com.typesafe.akka" %% "akka-stream-experimental" % akkaStreamAndHttpVersion,
+    "com.typesafe.slick" %% "slick" % slickVersion,
+    "com.typesafe.slick" %% "slick-extensions" % "3.1.0",
+    "com.typesafe.slick" %% "slick-hikaricp" % slickVersion,
+    "com.typesafe.akka" %% "akka-slf4j" % akkaVersion % Test,
+    "ch.qos.logback" % "logback-classic" % "1.1.2" % Test,
+    "com.typesafe.akka" %% "akka-persistence-tck" % akkaVersion % Test,
+    "com.typesafe.akka" %% "akka-slf4j" % akkaVersion % Test,
+    "org.postgresql" % "postgresql" % "9.4-1206-jdbc42" % Test,
+    "mysql" % "mysql-connector-java" % "5.1.33" % Test,
+    "com.typesafe.akka" %% "akka-stream-testkit-experimental" % akkaStreamAndHttpVersion % Test,
+    "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
+    "org.scalatest" %% "scalatest" % "2.2.4" % Test,
+    "org.scalacheck" %% "scalacheck" % "1.12.5" % Test
   )
 }
 
-autoCompilerPlugins := true
+fork in Test := true
+
+javaOptions in Test ++= Seq("-Xms30m", "-Xmx30m")
 
 parallelExecution in Test := false
 
-scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
-
-publishMavenStyle := true
-
-licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php"))
-
-//testOptions in ThisBuild += Tests.Argument(TestFrameworks.ScalaTest, "-h", "target/test-reports")
+licenses +=("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php"))
 
 // enable scala code formatting //
 import scalariform.formatter.preferences._
@@ -57,11 +56,8 @@ ScalariformKeys.preferences := ScalariformKeys.preferences.value
 import de.heikoseeberger.sbtheader.license.Apache2_0
 
 headers := Map(
-    "scala" -> Apache2_0("2015", "Dennis Vriend"),
-    "conf" -> Apache2_0("2015", "Dennis Vriend", "#")
+  "scala" -> Apache2_0("2015", "Dennis Vriend"),
+  "conf" -> Apache2_0("2015", "Dennis Vriend", "#")
 )
 
-// enable plugins //
-lazy val akkaPersistenceJdbc = project
-  .in(file("."))
-  .enablePlugins(AutomateHeaderPlugin)
+enablePlugins(AutomateHeaderPlugin)

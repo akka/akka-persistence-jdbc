@@ -1,0 +1,30 @@
+postgres:
+  image: postgres:latest
+  container_name: postgres
+  environment:
+    - "TZ=Europe/Amsterdam"
+    - "POSTGRES_USER=docker"
+    - "POSTGRES_PASSWORD=docker"
+  ports:
+    - "5432:5432"  # credentials (docker:docker)
+
+mysql:
+  image: mysql:latest
+  container_name: mysql
+  environment:
+    - MYSQL_ROOT_PASSWORD=root
+  ports:
+    - "3306:3306" # credentials (root:root)
+
+#oracle:
+#  image: alexeiled/docker-oracle-xe-11g
+#  container_name: oracle
+#  ports:
+#    - "1521:1521" # credentials (system:oracle)
+
+
+#h2:
+#  image: viliusl/ubuntu-h2-server
+#  container_name: h2
+#  ports:
+#    - "1522:1521"

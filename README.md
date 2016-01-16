@@ -63,6 +63,64 @@ akka-persistence-jdbc {
 }
 ```
 
+## Postgres Schema
+```sql
+DROP TABLE IF EXISTS public.journal;
+
+CREATE TABLE IF NOT EXISTS public.journal (
+  persistence_id VARCHAR(255) NOT NULL,
+  sequence_number BIGINT NOT NULL,
+  message BYTEA NOT NULL,
+  PRIMARY KEY(persistence_id, sequence_number)
+);
+
+DROP TABLE IF EXISTS public.deleted_to;
+
+CREATE TABLE IF NOT EXISTS public.deleted_to (
+  persistence_id VARCHAR(255) NOT NULL,
+  deleted_to BIGINT NOT NULL
+);
+
+DROP TABLE IF EXISTS public.snapshot;
+
+CREATE TABLE IF NOT EXISTS public.snapshot (
+  persistence_id VARCHAR(255) NOT NULL,
+  sequence_number BIGINT NOT NULL,
+  created BIGINT NOT NULL,
+  snapshot BYTEA NOT NULL,
+  PRIMARY KEY(persistence_id, sequence_number)
+);
+```
+
+## MySQL Schema
+```sql
+DROP TABLE IF EXISTS journal;
+
+CREATE TABLE IF NOT EXISTS journal (
+  persistence_id VARCHAR(255) NOT NULL,
+  sequence_number BIGINT NOT NULL,
+  message BLOB NOT NULL,
+  PRIMARY KEY(persistence_id, sequence_number)
+);
+
+DROP TABLE IF EXISTS deleted_to;
+
+CREATE TABLE IF NOT EXISTS deleted_to (
+  persistence_id VARCHAR(255) NOT NULL,
+  deleted_to BIGINT NOT NULL
+);
+
+DROP TABLE IF EXISTS snapshot;
+
+CREATE TABLE IF NOT EXISTS snapshot (
+  persistence_id VARCHAR(255) NOT NULL,
+  sequence_number BIGINT NOT NULL,
+  created BIGINT NOT NULL,
+  snapshot BLOB NOT NULL,
+  PRIMARY KEY (persistence_id, sequence_number)
+);
+```
+
 # Usage
 The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-persistence-jdbc/wiki)
 

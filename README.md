@@ -23,6 +23,15 @@ The latest version is `v2.0.0` and breaks backwards compatibility in a big way. 
 - It supports the `Persistence Query` interface thus providing a universal asynchronous stream based query interface,
 - It has been tested against MySQL and Postgres only.
 
+## Installation
+Add the following to your `build.sbt`:
+
+```scala
+resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
+
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.0.0"
+```
+
 ## Configuration
 The new plugin relies on Slick to do create the SQL dialect for the database in use, therefor the following must be
 configured in `application.conf`

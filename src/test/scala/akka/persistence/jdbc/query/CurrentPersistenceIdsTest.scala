@@ -36,7 +36,7 @@ abstract class CurrentPersistenceIdsTest(config: String) extends QueryTestSpec(c
       eventually {
         withCurrentPersistenceIds() { tp ⇒
           tp.request(3)
-          tp.expectNext("my-1", "my-2", "my-3")
+          tp.expectNextUnordered("my-1", "my-2", "my-3")
           tp.expectComplete()
         }
       }

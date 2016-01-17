@@ -16,10 +16,9 @@
 
 package akka.persistence.jdbc.journal
 
-import akka.actor.{ Terminated, ActorRef }
-import akka.event.LoggingReceive
+import akka.actor.Terminated
 import akka.persistence.jdbc.dao.JournalDao
-import akka.persistence.jdbc.journal.JdbcJournal.{ AllPersistenceIdsRequest, AllPersistenceIdsResponse }
+import akka.persistence.jdbc.journal.AllPersistenceIdsSubscriberRegistry.AllPersistenceIdsSubscriberTerminated
 import akka.persistence.jdbc.serialization.SerializationFacade
 import akka.persistence.journal.AsyncWriteJournal
 import akka.persistence.{ AtomicWrite, PersistentRepr }
@@ -41,8 +40,7 @@ object JdbcJournal {
   final case class PersistenceIdAdded(persistenceId: String)
 }
 
-trait SlickAsyncWriteJournal extends AsyncWriteJournal {
-  //  var allPersistenceIdsSubscribers = Set.empty[ActorRef]
+trait SlickAsyncWriteJournal extends AsyncWriteJournal with AllPersistenceIdsSubscriberRegistry {
 
   def journalDao: JournalDao
 
@@ -56,6 +54,7 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal {
     Source.fromIterator(() ⇒ messages.iterator)
       .via(serializationFacade.serialize)
       .via(journalDao.writeFlow)
+      .via(addAllPersistenceIdsFlow)
       .map(_.map(_ ⇒ ()))
       .runFold(List.empty[Try[Unit]])(_ :+ _)
   }
@@ -72,14 +71,11 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal {
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
       .runForeach(recoveryCallback)
 
-  override def receivePluginInternal: Receive = LoggingReceive {
-    case AllPersistenceIdsRequest ⇒
-    //      allPersistenceIdsSubscribers += sender()
-    //      val theSender = sender()
-    //      journalDao.allPersistenceIds.map(theSender ! AllPersistenceIdsResponse(_))
-    //      context.watch(sender())
-
-    case Terminated(subscriber)   ⇒
-    //      allPersistenceIdsSubscribers -= sender()
+  def handleTerminated: Receive = {
+    case Terminated(ref) ⇒
+      self ! AllPersistenceIdsSubscriberTerminated(ref)
   }
+
+  override def receivePluginInternal: Receive =
+    handleTerminated.orElse(receiveAllPersistenceIdsSubscriber)
 }

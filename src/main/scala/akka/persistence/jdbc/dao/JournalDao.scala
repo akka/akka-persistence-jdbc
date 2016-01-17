@@ -124,7 +124,7 @@ class SlickJournalDaoQueries(val profile: JdbcProfile) extends Tables {
     selectAllDeletedTo(persistenceId).map(_.deletedTo).max
 
   def allPersistenceIdsDistinct: Query[Rep[String], String, Seq] =
-    JournalTable.map(_.persistenceId).distinct.sorted
+    JournalTable.map(_.persistenceId).distinct
 }
 
 trait SlickJournalDao extends JournalDao with Tables {

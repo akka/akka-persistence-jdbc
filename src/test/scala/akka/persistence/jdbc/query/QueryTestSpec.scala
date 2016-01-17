@@ -34,14 +34,14 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) {
 
   val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 
-  def withCurrentPersistenceIds(max: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit = {
+  def withCurrentPersistenceIds(within: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit = {
     val tp = readJournal.currentPersistenceIds().runWith(TestSink.probe[String])
-    tp.within(max)(f(tp))
+    tp.within(within)(f(tp))
   }
 
-  def withAllPersistenceIds(max: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit = {
+  def withAllPersistenceIds(within: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit = {
     val tp = readJournal.allPersistenceIds().runWith(TestSink.probe[String])
-    tp.within(max)(f(tp))
+    tp.within(within)(f(tp))
   }
 
   def withCurrentEventsByPersistenceid(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit =

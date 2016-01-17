@@ -32,18 +32,25 @@ abstract class AllPersistenceIdsTest(config: String) extends QueryTestSpec(confi
 
   it should "find persistenceIds for actors" in {
     withTestActors { (actor1, actor2, actor3) ⇒
-      actor1 ! 1
-      actor2 ! 1
-      actor3 ! 1
+      withAllPersistenceIds(within = 1.second) { tp ⇒
+        // request 10
+        tp.request(10)
+        tp.expectNoMsg(100.millis)
 
-      eventually {
-        withAllPersistenceIds() { tp ⇒
-          tp.request(3)
-          tp.expectNext("my-1", "my-2", "my-3")
-          tp.expectNoMsg(100.millis)
-          tp.cancel()
-          tp.expectNoMsg(100.millis)
-        }
+        actor1 ! 1
+        tp.expectNext("my-1")
+        tp.expectNoMsg(100.millis)
+
+        actor2 ! 1
+        tp.expectNext("my-2")
+        tp.expectNoMsg(100.millis)
+
+        actor3 ! 1
+        tp.expectNext("my-3")
+        tp.expectNoMsg(100.millis)
+
+        tp.cancel()
+        tp.expectNoMsg(100.millis)
       }
     }
   }

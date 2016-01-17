@@ -47,9 +47,12 @@ trait AllPersistenceIdsSubscriberRegistry { _: SlickAsyncWriteJournal ⇒
     }
   }
 
-  def addAllPersistenceIdsFlow: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =
+  def addAllPersistenceIdsFlow(persistenceIdsNotInJournal: List[String]): Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =
     Flow[Try[Iterable[Serialized]]].map { atomicWriteResult ⇒
-      atomicWriteResult.foreach(xs ⇒ xs.foreach(serialized ⇒ newPersistenceIdAdded(serialized.persistenceId)))
+      atomicWriteResult.foreach {
+        case xs if persistenceIdsNotInJournal.isEmpty ⇒ xs.foreach(serialized ⇒ newPersistenceIdAdded(serialized.persistenceId))
+        case xs                                       ⇒ xs.filter(persistenceIdsNotInJournal.contains).foreach(serialized ⇒ newPersistenceIdAdded(serialized.persistenceId))
+      }
       atomicWriteResult
     }
 

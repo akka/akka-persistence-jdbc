@@ -51,12 +51,18 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal with AllPersistenceIdsSub
   def serializationFacade: SerializationFacade
 
   override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] = {
-    Source.fromIterator(() ⇒ messages.iterator)
-      .via(serializationFacade.serialize)
-      .via(journalDao.writeFlow)
-      .via(addAllPersistenceIdsFlow)
-      .map(_.map(_ ⇒ ()))
-      .runFold(List.empty[Try[Unit]])(_ :+ _)
+    val persistenceIdsInNewSetOfAtomicWrites = messages.map(_.persistenceId).toList
+    for {
+      xs ← journalDao.allPersistenceIdsSource.runFold(List.empty[String]) {
+        case (c, pid) ⇒ if (persistenceIdsInNewSetOfAtomicWrites.contains(pid)) c :+ pid else c
+      }
+      xy ← Source.fromIterator(() ⇒ messages.iterator)
+        .via(serializationFacade.serialize)
+        .via(journalDao.writeFlow)
+        .via(addAllPersistenceIdsFlow(xs))
+        .map(_.map(_ ⇒ ()))
+        .runFold(List.empty[Try[Unit]])(_ :+ _)
+    } yield xy
   }
 
   override def asyncDeleteMessagesTo(persistenceId: String, toSequenceNr: Long): Future[Unit] =

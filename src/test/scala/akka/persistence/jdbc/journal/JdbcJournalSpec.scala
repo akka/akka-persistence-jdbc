@@ -56,7 +56,3 @@ class PostgresJournalSpec extends JdbcJournalSpec(ConfigFactory.load("postgres-a
 class MySQLJournalSpec extends JdbcJournalSpec(ConfigFactory.load("mysql-application.conf")) {
   dropCreate(Schema.MySQL)
 }
-
-//class OracleJournalSpec extends JdbcJournalSpec(ConfigFactory.load("oracle-application.conf")) {
-//  dropCreate(Schema.Oracle)
-//}

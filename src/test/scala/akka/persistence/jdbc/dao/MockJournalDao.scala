@@ -38,9 +38,6 @@ class MockJournalDao(fail: Boolean = false) extends JournalDao {
   override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Array[Byte], Unit] =
     Source.single(Array.empty[Byte]).map(e ⇒ if (fail) throw new RuntimeException("Mock cannot read message") else e)
 
-  override def allPersistenceIds: Future[Set[String]] =
-    if (fail) Future.failed(new RuntimeException("Mock cannot all persistence Ids")) else Future.successful(Set.empty[String])
-
   override def allPersistenceIdsSource: Source[String, Unit] =
     Source.single("pid-1").map(e ⇒ if (fail) throw new RuntimeException("Mock cannot read message") else e)
 }

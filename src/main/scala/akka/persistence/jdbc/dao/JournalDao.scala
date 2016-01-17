@@ -21,6 +21,7 @@ import akka.persistence.jdbc.serialization.Serialized
 import akka.persistence.jdbc.util.SlickDriver
 import akka.stream.scaladsl._
 import akka.stream.{ FlowShape, Materializer }
+import slick.dbio.{ NoStream, DBIOAction }
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend
 
@@ -64,11 +65,6 @@ trait JournalDao {
    * Returns a Source of bytes for a certain persistenceId
    */
   def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Array[Byte], Unit]
-
-  /**
-   * Returns a Set containing all persistenceIds
-   */
-  def allPersistenceIds: Future[Set[String]]
 
   /**
    * Returns distinct stream of persistenceIds
@@ -177,10 +173,6 @@ trait SlickJournalDao extends JournalDao with Tables {
         .result))
       .map(_.message)
   }
-
-  override def allPersistenceIds: Future[Set[String]] = for {
-    ids ← db.run(queries.allPersistenceIdsDistinct.result)
-  } yield ids.toSet
 
   override def allPersistenceIdsSource: Source[String, Unit] =
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct.result))

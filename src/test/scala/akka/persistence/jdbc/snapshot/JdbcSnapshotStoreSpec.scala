@@ -46,8 +46,3 @@ class PostgresSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load
 class MySQLSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("mysql-application.conf")) {
   dropCreate(Schema.MySQL)
 }
-
-//class OracleSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("oracle-application.conf")) {
-//  dropCreate(Schema.Oracle)
-//}
-

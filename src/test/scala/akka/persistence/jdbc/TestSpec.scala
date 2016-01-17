@@ -22,7 +22,7 @@ import akka.actor.{ ActorRef, ActorSystem, PoisonPill }
 import akka.event.{ Logging, LoggingAdapter }
 import akka.persistence.jdbc.util.{ DropCreate, ClasspathResources }
 import akka.serialization.SerializationExtension
-import akka.stream.ActorMaterializer
+import akka.stream.{Materializer, ActorMaterializer}
 import akka.testkit.TestProbe
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
@@ -36,7 +36,7 @@ import scala.util.Try
 
 abstract class TestSpec(config: String = "postgres-application.conf") extends FlatSpec with Matchers with ScalaFutures with TryValues with OptionValues with Eventually with PropertyChecks with BeforeAndAfterAll with BeforeAndAfterEach with GivenWhenThen with ClasspathResources with DropCreate {
   implicit val system: ActorSystem = ActorSystem("test", ConfigFactory.load(config))
-  implicit val mat = ActorMaterializer()
+  implicit val mat: Materializer = ActorMaterializer()
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   val log: LoggingAdapter = Logging(system, this.getClass)
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 3.seconds)

@@ -13,7 +13,7 @@ Bintray | [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-pers
 **End of Disclaimer**
 
 ## New release
-The latest version is `v2.0.0` and breaks backwards compatibility in a big way. New features:
+The latest version is `v2.0.1` and breaks backwards compatibility in a big way. New features:
 
 - It uses [Typesafe Slick](http://slick.typesafe.com/) as the database backend,
 - It uses a new database schema, dropping some columns and changing the column types,
@@ -29,7 +29,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.0.0"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.0.1"
 ```
 
 ## Configuration
@@ -71,6 +71,63 @@ akka-persistence-jdbc {
   }
 }
 ```
+
+## Persistence Query
+The plugin supports the following queries:
+
+## AllPersistenceIdsQuery and CurrentPersistenceIdsQuery
+`allPersistenceIds` and `currentPersistenceIds` are used for retrieving all persistenceIds of all persistent actors.
+
+```scala
+import akka.actor.ActorSystem
+import akka.stream.{Materializer, ActorMaterializer}
+import akka.stream.scaladsl.Source
+import akka.persistence.query.PersistenceQuery
+import akka.persistence.jdbc.query.journal.JdbcReadJournal
+
+implicit val system: ActorSystem = ActorSystem()
+implicit val mat: Materializer = ActorMaterializer()(system)
+val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
+
+val willNotCompleteTheStream: Source[String, Unit] = readJournal.allPersistenceIds()
+
+val willCompleteTheStream: Source[String, Unit] = readJournal.currentPersistenceIds()
+```
+
+The returned event stream is unordered and you can expect different order for multiple executions of the query.
+
+When using the `allPersistenceIds` query, the stream is not completed when it reaches the end of the currently used persistenceIds, 
+but it continues to push new persistenceIds when new persistent actors are created. 
+
+When using the `currentPersistenceIds` query, the stream is completed when the end of the current list of persistenceIds is reached,
+thus it is not a `live` query.
+
+The stream is completed with failure if there is a failure in executing the query in the backend journal.
+
+## EventsByPersistenceIdQuery and CurrentEventsByPersistenceIdQuery
+`eventsByPersistenceId` (currently not supported) and `currentEventsByPersistenceId` is used for retrieving events for 
+a specific PersistentActor identified by persistenceId.
+
+```scala
+import akka.actor.ActorSystem
+import akka.stream.{Materializer, ActorMaterializer}
+import akka.stream.scaladsl.Source
+import akka.persistence.query.PersistenceQuery
+import akka.persistence.jdbc.query.journal.JdbcReadJournal
+
+implicit val system: ActorSystem = ActorSystem()
+implicit val mat: Materializer = ActorMaterializer()(system)
+val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
+
+val willCompleteTheStream: Source[String, Unit] = readJournal.currentEventsByPersistenceId("some-persistence-id", 0L, Long.MaxValue)
+```
+
+You can retrieve a subset of all events by specifying `fromSequenceNr` and `toSequenceNr` or use `0L` and `Long.MaxValue` respectively to retrieve all events. Note that the corresponding sequence number of each event is provided in the `EventEnvelope`, which makes it possible to resume the stream at a later point from a given sequence number.
+
+The returned event stream is ordered by sequence number, i.e. the same order as the PersistentActor persisted the events. The same prefix of stream elements (in same order) are returned for multiple executions of the query, except for when events have been deleted.
+
+The stream is completed with failure if there is a failure in executing the query in the backend journal.
+
 
 ## Postgres Schema
 ```sql

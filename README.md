@@ -29,7 +29,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.0.1"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.0.2"
 ```
 
 ## Configuration
@@ -105,7 +105,7 @@ thus it is not a `live` query.
 The stream is completed with failure if there is a failure in executing the query in the backend journal.
 
 ## EventsByPersistenceIdQuery and CurrentEventsByPersistenceIdQuery
-`eventsByPersistenceId` (currently not supported) and `currentEventsByPersistenceId` is used for retrieving events for 
+`eventsByPersistenceId` and `currentEventsByPersistenceId` is used for retrieving events for 
 a specific PersistentActor identified by persistenceId.
 
 ```scala
@@ -192,6 +192,9 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
+
+## 2.0.2 (2016-01-17)
+ - Support for the `eventsByPersistenceId` live query
 
 ## 2.0.1 (2016-01-17)
  - Support for the `allPersistenceIds` live query

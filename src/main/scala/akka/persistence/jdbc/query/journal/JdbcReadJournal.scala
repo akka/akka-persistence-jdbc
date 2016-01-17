@@ -36,7 +36,8 @@ object JdbcReadJournal {
 trait SlickReadJournal extends ReadJournal
     with CurrentPersistenceIdsQuery
     with AllPersistenceIdsQuery
-    with CurrentEventsByPersistenceIdQuery {
+    with CurrentEventsByPersistenceIdQuery
+    with EventsByPersistenceIdQuery {
 
   implicit def mat: Materializer
 
@@ -48,13 +49,18 @@ trait SlickReadJournal extends ReadJournal
     journalDao.allPersistenceIdsSource
 
   override def allPersistenceIds(): Source[String, Unit] =
-    journalDao.allPersistenceIdsSource.concat(Source.actorPublisher[String](Props(classOf[AllPersistenceIdsPublisher], true)))
+    currentPersistenceIds()
+      .concat(Source.actorPublisher[String](Props(new AllPersistenceIdsPublisher(true))))
 
   override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, Unit] =
     journalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, Long.MaxValue)
       .via(serializationFacade.deserializeRepr)
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
       .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
+
+  override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, Unit] =
+    currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr)
+      .concat(Source.actorPublisher[EventEnvelope](Props(new EventsByPersistenceIdPublisher(persistenceId, true))))
 }
 
 trait JdbcReadJournal extends SlickReadJournal

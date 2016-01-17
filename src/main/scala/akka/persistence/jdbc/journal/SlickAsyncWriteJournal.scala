@@ -18,9 +18,9 @@ package akka.persistence.jdbc.journal
 
 import akka.actor.Terminated
 import akka.persistence.jdbc.dao.JournalDao
-import akka.persistence.jdbc.journal.AllPersistenceIdsSubscriberRegistry.AllPersistenceIdsSubscriberTerminated
 import akka.persistence.jdbc.serialization.SerializationFacade
 import akka.persistence.journal.AsyncWriteJournal
+import akka.persistence.query.EventEnvelope
 import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
@@ -33,13 +33,15 @@ object JdbcJournal {
   final val Identifier = "jdbc-journal"
 
   final case class EventsByPersistenceIdRequest(persistenceId: String)
-  final case class EventAppended(persistenceId: String)
+  final case class EventAppended(envelope: EventEnvelope)
 
   case object AllPersistenceIdsRequest
   final case class PersistenceIdAdded(persistenceId: String)
 }
 
-trait SlickAsyncWriteJournal extends AsyncWriteJournal with AllPersistenceIdsSubscriberRegistry {
+trait SlickAsyncWriteJournal extends AsyncWriteJournal
+    with AllPersistenceIdsSubscriberRegistry
+    with EventsByPersistenceIdRegistry {
 
   def journalDao: JournalDao
 
@@ -59,6 +61,7 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal with AllPersistenceIdsSub
         .via(serializationFacade.serialize)
         .via(journalDao.writeFlow)
         .via(addAllPersistenceIdsFlow(xs))
+        .via(eventsByPersistenceIdFlow)
         .map(_.map(_ ⇒ ()))
         .runFold(List.empty[Try[Unit]])(_ :+ _)
     } yield xy
@@ -78,9 +81,11 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal with AllPersistenceIdsSub
 
   def handleTerminated: Receive = {
     case Terminated(ref) ⇒
-      self ! AllPersistenceIdsSubscriberTerminated(ref)
+      sendAllPersistenceIdsSubscriberTerminated(ref)
+      sendEventsByPersistenceIdSubscriberTerminated(ref)
   }
 
   override def receivePluginInternal: Receive =
     handleTerminated.orElse(receiveAllPersistenceIdsSubscriber)
+      .orElse(receiveEventsByPersistenceIdRegistry)
 }

@@ -55,6 +55,9 @@ trait AllPersistenceIdsSubscriberRegistry { _: SlickAsyncWriteJournal ⇒
       atomicWriteResult
     }
 
+  def sendAllPersistenceIdsSubscriberTerminated(ref: ActorRef): Unit =
+    self ! AllPersistenceIdsSubscriberTerminated(ref)
+
   def receiveAllPersistenceIdsSubscriber: Actor.Receive = {
     case JdbcJournal.AllPersistenceIdsRequest ⇒
       addAllPersistenceIdsSubscriber(sender())

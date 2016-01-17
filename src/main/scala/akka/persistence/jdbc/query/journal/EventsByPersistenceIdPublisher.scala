@@ -19,12 +19,13 @@ package akka.persistence.jdbc.query.journal
 import akka.actor.{ ActorLogging, ActorRef }
 import akka.persistence.Persistence
 import akka.persistence.jdbc.journal.JdbcJournal
+import akka.persistence.query.EventEnvelope
 import akka.persistence.query.journal.leveldb.DeliveryBuffer
 import akka.stream.actor.ActorPublisher
 import akka.stream.actor.ActorPublisherMessage.{ Cancel, Request }
 
-class EventsByPersistenceIdQueryPublisher(liveQuery: Boolean)
-    extends ActorPublisher[String] with DeliveryBuffer[String] with ActorLogging {
+class EventsByPersistenceIdPublisher(persistenceId: String, liveQuery: Boolean)
+    extends ActorPublisher[EventEnvelope] with DeliveryBuffer[EventEnvelope] with ActorLogging {
 
   val journal: ActorRef = Persistence(context.system).journalFor(JdbcJournal.Identifier)
 
@@ -32,15 +33,15 @@ class EventsByPersistenceIdQueryPublisher(liveQuery: Boolean)
 
   def init: Receive = {
     case _: Request ⇒
-      journal ! JdbcJournal.AllPersistenceIdsRequest
+      journal ! JdbcJournal.EventsByPersistenceIdRequest(persistenceId)
       context.become(active)
     case Cancel ⇒ context.stop(self)
   }
 
   def active: Receive = {
-    case JdbcJournal.PersistenceIdAdded(persistenceId) ⇒
+    case JdbcJournal.EventAppended(envelope) ⇒
       if (liveQuery) {
-        buf :+= persistenceId
+        buf :+= envelope
         deliverBuf()
       }
 

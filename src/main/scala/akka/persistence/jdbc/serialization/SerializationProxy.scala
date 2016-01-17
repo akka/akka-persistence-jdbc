@@ -18,8 +18,9 @@ package akka.persistence.jdbc.serialization
 
 import java.nio.ByteBuffer
 
+import akka.actor.ActorSystem
 import akka.persistence.{ AtomicWrite, PersistentRepr }
-import akka.serialization.Serialization
+import akka.serialization.{ SerializationExtension, Serialization }
 import akka.stream.scaladsl.Flow
 
 import scala.util.{ Failure, Success, Try }
@@ -60,6 +61,11 @@ class AkkaSerializationProxy(serialization: Serialization) extends Serialization
  *
  */
 
+object SerializationFacade {
+  def apply(system: ActorSystem): SerializationFacade =
+    new SerializationFacade(new AkkaSerializationProxy(SerializationExtension(system)))
+}
+
 class SerializationFacade(proxy: SerializationProxy) {
   private def serializeAtomicWrite(atomicWrite: AtomicWrite): Try[Iterable[Serialized]] = {
     def serializeARepr(x: PersistentRepr): Try[Serialized] =
@@ -78,10 +84,9 @@ class SerializationFacade(proxy: SerializationProxy) {
   def serialize: Flow[AtomicWrite, Try[Iterable[Serialized]], Unit] =
     Flow[AtomicWrite].map(serializeAtomicWrite)
 
-  def deserializeRepr: Flow[Array[Byte], Try[PersistentRepr], Unit] = {
-    def persistentFromByteArray(bytes: Array[Byte]): Try[PersistentRepr] =
-      proxy.deserialize(bytes, classOf[PersistentRepr])
+  def persistentFromByteArray(bytes: Array[Byte]): Try[PersistentRepr] =
+    proxy.deserialize(bytes, classOf[PersistentRepr])
 
+  def deserializeRepr: Flow[Array[Byte], Try[PersistentRepr], Unit] =
     Flow[Array[Byte]].map(persistentFromByteArray)
-  }
 }

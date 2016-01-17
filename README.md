@@ -193,6 +193,9 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
 
+## 2.0.1 (2016-01-17)
+ - Support for the `allPersistenceIds` live query
+
 ## 2.0.0 (2016-01-16)
  - A complete rewrite using [slick](http://slick.typesafe.com/) as the database backend, breaking backwards compatibility in a big way.
 

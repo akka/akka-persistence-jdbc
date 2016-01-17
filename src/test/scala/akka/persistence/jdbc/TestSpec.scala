@@ -22,7 +22,7 @@ import akka.actor.{ ActorRef, ActorSystem, PoisonPill }
 import akka.event.{ Logging, LoggingAdapter }
 import akka.persistence.jdbc.util.{ DropCreate, ClasspathResources }
 import akka.serialization.SerializationExtension
-import akka.stream.{Materializer, ActorMaterializer}
+import akka.stream.{ Materializer, ActorMaterializer }
 import akka.testkit.TestProbe
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory

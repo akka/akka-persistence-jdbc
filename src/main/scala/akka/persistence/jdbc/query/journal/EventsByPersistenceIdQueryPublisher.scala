@@ -23,7 +23,7 @@ import akka.persistence.query.journal.leveldb.DeliveryBuffer
 import akka.stream.actor.ActorPublisher
 import akka.stream.actor.ActorPublisherMessage.{ Cancel, Request }
 
-class AllPersistenceIdsPublisher(liveQuery: Boolean)
+class EventsByPersistenceIdQueryPublisher(liveQuery: Boolean)
     extends ActorPublisher[String] with DeliveryBuffer[String] with ActorLogging {
 
   val journal: ActorRef = Persistence(context.system).journalFor(JdbcJournal.Identifier)

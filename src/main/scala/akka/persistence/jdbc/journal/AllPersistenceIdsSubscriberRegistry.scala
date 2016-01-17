@@ -49,9 +49,8 @@ trait AllPersistenceIdsSubscriberRegistry { _: SlickAsyncWriteJournal ⇒
 
   def addAllPersistenceIdsFlow(persistenceIdsNotInJournal: List[String]): Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =
     Flow[Try[Iterable[Serialized]]].map { atomicWriteResult ⇒
-      atomicWriteResult.foreach {
-        case xs if persistenceIdsNotInJournal.isEmpty ⇒ xs.foreach(serialized ⇒ newPersistenceIdAdded(serialized.persistenceId))
-        case xs                                       ⇒ xs.filter(persistenceIdsNotInJournal.contains).foreach(serialized ⇒ newPersistenceIdAdded(serialized.persistenceId))
+      if (hasAllPersistenceIdsSubscribers) {
+        atomicWriteResult.foreach(_.headOption.map(_.persistenceId).filter(persistenceIdsNotInJournal.contains).foreach(newPersistenceIdAdded))
       }
       atomicWriteResult
     }
@@ -60,6 +59,7 @@ trait AllPersistenceIdsSubscriberRegistry { _: SlickAsyncWriteJournal ⇒
     case JdbcJournal.AllPersistenceIdsRequest ⇒
       addAllPersistenceIdsSubscriber(sender())
       context.watch(sender())
+
     case AllPersistenceIdsSubscriberTerminated(ref) ⇒
       removeAllPersistenceIdsSubscriber(ref)
   }

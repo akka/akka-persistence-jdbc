@@ -32,11 +32,10 @@ import scala.util.Try
 object JdbcJournal {
   final val Identifier = "jdbc-journal"
 
-  //  final case class SubscribePersistenceId(persistenceId: String)
-  //  final case class EventAppended(persistenceId: String)
+  final case class EventsByPersistenceIdRequest(persistenceId: String)
+  final case class EventAppended(persistenceId: String)
 
   case object AllPersistenceIdsRequest
-  final case class AllPersistenceIdsResponse(allPersistenceIds: Set[String])
   final case class PersistenceIdAdded(persistenceId: String)
 }
 
@@ -53,9 +52,9 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal with AllPersistenceIdsSub
   override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] = {
     val persistenceIdsInNewSetOfAtomicWrites = messages.map(_.persistenceId).toList
     for {
-      xs ← journalDao.allPersistenceIdsSource.runFold(List.empty[String]) {
-        case (c, pid) ⇒ if (persistenceIdsInNewSetOfAtomicWrites.contains(pid)) c :+ pid else c
-      }
+      xs ← if (hasAllPersistenceIdsSubscribers) journalDao.persistenceIds(persistenceIdsInNewSetOfAtomicWrites)
+        .map(persistenceIdsInNewSetOfAtomicWrites.diff(_))
+      else Future.successful(List.empty[String])
       xy ← Source.fromIterator(() ⇒ messages.iterator)
         .via(serializationFacade.serialize)
         .via(journalDao.writeFlow)

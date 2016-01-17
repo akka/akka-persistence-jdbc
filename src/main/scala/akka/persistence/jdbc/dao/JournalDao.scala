@@ -70,6 +70,11 @@ trait JournalDao {
    * Returns distinct stream of persistenceIds
    */
   def allPersistenceIdsSource: Source[String, Unit]
+
+  /**
+   * Returns the persistenceIds that are available on request of a query list of persistence ids
+   */
+  def persistenceIds(queryListOfPersistenceIds: Iterable[String]): Future[Seq[String]]
 }
 
 trait WriteMessagesFacade {
@@ -121,6 +126,11 @@ class SlickJournalDaoQueries(val profile: JdbcProfile) extends Tables {
 
   def allPersistenceIdsDistinct: Query[Rep[String], String, Seq] =
     JournalTable.map(_.persistenceId).distinct
+
+  def journalRowByPersistenceIds(persistenceIds: Iterable[String]) = for {
+    query ← JournalTable.map(_.persistenceId)
+    if query inSetBind persistenceIds
+  } yield query
 }
 
 trait SlickJournalDao extends JournalDao with Tables {
@@ -173,6 +183,10 @@ trait SlickJournalDao extends JournalDao with Tables {
         .result))
       .map(_.message)
   }
+
+  override def persistenceIds(queryListOfPersistenceIds: Iterable[String]): Future[Seq[String]] = for {
+    xs ← db.run(queries.journalRowByPersistenceIds(queryListOfPersistenceIds).result)
+  } yield xs
 
   override def allPersistenceIdsSource: Source[String, Unit] =
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct.result))

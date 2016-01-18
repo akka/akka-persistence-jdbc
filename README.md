@@ -13,7 +13,7 @@ Bintray | [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-pers
 **End of Disclaimer**
 
 ## New release
-The latest version is `v2.0.1` and breaks backwards compatibility in a big way. New features:
+The latest version is `v2.0.3` and breaks backwards compatibility in a big way. New features:
 
 - It uses [Typesafe Slick](http://slick.typesafe.com/) as the database backend,
 - It uses a new database schema, dropping some columns and changing the column types,
@@ -29,7 +29,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.0.2"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.0.3"
 ```
 
 ## Configuration
@@ -192,6 +192,9 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
+
+## 2.0.3 (2016-01-18)
+ - Optimization for the `eventsByPersistenceId` and `allPersistenceIds` queries. 
 
 ## 2.0.2 (2016-01-17)
  - Support for the `eventsByPersistenceId` live query

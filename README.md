@@ -119,6 +119,8 @@ implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
 val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 
+val willNotCompleteTheStream: Source[String, Unit] = readJournal.eventsByPersistenceId("some-persistence-id", 0L, Long.MaxValue)
+
 val willCompleteTheStream: Source[String, Unit] = readJournal.currentEventsByPersistenceId("some-persistence-id", 0L, Long.MaxValue)
 ```
 
@@ -127,7 +129,6 @@ You can retrieve a subset of all events by specifying `fromSequenceNr` and `toSe
 The returned event stream is ordered by sequence number, i.e. the same order as the PersistentActor persisted the events. The same prefix of stream elements (in same order) are returned for multiple executions of the query, except for when events have been deleted.
 
 The stream is completed with failure if there is a failure in executing the query in the backend journal.
-
 
 ## Postgres Schema
 ```sql

@@ -25,7 +25,7 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
   it should "not find any events for unknown pid" in {
     When("All events of unknown pid are requested")
     Then("No events should be found")
-    withCurrentEventsByPersistenceid("unkown-pid", 0L, Long.MaxValue) { tp ⇒
+    withCurrentEventsByPersistenceid()("unkown-pid", 0L, Long.MaxValue) { tp ⇒
       tp.request(Int.MaxValue)
       tp.expectComplete()
     }
@@ -41,7 +41,7 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
 
       Then("Eventually three events are available in the journal")
       eventually {
-        withCurrentEventsByPersistenceid("my-1", 0, Long.MaxValue) { tp ⇒
+        withCurrentEventsByPersistenceid()("my-1", 0, Long.MaxValue) { tp ⇒
           tp.request(Int.MaxValue)
             .expectNextN((1 to 3).toList.map(i ⇒ EventEnvelope(i, "my-1", i, i)))
             .expectComplete()
@@ -49,28 +49,28 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
       }
 
       And("The events can be queried by offset 1, 1")
-      withCurrentEventsByPersistenceid("my-1", 1, 1) { tp ⇒
+      withCurrentEventsByPersistenceid()("my-1", 1, 1) { tp ⇒
         tp.request(Int.MaxValue)
           .expectNext(EventEnvelope(1, "my-1", 1, 1))
           .expectComplete()
       }
 
       And("The events can be queried by offset 2, 2")
-      withCurrentEventsByPersistenceid("my-1", 2, 2) { tp ⇒
+      withCurrentEventsByPersistenceid()("my-1", 2, 2) { tp ⇒
         tp.request(Int.MaxValue)
           .expectNext(EventEnvelope(2, "my-1", 2, 2))
           .expectComplete()
       }
 
       And("The events can be queried by offset 3, 3")
-      withCurrentEventsByPersistenceid("my-1", 3, 3) { tp ⇒
+      withCurrentEventsByPersistenceid()("my-1", 3, 3) { tp ⇒
         tp.request(Int.MaxValue)
           .expectNext(EventEnvelope(3, "my-1", 3, 3))
           .expectComplete()
       }
 
       And("The events can be queried by offset 2, 3")
-      withCurrentEventsByPersistenceid("my-1", 2, 3) { tp ⇒
+      withCurrentEventsByPersistenceid()("my-1", 2, 3) { tp ⇒
         tp.request(Int.MaxValue)
           .expectNext(EventEnvelope(2, "my-1", 2, 2), EventEnvelope(3, "my-1", 3, 3))
           .expectComplete()

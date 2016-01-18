@@ -75,6 +75,12 @@ trait JournalDao {
    * Returns the persistenceIds that are available on request of a query list of persistence ids
    */
   def persistenceIds(queryListOfPersistenceIds: Iterable[String]): Future[Seq[String]]
+
+  /**
+   * Returns a Source of bytes for certain tags from an offset. The result is sorted by
+   * created time asc thus the offset is relative to the creation time
+   */
+  def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit]
 }
 
 trait WriteMessagesFacade {
@@ -190,6 +196,15 @@ trait SlickJournalDao extends JournalDao with Tables {
 
   override def allPersistenceIdsSource: Source[String, Unit] =
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct.result))
+
+  override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit] =
+    Source.fromPublisher(
+      db.stream(JournalTable
+        .filter(_.tags like tag)
+        .sortBy(_.created.asc)
+        .drop(offset)
+        .result))
+      .map(_.message)
 }
 
 class JdbcSlickJournalDao(val db: JdbcBackend#Database, override val profile: JdbcProfile)(implicit val ec: ExecutionContext, val mat: Materializer) extends SlickJournalDao {

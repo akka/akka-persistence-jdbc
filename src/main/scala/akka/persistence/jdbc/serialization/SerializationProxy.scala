@@ -19,6 +19,7 @@ package akka.persistence.jdbc.serialization
 import java.nio.ByteBuffer
 
 import akka.actor.ActorSystem
+import akka.persistence.journal.Tagged
 import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.scaladsl.Flow
@@ -26,7 +27,7 @@ import akka.stream.scaladsl.Flow
 import scala.compat.Platform
 import scala.util.{ Failure, Success, Try }
 
-case class Serialized(persistenceId: String, sequenceNr: Long, serialized: ByteBuffer, created: Long = Platform.currentTime, tags: Option[String] = None)
+case class Serialized(persistenceId: String, sequenceNr: Long, serialized: ByteBuffer, tags: Option[String] = None, created: Long = Platform.currentTime)
 
 trait SerializationProxy {
   def serialize(o: AnyRef): Try[Array[Byte]]
@@ -65,15 +66,25 @@ class AkkaSerializationProxy(serialization: Serialization) extends Serialization
 object SerializationFacade {
   def apply(system: ActorSystem): SerializationFacade =
     new SerializationFacade(new AkkaSerializationProxy(SerializationExtension(system)))
+
+  def encodeTags(tags: Set[String]): Option[String] =
+    if (tags.isEmpty) None else Option(tags.mkString("$$$"))
 }
 
 class SerializationFacade(proxy: SerializationProxy) {
+  import SerializationFacade._
   private def serializeAtomicWrite(atomicWrite: AtomicWrite): Try[Iterable[Serialized]] = {
-    def serializeARepr(repr: PersistentRepr): Try[Serialized] = for {
+    def serializeARepr(repr: PersistentRepr, tags: Set[String] = Set.empty[String]): Try[Serialized] = for {
       byteArray ← proxy.serialize(repr)
-    } yield Serialized(repr.persistenceId, repr.sequenceNr, ByteBuffer.wrap(byteArray))
+    } yield Serialized(repr.persistenceId, repr.sequenceNr, ByteBuffer.wrap(byteArray), encodeTags(tags))
 
-    val xs = atomicWrite.payload.map(serializeARepr)
+    def serializeTaggedOrRepr(repr: PersistentRepr): Try[Serialized] = repr.payload match {
+      case Tagged(payload, tags) ⇒
+        serializeARepr(repr.withPayload(payload), tags)
+      case _ ⇒ serializeARepr(repr)
+    }
+
+    val xs = atomicWrite.payload.map(serializeTaggedOrRepr)
     if (xs.exists(_.isFailure)) Failure(new RuntimeException("Could not serialize: " + atomicWrite))
     else Success(xs.foldLeft(List.empty[Serialized]) {
       case (xy, Success(serialized)) ⇒ xy :+ serialized

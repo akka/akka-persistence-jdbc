@@ -18,6 +18,7 @@ package akka.persistence.jdbc.snapshot
 
 import akka.persistence.jdbc.dao.Tables
 import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, SlickDatabase }
+import akka.persistence.jdbc.util.Schema.{ MySQL, Postgres }
 import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, Schema, SlickDriver }
 import akka.persistence.snapshot.SnapshotStoreSpec
 import com.typesafe.config.{ Config, ConfigFactory }
@@ -40,9 +41,9 @@ abstract class JdbcSnapshotStoreSpec(config: Config) extends SnapshotStoreSpec(c
 }
 
 class PostgresSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("postgres-application.conf")) {
-  dropCreate(Schema.Postgres)
+  dropCreate(Postgres())
 }
 
 class MySQLSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("mysql-application.conf")) {
-  dropCreate(Schema.MySQL)
+  dropCreate(MySQL())
 }

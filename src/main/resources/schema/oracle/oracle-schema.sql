@@ -1,16 +1,16 @@
-CREATE TABLE journal (
+CREATE TABLE public.journal (
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number NUMERIC NOT NULL,
   message BLOB NOT NULL,
   PRIMARY KEY(persistence_id, sequence_number)
 );
 
-CREATE TABLE deleted_to (
+CREATE TABLE public.deleted_to (
   persistence_id VARCHAR(255) NOT NULL,
   deleted_to NUMERIC NOT NULL
 );
 
-CREATE TABLE snapshot (
+CREATE TABLE public.snapshot (
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number NUMERIC NOT NULL,
   created NUMERIC NOT NULL,

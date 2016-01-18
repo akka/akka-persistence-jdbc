@@ -17,6 +17,7 @@
 package akka.persistence.jdbc.query
 
 import akka.persistence.jdbc.util.Schema
+import akka.persistence.jdbc.util.Schema.{ MySQL, Postgres }
 import akka.persistence.query.EventEnvelope
 
 abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTestSpec(config) {
@@ -79,9 +80,9 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
 }
 
 class PostgresCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("postgres-application.conf") {
-  dropCreate(Schema.Postgres)
+  dropCreate(Postgres())
 }
 
 class MySQLCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("mysql-application.conf") {
-  dropCreate(Schema.MySQL)
+  dropCreate(MySQL())
 }

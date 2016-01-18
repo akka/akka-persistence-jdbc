@@ -20,29 +20,47 @@ import java.sql.Statement
 
 import akka.actor.ActorSystem
 import akka.persistence.jdbc.extension.SlickDatabase
+import akka.persistence.jdbc.util.Schema.{ Oracle, Postgres, SchemaType }
 import slick.driver.PostgresDriver.api._
 
+import scala.util.Try
+
 object Schema {
-  final val Postgres = "schema/postgres/postgres-schema.sql"
-  final val MySQL = "schema/mysql/mysql-schema.sql"
-  final val Oracle = "schema/oracle/oracle-schema.sql"
+  sealed trait SchemaType { def schema: String }
+  final case class Postgres(val schema: String = "schema/postgres/postgres-schema.sql") extends SchemaType
+  final case class MySQL(val schema: String = "schema/mysql/mysql-schema.sql") extends SchemaType
+  final case class Oracle(val schema: String = "schema/oracle/oracle-schema.sql") extends SchemaType
 }
 
 trait DropCreate extends ClasspathResources {
 
   def system: ActorSystem
 
-  def dropCreate(schemaName: String): Unit = {
-    val schemaFromClasspath = Option(fromClasspathAsString(schemaName))
-    if (schemaFromClasspath.isEmpty) println("Could not find schema: " + schemaName)
-    else schemaFromClasspath.foreach { schema ⇒
+  def dropCreate(schemaType: SchemaType) = schemaType match {
+    case Oracle(schema) ⇒
       withStatement { stmt ⇒
-        schema.split(";").map(_.trim).filter(_.nonEmpty).foreach { q ⇒
-          println(s"[$q]")
-          stmt.executeUpdate(q)
+        Try {
+          stmt.executeUpdate("DROP TABLE public.journal CASCADE CONSTRAINT")
+          stmt.executeUpdate("DROP TABLE public.deleted_to CASCADE CONSTRAINT")
+          stmt.executeUpdate("DROP TABLE public.snapshot CASCADE CONSTRAINT")
+        } recover {
+          case t: Throwable ⇒
+            t.printStackTrace()
+            create(schema)
         }
       }
-    }
+    case s: SchemaType ⇒ create(s.schema)
+  }
+
+  def create(schema: String) = for {
+    schema ← Option(fromClasspathAsString(schema))
+    query ← for {
+      trimmedLine ← schema.split(";").map(_.trim)
+      if trimmedLine.nonEmpty
+    } yield trimmedLine
+  } withStatement { stmt ⇒
+    println(query)
+    stmt.executeUpdate(query)
   }
 
   def withSession(f: Session ⇒ Unit): Unit = {
@@ -51,5 +69,5 @@ trait DropCreate extends ClasspathResources {
   }
 
   def withStatement(f: Statement ⇒ Unit): Unit =
-    withSession(session ⇒ session.withStatement()(f(_)))
+    withSession(session ⇒ session.withStatement()(f))
 }

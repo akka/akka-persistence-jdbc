@@ -19,6 +19,7 @@ package akka.persistence.jdbc.journal
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.dao.Tables
 import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, SlickDatabase }
+import akka.persistence.jdbc.util.Schema.{ Oracle, MySQL, Postgres }
 import akka.persistence.jdbc.util.{ Schema, DropCreate, ClasspathResources, SlickDriver }
 import akka.persistence.journal.JournalSpec
 import com.typesafe.config.{ Config, ConfigFactory }
@@ -46,7 +47,7 @@ abstract class JdbcJournalSpec(config: Config) extends JournalSpec(config) with 
  * but the Slick Tables definition must not change, else it breaks the UPSERT feature...
  */
 class PostgresJournalSpec extends JdbcJournalSpec(ConfigFactory.load("postgres-application.conf")) {
-  dropCreate(Schema.Postgres)
+  dropCreate(Postgres())
 }
 
 /**
@@ -54,5 +55,5 @@ class PostgresJournalSpec extends JdbcJournalSpec(ConfigFactory.load("postgres-a
  * for some reason when creating the DDL
  */
 class MySQLJournalSpec extends JdbcJournalSpec(ConfigFactory.load("mysql-application.conf")) {
-  dropCreate(Schema.MySQL)
+  dropCreate(MySQL())
 }

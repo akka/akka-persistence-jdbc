@@ -12,19 +12,23 @@ mysql:
   image: mysql:latest
   container_name: mysql
   environment:
-    - MYSQL_ROOT_PASSWORD=root
+    - "TZ=Europe/Amsterdam"
+    - "MYSQL_ROOT_PASSWORD=root"
   ports:
     - "3306:3306" # credentials (root:root)
 
 #oracle:
 #  image: alexeiled/docker-oracle-xe-11g
 #  container_name: oracle
+#  environment:
+#    - "TZ=Europe/Amsterdam"
 #  ports:
 #    - "1521:1521" # credentials (system:oracle)
-
-
+#
 #h2:
 #  image: viliusl/ubuntu-h2-server
 #  container_name: h2
+#  environment:
+#    - "TZ=Europe/Amsterdam"
 #  ports:
 #    - "1522:1521"

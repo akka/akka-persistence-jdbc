@@ -112,16 +112,16 @@ a specific PersistentActor identified by persistenceId.
 import akka.actor.ActorSystem
 import akka.stream.{Materializer, ActorMaterializer}
 import akka.stream.scaladsl.Source
-import akka.persistence.query.PersistenceQuery
+import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
 import akka.persistence.jdbc.query.journal.JdbcReadJournal
 
 implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
 val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 
-val willNotCompleteTheStream: Source[String, Unit] = readJournal.eventsByPersistenceId("some-persistence-id", 0L, Long.MaxValue)
+val willNotCompleteTheStream: Source[EventEnvelope, Unit] = readJournal.eventsByPersistenceId("some-persistence-id", 0L, Long.MaxValue)
 
-val willCompleteTheStream: Source[String, Unit] = readJournal.currentEventsByPersistenceId("some-persistence-id", 0L, Long.MaxValue)
+val willCompleteTheStream: Source[EventEnvelope, Unit] = readJournal.currentEventsByPersistenceId("some-persistence-id", 0L, Long.MaxValue)
 ```
 
 You can retrieve a subset of all events by specifying `fromSequenceNr` and `toSequenceNr` or use `0L` and `Long.MaxValue` respectively to retrieve all events. Note that the corresponding sequence number of each event is provided in the `EventEnvelope`, which makes it possible to resume the stream at a later point from a given sequence number.

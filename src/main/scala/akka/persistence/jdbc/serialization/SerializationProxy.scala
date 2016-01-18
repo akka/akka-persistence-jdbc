@@ -20,12 +20,13 @@ import java.nio.ByteBuffer
 
 import akka.actor.ActorSystem
 import akka.persistence.{ AtomicWrite, PersistentRepr }
-import akka.serialization.{ SerializationExtension, Serialization }
+import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.scaladsl.Flow
 
+import scala.compat.Platform
 import scala.util.{ Failure, Success, Try }
 
-case class Serialized(persistenceId: String, sequenceNr: Long, serialized: ByteBuffer)
+case class Serialized(persistenceId: String, sequenceNr: Long, serialized: ByteBuffer, created: Long = Platform.currentTime, tags: Option[String] = None)
 
 trait SerializationProxy {
   def serialize(o: AnyRef): Try[Array[Byte]]
@@ -68,10 +69,9 @@ object SerializationFacade {
 
 class SerializationFacade(proxy: SerializationProxy) {
   private def serializeAtomicWrite(atomicWrite: AtomicWrite): Try[Iterable[Serialized]] = {
-    def serializeARepr(x: PersistentRepr): Try[Serialized] =
-      proxy.serialize(x).map { arr ⇒
-        Serialized(x.persistenceId, x.sequenceNr, ByteBuffer.wrap(arr))
-      }
+    def serializeARepr(repr: PersistentRepr): Try[Serialized] = for {
+      byteArray ← proxy.serialize(repr)
+    } yield Serialized(repr.persistenceId, repr.sequenceNr, ByteBuffer.wrap(byteArray))
 
     val xs = atomicWrite.payload.map(serializeARepr)
     if (xs.exists(_.isFailure)) Failure(new RuntimeException("Could not serialize: " + atomicWrite))

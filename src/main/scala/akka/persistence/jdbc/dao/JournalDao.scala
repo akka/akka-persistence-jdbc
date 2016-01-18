@@ -148,7 +148,7 @@ trait SlickJournalDao extends JournalDao with Tables {
   def queries: SlickJournalDaoQueries = new SlickJournalDaoQueries(profile)
 
   def writeList(xs: Iterable[Serialized]): Future[Unit] = for {
-    _ ← db.run(JournalTable ++= xs.map(ser ⇒ JournalRow(ser.persistenceId, ser.sequenceNr, ser.serialized.array())))
+    _ ← db.run(JournalTable ++= xs.map(ser ⇒ JournalRow(ser.persistenceId, ser.sequenceNr, ser.serialized.array(), ser.created)))
   } yield ()
 
   def writeFlow: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =

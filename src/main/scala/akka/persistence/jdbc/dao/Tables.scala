@@ -18,7 +18,7 @@ package akka.persistence.jdbc.dao
 
 object Tables {
 
-  case class JournalRow(persistenceId: String, sequenceNumber: Long, message: Array[Byte])
+  case class JournalRow(persistenceId: String, sequenceNumber: Long, message: Array[Byte], created: Long, tags: Option[String] = None)
 
   case class JournalDeletedToRow(persistenceId: String, deletedTo: Long)
 
@@ -33,10 +33,12 @@ trait Tables {
   import profile.api._
 
   class Journal(_tableTag: Tag) extends Table[JournalRow](_tableTag, _schemaName = None, _tableName = "journal") {
-    def * = (persistenceId, sequenceNumber, message) <> (JournalRow.tupled, JournalRow.unapply)
+    def * = (persistenceId, sequenceNumber, message, created, tags) <> (JournalRow.tupled, JournalRow.unapply)
 
     val persistenceId: Rep[String] = column[String]("persistence_id", O.Length(255, varying = true))
     val sequenceNumber: Rep[Long] = column[Long]("sequence_number")
+    val created: Rep[Long] = column[Long]("created")
+    val tags: Rep[Option[String]] = column[String]("tags", O.Length(255, varying = true))
     val message: Rep[Array[Byte]] = column[Array[Byte]]("message")
     val pk = primaryKey("journal_pk", (persistenceId, sequenceNumber))
   }

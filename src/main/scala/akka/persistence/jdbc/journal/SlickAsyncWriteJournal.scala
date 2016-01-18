@@ -54,8 +54,9 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal
   override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] = {
     val persistenceIdsInNewSetOfAtomicWrites = messages.map(_.persistenceId).toList
     for {
-      xs ← if (hasAllPersistenceIdsSubscribers) journalDao.persistenceIds(persistenceIdsInNewSetOfAtomicWrites)
-        .map(persistenceIdsInNewSetOfAtomicWrites.diff(_))
+      xs ← if (hasAllPersistenceIdsSubscribers)
+        journalDao.persistenceIds(persistenceIdsInNewSetOfAtomicWrites)
+          .map(persistenceIdsInNewSetOfAtomicWrites.diff(_))
       else Future.successful(List.empty[String])
       xy ← Source.fromIterator(() ⇒ messages.iterator)
         .via(serializationFacade.serialize)

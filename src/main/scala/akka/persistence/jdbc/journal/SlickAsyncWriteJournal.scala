@@ -61,7 +61,7 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal
         .via(serializationFacade.serialize)
         .via(journalDao.writeFlow)
         .via(addAllPersistenceIdsFlow(xs))
-        .via(eventsByPersistenceIdFlow)
+        .via(eventsByPersistenceIdFlow(messages))
         .map(_.map(_ ⇒ ()))
         .runFold(List.empty[Try[Unit]])(_ :+ _)
     } yield xy

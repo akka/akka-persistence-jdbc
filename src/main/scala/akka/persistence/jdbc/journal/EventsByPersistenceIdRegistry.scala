@@ -16,25 +16,26 @@
 
 package akka.persistence.jdbc.journal
 
-import akka.actor.{ ActorRef, Actor }
+import akka.actor.{ Actor, ActorRef }
+import akka.persistence.AtomicWrite
 import akka.persistence.jdbc.journal.EventsByPersistenceIdRegistry.EventsByPersistenceIdSubscriberTerminated
-import akka.persistence.jdbc.serialization.{ SerializationFacade, Serialized }
+import akka.persistence.jdbc.serialization.Serialized
 import akka.persistence.query.EventEnvelope
 import akka.stream.scaladsl.Flow
+
 import scala.collection._
 import scala.util.Try
 
 object EventsByPersistenceIdRegistry {
+
   case class EventsByPersistenceIdSubscriberTerminated(ref: ActorRef)
+
 }
 
-trait EventsByPersistenceIdRegistry { _: SlickAsyncWriteJournal ⇒
+trait EventsByPersistenceIdRegistry {
+  _: SlickAsyncWriteJournal ⇒
 
   val eventsByPersistenceIdSubscribers = new mutable.HashMap[String, mutable.Set[ActorRef]] with mutable.MultiMap[String, ActorRef]
-
-  val serializationFacade: SerializationFacade = SerializationFacade(context.system)
-
-  //
 
   def hasEventsByPersistenceIdSubscribers: Boolean = eventsByPersistenceIdSubscribers.nonEmpty
 
@@ -46,22 +47,21 @@ trait EventsByPersistenceIdRegistry { _: SlickAsyncWriteJournal ⇒
     keys.foreach { key ⇒ eventsByPersistenceIdSubscribers.removeBinding(key, subscriber) }
   }
 
-  def eventsByPersistenceIdFlow: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =
+  def eventsByPersistenceIdFlow(atomicWrites: Iterable[AtomicWrite]): Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =
     Flow[Try[Iterable[Serialized]]].map { atomicWriteResult ⇒
       if (hasEventsByPersistenceIdSubscribers) {
-        atomicWriteResult.foreach { (xs: Iterable[Serialized]) ⇒
-          val persistenceId = xs.head.persistenceId
-          if (eventsByPersistenceIdSubscribers.contains(persistenceId)) {
-            eventsByPersistenceIdSubscribers(persistenceId).foreach { subscriber ⇒
-              xs.toList.sortBy(_.sequenceNr).foreach { serialized ⇒
-                serializationFacade.persistentFromByteArray(serialized.serialized.array()).foreach { repr ⇒
-                  val envelope = EventEnvelope(serialized.sequenceNr, serialized.persistenceId, serialized.sequenceNr, repr.payload)
-                  subscriber ! JdbcJournal.EventAppended(envelope)
-                }
-              }
-            }
-          }
-        }
+        for {
+          seqSerialized ← atomicWriteResult
+          headOfSeqSerialized ← seqSerialized.headOption
+          persistenceId = headOfSeqSerialized.persistenceId
+          if eventsByPersistenceIdSubscribers contains persistenceId
+          atomicWrite ← atomicWrites
+          if atomicWrite.persistenceId == persistenceId
+          subscriber ← eventsByPersistenceIdSubscribers(persistenceId)
+          persistentRepr ← atomicWrite.payload
+          envelope = EventEnvelope(persistentRepr.sequenceNr, persistentRepr.persistenceId, persistentRepr.sequenceNr, persistentRepr.payload)
+          eventAppended = JdbcJournal.EventAppended(envelope)
+        } subscriber ! eventAppended
       }
       atomicWriteResult
     }

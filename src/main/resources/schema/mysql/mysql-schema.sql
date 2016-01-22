@@ -3,8 +3,8 @@ DROP TABLE IF EXISTS journal;
 CREATE TABLE IF NOT EXISTS journal (
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
-  created BIGINT NOT NULL,
-  tags VARCHAR(255) DEFAULT NULL,
+--   created BIGINT NOT NULL,
+--   tags VARCHAR(255) DEFAULT NULL,
   message BLOB NOT NULL,
   PRIMARY KEY(persistence_id, sequence_number)
 );

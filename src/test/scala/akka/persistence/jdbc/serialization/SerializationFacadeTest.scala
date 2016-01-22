@@ -19,7 +19,6 @@ package akka.persistence.jdbc.serialization
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.TestSpec
 import akka.persistence.jdbc.generator.AkkaPersistenceGen
-import akka.persistence.jdbc.serialization.MockSerializationProxy
 import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
 

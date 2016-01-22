@@ -37,8 +37,8 @@ trait SlickReadJournal extends ReadJournal
     with CurrentPersistenceIdsQuery
     with AllPersistenceIdsQuery
     with CurrentEventsByPersistenceIdQuery
-    with EventsByPersistenceIdQuery
-    with CurrentEventsByTagQuery {
+    with EventsByPersistenceIdQuery {
+  //    with CurrentEventsByTagQuery {
 
   implicit def mat: Materializer
 
@@ -63,11 +63,11 @@ trait SlickReadJournal extends ReadJournal
     currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr)
       .concat(Source.actorPublisher[EventEnvelope](Props(new EventsByPersistenceIdPublisher(persistenceId, true))))
 
-  override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, Unit] =
-    journalDao.eventsByTag(tag, offset)
-      .via(serializationFacade.deserializeRepr)
-      .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
-      .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
+  //  override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, Unit] =
+  //    journalDao.eventsByTag(tag, offset)
+  //      .via(serializationFacade.deserializeRepr)
+  //      .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
+  //      .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
 
 }
 

@@ -156,6 +156,9 @@ akka-persistence-jdbc {
       user = "root"
       password = "root"
       driver = "com.mysql.jdbc.Driver"
+      keepAliveConnection = on
+      numThreads = 2
+      queueSize = 100
     }
   }
 
@@ -233,6 +236,9 @@ akka-persistence-jdbc {
       user = "system"
       password = "oracle"
       driver = "oracle.jdbc.OracleDriver"
+      keepAliveConnection = on
+      numThreads = 2
+      queueSize = 100
     }
   }
 

@@ -16,9 +16,9 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.jdbc.util.Schema
 import akka.persistence.jdbc.util.Schema.{ MySQL, Postgres }
 import akka.persistence.query.EventEnvelope
+import org.scalatest.Ignore
 
 import scala.concurrent.duration._
 
@@ -106,10 +106,12 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
   }
 }
 
+@Ignore
 class PostgresEventsByPersistenceIdTest extends EventsByPersistenceIdTest("postgres-application.conf") {
   dropCreate(Postgres())
 }
 
+@Ignore
 class MySQLEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mysql-application.conf") {
   dropCreate(MySQL())
 }

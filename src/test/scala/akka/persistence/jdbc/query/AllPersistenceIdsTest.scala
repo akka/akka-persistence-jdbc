@@ -17,21 +17,19 @@
 package akka.persistence.jdbc.query
 
 import akka.persistence.jdbc.util.Schema.{ MySQL, Postgres }
-import akka.persistence.jdbc.util.{ Schema, DropCreate }
 
 import scala.concurrent.duration._
 
 abstract class AllPersistenceIdsTest(config: String) extends QueryTestSpec(config) {
-  it should "not terminate the stream when there are not pids" in {
+  it should "not terminate the stream when there are not pids" in
     withAllPersistenceIds(500.millis) { tp ⇒
       tp.request(1)
       tp.expectNoMsg(100.millis)
       tp.cancel()
       tp.expectNoMsg(100.millis)
     }
-  }
 
-  it should "find persistenceIds for actors" in {
+  it should "find persistenceIds for actors" in
     withTestActors { (actor1, actor2, actor3) ⇒
       withAllPersistenceIds(within = 1.second) { tp ⇒
         tp.request(10)
@@ -62,7 +60,6 @@ abstract class AllPersistenceIdsTest(config: String) extends QueryTestSpec(confi
         tp.expectNoMsg(100.millis)
       }
     }
-  }
 }
 
 class PostgresAllPersistenceIdsTest extends AllPersistenceIdsTest("postgres-application.conf") {

@@ -18,7 +18,7 @@ package akka.persistence.jdbc.journal
 
 import akka.actor.ActorSystem
 import akka.persistence.jdbc.dao.JournalDao
-import akka.persistence.jdbc.extension.DaoRepository
+import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DaoRepository }
 import akka.persistence.jdbc.serialization.SerializationFacade
 import akka.stream.{ ActorMaterializer, Materializer }
 
@@ -33,5 +33,6 @@ class JdbcAsyncWriteJournal extends SlickAsyncWriteJournal {
 
   override val journalDao: JournalDao = DaoRepository(system).journalDao
 
-  override val serializationFacade: SerializationFacade = SerializationFacade(system)
+  override val serializationFacade: SerializationFacade =
+    SerializationFacade(system, AkkaPersistenceConfig(context.system).persistenceQueryConfiguration.tagPrefix)
 }

@@ -16,23 +16,18 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.jdbc.util.Schema
 import akka.persistence.jdbc.util.Schema.{ MySQL, Postgres }
 import akka.persistence.query.EventEnvelope
 
 abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTestSpec(config) {
 
-  it should "not find any events for unknown pid" in {
-    When("All events of unknown pid are requested")
-    Then("No events should be found")
+  it should "not find any events for unknown pid" in
     withCurrentEventsByPersistenceid()("unkown-pid", 0L, Long.MaxValue) { tp ⇒
       tp.request(Int.MaxValue)
       tp.expectComplete()
     }
-  }
 
-  it should "find events for actors" in {
-    Given("Three persistent actors")
+  it should "find events for actors" in
     withTestActors { (actor1, actor2, actor3) ⇒
       When("Events are stored")
       actor1 ! 1
@@ -76,7 +71,6 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
           .expectComplete()
       }
     }
-  }
 }
 
 class PostgresCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("postgres-application.conf") {

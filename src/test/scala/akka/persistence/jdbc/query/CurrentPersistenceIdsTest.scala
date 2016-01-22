@@ -16,19 +16,17 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.jdbc.util.Schema
 import akka.persistence.jdbc.util.Schema.{ MySQL, Postgres }
 
 abstract class CurrentPersistenceIdsTest(config: String) extends QueryTestSpec(config) {
 
-  it should "not find any persistenceIds for empty journal" in {
+  it should "not find any persistenceIds for empty journal" in
     withCurrentPersistenceIds() { tp ⇒
       tp.request(1)
       tp.expectComplete()
     }
-  }
 
-  it should "find persistenceIds for actors" in {
+  it should "find persistenceIds for actors" in
     withTestActors { (actor1, actor2, actor3) ⇒
       actor1 ! 1
       actor2 ! 1
@@ -42,7 +40,6 @@ abstract class CurrentPersistenceIdsTest(config: String) extends QueryTestSpec(c
         }
       }
     }
-  }
 }
 
 class PostgresCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("postgres-application.conf") {

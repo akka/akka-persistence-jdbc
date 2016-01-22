@@ -17,7 +17,8 @@
 package akka.persistence.jdbc.dao
 
 import akka.persistence.jdbc.dao.SnapshotDao.SnapshotData
-import akka.persistence.jdbc.dao.Tables._
+import akka.persistence.jdbc.dao.SnapshotTables.SnapshotRow
+import akka.persistence.jdbc.extension.SnapshotTableConfiguration
 import akka.persistence.jdbc.util.SlickDriver
 import akka.stream.Materializer
 import slick.driver.JdbcProfile
@@ -29,9 +30,9 @@ object SnapshotDao {
 
   case class SnapshotData(persistenceId: String, sequenceNumber: Long, created: Long, snapshot: Array[Byte])
 
-  def apply(driver: String, db: JdbcBackend#Database)(implicit ec: ExecutionContext, mat: Materializer): SnapshotDao =
+  def apply(driver: String, db: JdbcBackend#Database, snapshotTableCfg: SnapshotTableConfiguration)(implicit ec: ExecutionContext, mat: Materializer): SnapshotDao =
     if (SlickDriver.forDriverName.isDefinedAt(driver)) {
-      new JdbcSlickSnapshotDao(db, SlickDriver.forDriverName(driver))
+      new JdbcSlickSnapshotDao(db, SlickDriver.forDriverName(driver), snapshotTableCfg)
     } else throw new IllegalArgumentException("Unknown slick driver: " + driver)
 }
 
@@ -57,7 +58,7 @@ trait SnapshotDao {
   def save(persistenceId: String, sequenceNr: Long, timestamp: Long, snapshot: Array[Byte]): Future[Unit]
 }
 
-class SlickSnapshotDaoQueries(val profile: JdbcProfile) extends Tables {
+class SlickSnapshotDaoQueries(val profile: JdbcProfile, override val snapshotTableCfg: SnapshotTableConfiguration) extends SnapshotTables {
   import profile.api._
 
   def maxSeqNrForPersistenceId(persistenceId: String) =
@@ -85,7 +86,8 @@ class SlickSnapshotDaoQueries(val profile: JdbcProfile) extends Tables {
     selectByPersistenceIdAndMaxSequenceNr(persistenceId, maxSequenceNr).filter(_.created <= maxTimestamp)
 }
 
-trait SlickSnapshotDao extends SnapshotDao with Tables {
+trait SlickSnapshotDao extends SnapshotDao {
+  val profile: slick.driver.JdbcProfile
 
   import profile.api._
 
@@ -94,6 +96,8 @@ trait SlickSnapshotDao extends SnapshotDao with Tables {
   implicit def mat: Materializer
 
   def db: JdbcBackend#Database
+
+  def snapshotTableCfg: SnapshotTableConfiguration
 
   def queries: SlickSnapshotDaoQueries
 
@@ -141,6 +145,6 @@ trait SlickSnapshotDao extends SnapshotDao with Tables {
   } yield ()
 }
 
-class JdbcSlickSnapshotDao(val db: JdbcBackend#Database, override val profile: JdbcProfile)(implicit val ec: ExecutionContext, val mat: Materializer) extends SlickSnapshotDao {
-  override val queries: SlickSnapshotDaoQueries = new SlickSnapshotDaoQueries(profile)
+class JdbcSlickSnapshotDao(val db: JdbcBackend#Database, override val profile: JdbcProfile, override val snapshotTableCfg: SnapshotTableConfiguration)(implicit val ec: ExecutionContext, val mat: Materializer) extends SlickSnapshotDao {
+  override val queries: SlickSnapshotDaoQueries = new SlickSnapshotDaoQueries(profile, snapshotTableCfg)
 }

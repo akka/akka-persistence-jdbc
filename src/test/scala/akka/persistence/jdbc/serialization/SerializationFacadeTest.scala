@@ -29,7 +29,7 @@ import scala.util.Try
 class SerializationFacadeTest extends TestSpec("postgres-application.conf") {
 
   it should "serialize successfully" in {
-    val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = false))
+    val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = false), "$$$")
     forAll(AkkaPersistenceGen.genAtomicWrite) { aw ⇒
       val probe = Source.single(aw).via(facade.serialize)
         .runWith(TestSink.probe[Try[Iterable[Serialized]]])
@@ -42,7 +42,7 @@ class SerializationFacadeTest extends TestSpec("postgres-application.conf") {
   }
 
   it should "deserialize successfully" in {
-    val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = false))
+    val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = false), "$$$")
     forAll { (bytes: Array[Byte]) ⇒
       val probe = Source.single(bytes).via(facade.deserializeRepr)
         .runWith(TestSink.probe[Try[PersistentRepr]])
@@ -55,7 +55,7 @@ class SerializationFacadeTest extends TestSpec("postgres-application.conf") {
   }
 
   it should "fail to serialize" in {
-    val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = true))
+    val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = true), "$$$")
     forAll(AkkaPersistenceGen.genAtomicWrite) { aw ⇒
       val probe = Source.single(aw).via(facade.serialize)
         .runWith(TestSink.probe[Try[Iterable[Serialized]]])
@@ -68,7 +68,7 @@ class SerializationFacadeTest extends TestSpec("postgres-application.conf") {
   }
 
   it should "fail to deserialize" in {
-    val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = true))
+    val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = true), "$$$")
     forAll { (bytes: Array[Byte]) ⇒
       val probe = Source.single(bytes).via(facade.deserializeRepr)
         .runWith(TestSink.probe[Try[PersistentRepr]])

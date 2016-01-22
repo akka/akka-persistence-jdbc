@@ -16,12 +16,12 @@
 
 package akka.persistence.jdbc.dao
 
-import akka.persistence.jdbc.dao.Tables.{ JournalDeletedToRow, JournalRow }
+import akka.persistence.jdbc.dao.JournalTables.{ JournalDeletedToRow, JournalRow }
+import akka.persistence.jdbc.extension.{ DeletedToTableConfiguration, JournalTableConfiguration }
 import akka.persistence.jdbc.serialization.Serialized
 import akka.persistence.jdbc.util.SlickDriver
 import akka.stream.scaladsl._
 import akka.stream.{ FlowShape, Materializer }
-import slick.dbio.{ NoStream, DBIOAction }
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend
 
@@ -32,9 +32,9 @@ object JournalDao {
   /**
    * Factory method
    */
-  def apply(driver: String, db: JdbcBackend#Database)(implicit ec: ExecutionContext, mat: Materializer): JournalDao =
+  def apply(driver: String, db: JdbcBackend#Database, journalTableCfg: JournalTableConfiguration, deletedToTableCfg: DeletedToTableConfiguration)(implicit ec: ExecutionContext, mat: Materializer): JournalDao =
     if (SlickDriver.forDriverName.isDefinedAt(driver)) {
-      new JdbcSlickJournalDao(db, SlickDriver.forDriverName(driver))
+      new JdbcSlickJournalDao(db, SlickDriver.forDriverName(driver), journalTableCfg, deletedToTableCfg)
     } else throw new IllegalArgumentException("Unknown slick driver: " + driver)
 }
 
@@ -105,9 +105,11 @@ class FlowGraphWriteMessagesFacade(journalDao: JournalDao)(implicit ec: Executio
     }
 }
 
-// see: http://slick.typesafe.com/doc/3.1.1/sql-to-slick.html
-class SlickJournalDaoQueries(val profile: JdbcProfile) extends Tables {
+class SlickJournalDaoQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration, override val deletedToTableCfg: DeletedToTableConfiguration) extends JournalTables {
   import profile.api._
+
+  def writeList(xs: Iterable[Serialized]) =
+    JournalTable ++= xs.map(ser ⇒ JournalRow(ser.persistenceId, ser.sequenceNr, ser.serialized.array(), ser.created))
 
   def insertDeletedTo(persistenceId: String, highestSequenceNr: Option[Long]) =
     DeletedToTable += JournalDeletedToRow(persistenceId, highestSequenceNr.getOrElse(0L))
@@ -137,9 +139,21 @@ class SlickJournalDaoQueries(val profile: JdbcProfile) extends Tables {
     query ← JournalTable.map(_.persistenceId)
     if query inSetBind persistenceIds
   } yield query
+
+  def messagesQuery(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long) =
+    JournalTable
+      .filter(_.persistenceId === persistenceId)
+      .filter(_.sequenceNumber >= fromSequenceNr)
+      .filter(_.sequenceNumber <= toSequenceNr)
+      .sortBy(_.sequenceNumber.asc)
+      .take(max)
+
+  def eventsByTag(tag: String, offset: Long) =
+    JournalTable.filter(_.tags like tag).sortBy(_.created.asc).drop(offset)
 }
 
-trait SlickJournalDao extends JournalDao with Tables {
+trait SlickJournalDao extends JournalDao {
+  val profile: slick.driver.JdbcProfile
 
   import profile.api._
 
@@ -151,10 +165,14 @@ trait SlickJournalDao extends JournalDao with Tables {
 
   def db: JdbcBackend#Database
 
-  def queries: SlickJournalDaoQueries = new SlickJournalDaoQueries(profile)
+  def journalTableCfg: JournalTableConfiguration
+
+  def deletedToTableCfg: DeletedToTableConfiguration
+
+  def queries: SlickJournalDaoQueries
 
   def writeList(xs: Iterable[Serialized]): Future[Unit] = for {
-    _ ← db.run(JournalTable ++= xs.map(ser ⇒ JournalRow(ser.persistenceId, ser.sequenceNr, ser.serialized.array(), ser.created)))
+    _ ← db.run(queries.writeList(xs))
   } yield ()
 
   def writeFlow: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =
@@ -178,17 +196,8 @@ trait SlickJournalDao extends JournalDao with Tables {
     db.run(actions)
   }
 
-  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Array[Byte], Unit] = {
-    Source.fromPublisher(
-      db.stream(JournalTable
-        .filter(_.persistenceId === persistenceId)
-        .filter(_.sequenceNumber >= fromSequenceNr)
-        .filter(_.sequenceNumber <= toSequenceNr)
-        .sortBy(_.sequenceNumber.asc)
-        .take(max)
-        .result))
-      .map(_.message)
-  }
+  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Array[Byte], Unit] =
+    Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result)).map(_.message)
 
   override def persistenceIds(queryListOfPersistenceIds: Iterable[String]): Future[Seq[String]] = for {
     xs ← db.run(queries.journalRowByPersistenceIds(queryListOfPersistenceIds).result)
@@ -198,15 +207,11 @@ trait SlickJournalDao extends JournalDao with Tables {
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct.result))
 
   override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit] =
-    Source.fromPublisher(
-      db.stream(JournalTable
-        .filter(_.tags like tag)
-        .sortBy(_.created.asc)
-        .drop(offset)
-        .result))
-      .map(_.message)
+    Source.fromPublisher(db.stream(queries.eventsByTag(tag, offset).result)).map(_.message)
 }
 
-class JdbcSlickJournalDao(val db: JdbcBackend#Database, override val profile: JdbcProfile)(implicit val ec: ExecutionContext, val mat: Materializer) extends SlickJournalDao {
+class JdbcSlickJournalDao(val db: JdbcBackend#Database, override val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration, override val deletedToTableCfg: DeletedToTableConfiguration)(implicit val ec: ExecutionContext, val mat: Materializer) extends SlickJournalDao {
   override val writeMessagesFacade: WriteMessagesFacade = new FlowGraphWriteMessagesFacade(this)
+
+  override val queries: SlickJournalDaoQueries = new SlickJournalDaoQueries(profile, journalTableCfg, deletedToTableCfg)
 }

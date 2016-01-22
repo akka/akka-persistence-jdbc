@@ -18,6 +18,9 @@ package akka.persistence.jdbc.extension
 
 import akka.actor.{ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
 import akka.event.{Logging, LoggingAdapter}
+import com.typesafe.config.Config
+
+import scala.util.Try
 
 object AkkaPersistenceConfig extends ExtensionId[AkkaPersistenceConfigImpl] with ExtensionIdProvider {
   override def createExtension(system: ExtendedActorSystem): AkkaPersistenceConfigImpl = new AkkaPersistenceConfigImpl()(system)
@@ -25,16 +28,80 @@ object AkkaPersistenceConfig extends ExtensionId[AkkaPersistenceConfigImpl] with
   override def lookup(): ExtensionId[_ <: Extension] = AkkaPersistenceConfig
 }
 
-trait AkkaPersistenceConfig {
-  def slickDriver: String
-  def driverClass: String
-  def url: String
-  def user: String
-  def password: String
+case class SlickConfiguration(slickDriver: String = "", driverClass: String = "", url: String = "", user: String = "", password: String = "") {
+  def fromConfig(config: Config): SlickConfiguration = {
+    val cfg = config.getConfig("akka-persistence-jdbc")
+    this.copy(
+      cfg.getString("slick.driver"),
+      cfg.getString("slick.jdbcDriverClass"),
+      cfg.getString("slick.url"),
+      cfg.getString("slick.user"),
+      cfg.getString("slick.password")
+    )
+  }
+}
 
-  def executorName: String
-  def numThreads: Int
-  def queueSize: Int
+case class SlickExecutorConfiguration(name: String = "", numThreads: Int = 0, queueSize: Int = 0) {
+  def fromConfig(config: Config): SlickExecutorConfiguration = {
+    val cfg = config.getConfig("akka-persistence-jdbc")
+    this.copy(
+      cfg.getString("slick.executor.name"),
+      cfg.getInt("slick.executor.numThreads"),
+      cfg.getInt("slick.executor.queueSize")
+    )
+  }
+}
+
+case class PersistenceQueryConfiguration(tagPrefix: String = "") {
+  def fromConfig(config: Config): PersistenceQueryConfiguration = {
+    val cfg = config.getConfig("akka-persistence-jdbc")
+    this.copy(cfg.getString("query.tagPrefix"))
+  }
+}
+
+case class JournalTableConfiguration(tableName: String = "", schema: Option[String] = None) {
+  def fromConfig(config: Config): JournalTableConfiguration = {
+    val cfg = config.getConfig("akka-persistence-jdbc.tables.journal")
+    this.copy(
+      cfg.getString("tableName"),
+      Try(cfg.getString("schemaName")).toOption.map(_.trim).filter(_.nonEmpty)
+    )
+  }
+}
+
+case class DeletedToTableConfiguration(tableName: String = "", schema: Option[String] = None) {
+  def fromConfig(config: Config): DeletedToTableConfiguration = {
+    val cfg = config.getConfig("akka-persistence-jdbc.tables.deletedTo")
+    this.copy(
+      cfg.getString("tableName"),
+      Try(cfg.getString("schemaName")).toOption.map(_.trim).filter(_.nonEmpty)
+    )
+  }
+}
+
+case class SnapshotTableConfiguration(tableName: String = "", schema: Option[String] = None) {
+  def fromConfig(config: Config): SnapshotTableConfiguration = {
+    val cfg = config.getConfig("akka-persistence-jdbc.tables.snapshot")
+    this.copy(
+      cfg.getString("tableName"),
+      Try(cfg.getString("schemaName")).toOption.map(_.trim).filter(_.nonEmpty)
+    )
+  }
+}
+
+trait AkkaPersistenceConfig {
+
+  def slickConfiguration: SlickConfiguration
+
+  def slickExecutorConfiguration: SlickExecutorConfiguration
+
+  def persistenceQueryConfiguration: PersistenceQueryConfiguration
+
+  def journalTableConfiguration: JournalTableConfiguration
+
+  def deletedToTableConfiguration: DeletedToTableConfiguration
+
+  def snapshotTableConfiguration: SnapshotTableConfiguration
 }
 
 class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) extends AkkaPersistenceConfig with Extension {
@@ -42,35 +109,42 @@ class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) exte
 
   val cfg = system.settings.config.getConfig("akka-persistence-jdbc")
 
-  log.debug(
+  override val slickConfiguration: SlickConfiguration =
+    SlickConfiguration().fromConfig(system.settings.config)
+
+  override val slickExecutorConfiguration: SlickExecutorConfiguration =
+    SlickExecutorConfiguration().fromConfig(system.settings.config)
+
+  override val persistenceQueryConfiguration: PersistenceQueryConfiguration =
+      PersistenceQueryConfiguration().fromConfig(system.settings.config)
+
+  override def journalTableConfiguration: JournalTableConfiguration =
+    JournalTableConfiguration().fromConfig(system.settings.config)
+
+  override def deletedToTableConfiguration: DeletedToTableConfiguration =
+    DeletedToTableConfiguration().fromConfig(system.settings.config)
+
+  override def snapshotTableConfiguration: SnapshotTableConfiguration =
+    SnapshotTableConfiguration().fromConfig(system.settings.config)
+
+  def debugInfo: String =
     s"""
-      | ====================================
-      | Akka Persistence JDBC Configuration:
-      | ====================================
-      | slickDriver: [$slickDriver]
-      | driverClass: [$driverClass]
-      | url: [$url]
-      | user: [$user]
-      | password: [$password]
-      | executorName: [$executorName]
-      | queueSize: [$queueSize]
-      | numThreads: [$numThreads]
-      | ====================================
-    """.stripMargin)
+       | ====================================
+       | Akka Persistence JDBC Configuration:
+       | ====================================
+       | $slickConfiguration
+       | ====================================
+       | $persistenceQueryConfiguration
+       | ====================================
+       | $slickExecutorConfiguration
+       | ====================================
+       | $journalTableConfiguration
+       | ====================================
+       | $deletedToTableConfiguration
+       | ====================================
+       | $snapshotTableConfiguration
+       | ====================================
+    """.stripMargin
 
-  override def slickDriver: String = cfg.getString("slick.driver")
-
-  override def driverClass: String = cfg.getString("slick.jdbcDriverClass")
-
-  override def url: String = cfg.getString("slick.url")
-
-  override def user: String = cfg.getString("slick.user")
-
-  override def password: String = cfg.getString("slick.password")
-
-  override def executorName: String = cfg.getString("slick.executor.name")
-
-  override def queueSize: Int = cfg.getInt("slick.executor.queueSize")
-
-  override def numThreads: Int = cfg.getInt("slick.executor.numThreads")
+  log.debug(debugInfo)
 }

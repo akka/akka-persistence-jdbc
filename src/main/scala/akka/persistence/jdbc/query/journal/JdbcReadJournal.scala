@@ -18,7 +18,7 @@ package akka.persistence.jdbc.query.journal
 
 import akka.actor.{ ExtendedActorSystem, Props }
 import akka.persistence.jdbc.dao.JournalDao
-import akka.persistence.jdbc.extension.DaoRepository
+import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DaoRepository }
 import akka.persistence.jdbc.serialization.{ AkkaSerializationProxy, SerializationFacade }
 import akka.persistence.query.scaladsl._
 import akka.persistence.query.{ EventEnvelope, ReadJournalProvider }
@@ -80,7 +80,7 @@ class PostgresReadJournal(config: Config)(implicit val system: ExtendedActorSyst
   override val journalDao: JournalDao = DaoRepository(system).journalDao
 
   override val serializationFacade: SerializationFacade =
-    new SerializationFacade(new AkkaSerializationProxy(SerializationExtension(system)))
+    new SerializationFacade(new AkkaSerializationProxy(SerializationExtension(system)), AkkaPersistenceConfig(system).persistenceQueryConfiguration.tagPrefix)
 }
 
 class JdbcReadJournalProvider(system: ExtendedActorSystem, config: Config) extends ReadJournalProvider {

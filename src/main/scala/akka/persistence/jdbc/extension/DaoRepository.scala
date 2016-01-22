@@ -17,7 +17,7 @@
 package akka.persistence.jdbc.extension
 
 import akka.actor.{ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
-import akka.event.{LoggingAdapter, Logging}
+import akka.event.{Logging, LoggingAdapter}
 import akka.persistence.jdbc.dao.{JournalDao, SnapshotDao}
 import akka.stream.{ActorMaterializer, Materializer}
 
@@ -42,9 +42,18 @@ class DaoRepositoryImpl()(implicit val system: ExtendedActorSystem) extends DaoR
 
   val log: LoggingAdapter = Logging(system, this.getClass)
 
-  log.debug("Creating DAO's with driver: {}", AkkaPersistenceConfig(system).slickDriver)
+  override val journalDao: JournalDao =
+    JournalDao(
+      AkkaPersistenceConfig(system).slickConfiguration.slickDriver,
+      SlickDatabase(system).db,
+      AkkaPersistenceConfig(system).journalTableConfiguration,
+      AkkaPersistenceConfig(system).deletedToTableConfiguration
+    )
 
-  override val journalDao: JournalDao = JournalDao(AkkaPersistenceConfig(system).slickDriver, SlickDatabase(system).db)
-
-  override val snapshotDao: SnapshotDao = SnapshotDao(AkkaPersistenceConfig(system).slickDriver, SlickDatabase(system).db)
+  override val snapshotDao: SnapshotDao =
+    SnapshotDao(
+      AkkaPersistenceConfig(system).slickConfiguration.slickDriver,
+      SlickDatabase(system).db,
+      AkkaPersistenceConfig(system).snapshotTableConfiguration
+    )
 }

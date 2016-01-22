@@ -27,13 +27,13 @@ object SlickDatabase extends ExtensionId[SlickDatabaseImpl] with ExtensionIdProv
 }
 
 class SlickDatabaseImpl()(implicit val system: ExtendedActorSystem) extends JdbcBackend with Extension {
-  val cfg = AkkaPersistenceConfig(system)
-  val executor = AsyncExecutor(cfg.executorName, cfg.numThreads, cfg.queueSize)
+  val cfg: AkkaPersistenceConfig = AkkaPersistenceConfig(system)
+  val executor: AsyncExecutor = AsyncExecutor(cfg.slickExecutorConfiguration.name, cfg.slickExecutorConfiguration.numThreads, cfg.slickExecutorConfiguration.numThreads)
   val db: Database = Database.forURL(
-    url = cfg.url,
-    user = cfg.user,
-    password = cfg.password,
-    driver = cfg.driverClass,
+    url = cfg.slickConfiguration.url,
+    user = cfg.slickConfiguration.user,
+    password = cfg.slickConfiguration.password,
+    driver = cfg.slickConfiguration.driverClass,
     executor = executor
   )
 }

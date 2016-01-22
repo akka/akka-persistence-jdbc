@@ -22,6 +22,7 @@ import akka.persistence.PersistentActor
 import akka.persistence.jdbc.TestSpec
 import akka.persistence.jdbc.extension.SlickDatabase
 import akka.persistence.jdbc.query.journal.JdbcReadJournal
+import akka.persistence.journal.Tagged
 import akka.persistence.query.{ EventEnvelope, PersistenceQuery }
 import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.scaladsl.TestSink
@@ -44,7 +45,7 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) {
     tp.within(within)(f(tp))
   }
 
-  def withCurrentEventsByPersistenceid(within: FiniteDuration = 1.second)(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit = {
+  def withCurrentEventsByPersistenceid(within: FiniteDuration = 1.second)(persistenceId: String, fromSequenceNr: Long = 0, toSequenceNr: Long = Long.MaxValue)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit = {
     val tp = readJournal.currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).runWith(TestSink.probe[EventEnvelope])
     tp.within(within)(f(tp))
   }
@@ -96,6 +97,8 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) {
   def withTestActors(f: (ActorRef, ActorRef, ActorRef) ⇒ Unit): Unit = {
     f(setupEmpty(1), setupEmpty(2), setupEmpty(3))
   }
+
+  def withTags(payload: Any, tags: String*) = Tagged(payload, Set(tags: _*))
 
   protected override def beforeEach(): Unit = {
     val db = SlickDatabase(system).db

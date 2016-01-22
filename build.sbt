@@ -11,7 +11,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 libraryDependencies ++= {
   val akkaVersion = "2.4.1"
   val slickVersion = "3.1.1"
-  val akkaStreamAndHttpVersion = "2.0.1"
+  val akkaStreamAndHttpVersion = "2.0.2"
   Seq(
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-persistence" % akkaVersion,

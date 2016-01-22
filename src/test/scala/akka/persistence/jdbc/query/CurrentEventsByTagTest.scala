@@ -20,10 +20,30 @@ import akka.persistence.jdbc.util.Schema
 import akka.persistence.jdbc.util.Schema.MySQL
 import akka.persistence.jdbc.util.Schema.Postgres
 import akka.persistence.jdbc.util.Schema.{ MySQL, Postgres }
+import akka.persistence.journal.Tagged
 import akka.persistence.query.EventEnvelope
 import akka.persistence.query.EventEnvelope
 
 abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config) {
+
+  it should "not find any events for unknown tag" in
+    withTestActors { (actor1, actor2, actor3) ⇒
+      withClue("Persisting a tagged event") {
+        actor1 ! withTags(1, "one")
+        eventually {
+          withCurrentEventsByPersistenceid()("my-1") { tp ⇒
+            tp.request(Long.MaxValue)
+            tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
+            tp.expectComplete()
+          }
+        }
+      }
+
+      //      withCurrentEventsByPersistenceid()("unkown-pid", 0L, Long.MaxValue) { tp ⇒
+      //        tp.request(Int.MaxValue)
+      //        tp.expectComplete()
+      //      }
+    }
 
 }
 
@@ -31,6 +51,6 @@ class PostgresCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-ap
   dropCreate(Postgres())
 }
 
-class MySQLCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") {
-  dropCreate(MySQL())
-}
+//class MySQLCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") {
+//  dropCreate(MySQL())
+//}

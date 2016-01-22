@@ -17,10 +17,10 @@
 package akka.persistence.jdbc.journal
 
 import akka.persistence.CapabilityFlag
-import akka.persistence.jdbc.dao.Tables
-import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, SlickDatabase }
-import akka.persistence.jdbc.util.Schema.{ Oracle, MySQL, Postgres }
-import akka.persistence.jdbc.util.{ Schema, DropCreate, ClasspathResources, SlickDriver }
+import akka.persistence.jdbc.dao.JournalTables
+import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DeletedToTableConfiguration, JournalTableConfiguration, SlickDatabase }
+import akka.persistence.jdbc.util.Schema.{ MySQL, Postgres }
+import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDriver }
 import akka.persistence.journal.JournalSpec
 import com.typesafe.config.{ Config, ConfigFactory }
 import org.scalatest.concurrent.ScalaFutures
@@ -29,7 +29,14 @@ import slick.driver.JdbcProfile
 
 import scala.concurrent.duration._
 
-abstract class JdbcJournalSpec(config: Config) extends JournalSpec(config) with BeforeAndAfterAll with BeforeAndAfterEach with ScalaFutures with Tables with ClasspathResources with DropCreate {
+abstract class JdbcJournalSpec(config: Config) extends JournalSpec(config)
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach
+    with ScalaFutures
+    with JournalTables
+    with ClasspathResources
+    with DropCreate {
+
   override protected def supportsRejectingNonSerializableObjects: CapabilityFlag = false
 
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 10.seconds)
@@ -38,8 +45,14 @@ abstract class JdbcJournalSpec(config: Config) extends JournalSpec(config) with 
 
   val db = SlickDatabase(system).db
 
+  override def journalTableCfg: JournalTableConfiguration =
+    AkkaPersistenceConfig(system).journalTableConfiguration
+
+  override def deletedToTableCfg: DeletedToTableConfiguration =
+    AkkaPersistenceConfig(system).deletedToTableConfiguration
+
   override val profile: JdbcProfile =
-    SlickDriver.forDriverName(AkkaPersistenceConfig(system).slickDriver)
+    SlickDriver.forDriverName(AkkaPersistenceConfig(system).slickConfiguration.slickDriver)
 }
 
 /**

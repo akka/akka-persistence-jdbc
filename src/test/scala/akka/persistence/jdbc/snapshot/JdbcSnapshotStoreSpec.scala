@@ -16,10 +16,10 @@
 
 package akka.persistence.jdbc.snapshot
 
-import akka.persistence.jdbc.dao.Tables
-import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, SlickDatabase }
+import akka.persistence.jdbc.dao.JournalTables
+import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DeletedToTableConfiguration, JournalTableConfiguration, SlickDatabase }
 import akka.persistence.jdbc.util.Schema.{ MySQL, Postgres }
-import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, Schema, SlickDriver }
+import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDriver }
 import akka.persistence.snapshot.SnapshotStoreSpec
 import com.typesafe.config.{ Config, ConfigFactory }
 import org.scalatest.BeforeAndAfterAll
@@ -28,7 +28,7 @@ import slick.driver.JdbcProfile
 
 import scala.concurrent.duration._
 
-abstract class JdbcSnapshotStoreSpec(config: Config) extends SnapshotStoreSpec(config) with BeforeAndAfterAll with ScalaFutures with Tables with ClasspathResources with DropCreate {
+abstract class JdbcSnapshotStoreSpec(config: Config) extends SnapshotStoreSpec(config) with BeforeAndAfterAll with ScalaFutures with JournalTables with ClasspathResources with DropCreate {
 
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 10.seconds)
 
@@ -36,8 +36,14 @@ abstract class JdbcSnapshotStoreSpec(config: Config) extends SnapshotStoreSpec(c
 
   val db = SlickDatabase(system).db
 
+  override def journalTableCfg: JournalTableConfiguration =
+    AkkaPersistenceConfig(system).journalTableConfiguration
+
+  override def deletedToTableCfg: DeletedToTableConfiguration =
+    AkkaPersistenceConfig(system).deletedToTableConfiguration
+
   override val profile: JdbcProfile =
-    SlickDriver.forDriverName(AkkaPersistenceConfig(system).slickDriver)
+    SlickDriver.forDriverName(AkkaPersistenceConfig(system).slickConfiguration.slickDriver)
 }
 
 class PostgresSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("postgres-application.conf")) {

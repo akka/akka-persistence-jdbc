@@ -14,13 +14,27 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao
+package akka.persistence.jdbc.serialization
 
 import akka.persistence.jdbc.TestSpec
-import org.scalatest.Ignore
-import slick.driver.PostgresDriver.api._
 
-@Ignore
-class SlickJournalDaoQueriesTest extends TestSpec {
-  val pgQueries = new SlickJournalDaoQueries(slick.driver.PostgresDriver)
+class EncodeTagsTest extends TestSpec {
+
+  it should "encode tags given a tagPrefix" in {
+
+    withClue("no tags") {
+      val tagPrefix = "$$$"
+      SerializationFacade.encodeTags(Set.empty[String], tagPrefix) shouldBe None
+    }
+
+    withClue("one tag") {
+      val tagPrefix = "$$$"
+      SerializationFacade.encodeTags(Set("foo"), tagPrefix).value shouldBe "$$$foo$$$"
+    }
+
+    withClue("two tags") {
+      val tagPrefix = "$$$"
+      SerializationFacade.encodeTags(Set("foo", "bar"), tagPrefix).value shouldBe "$$$foo$$$bar$$$"
+    }
+  }
 }

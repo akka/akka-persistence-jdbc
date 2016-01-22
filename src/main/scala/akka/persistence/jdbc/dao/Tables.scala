@@ -16,23 +16,26 @@
 
 package akka.persistence.jdbc.dao
 
-object Tables {
+import akka.persistence.jdbc.dao.JournalTables.{ JournalDeletedToRow, JournalRow }
+import akka.persistence.jdbc.dao.SnapshotTables.SnapshotRow
+import akka.persistence.jdbc.extension.{ DeletedToTableConfiguration, JournalTableConfiguration, SnapshotTableConfiguration }
 
+object JournalTables {
   case class JournalRow(persistenceId: String, sequenceNumber: Long, message: Array[Byte], created: Long, tags: Option[String] = None)
 
   case class JournalDeletedToRow(persistenceId: String, deletedTo: Long)
-
-  case class SnapshotRow(persistenceId: String, sequenceNumber: Long, created: Long, snapshot: Array[Byte])
 }
 
-trait Tables {
-  import Tables._
-
+trait JournalTables {
   val profile: slick.driver.JdbcProfile
 
   import profile.api._
 
-  class Journal(_tableTag: Tag) extends Table[JournalRow](_tableTag, _schemaName = None, _tableName = "journal") {
+  def journalTableCfg: JournalTableConfiguration
+
+  def deletedToTableCfg: DeletedToTableConfiguration
+
+  class Journal(_tableTag: Tag) extends Table[JournalRow](_tableTag, _schemaName = journalTableCfg.schema, _tableName = journalTableCfg.tableName) {
     def * = (persistenceId, sequenceNumber, message, created, tags) <> (JournalRow.tupled, JournalRow.unapply)
 
     val persistenceId: Rep[String] = column[String]("persistence_id", O.Length(255, varying = true))
@@ -45,7 +48,7 @@ trait Tables {
 
   lazy val JournalTable = new TableQuery(tag ⇒ new Journal(tag))
 
-  class DeletedTo(_tableTag: Tag) extends Table[JournalDeletedToRow](_tableTag, _schemaName = None, _tableName = "deleted_to") {
+  class DeletedTo(_tableTag: Tag) extends Table[JournalDeletedToRow](_tableTag, _schemaName = deletedToTableCfg.schema, _tableName = deletedToTableCfg.tableName) {
     def * = (persistenceId, deletedTo) <> (JournalDeletedToRow.tupled, JournalDeletedToRow.unapply)
 
     val persistenceId: Rep[String] = column[String]("persistence_id", O.Length(255, varying = true))
@@ -53,8 +56,20 @@ trait Tables {
   }
 
   lazy val DeletedToTable = new TableQuery(tag ⇒ new DeletedTo(tag))
+}
 
-  class Snapshot(_tableTag: Tag) extends Table[SnapshotRow](_tableTag, _schemaName = None, _tableName = "snapshot") {
+object SnapshotTables {
+  case class SnapshotRow(persistenceId: String, sequenceNumber: Long, created: Long, snapshot: Array[Byte])
+}
+
+trait SnapshotTables {
+  val profile: slick.driver.JdbcProfile
+
+  import profile.api._
+
+  def snapshotTableCfg: SnapshotTableConfiguration
+
+  class Snapshot(_tableTag: Tag) extends Table[SnapshotRow](_tableTag, _schemaName = snapshotTableCfg.schema, _tableName = snapshotTableCfg.tableName) {
     def * = (persistenceId, sequenceNumber, created, snapshot) <> (SnapshotRow.tupled, SnapshotRow.unapply)
 
     val persistenceId: Rep[String] = column[String]("persistence_id", O.Length(255, varying = true), O.PrimaryKey)

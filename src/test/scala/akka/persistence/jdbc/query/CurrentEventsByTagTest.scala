@@ -23,6 +23,7 @@ import akka.persistence.jdbc.util.Schema.{ MySQL, Postgres }
 import akka.persistence.journal.Tagged
 import akka.persistence.query.EventEnvelope
 import akka.persistence.query.EventEnvelope
+import org.scalatest.Ignore
 
 abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config) {
 
@@ -47,6 +48,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
 
 }
 
+@Ignore
 class PostgresCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") {
   dropCreate(Postgres())
 }

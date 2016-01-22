@@ -28,26 +28,11 @@ object AkkaPersistenceConfig extends ExtensionId[AkkaPersistenceConfigImpl] with
   override def lookup(): ExtensionId[_ <: Extension] = AkkaPersistenceConfig
 }
 
-case class SlickConfiguration(slickDriver: String = "", driverClass: String = "", url: String = "", user: String = "", password: String = "") {
+case class SlickConfiguration(slickDriver: String = "") {
   def fromConfig(config: Config): SlickConfiguration = {
     val cfg = config.getConfig("akka-persistence-jdbc")
     this.copy(
-      cfg.getString("slick.driver"),
-      cfg.getString("slick.jdbcDriverClass"),
-      cfg.getString("slick.url"),
-      cfg.getString("slick.user"),
-      cfg.getString("slick.password")
-    )
-  }
-}
-
-case class SlickExecutorConfiguration(name: String = "", numThreads: Int = 0, queueSize: Int = 0) {
-  def fromConfig(config: Config): SlickExecutorConfiguration = {
-    val cfg = config.getConfig("akka-persistence-jdbc")
-    this.copy(
-      cfg.getString("slick.executor.name"),
-      cfg.getInt("slick.executor.numThreads"),
-      cfg.getInt("slick.executor.queueSize")
+      cfg.getString("slick.driver")
     )
   }
 }
@@ -93,8 +78,6 @@ trait AkkaPersistenceConfig {
 
   def slickConfiguration: SlickConfiguration
 
-  def slickExecutorConfiguration: SlickExecutorConfiguration
-
   def persistenceQueryConfiguration: PersistenceQueryConfiguration
 
   def journalTableConfiguration: JournalTableConfiguration
@@ -107,13 +90,8 @@ trait AkkaPersistenceConfig {
 class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) extends AkkaPersistenceConfig with Extension {
   val log: LoggingAdapter = Logging(system, this.getClass)
 
-  val cfg = system.settings.config.getConfig("akka-persistence-jdbc")
-
   override val slickConfiguration: SlickConfiguration =
     SlickConfiguration().fromConfig(system.settings.config)
-
-  override val slickExecutorConfiguration: SlickExecutorConfiguration =
-    SlickExecutorConfiguration().fromConfig(system.settings.config)
 
   override val persistenceQueryConfiguration: PersistenceQueryConfiguration =
       PersistenceQueryConfiguration().fromConfig(system.settings.config)
@@ -135,8 +113,6 @@ class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) exte
        | $slickConfiguration
        | ====================================
        | $persistenceQueryConfiguration
-       | ====================================
-       | $slickExecutorConfiguration
        | ====================================
        | $journalTableConfiguration
        | ====================================

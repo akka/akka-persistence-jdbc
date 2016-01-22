@@ -18,7 +18,6 @@ package akka.persistence.jdbc.extension
 
 import akka.actor.{ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
 import slick.jdbc.JdbcBackend
-import slick.util.AsyncExecutor
 
 object SlickDatabase extends ExtensionId[SlickDatabaseImpl] with ExtensionIdProvider {
   override def createExtension(system: ExtendedActorSystem): SlickDatabaseImpl = new SlickDatabaseImpl()(system)
@@ -27,13 +26,5 @@ object SlickDatabase extends ExtensionId[SlickDatabaseImpl] with ExtensionIdProv
 }
 
 class SlickDatabaseImpl()(implicit val system: ExtendedActorSystem) extends JdbcBackend with Extension {
-  val cfg: AkkaPersistenceConfig = AkkaPersistenceConfig(system)
-  val executor: AsyncExecutor = AsyncExecutor(cfg.slickExecutorConfiguration.name, cfg.slickExecutorConfiguration.numThreads, cfg.slickExecutorConfiguration.numThreads)
-  val db: Database = Database.forURL(
-    url = cfg.slickConfiguration.url,
-    user = cfg.slickConfiguration.user,
-    password = cfg.slickConfiguration.password,
-    driver = cfg.slickConfiguration.driverClass,
-    executor = executor
-  )
+  val db: Database = Database.forConfig("akka-persistence-jdbc.slick.db", system.settings.config)
 }

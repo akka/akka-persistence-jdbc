@@ -194,6 +194,12 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
 
+## 2.0.4 (2016-01-22)
+ - Using the typesafe config for the Slick database configuration,
+ - Uses HikariCP as the connection pool,
+ - Table names and schema names are configurable,
+ - Tested with Oracle XE 
+
 ## 2.0.3 (2016-01-18)
  - Optimization for the `eventsByPersistenceId` and `allPersistenceIds` queries. 
 

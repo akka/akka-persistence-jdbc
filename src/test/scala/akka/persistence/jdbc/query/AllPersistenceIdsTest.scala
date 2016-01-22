@@ -16,7 +16,8 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.jdbc.util.Schema.{ MySQL, Postgres }
+import akka.persistence.jdbc.util.DropCreate
+import akka.persistence.jdbc.util.Schema.{ Oracle, MySQL, Postgres }
 
 import scala.concurrent.duration._
 
@@ -68,4 +69,10 @@ class PostgresAllPersistenceIdsTest extends AllPersistenceIdsTest("postgres-appl
 
 class MySQLAllPersistenceIdsTest extends AllPersistenceIdsTest("mysql-application.conf") {
   dropCreate(MySQL())
+}
+
+class OracleAllPersistenceIdsTest extends AllPersistenceIdsTest("oracle-application.conf") {
+  dropCreate(Oracle())
+
+  protected override def beforeEach(): Unit = ()
 }

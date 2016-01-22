@@ -16,13 +16,13 @@
 
 package akka.persistence.jdbc.configuration
 
-import akka.persistence.jdbc.extension.{ SnapshotTableConfiguration, JournalTableConfiguration }
+import akka.persistence.jdbc.TestSpec
+import akka.persistence.jdbc.extension.{ JournalTableConfiguration, SnapshotTableConfiguration }
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{ FlatSpec, Matchers }
 
-class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
+class AkkaPersistenceConfigTest extends TestSpec {
 
-  "JournalTableConfig" should "be parsed" in {
+  "JournalTableConfig" should "be parsed with no schemaName" in {
     val config = ConfigFactory.parseString(
       """
         |akka-persistence-jdbc {
@@ -38,7 +38,23 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     JournalTableConfiguration().fromConfig(config) shouldBe JournalTableConfiguration("journal", None)
   }
 
-  "SlickTableConfig" should "be parsed" in {
+  it should "be parsed with a schemaName" in {
+    val config = ConfigFactory.parseString(
+      """
+        |akka-persistence-jdbc {
+        |  tables {
+        |    journal {
+        |      tableName = "journal"
+        |      schemaName = "public"
+        |    }
+        |  }
+        |}
+      """.stripMargin
+    )
+    JournalTableConfiguration().fromConfig(config) shouldBe JournalTableConfiguration("journal", Some("public"))
+  }
+
+  "SlickTableConfig" should "be parsed with no schemaName" in {
     val config = ConfigFactory.parseString(
       """
         |akka-persistence-jdbc {

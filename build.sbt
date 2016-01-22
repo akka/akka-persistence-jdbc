@@ -35,7 +35,7 @@ libraryDependencies ++= {
 
 fork in Test := true
 
-javaOptions in Test ++= Seq("-Xms30m", "-Xmx30m")
+//javaOptions in Test ++= Seq("-Xms30m", "-Xmx30m")
 
 parallelExecution in Test := false
 

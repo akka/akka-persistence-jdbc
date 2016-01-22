@@ -19,7 +19,7 @@ package akka.persistence.jdbc.journal
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.dao.JournalTables
 import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DeletedToTableConfiguration, JournalTableConfiguration, SlickDatabase }
-import akka.persistence.jdbc.util.Schema.{ MySQL, Postgres }
+import akka.persistence.jdbc.util.Schema.{ Oracle, MySQL, Postgres }
 import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDriver }
 import akka.persistence.journal.JournalSpec
 import com.typesafe.config.{ Config, ConfigFactory }
@@ -69,4 +69,8 @@ class PostgresJournalSpec extends JdbcJournalSpec(ConfigFactory.load("postgres-a
  */
 class MySQLJournalSpec extends JdbcJournalSpec(ConfigFactory.load("mysql-application.conf")) {
   dropCreate(MySQL())
+}
+
+class OracleJournalSpec extends JdbcJournalSpec(ConfigFactory.load("oracle-application.conf")) {
+  dropCreate(Oracle())
 }

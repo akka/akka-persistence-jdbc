@@ -20,10 +20,10 @@ import java.sql.Statement
 
 import akka.actor.ActorSystem
 import akka.persistence.jdbc.extension.SlickDatabase
-import akka.persistence.jdbc.util.Schema.{ Oracle, Postgres, SchemaType }
+import akka.persistence.jdbc.util.Schema.{ Oracle, SchemaType }
 import slick.driver.PostgresDriver.api._
 
-import scala.util.Try
+import scala.util.{ Failure, Try }
 
 object Schema {
   sealed trait SchemaType { def schema: String }
@@ -36,19 +36,25 @@ trait DropCreate extends ClasspathResources {
 
   def system: ActorSystem
 
+  val oracleQueries = List(
+    """DROP TABLE "journal" CASCADE CONSTRAINT""",
+    """DROP TABLE "deleted_to" CASCADE CONSTRAINT""",
+    """DROP TABLE "snapshot" CASCADE CONSTRAINT"""
+  )
+
   def dropCreate(schemaType: SchemaType) = schemaType match {
     case Oracle(schema) ⇒
       withStatement { stmt ⇒
-        Try {
-          stmt.executeUpdate("DROP TABLE public.journal CASCADE CONSTRAINT")
-          stmt.executeUpdate("DROP TABLE public.deleted_to CASCADE CONSTRAINT")
-          stmt.executeUpdate("DROP TABLE public.snapshot CASCADE CONSTRAINT")
-        } recover {
-          case t: Throwable ⇒
-            t.printStackTrace()
-            create(schema)
-        }
+        for {
+          ddl ← oracleQueries
+          result ← Try(stmt.executeUpdate(ddl)) recoverWith {
+            case t: Throwable ⇒
+              t.printStackTrace()
+              Failure(t)
+          }
+        } ()
       }
+      create(schema)
     case s: SchemaType ⇒ create(s.schema)
   }
 
@@ -60,7 +66,10 @@ trait DropCreate extends ClasspathResources {
     } yield trimmedLine
   } withStatement { stmt ⇒
     println(query)
-    stmt.executeUpdate(query)
+    Try(stmt.executeUpdate(query)).recover {
+      case t: Throwable ⇒
+        t.printStackTrace()
+    }
   }
 
   def withSession(f: Session ⇒ Unit): Unit = {

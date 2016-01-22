@@ -6,22 +6,29 @@ Service | Status | Description
 License | [![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt) | Apache 2.0
 Bintray | [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-persistence-jdbc/images/download.svg) ](https://bintray.com/dnvriend/maven/akka-persistence-jdbc/_latestVersion) | Latest Version on Bintray
 
-**Start of Disclaimer:**
+## Commercial notice
+Please note that the `akka persistence JDBC plugin` uses the Commercial [Typesafe Slick Extensions](http://slick.typesafe.com/doc/3.1.1/extensions.html).
+When you use the `akka persistence plugin` together with either the `Oracle`, `IBM DB2` or `Microsoft SQL Server` database, for use
+other than for development and testing purposes, then you need a commercial Typesafe subscription under the terms and conditions of the 
+[Typesafe Subscription Agreement (PDF)](http://typesafe.com/public/legal/TypesafeSubscriptionAgreement.pdf). 
+A subscription is required for production use, please see http://typesafe.com/how/subscription for details. 
 
-> This plugin should not be used in production, ever! For a good, stable and scalable solution use [Apache Cassandra](http://cassandra.apache.org/) with the [akka-persistence-cassandra plugin](https://github.com/akka/akka-persistence-cassandra) Only use this plug-in for study projects and proof of concepts. Please use Docker and [library/cassandra](https://registry.hub.docker.com/u/library/cassandra/) You have been warned! 
-
-**End of Disclaimer**
+Please note that most of my projects run on [Postgresql](http://www.postgresql.org/), which is the most advanced open source
+database available, with some great features, and it works great together with the JDBC plugin.
 
 ## New release
-The latest version is `v2.0.3` and breaks backwards compatibility in a big way. New features:
+The latest version is `v2.0.4` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe Slick](http://slick.typesafe.com/) as the database backend,
-- It uses a new database schema, dropping some columns and changing the column types,
-- It writes the journal and snapshot entries as byte arrays,
+  - Using the typesafe config for the Slick database configuration,
+  - Uses HikariCP for the connection pool,
+  - It has been tested against Postgres, MySQL and Oracle only.
+  - It uses a new database schema, dropping some columns and changing the column types,
+  - It writes the journal and snapshot entries as byte arrays,
 - It relies on [Akka Serialization](http://doc.akka.io/docs/akka/2.4.1/scala/serialization.html),
-- For serializing, please split the domain model from the storage model, and use a binary format for the storage model that support schema versioning like [Google's protocol buffers](https://developers.google.com/protocol-buffers/docs/overview), as it is used by Akka Persistence, and is available as a dependent library. For an example on how to use Akka Serialization with protocol buffers, you can examine the [akka-serialization-test](https://github.com/dnvriend/akka-serialization-test) study project,
+  - For serializing, please split the domain model from the storage model, and use a binary format for the storage model that support schema versioning like [Google's protocol buffers](https://developers.google.com/protocol-buffers/docs/overview), as it is used by Akka Persistence, and is available as a dependent library. For an example on how to use Akka Serialization with protocol buffers, you can examine the [akka-serialization-test](https://github.com/dnvriend/akka-serialization-test) study project,
 - It supports the `Persistence Query` interface thus providing a universal asynchronous stream based query interface,
-- It has been tested against MySQL and Postgres only.
+- Table names and schema names are configurable,
 
 ## Installation
 Add the following to your `build.sbt`:
@@ -29,7 +36,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.0.3"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.0.4"
 ```
 
 ## Configuration
@@ -41,13 +48,12 @@ Configure `akka-persistence`:
 - instruct akka persistence to use the `jdbc-snapshot-store` plugin,
 
 Configure `slick`:
-- the slick `driver` to use: `slick.driver.PostgresDriver` and `slick.driver.MySQLDriver` are supported,
-- the `jdbcDriverClass`, eg: `org.postgresql.ds.PGSimpleDataSource`,
-- the `url` which is the JDBC URL,
-- the `user` to to use when creating a database connection,
-- the `password` to use when creating a database connection,
-- Slick uses an `executor` that manages the thread pool for asynchronous execution of Database I/O Actions. The values below are default.
+- The following slick drivers are supported:
+  - `slick.driver.PostgresDriver`
+  - `slick.driver.MySQLDriver`
+  - `com.typesafe.slick.driver.oracle.OracleDriver`
    
+# Postgres configuration   
 ```bash
 akka {
   persistence {
@@ -59,17 +65,220 @@ akka {
 akka-persistence-jdbc {
   slick {
     driver = "slick.driver.PostgresDriver"
-    jdbcDriverClass = "org.postgresql.ds.PGSimpleDataSource"
-    url = "jdbc:postgresql://localhost:5432"/docker"
-    user = "docker"
-    password = "docker"
-    executor {
-      name = "slick-executor"
-      numThreads = 10
-      queueSize = 1000
+    db {
+      host = "boot2docker"
+      host = ${?POSTGRES_HOST}
+      port = "5432"
+      port = ${?POSTGRES_PORT}
+      name = "docker"
+
+      url = "jdbc:postgresql://"${akka-persistence-jdbc.slick.db.host}":"${akka-persistence-jdbc.slick.db.port}"/"${akka-persistence-jdbc.slick.db.name}
+      user = "docker"
+      password = "docker"
+      driver = "org.postgresql.Driver"
+      keepAliveConnection = on
+      numThreads = 2
+      queueSize = 100
     }
   }
+
+  tables {
+    journal {
+      tableName = "journal"
+      schemaName = ""
+    }
+
+    deletedTo {
+      tableName = "deleted_to"
+      schemaName = ""
+    }
+
+    snapshot {
+      tableName = "snapshot"
+      schemaName = ""
+    }
+  }
+
+  query {
+    tagPrefix = "###"
+  }
 }
+```
+
+```sql
+DROP TABLE IF EXISTS public.journal;
+
+CREATE TABLE IF NOT EXISTS public.journal (
+  persistence_id VARCHAR(255) NOT NULL,
+  sequence_number BIGINT NOT NULL,
+  message BYTEA NOT NULL,
+  PRIMARY KEY(persistence_id, sequence_number)
+);
+
+DROP TABLE IF EXISTS public.deleted_to;
+
+CREATE TABLE IF NOT EXISTS public.deleted_to (
+  persistence_id VARCHAR(255) NOT NULL,
+  deleted_to BIGINT NOT NULL
+);
+
+DROP TABLE IF EXISTS public.snapshot;
+
+CREATE TABLE IF NOT EXISTS public.snapshot (
+  persistence_id VARCHAR(255) NOT NULL,
+  sequence_number BIGINT NOT NULL,
+  created BIGINT NOT NULL,
+  snapshot BYTEA NOT NULL,
+  PRIMARY KEY(persistence_id, sequence_number)
+);
+```
+
+## MySQL configuration
+```bash
+akka {
+  persistence {
+    journal.plugin = "jdbc-journal"
+    snapshot-store.plugin = "jdbc-snapshot-store"
+  }
+}
+
+akka-persistence-jdbc {
+  slick {
+    driver = "slick.driver.MySQLDriver"
+    db {
+      host = "boot2docker"
+      host = ${?MYSQL_HOST}
+      port = "3306"
+      port = ${?MYSQL_PORT}
+      name = "mysql"
+
+      url = "jdbc:mysql://"${akka-persistence-jdbc.slick.db.host}":"${akka-persistence-jdbc.slick.db.port}"/"${akka-persistence-jdbc.slick.db.name}
+      user = "root"
+      password = "root"
+      driver = "com.mysql.jdbc.Driver"
+    }
+  }
+
+  tables {
+    journal {
+      tableName = "journal"
+      schemaName = ""
+    }
+
+    deletedTo {
+      tableName = "deleted_to"
+      schemaName = ""
+    }
+
+    snapshot {
+      tableName = "snapshot"
+      schemaName = ""
+    }
+  }
+
+  query {
+    tagPrefix = "###"
+  }
+}
+```
+
+```sql
+DROP TABLE IF EXISTS journal;
+
+CREATE TABLE IF NOT EXISTS journal (
+  persistence_id VARCHAR(255) NOT NULL,
+  sequence_number BIGINT NOT NULL,
+  message BLOB NOT NULL,
+  PRIMARY KEY(persistence_id, sequence_number)
+);
+
+DROP TABLE IF EXISTS deleted_to;
+
+CREATE TABLE IF NOT EXISTS deleted_to (
+  persistence_id VARCHAR(255) NOT NULL,
+  deleted_to BIGINT NOT NULL
+);
+
+DROP TABLE IF EXISTS snapshot;
+
+CREATE TABLE IF NOT EXISTS snapshot (
+  persistence_id VARCHAR(255) NOT NULL,
+  sequence_number BIGINT NOT NULL,
+  created BIGINT NOT NULL,
+  snapshot BLOB NOT NULL,
+  PRIMARY KEY (persistence_id, sequence_number)
+);
+```
+
+## Oracle configuration
+```bash
+akka {
+  persistence {
+    journal.plugin = "jdbc-journal"
+    snapshot-store.plugin = "jdbc-snapshot-store"
+  }
+}
+
+akka-persistence-jdbc {
+  slick {
+    driver = "com.typesafe.slick.driver.oracle.OracleDriver"
+    db {
+      host = "boot2docker"
+      host = ${?ORACLE_HOST}
+      port = "1521"
+      port = ${?ORACLE_PORT}
+      name = "xe"
+
+      url = "jdbc:oracle:thin:@//"${akka-persistence-jdbc.slick.db.host}":"${akka-persistence-jdbc.slick.db.port}"/"${akka-persistence-jdbc.slick.db.name}
+      user = "system"
+      password = "oracle"
+      driver = "oracle.jdbc.OracleDriver"
+    }
+  }
+
+  tables {
+    journal {
+      tableName = "journal"
+      schemaName = "SYSTEM"
+    }
+
+    deletedTo {
+      tableName = "deleted_to"
+      schemaName = "SYSTEM"
+    }
+
+    snapshot {
+      tableName = "snapshot"
+      schemaName = "SYSTEM"
+    }
+  }
+
+  query {
+    tagPrefix = "###"
+  }
+}
+```
+
+```sql
+CREATE TABLE "journal" (
+  "persistence_id" VARCHAR(255) NOT NULL,
+  "sequence_number" NUMERIC NOT NULL,
+  "message" BLOB NOT NULL,
+  PRIMARY KEY("persistence_id", "sequence_number")
+);
+
+CREATE TABLE "deleted_to" (
+  "persistence_id" VARCHAR(255) NOT NULL,
+  "deleted_to" NUMERIC NOT NULL
+);
+
+CREATE TABLE "snapshot" (
+  "persistence_id" VARCHAR(255) NOT NULL,
+  "sequence_number" NUMERIC NOT NULL,
+  "created" NUMERIC NOT NULL,
+  "snapshot" BLOB NOT NULL,
+  PRIMARY KEY ("persistence_id", "sequence_number")
+);
 ```
 
 ## Persistence Query
@@ -130,64 +339,6 @@ The returned event stream is ordered by sequence number, i.e. the same order as 
 
 The stream is completed with failure if there is a failure in executing the query in the backend journal.
 
-## Postgres Schema
-```sql
-DROP TABLE IF EXISTS public.journal;
-
-CREATE TABLE IF NOT EXISTS public.journal (
-  persistence_id VARCHAR(255) NOT NULL,
-  sequence_number BIGINT NOT NULL,
-  message BYTEA NOT NULL,
-  PRIMARY KEY(persistence_id, sequence_number)
-);
-
-DROP TABLE IF EXISTS public.deleted_to;
-
-CREATE TABLE IF NOT EXISTS public.deleted_to (
-  persistence_id VARCHAR(255) NOT NULL,
-  deleted_to BIGINT NOT NULL
-);
-
-DROP TABLE IF EXISTS public.snapshot;
-
-CREATE TABLE IF NOT EXISTS public.snapshot (
-  persistence_id VARCHAR(255) NOT NULL,
-  sequence_number BIGINT NOT NULL,
-  created BIGINT NOT NULL,
-  snapshot BYTEA NOT NULL,
-  PRIMARY KEY(persistence_id, sequence_number)
-);
-```
-
-## MySQL Schema
-```sql
-DROP TABLE IF EXISTS journal;
-
-CREATE TABLE IF NOT EXISTS journal (
-  persistence_id VARCHAR(255) NOT NULL,
-  sequence_number BIGINT NOT NULL,
-  message BLOB NOT NULL,
-  PRIMARY KEY(persistence_id, sequence_number)
-);
-
-DROP TABLE IF EXISTS deleted_to;
-
-CREATE TABLE IF NOT EXISTS deleted_to (
-  persistence_id VARCHAR(255) NOT NULL,
-  deleted_to BIGINT NOT NULL
-);
-
-DROP TABLE IF EXISTS snapshot;
-
-CREATE TABLE IF NOT EXISTS snapshot (
-  persistence_id VARCHAR(255) NOT NULL,
-  sequence_number BIGINT NOT NULL,
-  created BIGINT NOT NULL,
-  snapshot BLOB NOT NULL,
-  PRIMARY KEY (persistence_id, sequence_number)
-);
-```
-
 # Usage
 The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-persistence-jdbc/wiki)
 
@@ -198,6 +349,7 @@ For the full list of what's new see [this wiki page] (https://github.com/dnvrien
  - Using the typesafe config for the Slick database configuration,
  - Uses HikariCP as the connection pool,
  - Table names and schema names are configurable,
+ - Akka Stream 2.0.1 -> 2.0.1
  - Tested with Oracle XE 
 
 ## 2.0.3 (2016-01-18)

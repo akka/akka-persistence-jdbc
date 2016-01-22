@@ -2,7 +2,7 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.0.3"
+version := "2.0.4"
 
 scalaVersion := "2.11.7"
 
@@ -34,8 +34,6 @@ libraryDependencies ++= {
 }
 
 fork in Test := true
-
-//javaOptions in Test ++= Seq("-Xms30m", "-Xmx30m")
 
 parallelExecution in Test := false
 

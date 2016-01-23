@@ -17,7 +17,7 @@ done;
 }
 
 docker rm -f $(docker ps -aq)
-docker-compose --x-networking up -d
+docker-compose --x-networking -f scripts/docker-compose.yml up -d
 wait 3306 MySQL
 wait 5432 Postgres
 wait 1521 Oracle

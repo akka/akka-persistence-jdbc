@@ -216,7 +216,7 @@ akka-persistence-jdbc {
   }
 
   query {
-    separator = "###"
+    separator = ","
   }
 }
 ```
@@ -315,7 +315,7 @@ akka-persistence-jdbc {
   }
 
   query {
-    separator = "###"
+    separator = ","
   }
 }
 ```
@@ -403,7 +403,7 @@ The returned event stream is ordered by sequence number, i.e. the same order as 
 The stream is completed with failure if there is a failure in executing the query in the backend journal.
 
 ## EventsByTag and CurrentEventsByTag
-`eventsByTag` (not yet supported) and `currentEventsByTag` are used for retrieving events that were marked with a given 
+`eventsByTag` and `currentEventsByTag` are used for retrieving events that were marked with a given 
 `tag`, e.g. all domain events of an Aggregate Root type.
 
 ```scala
@@ -416,6 +416,8 @@ import akka.persistence.jdbc.query.journal.JdbcReadJournal
 implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
 val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
+
+val willNotCompleteTheStream: Source[EventEnvelope, Unit] = readJournal.eventsByTag("apple", 0L)
 
 val willCompleteTheStream: Source[EventEnvelope, Unit] = readJournal.currentEventsByTag("apple", 0L)
 ```
@@ -465,10 +467,15 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
 
+## 2.2.1 (2016-01-24)
+  - Support for the `eventsByTag` live query
+  - Tags are now separated by a character, and not by a tagPrefix
+  - Please note the configuration change. 
+
 ## 2.1.0 (2016-01-24) 
- - Schema change for the journal table, added two columns, `tags` and `created`, please update your schema.
  - Support for the `currentEventsByTag` query, the tagged events will be sorted by event creation time.
  - Table column names are configurable.
+ - Schema change for the journal table, added two columns, `tags` and `created`, please update your schema.
 
 ## 2.0.4 (2016-01-22)
  - Using the typesafe config for the Slick database configuration,

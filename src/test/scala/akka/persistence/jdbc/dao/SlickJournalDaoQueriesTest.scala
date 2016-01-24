@@ -45,8 +45,8 @@ class SlickJournalDaoQueriesTest extends TestSpec {
 
   "eventsByTag" should "escape non valid tag characters" in {
     import slick.driver.PostgresDriver.api._
-    val statements = postgresJournalQueries.eventsByTag("one", "###", 0).result.statements
+    val statements = postgresJournalQueries.eventsByTag("one", 0).result.statements
     statements should not be 'empty
-    statements.head shouldBe """select "persistence_id", "sequence_nr", "message", "created", "tags" from "journal" where "tags" like '%###one%' order by "created" offset 0"""
+    statements.head shouldBe """select "persistence_id", "sequence_nr", "message", "created", "tags" from "journal" where "tags" like '%one%' order by "created" offset 0"""
   }
 }

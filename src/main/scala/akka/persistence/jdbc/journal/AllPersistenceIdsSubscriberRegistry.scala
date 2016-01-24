@@ -28,26 +28,38 @@ object AllPersistenceIdsSubscriberRegistry {
 }
 
 trait AllPersistenceIdsSubscriberRegistry { _: SlickAsyncWriteJournal ⇒
-  var allPersistenceIdsSubscribers = Set.empty[ActorRef]
+  private var allPersistenceIdsSubscribers = Set.empty[ActorRef]
 
-  def hasAllPersistenceIdsSubscribers: Boolean = allPersistenceIdsSubscribers.nonEmpty
+  protected def hasAllPersistenceIdsSubscribers: Boolean = allPersistenceIdsSubscribers.nonEmpty
 
-  def addAllPersistenceIdsSubscriber(subscriber: ActorRef): Unit = {
+  private def addAllPersistenceIdsSubscriber(subscriber: ActorRef): Unit = {
     allPersistenceIdsSubscribers += subscriber
   }
 
-  def removeAllPersistenceIdsSubscriber(subscriber: ActorRef): Unit = {
+  private def removeAllPersistenceIdsSubscriber(subscriber: ActorRef): Unit = {
     allPersistenceIdsSubscribers -= subscriber
   }
 
-  def newPersistenceIdAdded(id: String): Unit = {
+  private def newPersistenceIdAdded(id: String): Unit = {
     if (hasAllPersistenceIdsSubscribers) {
       val added = JdbcJournal.PersistenceIdAdded(id)
       allPersistenceIdsSubscribers.foreach(_ ! added)
     }
   }
 
-  def addAllPersistenceIdsFlow(persistenceIdsNotInJournal: List[String]): Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =
+  protected def sendAllPersistenceIdsSubscriberTerminated(ref: ActorRef): Unit =
+    self ! AllPersistenceIdsSubscriberTerminated(ref)
+
+  protected def receiveAllPersistenceIdsSubscriber: Actor.Receive = {
+    case JdbcJournal.AllPersistenceIdsRequest ⇒
+      addAllPersistenceIdsSubscriber(sender())
+      context.watch(sender())
+
+    case AllPersistenceIdsSubscriberTerminated(ref) ⇒
+      removeAllPersistenceIdsSubscriber(ref)
+  }
+
+  protected def addAllPersistenceIdsFlow(persistenceIdsNotInJournal: List[String]): Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =
     Flow[Try[Iterable[Serialized]]].map { atomicWriteResult ⇒
       if (hasAllPersistenceIdsSubscribers) {
         for {
@@ -59,16 +71,4 @@ trait AllPersistenceIdsSubscriberRegistry { _: SlickAsyncWriteJournal ⇒
       }
       atomicWriteResult
     }
-
-  def sendAllPersistenceIdsSubscriberTerminated(ref: ActorRef): Unit =
-    self ! AllPersistenceIdsSubscriberTerminated(ref)
-
-  def receiveAllPersistenceIdsSubscriber: Actor.Receive = {
-    case JdbcJournal.AllPersistenceIdsRequest ⇒
-      addAllPersistenceIdsSubscriber(sender())
-      context.watch(sender())
-
-    case AllPersistenceIdsSubscriberTerminated(ref) ⇒
-      removeAllPersistenceIdsSubscriber(ref)
-  }
 }

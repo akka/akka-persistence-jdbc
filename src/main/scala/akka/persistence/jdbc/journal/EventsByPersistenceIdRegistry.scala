@@ -27,27 +27,36 @@ import scala.collection._
 import scala.util.Try
 
 object EventsByPersistenceIdRegistry {
-
   case class EventsByPersistenceIdSubscriberTerminated(ref: ActorRef)
-
 }
 
-trait EventsByPersistenceIdRegistry {
-  _: SlickAsyncWriteJournal ⇒
+trait EventsByPersistenceIdRegistry { _: SlickAsyncWriteJournal ⇒
 
-  val eventsByPersistenceIdSubscribers = new mutable.HashMap[String, mutable.Set[ActorRef]] with mutable.MultiMap[String, ActorRef]
+  private val eventsByPersistenceIdSubscribers = new mutable.HashMap[String, mutable.Set[ActorRef]] with mutable.MultiMap[String, ActorRef]
 
-  def hasEventsByPersistenceIdSubscribers: Boolean = eventsByPersistenceIdSubscribers.nonEmpty
+  protected def hasEventsByPersistenceIdSubscribers: Boolean = eventsByPersistenceIdSubscribers.nonEmpty
 
-  def addEventsByPersistenceIdSubscribers(subscriber: ActorRef, persistenceId: String): Unit =
+  private def addEventsByPersistenceIdSubscriber(subscriber: ActorRef, persistenceId: String): Unit =
     eventsByPersistenceIdSubscribers.addBinding(persistenceId, subscriber)
 
-  def removeEventsByPersistenceIdSubscribers(subscriber: ActorRef): Unit = {
+  private def removeEventsByPersistenceIdSubscriber(subscriber: ActorRef): Unit = {
     val keys = eventsByPersistenceIdSubscribers.collect { case (k, s) if s.contains(subscriber) ⇒ k }
     keys.foreach { key ⇒ eventsByPersistenceIdSubscribers.removeBinding(key, subscriber) }
   }
 
-  def eventsByPersistenceIdFlow(atomicWrites: Iterable[AtomicWrite]): Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =
+  protected def sendEventsByPersistenceIdSubscriberTerminated(ref: ActorRef): Unit =
+    self ! EventsByPersistenceIdSubscriberTerminated(ref)
+
+  protected def receiveEventsByPersistenceIdRegistry: Actor.Receive = {
+    case JdbcJournal.EventsByPersistenceIdRequest(persistenceId) ⇒
+      addEventsByPersistenceIdSubscriber(sender(), persistenceId)
+      context.watch(sender())
+
+    case EventsByPersistenceIdSubscriberTerminated(ref) ⇒
+      removeEventsByPersistenceIdSubscriber(ref)
+  }
+
+  protected def eventsByPersistenceIdFlow(atomicWrites: Iterable[AtomicWrite]): Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =
     Flow[Try[Iterable[Serialized]]].map { atomicWriteResult ⇒
       if (hasEventsByPersistenceIdSubscribers) {
         for {
@@ -65,16 +74,4 @@ trait EventsByPersistenceIdRegistry {
       }
       atomicWriteResult
     }
-
-  def sendEventsByPersistenceIdSubscriberTerminated(ref: ActorRef): Unit =
-    self ! EventsByPersistenceIdSubscriberTerminated(ref)
-
-  def receiveEventsByPersistenceIdRegistry: Actor.Receive = {
-    case JdbcJournal.EventsByPersistenceIdRequest(persistenceId) ⇒
-      addEventsByPersistenceIdSubscribers(sender(), persistenceId)
-      context.watch(sender())
-
-    case EventsByPersistenceIdSubscriberTerminated(ref) ⇒
-      removeEventsByPersistenceIdSubscribers(ref)
-  }
 }

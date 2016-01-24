@@ -85,7 +85,7 @@ trait JournalDao {
    * Returns a Source of bytes for certain tags from an offset. The result is sorted by
    * created time asc thus the offset is relative to the creation time
    */
-  def eventsByTag(tag: String, tagPrefix: String, offset: Long): Source[Array[Byte], Unit]
+  def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit]
 }
 
 trait WriteMessagesFacade {
@@ -156,8 +156,8 @@ class SlickJournalDaoQueries(val profile: JdbcProfile, override val journalTable
       .sortBy(_.sequenceNumber.asc)
       .take(max)
 
-  def eventsByTag(tag: String, tagPrefix: String, offset: Long): Query[Journal, JournalRow, Seq] =
-    JournalTable.filter(_.tags like s"%$tagPrefix$tag%").sortBy(_.created.asc).drop(offset)
+  def eventsByTag(tag: String, offset: Long): Query[Journal, JournalRow, Seq] =
+    JournalTable.filter(_.tags like s"%$tag%").sortBy(_.created.asc).drop(offset)
 
   def countJournal: Rep[Int] =
     JournalTable.length
@@ -221,8 +221,8 @@ trait SlickJournalDao extends JournalDao {
   override def allPersistenceIdsSource: Source[String, Unit] =
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct.result))
 
-  override def eventsByTag(tag: String, tagPrefix: String, offset: Long): Source[Array[Byte], Unit] =
-    Source.fromPublisher(db.stream(queries.eventsByTag(tag, tagPrefix, offset).result)).map(_.message)
+  override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit] =
+    Source.fromPublisher(db.stream(queries.eventsByTag(tag, offset).result)).map(_.message)
 }
 
 class JdbcSlickJournalDao(val db: JdbcBackend#Database, override val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration, override val deletedToTableCfg: DeletedToTableConfiguration)(implicit val ec: ExecutionContext, val mat: Materializer) extends SlickJournalDao {

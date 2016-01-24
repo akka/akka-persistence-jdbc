@@ -64,19 +64,26 @@ class AkkaSerializationProxy(serialization: Serialization) extends Serialization
  */
 
 object SerializationFacade {
-  def apply(system: ActorSystem, tagPrefix: String): SerializationFacade =
-    new SerializationFacade(new AkkaSerializationProxy(SerializationExtension(system)), tagPrefix)
+  def apply(system: ActorSystem, separatorChar: String): SerializationFacade =
+    new SerializationFacade(new AkkaSerializationProxy(SerializationExtension(system)), separatorChar)
 
-  def encodeTags(tags: Set[String], tagPrefix: String): Option[String] =
-    if (tags.isEmpty) None else Option(tagPrefix + tags.mkString(tagPrefix))
+  def encodeTags(tags: Set[String], separatorChar: String): Option[String] =
+    if (tags.isEmpty) None else Option(tags.mkString(separatorChar))
+
+  def decodeTags(tags: String, separator: String): List[String] =
+    tags.split(separator).toList
 }
 
-class SerializationFacade(proxy: SerializationProxy, tagPrefix: String) {
+class SerializationFacade(proxy: SerializationProxy, separator: String) {
   import SerializationFacade._
+
+  def decodeTags(tags: String): List[String] =
+    SerializationFacade.decodeTags(tags, separator)
+
   private def serializeAtomicWrite(atomicWrite: AtomicWrite): Try[Iterable[Serialized]] = {
     def serializeARepr(repr: PersistentRepr, tags: Set[String] = Set.empty[String]): Try[Serialized] = for {
       byteArray ← proxy.serialize(repr)
-    } yield Serialized(repr.persistenceId, repr.sequenceNr, ByteBuffer.wrap(byteArray), encodeTags(tags, tagPrefix))
+    } yield Serialized(repr.persistenceId, repr.sequenceNr, ByteBuffer.wrap(byteArray), encodeTags(tags, separator))
 
     def serializeTaggedOrRepr(repr: PersistentRepr): Try[Serialized] = repr.payload match {
       case Tagged(payload, tags) ⇒

@@ -20,21 +20,31 @@ import akka.persistence.jdbc.TestSpec
 
 class EncodeTagsTest extends TestSpec {
 
-  it should "encode tags given a tagPrefix" in {
+  "Encode" should "no tags" in {
+    SerializationFacade.encodeTags(Set.empty[String], ",") shouldBe None
+  }
 
-    withClue("no tags") {
-      val tagPrefix = "$$$"
-      SerializationFacade.encodeTags(Set.empty[String], tagPrefix) shouldBe None
-    }
+  it should "one tag" in {
+    SerializationFacade.encodeTags(Set("foo"), ",").value shouldBe "foo"
+  }
 
-    withClue("one tag") {
-      val tagPrefix = "$$$"
-      SerializationFacade.encodeTags(Set("foo"), tagPrefix).value shouldBe "$$$foo"
-    }
+  it should "two tags" in {
+    SerializationFacade.encodeTags(Set("foo", "bar"), ",").value shouldBe "foo,bar"
+  }
 
-    withClue("two tags") {
-      val tagPrefix = "$$$"
-      SerializationFacade.encodeTags(Set("foo", "bar"), tagPrefix).value shouldBe "$$$foo$$$bar"
-    }
+  it should "three tags" in {
+    SerializationFacade.encodeTags(Set("foo", "bar", "baz"), ",").value shouldBe "foo,bar,baz"
+  }
+
+  "decode" should "one tag with separator" in {
+    SerializationFacade.decodeTags("foo", ",") shouldBe List("foo")
+  }
+
+  it should "two tags with separator" in {
+    SerializationFacade.decodeTags("foo,bar", ",") shouldBe List("foo", "bar")
+  }
+
+  it should "three tags with separator" in {
+    SerializationFacade.decodeTags("foo,bar,baz", ",") shouldBe List("foo", "bar", "baz")
   }
 }

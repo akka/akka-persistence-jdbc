@@ -39,11 +39,11 @@ case class SlickConfiguration(slickDriver: String)
 object PersistenceQueryConfiguration {
   def apply(cfg: Config): PersistenceQueryConfiguration =
     cfg.withPath("akka-persistence-jdbc.query") { cfg =>
-      PersistenceQueryConfiguration(cfg.as[String]("tagPrefix", "###"))
+      PersistenceQueryConfiguration(cfg.as[String]("separator", ","))
     }
 }
 
-case class PersistenceQueryConfiguration(tagPrefix: String)
+case class PersistenceQueryConfiguration(separator: String)
 
 case class JournalTableColumnNames(persistenceId: String, sequenceNumber: String, created: String, tags: String, message: String)
 

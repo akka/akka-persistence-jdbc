@@ -62,6 +62,11 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) {
     tp.within(within)(f(tp))
   }
 
+  def withEventsByTag(within: FiniteDuration = 1.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit = {
+    val tp = readJournal.eventsByTag(tag, offset).runWith(TestSink.probe[EventEnvelope])
+    tp.within(within)(f(tp))
+  }
+
   case class DeleteCmd(toSequenceNr: Long = Long.MaxValue) extends Serializable
 
   class TestActor(id: Int) extends PersistentActor {

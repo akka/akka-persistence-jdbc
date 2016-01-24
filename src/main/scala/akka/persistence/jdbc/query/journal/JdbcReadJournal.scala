@@ -38,7 +38,8 @@ trait SlickReadJournal extends ReadJournal
     with AllPersistenceIdsQuery
     with CurrentEventsByPersistenceIdQuery
     with EventsByPersistenceIdQuery
-    with CurrentEventsByTagQuery {
+    with CurrentEventsByTagQuery
+    with EventsByTagQuery {
 
   implicit def mat: Materializer
 
@@ -66,10 +67,13 @@ trait SlickReadJournal extends ReadJournal
       .concat(Source.actorPublisher[EventEnvelope](Props(new EventsByPersistenceIdPublisher(persistenceId, true))))
 
   override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, Unit] =
-    journalDao.eventsByTag(tag, akkaPersistenceConfiguration.persistenceQueryConfiguration.tagPrefix, offset)
+    journalDao.eventsByTag(tag, offset)
       .via(serializationFacade.deserializeRepr)
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
       .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
+
+  override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, Unit] =
+    currentEventsByTag(tag, offset).concat(Source.actorPublisher[EventEnvelope](Props(new EventsByTagPublisher(tag, true))))
 }
 
 class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) extends SlickReadJournal {
@@ -85,7 +89,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
 
   override val serializationFacade: SerializationFacade =
     new SerializationFacade(new AkkaSerializationProxy(SerializationExtension(system)),
-      AkkaPersistenceConfig(system).persistenceQueryConfiguration.tagPrefix)
+      AkkaPersistenceConfig(system).persistenceQueryConfiguration.separator)
 }
 
 class JdbcReadJournalProvider(system: ExtendedActorSystem, config: Config) extends ReadJournalProvider {

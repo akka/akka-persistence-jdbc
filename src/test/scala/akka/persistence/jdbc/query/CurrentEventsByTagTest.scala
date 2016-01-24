@@ -23,22 +23,17 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
 
   it should "not find an event by tag for unknown tag" in {
     withTestActors { (actor1, actor2, actor3) ⇒
-      withClue("Persisting a tagged event") {
-        actor1 ! withTags(1, "one")
-        eventually {
-          withCurrentEventsByPersistenceid()("my-1") { tp ⇒
-            tp.request(Long.MaxValue)
-            tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
-            tp.expectComplete()
-          }
-        }
+      actor1 ! withTags(1, "one")
+      actor1 ! withTags(2, "two")
+      actor1 ! withTags(3, "three")
+
+      eventually {
+        journalDao.countJournal.futureValue shouldBe 3
       }
 
-      withClue("query should not find the event by unknown") {
-        withCurrentEventsByTag()("foobar", 0) { tp ⇒
-          tp.request(Int.MaxValue)
-          tp.expectComplete()
-        }
+      withCurrentEventsByTag()("unknown", 0) { tp ⇒
+        tp.request(Int.MaxValue)
+        tp.expectComplete()
       }
     }
   }
@@ -85,8 +80,11 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         actor2 ! withTags(3, "three", "3", "prime")
         actor3 ! withTags(3, "three", "3", "prime")
 
+        actor1 ! 1
+        actor1 ! 1
+
         eventually {
-          journalDao.countJournal.futureValue shouldBe 7
+          journalDao.countJournal.futureValue shouldBe 9
         }
       }
 
@@ -121,6 +119,14 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
             EventEnvelope(1, "my-2", 1, 3),
             EventEnvelope(1, "my-3", 1, 3)
           )
+          tp.expectComplete()
+        }
+      }
+
+      withClue("query should find events for tag '3'") {
+        withCurrentEventsByTag()("4", 0) { tp ⇒
+          tp.request(Int.MaxValue)
+          tp.expectNext(EventEnvelope(4, "my-1", 4, 4))
           tp.expectComplete()
         }
       }

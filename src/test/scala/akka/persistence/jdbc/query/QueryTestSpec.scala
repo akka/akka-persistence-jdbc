@@ -20,7 +20,8 @@ import akka.actor.{ ActorRef, Props }
 import akka.event.LoggingReceive
 import akka.persistence.PersistentActor
 import akka.persistence.jdbc.TestSpec
-import akka.persistence.jdbc.extension.SlickDatabase
+import akka.persistence.jdbc.dao.JournalDao
+import akka.persistence.jdbc.extension.{ DaoRepository, SlickDatabase }
 import akka.persistence.jdbc.query.journal.JdbcReadJournal
 import akka.persistence.journal.Tagged
 import akka.persistence.query.{ EventEnvelope, PersistenceQuery }
@@ -28,10 +29,11 @@ import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.scaladsl.TestSink
 import slick.driver.PostgresDriver.api._
 
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.duration._
+import scala.concurrent.duration.{ FiniteDuration, _ }
 
 abstract class QueryTestSpec(config: String) extends TestSpec(config) {
+
+  val journalDao: JournalDao = DaoRepository(system).journalDao
 
   val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 

@@ -23,6 +23,10 @@ import scala.concurrent.Future
 import scala.util.Try
 
 class MockJournalDao(fail: Boolean = false) extends JournalDao {
+
+  override def countJournal: Future[Int] =
+    if (fail) Future.failed(new RuntimeException("Mock cannot count")) else Future.successful(0)
+
   override def writeList(xs: Iterable[Serialized]): Future[Unit] =
     if (fail) Future.failed(new RuntimeException("Mock cannot write message list")) else Future.successful(())
 

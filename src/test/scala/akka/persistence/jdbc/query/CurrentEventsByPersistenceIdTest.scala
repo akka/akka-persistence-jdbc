@@ -29,18 +29,12 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
 
   it should "find events for actors" in
     withTestActors { (actor1, actor2, actor3) ⇒
-      When("Events are stored")
       actor1 ! 1
       actor1 ! 2
       actor1 ! 3
 
-      Then("Eventually three events are available in the journal")
       eventually {
-        withCurrentEventsByPersistenceid()("my-1", 0, Long.MaxValue) { tp ⇒
-          tp.request(Int.MaxValue)
-            .expectNextN((1 to 3).toList.map(i ⇒ EventEnvelope(i, "my-1", i, i)))
-            .expectComplete()
-        }
+        journalDao.countJournal.futureValue shouldBe 3
       }
 
       And("The events can be queried by offset 1, 1")
@@ -84,5 +78,11 @@ class MySQLCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceId
 class OracleCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("oracle-application.conf") {
   dropCreate(Oracle())
 
-  protected override def beforeEach(): Unit = ()
+  protected override def beforeEach(): Unit = {
+    withStatement { stmt ⇒
+      stmt.executeUpdate("""DELETE FROM "SYSTEM"."journal"""")
+      stmt.executeUpdate("""DELETE FROM "SYSTEM"."deleted_to"""")
+      stmt.executeUpdate("""DELETE FROM "SYSTEM"."snapshot"""")
+    }
+  }
 }

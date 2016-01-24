@@ -16,9 +16,8 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.jdbc.util.Schema.{ MySQL, Postgres }
+import akka.persistence.jdbc.util.Schema.{ MySQL, Oracle, Postgres }
 import akka.persistence.query.EventEnvelope
-import org.scalatest.Ignore
 
 import scala.concurrent.duration._
 
@@ -84,6 +83,10 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
       actor2 ! 2
       actor2 ! 3
 
+      eventually {
+        journalDao.countJournal.futureValue shouldBe 3
+      }
+
       withEventsByPersistenceId(500.millis)("my-2", 0, Long.MaxValue) { tp ⇒
         tp.request(10)
         tp.expectNext(EventEnvelope(1, "my-2", 1, 1))
@@ -94,6 +97,11 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         actor2 ! 5
         actor2 ! 6
         actor2 ! 7
+
+        eventually {
+          journalDao.countJournal.futureValue shouldBe 6
+        }
+
         tp.expectNext(EventEnvelope(4, "my-2", 4, 5))
         tp.expectNext(EventEnvelope(5, "my-2", 5, 6))
         tp.expectNext(EventEnvelope(6, "my-2", 6, 7))
@@ -106,12 +114,22 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
   }
 }
 
-@Ignore
 class PostgresEventsByPersistenceIdTest extends EventsByPersistenceIdTest("postgres-application.conf") {
   dropCreate(Postgres())
 }
 
-@Ignore
 class MySQLEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mysql-application.conf") {
   dropCreate(MySQL())
+}
+
+class OracleEventsByPersistenceIdTest extends EventsByPersistenceIdTest("oracle-application.conf") {
+  dropCreate(Oracle())
+
+  protected override def beforeEach(): Unit = {
+    withStatement { stmt ⇒
+      stmt.executeUpdate("""DELETE FROM "SYSTEM"."journal"""")
+      stmt.executeUpdate("""DELETE FROM "SYSTEM"."deleted_to"""")
+      stmt.executeUpdate("""DELETE FROM "SYSTEM"."snapshot"""")
+    }
+  }
 }

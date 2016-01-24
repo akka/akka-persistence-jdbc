@@ -20,15 +20,12 @@ import java.util.UUID
 
 import akka.actor.{ ActorRef, ActorSystem, PoisonPill }
 import akka.event.{ Logging, LoggingAdapter }
-import akka.persistence.jdbc.util.{ DropCreate, ClasspathResources }
+import akka.persistence.jdbc.util.DropCreate
 import akka.serialization.SerializationExtension
-import akka.stream.{ Materializer, ActorMaterializer }
+import akka.stream.{ ActorMaterializer, Materializer }
 import akka.testkit.TestProbe
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import org.scalatest._
-import org.scalatest.concurrent.{ Eventually, ScalaFutures }
-import org.scalatest.prop.PropertyChecks
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContextExecutor, Future }

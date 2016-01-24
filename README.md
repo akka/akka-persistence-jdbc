@@ -17,7 +17,7 @@ Please note that most of my projects run on [Postgresql](http://www.postgresql.o
 database available, with some great features, and it works great together with the JDBC plugin.
 
 ## New release
-The latest version is `v2.0.4` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The latest version is `v2.1.0` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -36,7 +36,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.0.4"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.1.0"
 ```
 
 ## Configuration
@@ -86,16 +86,33 @@ akka-persistence-jdbc {
     journal {
       tableName = "journal"
       schemaName = ""
+      columnNames {
+        persistenceId = "persistence_id"
+        sequenceNumber = "sequence_number"
+        created = "created"
+        tags = "tags"
+        message = "message"
+      }
     }
 
     deletedTo {
       tableName = "deleted_to"
       schemaName = ""
+      columnNames = {
+        persistenceId = "persistence_id"
+        deletedTo = "deleted_to"
+      }
     }
 
     snapshot {
       tableName = "snapshot"
       schemaName = ""
+      columnNames {
+        persistenceId = "persistence_id"
+        sequenceNumber = "sequence_number"
+        created = "created"
+        snapshot = "snapshot"
+      }
     }
   }
 
@@ -111,6 +128,8 @@ DROP TABLE IF EXISTS public.journal;
 CREATE TABLE IF NOT EXISTS public.journal (
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
+  created BIGINT NOT NULL,
+  tags VARCHAR(255) DEFAULT NULL,
   message BYTEA NOT NULL,
   PRIMARY KEY(persistence_id, sequence_number)
 );
@@ -144,38 +163,55 @@ akka {
 
 akka-persistence-jdbc {
   slick {
-    driver = "slick.driver.MySQLDriver"
-    db {
-      host = "boot2docker"
-      host = ${?MYSQL_HOST}
-      port = "3306"
-      port = ${?MYSQL_PORT}
-      name = "mysql"
-
-      url = "jdbc:mysql://"${akka-persistence-jdbc.slick.db.host}":"${akka-persistence-jdbc.slick.db.port}"/"${akka-persistence-jdbc.slick.db.name}
-      user = "root"
-      password = "root"
-      driver = "com.mysql.jdbc.Driver"
-      keepAliveConnection = on
-      numThreads = 2
-      queueSize = 100
+      driver = "slick.driver.MySQLDriver"
+      db {
+        host = "boot2docker"
+        host = ${?MYSQL_HOST}
+        port = "3306"
+        port = ${?MYSQL_PORT}
+        name = "mysql"
+  
+        url = "jdbc:mysql://"${akka-persistence-jdbc.slick.db.host}":"${akka-persistence-jdbc.slick.db.port}"/"${akka-persistence-jdbc.slick.db.name}
+        user = "root"
+        password = "root"
+        driver = "com.mysql.jdbc.Driver"
+        keepAliveConnection = on
+        numThreads = 2
+        queueSize = 100
+      }
     }
-  }
 
   tables {
     journal {
       tableName = "journal"
       schemaName = ""
+      columnNames {
+        persistenceId = "persistence_id"
+        sequenceNumber = "sequence_number"
+        created = "created"
+        tags = "tags"
+        message = "message"
+      }
     }
 
     deletedTo {
       tableName = "deleted_to"
       schemaName = ""
+      columnNames = {
+        persistenceId = "persistence_id"
+        deletedTo = "deleted_to"
+      }
     }
 
     snapshot {
       tableName = "snapshot"
       schemaName = ""
+      columnNames {
+        persistenceId = "persistence_id"
+        sequenceNumber = "sequence_number"
+        created = "created"
+        snapshot = "snapshot"
+      }
     }
   }
 
@@ -191,6 +227,8 @@ DROP TABLE IF EXISTS journal;
 CREATE TABLE IF NOT EXISTS journal (
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
+  created BIGINT NOT NULL,
+  tags VARCHAR(255) DEFAULT NULL,
   message BLOB NOT NULL,
   PRIMARY KEY(persistence_id, sequence_number)
 );
@@ -246,16 +284,33 @@ akka-persistence-jdbc {
     journal {
       tableName = "journal"
       schemaName = "SYSTEM"
+      columnNames {
+        persistenceId = "persistence_id"
+        sequenceNumber = "sequence_number"
+        created = "created"
+        tags = "tags"
+        message = "message"
+      }
     }
 
     deletedTo {
       tableName = "deleted_to"
       schemaName = "SYSTEM"
+      columnNames = {
+        persistenceId = "persistence_id"
+        deletedTo = "deleted_to"
+      }
     }
 
     snapshot {
       tableName = "snapshot"
       schemaName = "SYSTEM"
+      columnNames {
+        persistenceId = "persistence_id"
+        sequenceNumber = "sequence_number"
+        created = "created"
+        snapshot = "snapshot"
+      }
     }
   }
 
@@ -269,6 +324,8 @@ akka-persistence-jdbc {
 CREATE TABLE "journal" (
   "persistence_id" VARCHAR(255) NOT NULL,
   "sequence_number" NUMERIC NOT NULL,
+  "created" NUMERIC NOT NULL,
+  "tags" VARCHAR(255) DEFAULT NULL,
   "message" BLOB NOT NULL,
   PRIMARY KEY("persistence_id", "sequence_number")
 );
@@ -345,11 +402,73 @@ The returned event stream is ordered by sequence number, i.e. the same order as 
 
 The stream is completed with failure if there is a failure in executing the query in the backend journal.
 
+## EventsByTag and CurrentEventsByTag
+`eventsByTag` (not yet supported) and `currentEventsByTag` are used for retrieving events that were marked with a given 
+`tag`, e.g. all domain events of an Aggregate Root type.
+
+```scala
+import akka.actor.ActorSystem
+import akka.stream.{Materializer, ActorMaterializer}
+import akka.stream.scaladsl.Source
+import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
+import akka.persistence.jdbc.query.journal.JdbcReadJournal
+
+implicit val system: ActorSystem = ActorSystem()
+implicit val mat: Materializer = ActorMaterializer()(system)
+val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
+
+val willCompleteTheStream: Source[EventEnvelope, Unit] = readJournal.currentEventsByTag("apple", 0L)
+```
+
+To tag events you'll need to create an [Event Adapter](http://doc.akka.io/docs/akka/2.4.1/scala/persistence.html#event-adapters-scala) 
+that will wrap the event in a [akka.persistence.journal.Tagged](http://doc.akka.io/api/akka/2.4.1/#akka.persistence.journal.Tagged) 
+class with the given tags. The `Tagged` class will instruct `akka-persistence-jdbc` to tag the event with the given set of tags.
+The persistence plugin will __not__ store the `Tagged` class in the journal. It will strip the `tags` and `payload` from the `Tagged` class,
+and use the class only as an instruction to tag the event with the given tags and store the `payload` in the 
+`message` field of the journal table. 
+
+```scala
+import akka.persistence.journal.WriteEventAdapter
+import akka.persistence.journal.Tagged
+ 
+class MyTaggingEventAdapter extends WriteEventAdapter {
+  val colors = Set("green", "black", "blue")
+  override def toJournal(event: Any): Any = event match {
+    case s: String ⇒
+      var tags = colors.foldLeft(Set.empty[String]) { (acc, c) ⇒
+        if (s.contains(c)) acc + c else acc
+      }
+      if (tags.isEmpty) event
+      else Tagged(event, tags)
+    case _ ⇒ event
+  }
+ 
+  override def manifest(event: Any): String = ""
+}
+```
+
+You can retrieve a subset of all events by specifying offset, or use 0L to retrieve all events with a given tag. 
+The offset corresponds to an ordered sequence number for the specific tag. Note that the corresponding offset of each 
+event is provided in the EventEnvelope, which makes it possible to resume the stream at a later point from a given offset.
+
+In addition to the offset the EventEnvelope also provides persistenceId and sequenceNr for each event. The sequenceNr is 
+the sequence number for the persistent actor with the persistenceId that persisted the event. The persistenceId + sequenceNr 
+is an unique identifier for the event.
+
+The returned event stream contains only events that correspond to the given tag, and is ordered by the creation time of the events, 
+The same stream elements (in same order) are returned for multiple executions of the same query. Deleted events are not deleted 
+from the tagged event stream. 
+
 # Usage
 The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-persistence-jdbc/wiki)
 
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
+
+## 2.1.0 (2016-01-24) 
+ - Schema change for the journal table, added two columns, `tags` and `created`, please update your schema.
+ - Support for the `currentEventsByTag` query, the tagged events will be sorted by event creation time.
+ - Table column names are configurable.
 
 ## 2.0.4 (2016-01-22)
  - Using the typesafe config for the Slick database configuration,

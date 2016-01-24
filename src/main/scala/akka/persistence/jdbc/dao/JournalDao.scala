@@ -41,6 +41,11 @@ object JournalDao {
 trait JournalDao {
 
   /**
+   * Returns the number of rows in the journal
+   */
+  def countJournal: Future[Int]
+
+  /**
    * Writes serialized messages
    */
   def writeList(xs: Iterable[Serialized]): Future[Unit]
@@ -153,6 +158,9 @@ class SlickJournalDaoQueries(val profile: JdbcProfile, override val journalTable
 
   def eventsByTag(tag: String, tagPrefix: String, offset: Long): Query[Journal, JournalRow, Seq] =
     JournalTable.filter(_.tags like s"%$tagPrefix$tag%").sortBy(_.created.asc).drop(offset)
+
+  def countJournal: Rep[Int] =
+    JournalTable.length
 }
 
 trait SlickJournalDao extends JournalDao {
@@ -180,6 +188,10 @@ trait SlickJournalDao extends JournalDao {
 
   def writeFlow: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =
     Flow[Try[Iterable[Serialized]]].via(writeMessagesFacade.writeMessages)
+
+  override def countJournal: Future[Int] = for {
+    count ← db.run(queries.countJournal.result)
+  } yield count
 
   override def delete(persistenceId: String, maxSequenceNr: Long): Future[Unit] = {
     val actions = (for {

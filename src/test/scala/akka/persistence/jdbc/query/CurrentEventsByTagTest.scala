@@ -86,21 +86,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         actor3 ! withTags(3, "three", "3", "prime")
 
         eventually {
-          withCurrentEventsByPersistenceid()("my-1", 1, 1) { tp ⇒
-            tp.request(Int.MaxValue)
-            tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
-            tp.expectComplete()
-          }
-          withCurrentEventsByPersistenceid()("my-2", 1, 1) { tp ⇒
-            tp.request(Int.MaxValue)
-            tp.expectNext(EventEnvelope(1, "my-2", 1, 3))
-            tp.expectComplete()
-          }
-          withCurrentEventsByPersistenceid()("my-3", 1, 1) { tp ⇒
-            tp.request(Int.MaxValue)
-            tp.expectNext(EventEnvelope(1, "my-3", 1, 3))
-            tp.expectComplete()
-          }
+          journalDao.countJournal.futureValue shouldBe 7
         }
       }
 
@@ -155,6 +141,8 @@ class OracleCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-applic
   protected override def beforeEach(): Unit = {
     withStatement { stmt ⇒
       stmt.executeUpdate("""DELETE FROM "SYSTEM"."journal"""")
+      stmt.executeUpdate("""DELETE FROM "SYSTEM"."deleted_to"""")
+      stmt.executeUpdate("""DELETE FROM "SYSTEM"."snapshot"""")
     }
   }
 }

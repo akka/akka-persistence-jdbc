@@ -16,18 +16,12 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.jdbc.util.Schema
-import akka.persistence.jdbc.util.Schema.MySQL
-import akka.persistence.jdbc.util.Schema.Postgres
-import akka.persistence.jdbc.util.Schema.{ MySQL, Postgres }
-import akka.persistence.journal.Tagged
+import akka.persistence.jdbc.util.Schema.{ Oracle, MySQL, Postgres }
 import akka.persistence.query.EventEnvelope
-import akka.persistence.query.EventEnvelope
-import org.scalatest.Ignore
 
 abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config) {
 
-  it should "not find any events for unknown tag" in
+  it should "not find an event by tag for unknown tag" in {
     withTestActors { (actor1, actor2, actor3) ⇒
       withClue("Persisting a tagged event") {
         actor1 ! withTags(1, "one")
@@ -40,19 +34,127 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         }
       }
 
-      //      withCurrentEventsByPersistenceid()("unkown-pid", 0L, Long.MaxValue) { tp ⇒
-      //        tp.request(Int.MaxValue)
-      //        tp.expectComplete()
-      //      }
+      withClue("query should not find the event by unknown") {
+        withCurrentEventsByTag()("foobar", 0) { tp ⇒
+          tp.request(Int.MaxValue)
+          tp.expectComplete()
+        }
+      }
+    }
+  }
+
+  it should "persist and find a tagged event with one tag" in
+    withTestActors { (actor1, actor2, actor3) ⇒
+      withClue("Persisting a tagged event") {
+        actor1 ! withTags(1, "one")
+        eventually {
+          withCurrentEventsByPersistenceid()("my-1") { tp ⇒
+            tp.request(Long.MaxValue)
+            tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
+            tp.expectComplete()
+          }
+        }
+      }
+
+      withClue("query should find the event by tag") {
+        withCurrentEventsByTag()("one", 0) { tp ⇒
+          tp.request(Int.MaxValue)
+          tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
+          tp.expectComplete()
+        }
+      }
+
+      withClue("query should find the event by persistenceId") {
+        withCurrentEventsByPersistenceid()("my-1", 1, 1) { tp ⇒
+          tp.request(Int.MaxValue)
+          tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
+          tp.expectComplete()
+        }
+      }
     }
 
+  it should "persist and find a tagged event with multiple tags" in
+    withTestActors { (actor1, actor2, actor3) ⇒
+      withClue("Persisting multiple tagged events") {
+        actor1 ! withTags(1, "one", "1", "prime")
+        actor1 ! withTags(2, "two", "2", "prime")
+        actor1 ! withTags(3, "three", "3", "prime")
+        actor1 ! withTags(4, "four", "4")
+        actor1 ! withTags(5, "five", "5", "prime")
+
+        actor2 ! withTags(3, "three", "3", "prime")
+        actor3 ! withTags(3, "three", "3", "prime")
+
+        eventually {
+          withCurrentEventsByPersistenceid()("my-1", 1, 1) { tp ⇒
+            tp.request(Int.MaxValue)
+            tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
+            tp.expectComplete()
+          }
+          withCurrentEventsByPersistenceid()("my-2", 1, 1) { tp ⇒
+            tp.request(Int.MaxValue)
+            tp.expectNext(EventEnvelope(1, "my-2", 1, 3))
+            tp.expectComplete()
+          }
+          withCurrentEventsByPersistenceid()("my-3", 1, 1) { tp ⇒
+            tp.request(Int.MaxValue)
+            tp.expectNext(EventEnvelope(1, "my-3", 1, 3))
+            tp.expectComplete()
+          }
+        }
+      }
+
+      withClue("query should find events for tag 'one'") {
+        withCurrentEventsByTag()("one", 0) { tp ⇒
+          tp.request(Int.MaxValue)
+          tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
+          tp.expectComplete()
+        }
+      }
+
+      withClue("query should find events for tag 'prime'") {
+        withCurrentEventsByTag()("prime", 0) { tp ⇒
+          tp.request(Int.MaxValue)
+          tp.expectNextUnordered(
+            EventEnvelope(1, "my-1", 1, 1),
+            EventEnvelope(2, "my-1", 2, 2),
+            EventEnvelope(3, "my-1", 3, 3),
+            EventEnvelope(5, "my-1", 5, 5),
+            EventEnvelope(1, "my-2", 1, 3),
+            EventEnvelope(1, "my-3", 1, 3)
+          )
+          tp.expectComplete()
+        }
+      }
+
+      withClue("query should find events for tag '3'") {
+        withCurrentEventsByTag()("3", 0) { tp ⇒
+          tp.request(Int.MaxValue)
+          tp.expectNextUnordered(
+            EventEnvelope(3, "my-1", 3, 3),
+            EventEnvelope(1, "my-2", 1, 3),
+            EventEnvelope(1, "my-3", 1, 3)
+          )
+          tp.expectComplete()
+        }
+      }
+    }
 }
 
-@Ignore
 class PostgresCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") {
   dropCreate(Postgres())
 }
 
-//class MySQLCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") {
-//  dropCreate(MySQL())
-//}
+class MySQLCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") {
+  dropCreate(MySQL())
+}
+
+class OracleCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") {
+  dropCreate(Oracle())
+
+  protected override def beforeEach(): Unit = {
+    withStatement { stmt ⇒
+      stmt.executeUpdate("""DELETE FROM "SYSTEM"."journal"""")
+    }
+  }
+}

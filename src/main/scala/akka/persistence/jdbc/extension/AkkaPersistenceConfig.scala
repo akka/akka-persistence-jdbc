@@ -68,9 +68,9 @@ object JournalTableConfiguration {
     }
 }
 
-case class DeletedToColumnNames(persistenceId: String, deletedTo: String)
+case class DeletedToTableColumnNames(persistenceId: String, deletedTo: String)
 
-case class DeletedToTableConfiguration(tableName: String, schemaName: Option[String], columnNames: DeletedToColumnNames)
+case class DeletedToTableConfiguration(tableName: String, schemaName: Option[String], columnNames: DeletedToTableColumnNames)
 
 object DeletedToTableConfiguration {
   def apply(cfg: Config): DeletedToTableConfiguration =
@@ -79,7 +79,7 @@ object DeletedToTableConfiguration {
         cfg.as[String]("tableName", "journal"),
         cfg.as[String]("schemeName").map(_.trim).filter(_.nonEmpty),
         cfg.withPath("columnNames") { cfg =>
-          DeletedToColumnNames(
+          DeletedToTableColumnNames(
             cfg.as[String]("persistenceId", "persistence_id"),
             cfg.as[String]("deletedTo", "deleted_to")
           )

@@ -46,6 +46,8 @@ trait SlickReadJournal extends ReadJournal
 
   def serializationFacade: SerializationFacade
 
+  def akkaPersistenceConfiguration: AkkaPersistenceConfig
+
   override def currentPersistenceIds(): Source[String, Unit] =
     journalDao.allPersistenceIdsSource
 
@@ -64,26 +66,30 @@ trait SlickReadJournal extends ReadJournal
       .concat(Source.actorPublisher[EventEnvelope](Props(new EventsByPersistenceIdPublisher(persistenceId, true))))
 
   override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, Unit] =
-    journalDao.eventsByTag(tag, offset)
+    journalDao.eventsByTag(tag, akkaPersistenceConfiguration.persistenceQueryConfiguration.tagPrefix, offset)
       .via(serializationFacade.deserializeRepr)
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
       .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
 }
 
-trait JdbcReadJournal extends SlickReadJournal
+class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) extends SlickReadJournal {
 
-class PostgresReadJournal(config: Config)(implicit val system: ExtendedActorSystem) extends JdbcReadJournal {
+  override implicit val mat: Materializer =
+    ActorMaterializer()
 
-  override implicit val mat: Materializer = ActorMaterializer()
+  override val journalDao: JournalDao =
+    DaoRepository(system).journalDao
 
-  override val journalDao: JournalDao = DaoRepository(system).journalDao
+  override val akkaPersistenceConfiguration: AkkaPersistenceConfig =
+    AkkaPersistenceConfig(system)
 
   override val serializationFacade: SerializationFacade =
-    new SerializationFacade(new AkkaSerializationProxy(SerializationExtension(system)), AkkaPersistenceConfig(system).persistenceQueryConfiguration.tagPrefix)
+    new SerializationFacade(new AkkaSerializationProxy(SerializationExtension(system)),
+      AkkaPersistenceConfig(system).persistenceQueryConfiguration.tagPrefix)
 }
 
 class JdbcReadJournalProvider(system: ExtendedActorSystem, config: Config) extends ReadJournalProvider {
-  override val scaladslReadJournal = new PostgresReadJournal(config)(system)
+  override val scaladslReadJournal = new JdbcReadJournal(config)(system)
 
   override val javadslReadJournal = null
 }

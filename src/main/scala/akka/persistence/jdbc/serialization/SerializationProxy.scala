@@ -68,7 +68,7 @@ object SerializationFacade {
     new SerializationFacade(new AkkaSerializationProxy(SerializationExtension(system)), tagPrefix)
 
   def encodeTags(tags: Set[String], tagPrefix: String): Option[String] =
-    if (tags.isEmpty) None else Option(tagPrefix + tags.mkString(tagPrefix) + tagPrefix)
+    if (tags.isEmpty) None else Option(tagPrefix + tags.mkString(tagPrefix))
 }
 
 class SerializationFacade(proxy: SerializationProxy, tagPrefix: String) {

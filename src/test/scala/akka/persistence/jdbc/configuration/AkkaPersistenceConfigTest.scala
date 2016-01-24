@@ -111,7 +111,7 @@ class AkkaPersistenceConfigTest extends TestSpec {
     DeletedToTableConfiguration(config) shouldBe DeletedToTableConfiguration(
       "deleted_to",
       None,
-      DeletedToColumnNames(
+      DeletedToTableColumnNames(
         "persistence_id",
         "deleted_to"
       )

@@ -44,6 +44,6 @@ class MockJournalDao(fail: Boolean = false) extends JournalDao {
   override def persistenceIds(queryListOfPersistenceIds: Iterable[String]): Future[Seq[String]] =
     if (fail) Future.failed(new RuntimeException("Mock cannot delete message to")) else Future.successful(Nil)
 
-  override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit] =
+  override def eventsByTag(tag: String, tagPrefix: String, offset: Long): Source[Array[Byte], Unit] =
     Source.single(Array.empty[Byte]).map(e ⇒ if (fail) throw new RuntimeException("Mock cannot eventsByTag") else e)
 }

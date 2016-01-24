@@ -29,12 +29,12 @@ class EncodeTagsTest extends TestSpec {
 
     withClue("one tag") {
       val tagPrefix = "$$$"
-      SerializationFacade.encodeTags(Set("foo"), tagPrefix).value shouldBe "$$$foo$$$"
+      SerializationFacade.encodeTags(Set("foo"), tagPrefix).value shouldBe "$$$foo"
     }
 
     withClue("two tags") {
       val tagPrefix = "$$$"
-      SerializationFacade.encodeTags(Set("foo", "bar"), tagPrefix).value shouldBe "$$$foo$$$bar$$$"
+      SerializationFacade.encodeTags(Set("foo", "bar"), tagPrefix).value shouldBe "$$$foo$$$bar"
     }
   }
 }

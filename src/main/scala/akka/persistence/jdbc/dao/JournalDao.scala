@@ -80,7 +80,7 @@ trait JournalDao {
    * Returns a Source of bytes for certain tags from an offset. The result is sorted by
    * created time asc thus the offset is relative to the creation time
    */
-  def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit]
+  def eventsByTag(tag: String, tagPrefix: String, offset: Long): Source[Array[Byte], Unit]
 }
 
 trait WriteMessagesFacade {
@@ -110,8 +110,9 @@ class SlickJournalDaoQueries(val profile: JdbcProfile, override val journalTable
   import profile.api._
 
   def writeList(xs: Iterable[Serialized]) =
-    JournalTable ++= xs.map(ser ⇒ JournalRow(ser.persistenceId, ser.sequenceNr, ser.serialized.array(), ser.created))
+    JournalTable ++= xs.map(ser ⇒ JournalRow(ser.persistenceId, ser.sequenceNr, ser.serialized.array(), ser.created, ser.tags))
 
+  // SlickJournalDaoQueries.this.profile.DriverAction[SlickJournalDaoQueries.this.profile.InsertActionExtensionMethods[SlickJournalDaoQueries.this.DeletedTo#TableElementType]#SingleInsertResult, NoStream, Effect.Write]
   def insertDeletedTo(persistenceId: String, highestSequenceNr: Option[Long]) =
     DeletedToTable += JournalDeletedToRow(persistenceId, highestSequenceNr.getOrElse(0L))
 
@@ -136,12 +137,13 @@ class SlickJournalDaoQueries(val profile: JdbcProfile, override val journalTable
   def allPersistenceIdsDistinct: Query[Rep[String], String, Seq] =
     JournalTable.map(_.persistenceId).distinct
 
-  def journalRowByPersistenceIds(persistenceIds: Iterable[String]) = for {
-    query ← JournalTable.map(_.persistenceId)
-    if query inSetBind persistenceIds
-  } yield query
+  def journalRowByPersistenceIds(persistenceIds: Iterable[String]): Query[Rep[String], String, Seq] =
+    for {
+      query ← JournalTable.map(_.persistenceId)
+      if query inSetBind persistenceIds
+    } yield query
 
-  def messagesQuery(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long) =
+  def messagesQuery(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Query[Journal, JournalRow, Seq] =
     JournalTable
       .filter(_.persistenceId === persistenceId)
       .filter(_.sequenceNumber >= fromSequenceNr)
@@ -149,8 +151,8 @@ class SlickJournalDaoQueries(val profile: JdbcProfile, override val journalTable
       .sortBy(_.sequenceNumber.asc)
       .take(max)
 
-  def eventsByTag(tag: String, offset: Long) =
-    JournalTable.filter(_.tags like tag).sortBy(_.created.asc).drop(offset)
+  def eventsByTag(tag: String, tagPrefix: String, offset: Long): Query[Journal, JournalRow, Seq] =
+    JournalTable.filter(_.tags like s"%$tagPrefix$tag%").sortBy(_.created.asc).drop(offset)
 }
 
 trait SlickJournalDao extends JournalDao {
@@ -207,8 +209,8 @@ trait SlickJournalDao extends JournalDao {
   override def allPersistenceIdsSource: Source[String, Unit] =
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct.result))
 
-  override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit] =
-    Source.fromPublisher(db.stream(queries.eventsByTag(tag, offset).result)).map(_.message)
+  override def eventsByTag(tag: String, tagPrefix: String, offset: Long): Source[Array[Byte], Unit] =
+    Source.fromPublisher(db.stream(queries.eventsByTag(tag, tagPrefix, offset).result)).map(_.message)
 }
 
 class JdbcSlickJournalDao(val db: JdbcBackend#Database, override val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration, override val deletedToTableCfg: DeletedToTableConfiguration)(implicit val ec: ExecutionContext, val mat: Materializer) extends SlickJournalDao {

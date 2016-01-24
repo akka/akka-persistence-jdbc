@@ -1,0 +1,9 @@
+postgres:
+  image: postgres:latest
+  container_name: postgres
+  environment:
+    - "TZ=Europe/Amsterdam"
+    - "POSTGRES_USER=docker"
+    - "POSTGRES_PASSWORD=docker"
+  ports:
+    - "5432:5432"  # credentials (docker:docker)

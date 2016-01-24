@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Dennis Vriend
+ * Copyright 2016 Dennis Vriend
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,11 +76,11 @@ trait JournalDao {
    */
   def persistenceIds(queryListOfPersistenceIds: Iterable[String]): Future[Seq[String]]
 
-  //  /**
-  //   * Returns a Source of bytes for certain tags from an offset. The result is sorted by
-  //   * created time asc thus the offset is relative to the creation time
-  //   */
-  //  def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit]
+  /**
+   * Returns a Source of bytes for certain tags from an offset. The result is sorted by
+   * created time asc thus the offset is relative to the creation time
+   */
+  def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit]
 }
 
 trait WriteMessagesFacade {
@@ -106,11 +106,11 @@ class FlowGraphWriteMessagesFacade(journalDao: JournalDao)(implicit ec: Executio
 }
 
 class SlickJournalDaoQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration, override val deletedToTableCfg: DeletedToTableConfiguration) extends JournalTables {
+
   import profile.api._
 
   def writeList(xs: Iterable[Serialized]) =
-    JournalTable ++= xs.map(ser ⇒ JournalRow(ser.persistenceId, ser.sequenceNr, ser.serialized.array()))
-  //    JournalTable ++= xs.map(ser ⇒ JournalRow(ser.persistenceId, ser.sequenceNr, ser.serialized.array(), ser.created))
+    JournalTable ++= xs.map(ser ⇒ JournalRow(ser.persistenceId, ser.sequenceNr, ser.serialized.array(), ser.created))
 
   def insertDeletedTo(persistenceId: String, highestSequenceNr: Option[Long]) =
     DeletedToTable += JournalDeletedToRow(persistenceId, highestSequenceNr.getOrElse(0L))
@@ -149,8 +149,8 @@ class SlickJournalDaoQueries(val profile: JdbcProfile, override val journalTable
       .sortBy(_.sequenceNumber.asc)
       .take(max)
 
-  //  def eventsByTag(tag: String, offset: Long) =
-  //    JournalTable.filter(_.tags like tag).sortBy(_.created.asc).drop(offset)
+  def eventsByTag(tag: String, offset: Long) =
+    JournalTable.filter(_.tags like tag).sortBy(_.created.asc).drop(offset)
 }
 
 trait SlickJournalDao extends JournalDao {
@@ -207,8 +207,8 @@ trait SlickJournalDao extends JournalDao {
   override def allPersistenceIdsSource: Source[String, Unit] =
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct.result))
 
-  //  override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit] =
-  //    Source.fromPublisher(db.stream(queries.eventsByTag(tag, offset).result)).map(_.message)
+  override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit] =
+    Source.fromPublisher(db.stream(queries.eventsByTag(tag, offset).result)).map(_.message)
 }
 
 class JdbcSlickJournalDao(val db: JdbcBackend#Database, override val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration, override val deletedToTableCfg: DeletedToTableConfiguration)(implicit val ec: ExecutionContext, val mat: Materializer) extends SlickJournalDao {

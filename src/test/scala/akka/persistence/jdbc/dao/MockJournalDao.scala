@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Dennis Vriend
+ * Copyright 2016 Dennis Vriend
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,6 @@ class MockJournalDao(fail: Boolean = false) extends JournalDao {
   override def persistenceIds(queryListOfPersistenceIds: Iterable[String]): Future[Seq[String]] =
     if (fail) Future.failed(new RuntimeException("Mock cannot delete message to")) else Future.successful(Nil)
 
-  //  override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit] =
-  //    Source.single(Array.empty[Byte]).map(e ⇒ if (fail) throw new RuntimeException("Mock cannot eventsByTag") else e)
+  override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit] =
+    Source.single(Array.empty[Byte]).map(e ⇒ if (fail) throw new RuntimeException("Mock cannot eventsByTag") else e)
 }

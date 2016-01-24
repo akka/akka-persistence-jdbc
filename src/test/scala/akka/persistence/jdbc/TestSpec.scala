@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Dennis Vriend
+ * Copyright 2016 Dennis Vriend
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContextExecutor, Future }
 import scala.util.Try
 
-abstract class TestSpec(config: String = "postgres-application.conf") extends FlatSpec with Matchers with ScalaFutures with TryValues with OptionValues with Eventually with PropertyChecks with BeforeAndAfterAll with BeforeAndAfterEach with GivenWhenThen with ClasspathResources with DropCreate {
+abstract class TestSpec(config: String = "postgres-application.conf") extends SimpleSpec with DropCreate {
   implicit val system: ActorSystem = ActorSystem("test", ConfigFactory.load(config))
   implicit val mat: Materializer = ActorMaterializer()
   implicit val ec: ExecutionContextExecutor = system.dispatcher

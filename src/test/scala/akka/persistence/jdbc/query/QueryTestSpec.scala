@@ -112,14 +112,28 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) {
 
   def withTags(payload: Any, tags: String*) = Tagged(payload, Set(tags: _*))
 
-  protected override def beforeEach(): Unit = {
-    val db = SlickDatabase(system).db
-    val queries = (for {
-      _ ← sqlu"""TRUNCATE journal"""
-      _ ← sqlu"""TRUNCATE deleted_to"""
-      _ ← sqlu"""TRUNCATE snapshot"""
-    } yield ()).transactionally
-    db.run(queries).futureValue
-    super.beforeAll()
-  }
+  val actionsClearPostgres = (for {
+    _ ← sqlu"""TRUNCATE journal"""
+    _ ← sqlu"""TRUNCATE deleted_to"""
+    _ ← sqlu"""TRUNCATE snapshot"""
+  } yield ()).transactionally
+
+  val actionsClearOracle = (for {
+    _ ← sqlu"""DELETE FROM "SYSTEM"."journal""""
+    _ ← sqlu"""DELETE FROM "SYSTEM"."deleted_to""""
+    _ ← sqlu"""DELETE FROM "SYSTEM"."snapshot""""
+  } yield ()).transactionally
+
+  def clearPostgres(): Unit =
+    withDatabase(_.run(actionsClearPostgres).toTry) should be a 'success
+
+  def clearOracle(): Unit =
+    withDatabase(_.run(actionsClearOracle).toTry) should be a 'success
+
+  protected override def beforeEach(): Unit =
+    clearPostgres()
+
+  override protected def afterAll(): Unit =
+    clearPostgres()
+
 }

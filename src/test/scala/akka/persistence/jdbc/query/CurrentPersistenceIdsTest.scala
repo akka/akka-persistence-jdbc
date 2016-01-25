@@ -53,11 +53,9 @@ class MySQLCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("mysql-ap
 class OracleCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("oracle-application.conf") {
   dropCreate(Oracle())
 
-  protected override def beforeEach(): Unit = {
-    withStatement { stmt ⇒
-      stmt.executeUpdate("""DELETE FROM "SYSTEM"."journal"""")
-      stmt.executeUpdate("""DELETE FROM "SYSTEM"."deleted_to"""")
-      stmt.executeUpdate("""DELETE FROM "SYSTEM"."snapshot"""")
-    }
-  }
+  protected override def beforeEach(): Unit =
+    clearOracle()
+
+  override protected def afterAll(): Unit =
+    clearOracle()
 }

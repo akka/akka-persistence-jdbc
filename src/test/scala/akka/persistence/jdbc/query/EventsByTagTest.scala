@@ -99,6 +99,10 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
       actor1 ! 9
       actor1 ! 10
 
+      eventually {
+        journalDao.countJournal.futureValue shouldBe 12
+      }
+
       withEventsByTag(10.seconds)("prime", 0) { tp ⇒
         tp.request(Int.MaxValue)
         tp.expectNextUnordered(
@@ -172,11 +176,9 @@ class MySQLEventByTagTest extends EventsByTagTest("mysql-application.conf") {
 class OracleEventByTagTest extends EventsByTagTest("oracle-application.conf") {
   dropCreate(Oracle())
 
-  protected override def beforeEach(): Unit = {
-    withStatement { stmt ⇒
-      stmt.executeUpdate("""DELETE FROM "SYSTEM"."journal"""")
-      stmt.executeUpdate("""DELETE FROM "SYSTEM"."deleted_to"""")
-      stmt.executeUpdate("""DELETE FROM "SYSTEM"."snapshot"""")
-    }
-  }
+  protected override def beforeEach(): Unit =
+    clearOracle()
+
+  override protected def afterAll(): Unit =
+    clearOracle
 }

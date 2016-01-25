@@ -72,11 +72,16 @@ trait DropCreate extends ClasspathResources {
     }
   }
 
-  def withSession(f: Session ⇒ Unit): Unit = {
-    val session = SlickDatabase(system).db.createSession()
-    try f(session) finally session.close()
+  def withDatabase[A](f: Database ⇒ A): A =
+    f(SlickDatabase(system).db)
+
+  def withSession[A](f: Session ⇒ A): A = {
+    withDatabase { db ⇒
+      val session = db.createSession()
+      try f(session) finally session.close()
+    }
   }
 
-  def withStatement(f: Statement ⇒ Unit): Unit =
+  def withStatement[A](f: Statement ⇒ A): A =
     withSession(session ⇒ session.withStatement()(f))
 }

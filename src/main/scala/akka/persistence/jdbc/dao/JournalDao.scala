@@ -82,10 +82,16 @@ trait JournalDao {
   def persistenceIds(queryListOfPersistenceIds: Iterable[String]): Future[Seq[String]]
 
   /**
-   * Returns a Source of bytes for certain tags from an offset. The result is sorted by
+   * Returns a Source of bytes for certain tag from an offset. The result is sorted by
    * created time asc thus the offset is relative to the creation time
    */
   def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit]
+
+  /**
+   * Returns a Source of bytes for certain persistenceId/tag combination from an offset. The result is sorted by
+   * created time asc thus the offset is relative to the creation time
+   */
+  def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[Array[Byte], Unit]
 }
 
 trait WriteMessagesFacade {
@@ -159,6 +165,9 @@ class SlickJournalDaoQueries(val profile: JdbcProfile, override val journalTable
   def eventsByTag(tag: String, offset: Long): Query[Journal, JournalRow, Seq] =
     JournalTable.filter(_.tags like s"%$tag%").sortBy(_.created.asc).drop(offset)
 
+  def eventsByTagAndPersistenceId(persistenceId: String, tag: String, offset: Long): Query[Journal, JournalRow, Seq] =
+    JournalTable.filter(_.persistenceId === persistenceId).filter(_.tags like s"%$tag%").sortBy(_.created.asc).drop(offset)
+
   def countJournal: Rep[Int] =
     JournalTable.length
 }
@@ -223,6 +232,9 @@ trait SlickJournalDao extends JournalDao {
 
   override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit] =
     Source.fromPublisher(db.stream(queries.eventsByTag(tag, offset).result)).map(_.message)
+
+  override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[Array[Byte], Unit] =
+    Source.fromPublisher(db.stream(queries.eventsByTagAndPersistenceId(persistenceId, tag, offset).result)).map(_.message)
 }
 
 class JdbcSlickJournalDao(val db: JdbcBackend#Database, override val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration, override val deletedToTableCfg: DeletedToTableConfiguration)(implicit val ec: ExecutionContext, val mat: Materializer) extends SlickJournalDao {

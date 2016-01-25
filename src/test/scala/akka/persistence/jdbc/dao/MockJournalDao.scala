@@ -50,4 +50,7 @@ class MockJournalDao(fail: Boolean = false) extends JournalDao {
 
   override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit] =
     Source.single(Array.empty[Byte]).map(e ⇒ if (fail) throw new RuntimeException("Mock cannot eventsByTag") else e)
+
+  override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[Array[Byte], Unit] =
+    Source.single(Array.empty[Byte]).map(e ⇒ if (fail) throw new RuntimeException("Mock cannot eventsByPersistenceIdAndTag") else e)
 }

@@ -17,7 +17,7 @@ Please note that most of my projects run on [Postgresql](http://www.postgresql.o
 database available, with some great features, and it works great together with the JDBC plugin.
 
 ## New release
-The latest version is `v2.1.1` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The latest version is `v2.1.2` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -36,7 +36,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.1.1"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.1.2"
 ```
 
 ## Configuration
@@ -430,22 +430,39 @@ and use the class only as an instruction to tag the event with the given tags an
 `message` field of the journal table. 
 
 ```scala
-import akka.persistence.journal.WriteEventAdapter
-import akka.persistence.journal.Tagged
- 
-class MyTaggingEventAdapter extends WriteEventAdapter {
-  val colors = Set("green", "black", "blue")
+import akka.persistence.journal.{ Tagged, WriteEventAdapter }
+import com.github.dnvriend.Person.{ LastNameChanged, FirstNameChanged, PersonCreated }
+
+class TaggingEventAdapter extends WriteEventAdapter {
+  override def manifest(event: Any): String = ""
+
+  def withTag(event: Any, tag: String) = Tagged(event, Set(tag))
+
   override def toJournal(event: Any): Any = event match {
-    case s: String ⇒
-      var tags = colors.foldLeft(Set.empty[String]) { (acc, c) ⇒
-        if (s.contains(c)) acc + c else acc
-      }
-      if (tags.isEmpty) event
-      else Tagged(event, tags)
+    case _: PersonCreated ⇒
+      withTag(event, "person-created")
+    case _: FirstNameChanged ⇒
+      withTag(event, "first-name-changed")
+    case _: LastNameChanged ⇒
+      withTag(event, "last-name-changed")
     case _ ⇒ event
   }
- 
-  override def manifest(event: Any): String = ""
+}
+```
+
+The `EventAdapter` must be registered by adding the following to the root of `application.conf` Please see the 
+[demo-akka-persistence-jdbc](https://github.com/dnvriend/demo-akka-persistence-jdbc) project for more information.
+
+```bash
+jdbc-journal {
+  event-adapters {
+    tagging = "com.github.dnvriend.TaggingEventAdapter"
+  }
+  event-adapter-bindings {
+    "com.github.dnvriend.Person$PersonCreated" = tagging
+    "com.github.dnvriend.Person$FirstNameChanged" = tagging
+    "com.github.dnvriend.Person$LastNameChanged" = tagging
+  }
 }
 ```
 
@@ -461,11 +478,36 @@ The returned event stream contains only events that correspond to the given tag,
 The same stream elements (in same order) are returned for multiple executions of the same query. Deleted events are not deleted 
 from the tagged event stream. 
 
+## EventsByPersistenceIdAndTag and CurrentEventsByPersistenceIdAndTag
+`eventsByPersistenceIdAndTag` and `currentEventsByPersistenceIdAndTag` is used for retrieving specific events identified 
+by a specific tag for a specific PersistentActor identified by persistenceId. These two queries basically are 
+convenience operations that optimize the lookup of events because the database can efficiently filter out the initial 
+persistenceId/tag combination. 
+
+```scala
+import akka.actor.ActorSystem
+import akka.stream.{Materializer, ActorMaterializer}
+import akka.stream.scaladsl.Source
+import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
+import akka.persistence.jdbc.query.journal.JdbcReadJournal
+
+implicit val system: ActorSystem = ActorSystem()
+implicit val mat: Materializer = ActorMaterializer()(system)
+val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
+
+val willNotCompleteTheStream: Source[EventEnvelope, Unit] = readJournal.eventsByPersistenceIdAndTag("fruitbasket", "apple", 0L)
+
+val willCompleteTheStream: Source[EventEnvelope, Unit] = readJournal.currentEventsByPersistenceIdAndTag("fruitbasket", "apple", 0L)
+```
+
 # Usage
 The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-persistence-jdbc/wiki)
 
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
+
+## 2.1.2 (2016-01-25)
+  - Support for the `currentEventsByPersistenceIdAndTag` and `eventsByPersistenceIdAndTag` queries
 
 ## 2.2.1 (2016-01-24)
   - Support for the `eventsByTag` live query

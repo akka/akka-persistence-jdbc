@@ -180,5 +180,5 @@ class OracleEventByTagTest extends EventsByTagTest("oracle-application.conf") {
     clearOracle()
 
   override protected def afterAll(): Unit =
-    clearOracle
+    clearOracle()
 }

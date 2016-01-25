@@ -39,7 +39,9 @@ trait SlickReadJournal extends ReadJournal
     with CurrentEventsByPersistenceIdQuery
     with EventsByPersistenceIdQuery
     with CurrentEventsByTagQuery
-    with EventsByTagQuery {
+    with EventsByTagQuery
+    with CurrentEventsByPersistenceIdAndTagQuery
+    with EventsByPersistenceIdAndTagQuery {
 
   implicit def mat: Materializer
 
@@ -74,6 +76,15 @@ trait SlickReadJournal extends ReadJournal
 
   override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, Unit] =
     currentEventsByTag(tag, offset).concat(Source.actorPublisher[EventEnvelope](Props(new EventsByTagPublisher(tag, true))))
+
+  override def currentEventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, Unit] =
+    journalDao.eventsByPersistenceIdAndTag(persistenceId, tag, offset)
+      .via(serializationFacade.deserializeRepr)
+      .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
+      .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
+
+  override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, Unit] =
+    currentEventsByPersistenceIdAndTag(persistenceId, tag, offset).concat(Source.actorPublisher[EventEnvelope](Props(new EventsByPersistenceIdAndTagPublisher(persistenceId, tag, true))))
 }
 
 class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) extends SlickReadJournal {

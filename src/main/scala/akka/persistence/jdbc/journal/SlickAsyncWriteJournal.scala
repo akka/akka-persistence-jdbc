@@ -32,6 +32,7 @@ import scala.util.Try
 object JdbcJournal {
   final val Identifier = "jdbc-journal"
 
+  final case class EventsByPersistenceIdAndTagRequest(persistenceId: String, tag: String)
   final case class EventsByTagRequest(tag: String)
   final case class EventsByPersistenceIdRequest(persistenceId: String)
   final case class EventAppended(envelope: EventEnvelope)
@@ -43,7 +44,8 @@ object JdbcJournal {
 trait SlickAsyncWriteJournal extends AsyncWriteJournal
     with AllPersistenceIdsSubscriberRegistry
     with EventsByPersistenceIdRegistry
-    with EventsByTagSubscriberRegistry {
+    with EventsByTagSubscriberRegistry
+    with EventsByPersistenceIdTagSubscriberRegistry {
 
   def journalDao: JournalDao
 
@@ -66,6 +68,7 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal
         .via(addAllPersistenceIdsFlow(xs))
         .via(eventsByPersistenceIdFlow(messages))
         .via(eventsByTagFlow(messages))
+        .via(eventsByPersistenceIdAndTagFlow(messages))
         .map(_.map(_ ⇒ ()))
         .runFold(List.empty[Try[Unit]])(_ :+ _)
     } yield xy
@@ -88,10 +91,12 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal
       sendAllPersistenceIdsSubscriberTerminated(ref)
       sendEventsByPersistenceIdSubscriberTerminated(ref)
       sendEventsByTagSubscriberTerminated(ref)
+      sendEventsByPersistenceIdAndTagSubscriberTerminated(ref)
   }
 
   override def receivePluginInternal: Receive =
     handleTerminated.orElse(receiveAllPersistenceIdsSubscriber)
       .orElse(receiveEventsByPersistenceIdRegistry)
       .orElse(receiveEventsByTagRegistry)
+      .orElse(receiveEventsByPersistenceIdAndTagRegistry)
 }

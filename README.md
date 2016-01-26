@@ -361,9 +361,9 @@ implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
 val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 
-val willNotCompleteTheStream: Source[String, Unit] = readJournal.allPersistenceIds()
+val willNotCompleteTheStream: Source[String, NotUsed] = readJournal.allPersistenceIds()
 
-val willCompleteTheStream: Source[String, Unit] = readJournal.currentPersistenceIds()
+val willCompleteTheStream: Source[String, NotUsed] = readJournal.currentPersistenceIds()
 ```
 
 The returned event stream is unordered and you can expect different order for multiple executions of the query.
@@ -391,9 +391,9 @@ implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
 val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 
-val willNotCompleteTheStream: Source[EventEnvelope, Unit] = readJournal.eventsByPersistenceId("some-persistence-id", 0L, Long.MaxValue)
+val willNotCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.eventsByPersistenceId("some-persistence-id", 0L, Long.MaxValue)
 
-val willCompleteTheStream: Source[EventEnvelope, Unit] = readJournal.currentEventsByPersistenceId("some-persistence-id", 0L, Long.MaxValue)
+val willCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.currentEventsByPersistenceId("some-persistence-id", 0L, Long.MaxValue)
 ```
 
 You can retrieve a subset of all events by specifying `fromSequenceNr` and `toSequenceNr` or use `0L` and `Long.MaxValue` respectively to retrieve all events. Note that the corresponding sequence number of each event is provided in the `EventEnvelope`, which makes it possible to resume the stream at a later point from a given sequence number.
@@ -417,9 +417,9 @@ implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
 val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 
-val willNotCompleteTheStream: Source[EventEnvelope, Unit] = readJournal.eventsByTag("apple", 0L)
+val willNotCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.eventsByTag("apple", 0L)
 
-val willCompleteTheStream: Source[EventEnvelope, Unit] = readJournal.currentEventsByTag("apple", 0L)
+val willCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.currentEventsByTag("apple", 0L)
 ```
 
 To tag events you'll need to create an [Event Adapter](http://doc.akka.io/docs/akka/2.4.1/scala/persistence.html#event-adapters-scala) 
@@ -495,9 +495,9 @@ implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
 val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 
-val willNotCompleteTheStream: Source[EventEnvelope, Unit] = readJournal.eventsByPersistenceIdAndTag("fruitbasket", "apple", 0L)
+val willNotCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.eventsByPersistenceIdAndTag("fruitbasket", "apple", 0L)
 
-val willCompleteTheStream: Source[EventEnvelope, Unit] = readJournal.currentEventsByPersistenceIdAndTag("fruitbasket", "apple", 0L)
+val willCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.currentEventsByPersistenceIdAndTag("fruitbasket", "apple", 0L)
 ```
 
 # Usage

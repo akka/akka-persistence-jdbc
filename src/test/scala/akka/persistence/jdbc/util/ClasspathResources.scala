@@ -18,6 +18,8 @@ package akka.persistence.jdbc.util
 
 import java.io.InputStream
 
+import akka.NotUsed
+import akka.stream.io.IOResult
 import akka.stream.scaladsl.{ Source, StreamConverters }
 import akka.util.ByteString
 
@@ -43,12 +45,12 @@ trait ClasspathResources {
       f(new XMLEventReader(ScalaIOSource.fromInputStream(is)))
     }
 
-  def withXMLEventSource[T](fileName: String)(f: Source[XMLEvent, Unit] ⇒ T): T =
+  def withXMLEventSource[T](fileName: String)(f: Source[XMLEvent, NotUsed] ⇒ T): T =
     withXMLEventReader(fileName) { reader ⇒
       f(Source.fromIterator(() ⇒ reader))
     }
 
-  def withByteStringSource[T](fileName: String)(f: Source[ByteString, Future[Long]] ⇒ T): T =
+  def withByteStringSource[T](fileName: String)(f: Source[ByteString, Future[IOResult]] ⇒ T): T =
     withInputStream(fileName) { inputStream ⇒
       f(StreamConverters.fromInputStream(() ⇒ inputStream))
     }

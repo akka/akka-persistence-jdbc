@@ -16,6 +16,7 @@
 
 package akka.persistence.jdbc.dao
 
+import akka.NotUsed
 import akka.persistence.jdbc.dao.JournalTables.{ JournalDeletedToRow, JournalRow }
 import akka.persistence.jdbc.extension.{ DeletedToTableConfiguration, JournalTableConfiguration }
 import akka.persistence.jdbc.serialization.Serialized
@@ -41,24 +42,31 @@ object JournalDao {
 trait JournalDao {
 
   /**
+   * Returns distinct stream of persistenceIds
+   */
+  def allPersistenceIdsSource: Source[String, NotUsed]
+
+  /**
    * Returns the number of rows in the journal
    */
   def countJournal: Future[Int]
 
   /**
-   * Writes serialized messages
-   */
-  def writeList(xs: Iterable[Serialized]): Future[Unit]
-
-  /**
-   * Writes serialized messages
-   */
-  def writeFlow: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit]
-
-  /**
    * Deletes all persistent messages up to toSequenceNr (inclusive) for the persistenceId
    */
   def delete(persistenceId: String, toSequenceNr: Long): Future[Unit]
+
+  /**
+   * Returns a Source of bytes for certain tag from an offset. The result is sorted by
+   * created time asc thus the offset is relative to the creation time
+   */
+  def eventsByTag(tag: String, offset: Long): Source[Array[Byte], NotUsed]
+
+  /**
+   * Returns a Source of bytes for certain persistenceId/tag combination from an offset. The result is sorted by
+   * created time asc thus the offset is relative to the creation time
+   */
+  def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[Array[Byte], NotUsed]
 
   /**
    * Returns the highest sequence number for the events that are stored for that `persistenceId`. When no events are
@@ -69,12 +77,7 @@ trait JournalDao {
   /**
    * Returns a Source of bytes for a certain persistenceId
    */
-  def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Array[Byte], Unit]
-
-  /**
-   * Returns distinct stream of persistenceIds
-   */
-  def allPersistenceIdsSource: Source[String, Unit]
+  def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Array[Byte], NotUsed]
 
   /**
    * Returns the persistenceIds that are available on request of a query list of persistence ids
@@ -82,24 +85,22 @@ trait JournalDao {
   def persistenceIds(queryListOfPersistenceIds: Iterable[String]): Future[Seq[String]]
 
   /**
-   * Returns a Source of bytes for certain tag from an offset. The result is sorted by
-   * created time asc thus the offset is relative to the creation time
+   * Writes serialized messages
    */
-  def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit]
+  def writeList(xs: Iterable[Serialized]): Future[Unit]
 
   /**
-   * Returns a Source of bytes for certain persistenceId/tag combination from an offset. The result is sorted by
-   * created time asc thus the offset is relative to the creation time
+   * Writes serialized messages
    */
-  def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[Array[Byte], Unit]
+  def writeFlow: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], NotUsed]
 }
 
 trait WriteMessagesFacade {
-  def writeMessages: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit]
+  def writeMessages: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], NotUsed]
 }
 
 class FlowGraphWriteMessagesFacade(journalDao: JournalDao)(implicit ec: ExecutionContext, mat: Materializer) extends WriteMessagesFacade {
-  def writeMessages: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =
+  def writeMessages: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], NotUsed] =
     Flow.fromGraph(GraphDSL.create() { implicit b ⇒
       import GraphDSL.Implicits._
       val broadcast = b.add(Broadcast[Try[Iterable[Serialized]]](2))
@@ -195,7 +196,7 @@ trait SlickJournalDao extends JournalDao {
     _ ← db.run(queries.writeList(xs))
   } yield ()
 
-  def writeFlow: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =
+  def writeFlow: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], NotUsed] =
     Flow[Try[Iterable[Serialized]]].via(writeMessagesFacade.writeMessages)
 
   override def countJournal: Future[Int] = for {
@@ -220,20 +221,20 @@ trait SlickJournalDao extends JournalDao {
     db.run(actions)
   }
 
-  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Array[Byte], Unit] =
+  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Array[Byte], NotUsed] =
     Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result)).map(_.message)
 
   override def persistenceIds(queryListOfPersistenceIds: Iterable[String]): Future[Seq[String]] = for {
     xs ← db.run(queries.journalRowByPersistenceIds(queryListOfPersistenceIds).result)
   } yield xs
 
-  override def allPersistenceIdsSource: Source[String, Unit] =
+  override def allPersistenceIdsSource: Source[String, NotUsed] =
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct.result))
 
-  override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit] =
+  override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], NotUsed] =
     Source.fromPublisher(db.stream(queries.eventsByTag(tag, offset).result)).map(_.message)
 
-  override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[Array[Byte], Unit] =
+  override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[Array[Byte], NotUsed] =
     Source.fromPublisher(db.stream(queries.eventsByTagAndPersistenceId(persistenceId, tag, offset).result)).map(_.message)
 }
 

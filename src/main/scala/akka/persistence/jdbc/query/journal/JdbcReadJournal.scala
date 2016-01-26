@@ -16,6 +16,7 @@
 
 package akka.persistence.jdbc.query.journal
 
+import akka.NotUsed
 import akka.actor.{ ExtendedActorSystem, Props }
 import akka.persistence.jdbc.dao.JournalDao
 import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DaoRepository }
@@ -51,39 +52,39 @@ trait SlickReadJournal extends ReadJournal
 
   def akkaPersistenceConfiguration: AkkaPersistenceConfig
 
-  override def currentPersistenceIds(): Source[String, Unit] =
+  override def currentPersistenceIds(): Source[String, NotUsed] =
     journalDao.allPersistenceIdsSource
 
-  override def allPersistenceIds(): Source[String, Unit] =
+  override def allPersistenceIds(): Source[String, NotUsed] =
     currentPersistenceIds()
       .concat(Source.actorPublisher[String](Props(new AllPersistenceIdsPublisher(true))))
 
-  override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, Unit] =
+  override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     journalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, Long.MaxValue)
       .via(serializationFacade.deserializeRepr)
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
       .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
 
-  override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, Unit] =
+  override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr)
       .concat(Source.actorPublisher[EventEnvelope](Props(new EventsByPersistenceIdPublisher(persistenceId, true))))
 
-  override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, Unit] =
+  override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     journalDao.eventsByTag(tag, offset)
       .via(serializationFacade.deserializeRepr)
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
       .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
 
-  override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, Unit] =
+  override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     currentEventsByTag(tag, offset).concat(Source.actorPublisher[EventEnvelope](Props(new EventsByTagPublisher(tag, true))))
 
-  override def currentEventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, Unit] =
+  override def currentEventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     journalDao.eventsByPersistenceIdAndTag(persistenceId, tag, offset)
       .via(serializationFacade.deserializeRepr)
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
       .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
 
-  override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, Unit] =
+  override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     currentEventsByPersistenceIdAndTag(persistenceId, tag, offset).concat(Source.actorPublisher[EventEnvelope](Props(new EventsByPersistenceIdAndTagPublisher(persistenceId, tag, true))))
 }
 

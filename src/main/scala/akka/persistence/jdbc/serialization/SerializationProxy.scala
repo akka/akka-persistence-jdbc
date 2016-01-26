@@ -18,6 +18,7 @@ package akka.persistence.jdbc.serialization
 
 import java.nio.ByteBuffer
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.persistence.journal.Tagged
 import akka.persistence.{ AtomicWrite, PersistentRepr }
@@ -99,12 +100,12 @@ class SerializationFacade(proxy: SerializationProxy, separator: String) {
     })
   }
 
-  def serialize: Flow[AtomicWrite, Try[Iterable[Serialized]], Unit] =
+  def serialize: Flow[AtomicWrite, Try[Iterable[Serialized]], NotUsed] =
     Flow[AtomicWrite].map(serializeAtomicWrite)
 
   def persistentFromByteArray(bytes: Array[Byte]): Try[PersistentRepr] =
     proxy.deserialize(bytes, classOf[PersistentRepr])
 
-  def deserializeRepr: Flow[Array[Byte], Try[PersistentRepr], Unit] =
+  def deserializeRepr: Flow[Array[Byte], Try[PersistentRepr], NotUsed] =
     Flow[Array[Byte]].map(persistentFromByteArray)
 }

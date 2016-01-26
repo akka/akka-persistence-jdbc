@@ -85,6 +85,7 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal
       .via(serializationFacade.deserializeRepr)
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
       .runForeach(recoveryCallback)
+      .map(_ ⇒ ())
 
   def handleTerminated: Receive = {
     case Terminated(ref) ⇒

@@ -16,6 +16,7 @@
 
 package akka.persistence.jdbc.query.journal
 
+import akka.NotUsed
 import akka.persistence.query.EventEnvelope
 import akka.persistence.query.scaladsl.ReadJournal
 import akka.stream.scaladsl.Source
@@ -26,5 +27,5 @@ trait EventsByPersistenceIdAndTagQuery extends ReadJournal {
    * This is an optimization query as the database can filter out the
    * events for a specific persistenceId
    */
-  def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, Unit]
+  def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, NotUsed]
 }

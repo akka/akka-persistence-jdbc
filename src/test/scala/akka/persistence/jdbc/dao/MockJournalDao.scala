@@ -16,6 +16,7 @@
 
 package akka.persistence.jdbc.dao
 
+import akka.NotUsed
 import akka.persistence.jdbc.serialization.Serialized
 import akka.stream.scaladsl.{ Flow, Source }
 
@@ -30,7 +31,7 @@ class MockJournalDao(fail: Boolean = false) extends JournalDao {
   override def writeList(xs: Iterable[Serialized]): Future[Unit] =
     if (fail) Future.failed(new RuntimeException("Mock cannot write message list")) else Future.successful(())
 
-  override def writeFlow: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =
+  override def writeFlow: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], NotUsed] =
     Flow[Try[Iterable[Serialized]]].map { e ⇒ if (fail) throw new RuntimeException("Mock cannot write message flow") else e }
 
   override def highestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] =
@@ -39,18 +40,18 @@ class MockJournalDao(fail: Boolean = false) extends JournalDao {
   override def delete(persistenceId: String, toSequenceNr: Long): Future[Unit] =
     if (fail) Future.failed(new RuntimeException("Mock cannot delete message to")) else Future.successful(())
 
-  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Array[Byte], Unit] =
+  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Array[Byte], NotUsed] =
     Source.single(Array.empty[Byte]).map(e ⇒ if (fail) throw new RuntimeException("Mock cannot read message") else e)
 
-  override def allPersistenceIdsSource: Source[String, Unit] =
+  override def allPersistenceIdsSource: Source[String, NotUsed] =
     Source.single("pid-1").map(e ⇒ if (fail) throw new RuntimeException("Mock cannot read message") else e)
 
   override def persistenceIds(queryListOfPersistenceIds: Iterable[String]): Future[Seq[String]] =
     if (fail) Future.failed(new RuntimeException("Mock cannot delete message to")) else Future.successful(Nil)
 
-  override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], Unit] =
+  override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], NotUsed] =
     Source.single(Array.empty[Byte]).map(e ⇒ if (fail) throw new RuntimeException("Mock cannot eventsByTag") else e)
 
-  override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[Array[Byte], Unit] =
+  override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[Array[Byte], NotUsed] =
     Source.single(Array.empty[Byte]).map(e ⇒ if (fail) throw new RuntimeException("Mock cannot eventsByPersistenceIdAndTag") else e)
 }

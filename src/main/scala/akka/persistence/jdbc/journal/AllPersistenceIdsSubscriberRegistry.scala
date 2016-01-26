@@ -16,6 +16,7 @@
 
 package akka.persistence.jdbc.journal
 
+import akka.NotUsed
 import akka.actor.{ Actor, ActorRef }
 import akka.persistence.jdbc.journal.AllPersistenceIdsSubscriberRegistry.AllPersistenceIdsSubscriberTerminated
 import akka.persistence.jdbc.serialization.Serialized
@@ -59,7 +60,7 @@ trait AllPersistenceIdsSubscriberRegistry { _: SlickAsyncWriteJournal ⇒
       removeAllPersistenceIdsSubscriber(ref)
   }
 
-  protected def addAllPersistenceIdsFlow(persistenceIdsNotInJournal: List[String]): Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], Unit] =
+  protected def addAllPersistenceIdsFlow(persistenceIdsNotInJournal: List[String]): Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], NotUsed] =
     Flow[Try[Iterable[Serialized]]].map { atomicWriteResult ⇒
       if (hasAllPersistenceIdsSubscribers) {
         for {

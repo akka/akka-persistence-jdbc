@@ -18,7 +18,7 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.2.0-RC1"
+version := "2.2.0"
 
 scalaVersion := "2.11.7"
 

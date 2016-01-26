@@ -17,7 +17,7 @@ Please note that most of my projects run on [Postgresql](http://www.postgresql.o
 database available, with some great features, and it works great together with the JDBC plugin.
 
 ## New release
-The latest version is `v2.2.0-RC1` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The latest version is `v2.2.0` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -36,7 +36,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.0-RC1"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.0"
 ```
 
 ## Configuration

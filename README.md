@@ -17,7 +17,7 @@ Please note that most of my projects run on [Postgresql](http://www.postgresql.o
 database available, with some great features, and it works great together with the JDBC plugin.
 
 ## New release
-The latest version is `v2.2.0` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The latest version is `v2.2.1` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -27,8 +27,8 @@ The latest version is `v2.2.0` and breaks backwards compatibility with `v1.x.x` 
   - It writes the journal and snapshot entries as byte arrays,
 - It relies on [Akka Serialization](http://doc.akka.io/docs/akka/2.4.1/scala/serialization.html),
   - For serializing, please split the domain model from the storage model, and use a binary format for the storage model that support schema versioning like [Google's protocol buffers](https://developers.google.com/protocol-buffers/docs/overview), as it is used by Akka Persistence, and is available as a dependent library. For an example on how to use Akka Serialization with protocol buffers, you can examine the [akka-serialization-test](https://github.com/dnvriend/akka-serialization-test) study project,
-- It supports the `Persistence Query` interface thus providing a universal asynchronous stream based query interface,
-- Table names and schema names are configurable,
+- It supports the `Persistence Query` interface for both Java and Scala thus providing a universal asynchronous stream based query interface,
+- Table, column and schema names are configurable, but note, if you change those, you'll need to change the DDL scripts.
 
 ## Installation
 Add the following to your `build.sbt`:
@@ -36,7 +36,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.0"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.1"
 ```
 
 ## Configuration

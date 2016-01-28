@@ -53,6 +53,21 @@ Configure `slick`:
   - `slick.driver.MySQLDriver`
   - `com.typesafe.slick.driver.oracle.OracleDriver`
    
+## DataSource lookup by JNDI name
+The plugin uses `slick` as the database access library. Slick [supports jndi](http://slick.typesafe.com/doc/3.1.1/database.html#using-a-jndi-name)
+for looking up [DataSource](http://docs.oracle.com/javase/7/docs/api/javax/sql/DataSource.html)s. 
+
+To enable the JNDI lookup, you must add the following to your `application.conf`:
+
+```bash
+akka-persistence-jdbc {
+  slick {
+    driver = "slick.driver.PostgresDriver"
+    jndiName = "java:jboss/datasources/PostgresDS"   
+  }
+}
+```
+   
 # Postgres configuration   
 ```bash
 akka {
@@ -525,6 +540,9 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
+
+## 2.2.2 (2016-01-28)
+  - Support for looking up DataSources using JNDI
 
 ## 2.2.1 (2016-01-28)
   - Support for the akka persistence query JavaDSL

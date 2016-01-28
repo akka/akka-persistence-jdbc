@@ -30,11 +30,14 @@ object AkkaPersistenceConfig extends ExtensionId[AkkaPersistenceConfigImpl] with
 object SlickConfiguration {
   def apply(cfg: Config): SlickConfiguration =
     cfg.withPath("akka-persistence-jdbc.slick") { cfg =>
-      SlickConfiguration(cfg.as[String]("driver", "slick.driver.PostgresDriver"))
+      SlickConfiguration(
+        cfg.as[String]("driver", "slick.driver.PostgresDriver"),
+        cfg.as[String]("jndiName")
+      )
     }
 }
 
-case class SlickConfiguration(slickDriver: String)
+case class SlickConfiguration(slickDriver: String, jndiName: Option[String])
 
 object PersistenceQueryConfiguration {
   def apply(cfg: Config): PersistenceQueryConfiguration =

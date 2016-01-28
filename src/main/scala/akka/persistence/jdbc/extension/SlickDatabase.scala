@@ -26,5 +26,8 @@ object SlickDatabase extends ExtensionId[SlickDatabaseImpl] with ExtensionIdProv
 }
 
 class SlickDatabaseImpl()(implicit val system: ExtendedActorSystem) extends JdbcBackend with Extension {
-  val db: Database = Database.forConfig("akka-persistence-jdbc.slick.db", system.settings.config)
+  val db: Database =
+    if(AkkaPersistenceConfig(system).slickConfiguration.jndiName.isDefined)
+      Database.forName(AkkaPersistenceConfig(system).slickConfiguration.jndiName.get)
+    else Database.forConfig("akka-persistence-jdbc.slick.db", system.settings.config)
 }

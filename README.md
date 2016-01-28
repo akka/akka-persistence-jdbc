@@ -344,6 +344,25 @@ CREATE TABLE "snapshot" (
 );
 ```
 
+The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery` extension:
+
+```scala
+import akka.persistence.query.PersistenceQuery
+import akka.persistence.jdbc.query.journal.JdbcReadJournal
+ 
+val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
+```
+
+## How to get the ReadJournal using Java
+The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery` extension:
+
+```java
+import akka.persistence.query.PersistenceQuery
+import akka.persistence.jdbc.query.journal.JavaDslJdbcReadJournal
+
+final JavaDslJdbcReadJournal readJournal = PersistenceQuery.get(system).getReadJournalFor(JavaDslJdbcReadJournal.class, JavaDslJdbcReadJournal.Identifier());
+```
+
 ## Persistence Query
 The plugin supports the following queries:
 
@@ -505,6 +524,9 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
+
+## 2.2.1 (2016-01-28)
+  - Support for the akka persistence query JavaDSL
 
 ## 2.2.0 (2016-01-26)
   - Compatibility with Akka 2.4.2-RC1

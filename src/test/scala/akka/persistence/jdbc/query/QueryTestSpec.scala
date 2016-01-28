@@ -16,26 +16,40 @@
 
 package akka.persistence.jdbc.query
 
-import akka.actor.{ ActorRef, Props }
+import akka.actor.{ ActorSystem, ActorRef, Props }
 import akka.event.LoggingReceive
 import akka.persistence.PersistentActor
 import akka.persistence.jdbc.TestSpec
 import akka.persistence.jdbc.dao.JournalDao
 import akka.persistence.jdbc.extension.{ DaoRepository, SlickDatabase }
-import akka.persistence.jdbc.query.journal.JdbcReadJournal
+import akka.persistence.jdbc.query.journal.{ JavaDslJdbcReadJournal, JdbcReadJournal }
 import akka.persistence.journal.Tagged
 import akka.persistence.query.{ EventEnvelope, PersistenceQuery }
+import akka.stream.Materializer
 import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.scaladsl.TestSink
+import akka.stream.testkit.javadsl.{ TestSink ⇒ JavaSink }
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.duration.{ FiniteDuration, _ }
 
-abstract class QueryTestSpec(config: String) extends TestSpec(config) {
+trait ReadJournalOperations {
+  def withCurrentPersistenceIds(within: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit
+  def withAllPersistenceIds(within: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit
+  def withCurrentEventsByPersistenceid(within: FiniteDuration = 1.second)(persistenceId: String, fromSequenceNr: Long = 0, toSequenceNr: Long = Long.MaxValue)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit
+  def withEventsByPersistenceId(within: FiniteDuration = 1.second)(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit
+  def withCurrentEventsByTag(within: FiniteDuration = 1.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit
+  def withEventsByTag(within: FiniteDuration = 1.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit
+  def withCurrentEventsByPersistenceIdAndTag(within: FiniteDuration = 1.second)(persistenceId: String, tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit
+  def withEventsByPersistenceIdAndTag(within: FiniteDuration = 1.second)(persistenceId: String, tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit
+}
 
-  val journalDao: JournalDao = DaoRepository(system).journalDao
+trait ScalaJdbcReadJournalOperations extends ReadJournalOperations {
+  implicit def system: ActorSystem
 
-  val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
+  implicit def mat: Materializer
+
+  lazy val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 
   def withCurrentPersistenceIds(within: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit = {
     val tp = readJournal.currentPersistenceIds().runWith(TestSink.probe[String])
@@ -76,6 +90,59 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) {
     val tp = readJournal.eventsByPersistenceIdAndTag(persistenceId, tag, offset).runWith(TestSink.probe[EventEnvelope])
     tp.within(within)(f(tp))
   }
+}
+
+trait JavaDslJdbcReadJournalOperations extends ReadJournalOperations {
+  implicit def system: ActorSystem
+
+  implicit def mat: Materializer
+
+  lazy val readJournal = PersistenceQuery.get(system).getReadJournalFor(classOf[JavaDslJdbcReadJournal], JavaDslJdbcReadJournal.Identifier)
+
+  def withCurrentPersistenceIds(within: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit = {
+    val tp = readJournal.currentPersistenceIds().runWith(JavaSink.probe(system), mat)
+    tp.within(within)(f(tp))
+  }
+
+  def withAllPersistenceIds(within: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit = {
+    val tp = readJournal.allPersistenceIds().runWith(JavaSink.probe(system), mat)
+    tp.within(within)(f(tp))
+  }
+
+  def withCurrentEventsByPersistenceid(within: FiniteDuration = 1.second)(persistenceId: String, fromSequenceNr: Long = 0, toSequenceNr: Long = Long.MaxValue)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit = {
+    val tp = readJournal.currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).runWith(JavaSink.probe(system), mat)
+    tp.within(within)(f(tp))
+  }
+
+  def withEventsByPersistenceId(within: FiniteDuration = 1.second)(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit = {
+    val tp = readJournal.eventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).runWith(JavaSink.probe(system), mat)
+    tp.within(within)(f(tp))
+  }
+
+  def withCurrentEventsByTag(within: FiniteDuration = 1.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit = {
+    val tp = readJournal.currentEventsByTag(tag, offset).runWith(JavaSink.probe(system), mat)
+    tp.within(within)(f(tp))
+  }
+
+  def withEventsByTag(within: FiniteDuration = 1.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit = {
+    val tp = readJournal.eventsByTag(tag, offset).runWith(JavaSink.probe(system), mat)
+    tp.within(within)(f(tp))
+  }
+
+  def withCurrentEventsByPersistenceIdAndTag(within: FiniteDuration = 1.second)(persistenceId: String, tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit = {
+    val tp = readJournal.currentEventsByPersistenceIdAndTag(persistenceId, tag, offset).runWith(JavaSink.probe(system), mat)
+    tp.within(within)(f(tp))
+  }
+
+  def withEventsByPersistenceIdAndTag(within: FiniteDuration = 1.second)(persistenceId: String, tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit = {
+    val tp = readJournal.eventsByPersistenceIdAndTag(persistenceId, tag, offset).runWith(JavaSink.probe(system), mat)
+    tp.within(within)(f(tp))
+  }
+}
+
+abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJournalOperations {
+
+  lazy val journalDao: JournalDao = DaoRepository(system).journalDao
 
   case class DeleteCmd(toSequenceNr: Long = Long.MaxValue) extends Serializable
 

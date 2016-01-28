@@ -133,15 +133,33 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
     }
 }
 
-class PostgresCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") {
+class PostgresScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with ScalaJdbcReadJournalOperations {
   dropCreate(Postgres())
 }
 
-class MySQLCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") {
+class MySQLScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") with ScalaJdbcReadJournalOperations {
   dropCreate(MySQL())
 }
 
-class OracleCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") {
+class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") with ScalaJdbcReadJournalOperations {
+  dropCreate(Oracle())
+
+  protected override def beforeEach(): Unit =
+    clearOracle()
+
+  override protected def afterAll(): Unit =
+    clearOracle()
+}
+
+class PostgresJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
+  dropCreate(Postgres())
+}
+
+class MySQLJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
+  dropCreate(MySQL())
+}
+
+class OracleJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
   dropCreate(Oracle())
 
   protected override def beforeEach(): Unit =

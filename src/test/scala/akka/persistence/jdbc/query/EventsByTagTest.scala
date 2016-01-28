@@ -165,15 +165,33 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
   }
 }
 
-class PostgresEventsByTagTest extends EventsByTagTest("postgres-application.conf") {
+class PostgresScalaEventsByTagTest extends EventsByTagTest("postgres-application.conf") with ScalaJdbcReadJournalOperations {
   dropCreate(Postgres())
 }
 
-class MySQLEventByTagTest extends EventsByTagTest("mysql-application.conf") {
+class MySQLScalaEventByTagTest extends EventsByTagTest("mysql-application.conf") with ScalaJdbcReadJournalOperations {
   dropCreate(MySQL())
 }
 
-class OracleEventByTagTest extends EventsByTagTest("oracle-application.conf") {
+class OracleScalaEventByTagTest extends EventsByTagTest("oracle-application.conf") with ScalaJdbcReadJournalOperations {
+  dropCreate(Oracle())
+
+  protected override def beforeEach(): Unit =
+    clearOracle()
+
+  override protected def afterAll(): Unit =
+    clearOracle()
+}
+
+class PostgresJavaEventsByTagTest extends EventsByTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
+  dropCreate(Postgres())
+}
+
+class MySQLJavaEventByTagTest extends EventsByTagTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
+  dropCreate(MySQL())
+}
+
+class OracleJavaEventByTagTest extends EventsByTagTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
   dropCreate(Oracle())
 
   protected override def beforeEach(): Unit =

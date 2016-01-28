@@ -41,8 +41,11 @@ object AkkaSerializationProxy {
 }
 
 class AkkaSerializationProxy(serialization: Serialization) extends SerializationProxy {
-  override def serialize(o: AnyRef): Try[Array[Byte]] =
-    serialization.serialize(o)
+  override def serialize(o: AnyRef): Try[Array[Byte]] = o match {
+    case arr: Array[Byte] ⇒ Success(arr) // when you passed an Array[Byte] to be persisted,
+    // you probably don't want to serialize the array
+    case _                ⇒ serialization.serialize(o)
+  }
 
   override def deserialize[A](bytes: Array[Byte], clazz: Class[A]): Try[A] =
     serialization.deserialize(bytes, clazz)
@@ -81,6 +84,9 @@ class SerializationFacade(proxy: SerializationProxy, separator: String) {
   def decodeTags(tags: String): List[String] =
     SerializationFacade.decodeTags(tags, separator)
 
+  /**
+   * Serializes an [[akka.persistence.AtomicWrite]]
+   */
   private def serializeAtomicWrite(atomicWrite: AtomicWrite): Try[Iterable[Serialized]] = {
     def serializeARepr(repr: PersistentRepr, tags: Set[String] = Set.empty[String]): Try[Serialized] = for {
       byteArray ← proxy.serialize(repr)
@@ -100,6 +106,12 @@ class SerializationFacade(proxy: SerializationProxy, separator: String) {
     })
   }
 
+  /**
+   * An [[akka.persistence.AtomicWrite]] contains a Sequence of events (with metadata, the PersistentRepr)
+   * that must all be persisted or all fail, what makes the operation atomic. The flow converts
+   * [[akka.persistence.AtomicWrite]] and converts them to a Try[Iterable[Serialized]]. The Try denotes
+   * whether there was a problem with the AtomicWrite or not.
+   */
   def serialize: Flow[AtomicWrite, Try[Iterable[Serialized]], NotUsed] =
     Flow[AtomicWrite].map(serializeAtomicWrite)
 

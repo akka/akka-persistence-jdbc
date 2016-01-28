@@ -107,5 +107,5 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
 class JdbcReadJournalProvider(system: ExtendedActorSystem, config: Config) extends ReadJournalProvider {
   override val scaladslReadJournal = new JdbcReadJournal(config)(system)
 
-  override val javadslReadJournal = null
+  override val javadslReadJournal = new JavaDslJdbcReadJournal(scaladslReadJournal)
 }

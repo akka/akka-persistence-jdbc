@@ -114,15 +114,33 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
   }
 }
 
-class PostgresEventsByPersistenceIdTest extends EventsByPersistenceIdTest("postgres-application.conf") {
+class PostgresScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("postgres-application.conf") with ScalaJdbcReadJournalOperations {
   dropCreate(Postgres())
 }
 
-class MySQLEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mysql-application.conf") {
+class MySQLScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mysql-application.conf") with ScalaJdbcReadJournalOperations {
   dropCreate(MySQL())
 }
 
-class OracleEventsByPersistenceIdTest extends EventsByPersistenceIdTest("oracle-application.conf") {
+class OracleScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("oracle-application.conf") with ScalaJdbcReadJournalOperations {
+  dropCreate(Oracle())
+
+  protected override def beforeEach(): Unit =
+    clearOracle()
+
+  override protected def afterAll(): Unit =
+    clearOracle()
+}
+
+class PostgresJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
+  dropCreate(Postgres())
+}
+
+class MySQLJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
+  dropCreate(MySQL())
+}
+
+class OracleJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
   dropCreate(Oracle())
 
   protected override def beforeEach(): Unit =

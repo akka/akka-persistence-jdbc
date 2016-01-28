@@ -42,15 +42,33 @@ abstract class CurrentPersistenceIdsTest(config: String) extends QueryTestSpec(c
     }
 }
 
-class PostgresCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("postgres-application.conf") {
+class PostgresScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("postgres-application.conf") with ScalaJdbcReadJournalOperations {
   dropCreate(Postgres())
 }
 
-class MySQLCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("mysql-application.conf") {
+class MySQLScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("mysql-application.conf") with ScalaJdbcReadJournalOperations {
   dropCreate(MySQL())
 }
 
-class OracleCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("oracle-application.conf") {
+class OracleScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("oracle-application.conf") with ScalaJdbcReadJournalOperations {
+  dropCreate(Oracle())
+
+  protected override def beforeEach(): Unit =
+    clearOracle()
+
+  override protected def afterAll(): Unit =
+    clearOracle()
+}
+
+class PostgresJavaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
+  dropCreate(Postgres())
+}
+
+class MySQLJavaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
+  dropCreate(MySQL())
+}
+
+class OracleJavaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
   dropCreate(Oracle())
 
   protected override def beforeEach(): Unit =

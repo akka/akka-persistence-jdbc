@@ -21,7 +21,7 @@ import akka.persistence.query.EventEnvelope
 
 import scala.concurrent.duration._
 
-class EventsByPersistenceIdAndTagTest(config: String) extends QueryTestSpec(config) {
+abstract class EventsByPersistenceIdAndTagTest(config: String) extends QueryTestSpec(config) {
 
   it should "not find events for unknown tags" in
     withTestActors { (actor1, actor2, actor3) ⇒
@@ -82,15 +82,33 @@ class EventsByPersistenceIdAndTagTest(config: String) extends QueryTestSpec(conf
     }
 }
 
-class PostgresEventsByPersistenceIdAndTagTest extends EventsByPersistenceIdAndTagTest("postgres-application.conf") {
+class PostgresScalaEventsByPersistenceIdAndTagTest extends EventsByPersistenceIdAndTagTest("postgres-application.conf") with ScalaJdbcReadJournalOperations {
   dropCreate(Postgres())
 }
 
-class MySQLEventsByPersistenceIdAndTagTest extends EventsByPersistenceIdAndTagTest("mysql-application.conf") {
+class MySQLScalaEventsByPersistenceIdAndTagTest extends EventsByPersistenceIdAndTagTest("mysql-application.conf") with ScalaJdbcReadJournalOperations {
   dropCreate(MySQL())
 }
 
-class OracleEventsByPersistenceIdAndTagTest extends EventsByPersistenceIdAndTagTest("oracle-application.conf") {
+class OracleScalaEventsByPersistenceIdAndTagTest extends EventsByPersistenceIdAndTagTest("oracle-application.conf") with ScalaJdbcReadJournalOperations {
+  dropCreate(Oracle())
+
+  protected override def beforeEach(): Unit =
+    clearOracle()
+
+  override protected def afterAll(): Unit =
+    clearOracle()
+}
+
+class PostgresJavaEventsByPersistenceIdAndTagTest extends EventsByPersistenceIdAndTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
+  dropCreate(Postgres())
+}
+
+class MySQLJavaEventsByPersistenceIdAndTagTest extends EventsByPersistenceIdAndTagTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
+  dropCreate(MySQL())
+}
+
+class OracleJavaEventsByPersistenceIdAndTagTest extends EventsByPersistenceIdAndTagTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
   dropCreate(Oracle())
 
   protected override def beforeEach(): Unit =

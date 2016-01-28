@@ -19,7 +19,7 @@ package akka.persistence.jdbc.query
 import akka.persistence.jdbc.util.Schema.{ Oracle, MySQL, Postgres }
 import akka.persistence.query.EventEnvelope
 
-class CurrentEventsByPersistenceIdAndTagTest(config: String) extends QueryTestSpec(config) {
+abstract class CurrentEventsByPersistenceIdAndTagTest(config: String) extends QueryTestSpec(config) {
 
   it should "not find an event by tag for unknown tag" in {
     withTestActors { (actor1, actor2, actor3) ⇒
@@ -71,15 +71,33 @@ class CurrentEventsByPersistenceIdAndTagTest(config: String) extends QueryTestSp
     }
 }
 
-class PostgresCurrentEventsByPersistenceIdAndTagTest extends CurrentEventsByPersistenceIdAndTagTest("postgres-application.conf") {
+class PostgresScalaCurrentEventsByPersistenceIdAndTagTest extends CurrentEventsByPersistenceIdAndTagTest("postgres-application.conf") with ScalaJdbcReadJournalOperations {
   dropCreate(Postgres())
 }
 
-class MySQLCurrentEventsByPersistenceIdAndTagTest extends CurrentEventsByPersistenceIdAndTagTest("mysql-application.conf") {
+class MySQLScalaCurrentEventsByPersistenceIdAndTagTest extends CurrentEventsByPersistenceIdAndTagTest("mysql-application.conf") with ScalaJdbcReadJournalOperations {
   dropCreate(MySQL())
 }
 
-class OracleCurrentEventsByPersistenceIdAndTagTest extends CurrentEventsByPersistenceIdAndTagTest("oracle-application.conf") {
+class OracleScalaCurrentEventsByPersistenceIdAndTagTest extends CurrentEventsByPersistenceIdAndTagTest("oracle-application.conf") with ScalaJdbcReadJournalOperations {
+  dropCreate(Oracle())
+
+  protected override def beforeEach(): Unit =
+    clearOracle()
+
+  override protected def afterAll(): Unit =
+    clearOracle()
+}
+
+class PostgresJavaCurrentEventsByPersistenceIdAndTagTest extends CurrentEventsByPersistenceIdAndTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
+  dropCreate(Postgres())
+}
+
+class MySQLJavaCurrentEventsByPersistenceIdAndTagTest extends CurrentEventsByPersistenceIdAndTagTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
+  dropCreate(MySQL())
+}
+
+class OracleJavaCurrentEventsByPersistenceIdAndTagTest extends CurrentEventsByPersistenceIdAndTagTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
   dropCreate(Oracle())
 
   protected override def beforeEach(): Unit =

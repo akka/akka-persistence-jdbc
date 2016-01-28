@@ -344,6 +344,7 @@ CREATE TABLE "snapshot" (
 );
 ```
 
+## How to get the ReadJournal using Scala
 The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery` extension:
 
 ```scala

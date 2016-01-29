@@ -30,6 +30,7 @@ object Schema {
   final case class Postgres(val schema: String = "schema/postgres/postgres-schema.sql") extends SchemaType
   final case class MySQL(val schema: String = "schema/mysql/mysql-schema.sql") extends SchemaType
   final case class Oracle(val schema: String = "schema/oracle/oracle-schema.sql") extends SchemaType
+  final case class H2(val schema: String = "schema/mysql/mysql-schema.sql") extends SchemaType
 }
 
 trait DropCreate extends ClasspathResources {

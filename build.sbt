@@ -40,6 +40,7 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-persistence-tck" % akkaVersion % Test,
     "org.postgresql" % "postgresql" % "9.4-1206-jdbc42" % Test,
     "mysql" % "mysql-connector-java" % "5.1.33" % Test,
+    "com.h2database" % "h2" % "1.4.191" % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
     "org.scalatest" %% "scalatest" % "2.2.4" % Test,

@@ -124,7 +124,6 @@ class SlickJournalDaoQueries(val profile: JdbcProfile, override val journalTable
   def writeList(xs: Iterable[Serialized]) =
     JournalTable ++= xs.map(ser ⇒ JournalRow(ser.persistenceId, ser.sequenceNr, ser.serialized.array(), ser.created, ser.tags))
 
-  // SlickJournalDaoQueries.this.profile.DriverAction[SlickJournalDaoQueries.this.profile.InsertActionExtensionMethods[SlickJournalDaoQueries.this.DeletedTo#TableElementType]#SingleInsertResult, NoStream, Effect.Write]
   def insertDeletedTo(persistenceId: String, highestSequenceNr: Option[Long]) =
     DeletedToTable += JournalDeletedToRow(persistenceId, highestSequenceNr.getOrElse(0L))
 

@@ -19,12 +19,12 @@ package akka.persistence.jdbc.journal
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.dao.JournalTables
 import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DeletedToTableConfiguration, JournalTableConfiguration, SlickDatabase }
-import akka.persistence.jdbc.util.Schema.{ Oracle, MySQL, Postgres }
+import akka.persistence.jdbc.util.Schema.{ H2, Oracle, MySQL, Postgres }
 import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDriver }
 import akka.persistence.journal.JournalSpec
 import com.typesafe.config.{ Config, ConfigFactory }
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import org.scalatest.{ Ignore, BeforeAndAfterAll, BeforeAndAfterEach }
 import slick.driver.JdbcProfile
 
 import scala.concurrent.duration._
@@ -73,4 +73,12 @@ class MySQLJournalSpec extends JdbcJournalSpec(ConfigFactory.load("mysql-applica
 
 class OracleJournalSpec extends JdbcJournalSpec(ConfigFactory.load("oracle-application.conf")) {
   dropCreate(Oracle())
+}
+
+/**
+ * Issue with h2 Long value: org.h2.jdbc.JdbcSQLException: Numeric value out of range: "9223372036854775807"
+ */
+@Ignore
+class H2JournalSpec extends JdbcJournalSpec(ConfigFactory.load("h2-inmemory-application.conf")) {
+  dropCreate(H2())
 }

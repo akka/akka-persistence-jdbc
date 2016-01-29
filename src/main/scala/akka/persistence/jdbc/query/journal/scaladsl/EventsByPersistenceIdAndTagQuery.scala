@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.query.journal
+package akka.persistence.jdbc.query.journal.scaladsl
 
 import akka.NotUsed
 import akka.persistence.query.EventEnvelope
 import akka.persistence.query.scaladsl.ReadJournal
 import akka.stream.scaladsl.Source
 
-trait CurrentEventsByPersistenceIdAndTagQuery extends ReadJournal {
+trait EventsByPersistenceIdAndTagQuery extends ReadJournal {
   /**
    * Query events that have a specific persistenceId/tag combination
+   * This is an optimization query as the database can filter out the
+   * events for a specific persistenceId
    */
-  def currentEventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, NotUsed]
+  def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, NotUsed]
 }

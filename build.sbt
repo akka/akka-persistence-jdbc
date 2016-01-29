@@ -18,7 +18,7 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.2.2"
+version := "2.2.3"
 
 scalaVersion := "2.11.7"
 
@@ -38,7 +38,6 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion % Test,
     "ch.qos.logback" % "logback-classic" % "1.1.2" % Test,
     "com.typesafe.akka" %% "akka-persistence-tck" % akkaVersion % Test,
-    "com.typesafe.akka" %% "akka-slf4j" % akkaVersion % Test,
     "org.postgresql" % "postgresql" % "9.4-1206-jdbc42" % Test,
     "mysql" % "mysql-connector-java" % "5.1.33" % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,

@@ -17,7 +17,7 @@ Please note that most of my projects run on [Postgresql](http://www.postgresql.o
 database available, with some great features, and it works great together with the JDBC plugin.
 
 ## New release
-The latest version is `v2.2.2` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The latest version is `v2.2.3` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -36,7 +36,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.2"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.3"
 ```
 
 ## Configuration
@@ -364,7 +364,7 @@ The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery`
 
 ```scala
 import akka.persistence.query.PersistenceQuery
-import akka.persistence.jdbc.query.journal.JdbcReadJournal
+import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
  
 val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 ```
@@ -374,9 +374,9 @@ The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery`
 
 ```java
 import akka.persistence.query.PersistenceQuery
-import akka.persistence.jdbc.query.journal.JavaDslJdbcReadJournal
+import akka.persistence.jdbc.query.journal.javadsl.JdbcReadJournal
 
-final JavaDslJdbcReadJournal readJournal = PersistenceQuery.get(system).getReadJournalFor(JavaDslJdbcReadJournal.class, JavaDslJdbcReadJournal.Identifier());
+final JdbcReadJournal readJournal = PersistenceQuery.get(system).getReadJournalFor(JdbcReadJournal.class, JdbcReadJournal.Identifier());
 ```
 
 ## Persistence Query
@@ -390,7 +390,7 @@ import akka.actor.ActorSystem
 import akka.stream.{Materializer, ActorMaterializer}
 import akka.stream.scaladsl.Source
 import akka.persistence.query.PersistenceQuery
-import akka.persistence.jdbc.query.journal.JdbcReadJournal
+import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
 
 implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
@@ -420,7 +420,7 @@ import akka.actor.ActorSystem
 import akka.stream.{Materializer, ActorMaterializer}
 import akka.stream.scaladsl.Source
 import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
-import akka.persistence.jdbc.query.journal.JdbcReadJournal
+import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
 
 implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
@@ -446,7 +446,7 @@ import akka.actor.ActorSystem
 import akka.stream.{Materializer, ActorMaterializer}
 import akka.stream.scaladsl.Source
 import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
-import akka.persistence.jdbc.query.journal.JdbcReadJournal
+import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
 
 implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
@@ -524,7 +524,7 @@ import akka.actor.ActorSystem
 import akka.stream.{Materializer, ActorMaterializer}
 import akka.stream.scaladsl.Source
 import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
-import akka.persistence.jdbc.query.journal.JdbcReadJournal
+import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
 
 implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
@@ -540,6 +540,11 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
+
+## 2.2.3 (2016-01-29)
+  - Refactored the akka-persistence-query package structure. It wasn't optimized for use with javadsl. Now the name of the ReadJournal is `JdbcReadJournal` for both Java and Scala, only the package name has been changed to reflect which language it is for. 
+  - __Scala:__ akka.persistence.jdbc.query.journal.`scaladsl`.JdbcReadJournal
+  - __Java:__ akka.persistence.jdbc.query.journal.`javadsl`.JdbcReadJournal
 
 ## 2.2.2 (2016-01-28)
   - Support for looking up DataSources using JNDI

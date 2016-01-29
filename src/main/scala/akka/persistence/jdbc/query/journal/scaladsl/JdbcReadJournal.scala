@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.query.journal
+package akka.persistence.jdbc.query.journal.scaladsl
 
 import akka.NotUsed
 import akka.actor.{ ExtendedActorSystem, Props }
 import akka.persistence.jdbc.dao.JournalDao
 import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DaoRepository }
+import akka.persistence.jdbc.query.journal.publisher.{ AllPersistenceIdsPublisher, EventsByPersistenceIdAndTagPublisher, EventsByPersistenceIdPublisher, EventsByTagPublisher }
 import akka.persistence.jdbc.serialization.{ AkkaSerializationProxy, SerializationFacade }
+import akka.persistence.query.EventEnvelope
 import akka.persistence.query.scaladsl._
-import akka.persistence.query.{ EventEnvelope, ReadJournalProvider }
 import akka.serialization.SerializationExtension
 import akka.stream.scaladsl.Source
 import akka.stream.{ ActorMaterializer, Materializer }
@@ -57,7 +58,7 @@ trait SlickReadJournal extends ReadJournal
 
   override def allPersistenceIds(): Source[String, NotUsed] =
     currentPersistenceIds()
-      .concat(Source.actorPublisher[String](Props(new AllPersistenceIdsPublisher(true))))
+      .concat(Source.actorPublisher[String](Props(classOf[AllPersistenceIdsPublisher])))
 
   override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     journalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, Long.MaxValue)
@@ -67,7 +68,7 @@ trait SlickReadJournal extends ReadJournal
 
   override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr)
-      .concat(Source.actorPublisher[EventEnvelope](Props(new EventsByPersistenceIdPublisher(persistenceId, true))))
+      .concat(Source.actorPublisher[EventEnvelope](Props(classOf[EventsByPersistenceIdPublisher], persistenceId)))
 
   override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     journalDao.eventsByTag(tag, offset)
@@ -76,7 +77,8 @@ trait SlickReadJournal extends ReadJournal
       .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
 
   override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    currentEventsByTag(tag, offset).concat(Source.actorPublisher[EventEnvelope](Props(new EventsByTagPublisher(tag, true))))
+    currentEventsByTag(tag, offset)
+      .concat(Source.actorPublisher[EventEnvelope](Props(classOf[EventsByTagPublisher], tag)))
 
   override def currentEventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     journalDao.eventsByPersistenceIdAndTag(persistenceId, tag, offset)
@@ -85,7 +87,8 @@ trait SlickReadJournal extends ReadJournal
       .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
 
   override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    currentEventsByPersistenceIdAndTag(persistenceId, tag, offset).concat(Source.actorPublisher[EventEnvelope](Props(new EventsByPersistenceIdAndTagPublisher(persistenceId, tag, true))))
+    currentEventsByPersistenceIdAndTag(persistenceId, tag, offset)
+      .concat(Source.actorPublisher[EventEnvelope](Props(classOf[EventsByPersistenceIdAndTagPublisher], persistenceId, tag)))
 }
 
 class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) extends SlickReadJournal {
@@ -102,10 +105,4 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   override val serializationFacade: SerializationFacade =
     new SerializationFacade(new AkkaSerializationProxy(SerializationExtension(system)),
       AkkaPersistenceConfig(system).persistenceQueryConfiguration.separator)
-}
-
-class JdbcReadJournalProvider(system: ExtendedActorSystem, config: Config) extends ReadJournalProvider {
-  override val scaladslReadJournal = new JdbcReadJournal(config)(system)
-
-  override val javadslReadJournal = new JavaDslJdbcReadJournal(scaladslReadJournal)
 }

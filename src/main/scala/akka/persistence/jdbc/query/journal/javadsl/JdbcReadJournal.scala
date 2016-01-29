@@ -14,26 +14,27 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.query.journal
+package akka.persistence.jdbc.query.journal.javadsl
 
 import akka.NotUsed
+import akka.persistence.jdbc.query.journal.scaladsl.{ JdbcReadJournal ⇒ ScalaJdbcReadJournal }
 import akka.persistence.query.EventEnvelope
 import akka.persistence.query.javadsl._
 import akka.stream.javadsl.Source
 
-object JavaDslJdbcReadJournal {
-  final val Identifier = JdbcReadJournal.Identifier
+object JdbcReadJournal {
+  final val Identifier = ScalaJdbcReadJournal.Identifier
 }
 
-class JavaDslJdbcReadJournal(journal: JdbcReadJournal) extends ReadJournal
+class JdbcReadJournal(journal: ScalaJdbcReadJournal) extends ReadJournal
     with CurrentPersistenceIdsQuery
     with AllPersistenceIdsQuery
     with CurrentEventsByPersistenceIdQuery
     with EventsByPersistenceIdQuery
     with CurrentEventsByTagQuery
     with EventsByTagQuery
-    with javadsl.CurrentEventsByPersistenceIdAndTagQuery
-    with javadsl.EventsByPersistenceIdAndTagQuery {
+    with CurrentEventsByPersistenceIdAndTagQuery
+    with EventsByPersistenceIdAndTagQuery {
 
   override def currentPersistenceIds(): Source[String, NotUsed] =
     journal.currentPersistenceIds().asJava

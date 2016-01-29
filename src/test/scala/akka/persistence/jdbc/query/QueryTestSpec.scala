@@ -16,19 +16,20 @@
 
 package akka.persistence.jdbc.query
 
-import akka.actor.{ ActorSystem, ActorRef, Props }
+import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.event.LoggingReceive
 import akka.persistence.PersistentActor
 import akka.persistence.jdbc.TestSpec
 import akka.persistence.jdbc.dao.JournalDao
-import akka.persistence.jdbc.extension.{ DaoRepository, SlickDatabase }
-import akka.persistence.jdbc.query.journal.{ JavaDslJdbcReadJournal, JdbcReadJournal }
+import akka.persistence.jdbc.extension.DaoRepository
+import akka.persistence.jdbc.query.journal.javadsl.{ JdbcReadJournal ⇒ JavaJdbcReadJournal }
+import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
 import akka.persistence.journal.Tagged
 import akka.persistence.query.{ EventEnvelope, PersistenceQuery }
 import akka.stream.Materializer
 import akka.stream.testkit.TestSubscriber
-import akka.stream.testkit.scaladsl.TestSink
 import akka.stream.testkit.javadsl.{ TestSink ⇒ JavaSink }
+import akka.stream.testkit.scaladsl.TestSink
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.duration.{ FiniteDuration, _ }
@@ -97,7 +98,7 @@ trait JavaDslJdbcReadJournalOperations extends ReadJournalOperations {
 
   implicit def mat: Materializer
 
-  lazy val readJournal = PersistenceQuery.get(system).getReadJournalFor(classOf[JavaDslJdbcReadJournal], JavaDslJdbcReadJournal.Identifier)
+  lazy val readJournal = PersistenceQuery.get(system).getReadJournalFor(classOf[JavaJdbcReadJournal], JavaJdbcReadJournal.Identifier)
 
   def withCurrentPersistenceIds(within: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit = {
     val tp = readJournal.currentPersistenceIds().runWith(JavaSink.probe(system), mat)

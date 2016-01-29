@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.query.journal
+package akka.persistence.jdbc.query.journal.publisher
 
 import akka.actor.{ ActorLogging, ActorRef }
 import akka.persistence.Persistence
 import akka.persistence.jdbc.journal.JdbcJournal
-import akka.persistence.query.EventEnvelope
 import akka.persistence.query.journal.leveldb.DeliveryBuffer
 import akka.stream.actor.ActorPublisher
 import akka.stream.actor.ActorPublisherMessage.{ Cancel, Request }
 
-class EventsByPersistenceIdAndTagPublisher(persistenceId: String, tag: String, liveQuery: Boolean)
-    extends ActorPublisher[EventEnvelope] with DeliveryBuffer[EventEnvelope] with ActorLogging {
+class AllPersistenceIdsPublisher extends ActorPublisher[String]
+    with DeliveryBuffer[String] with ActorLogging {
 
   val journal: ActorRef = Persistence(context.system).journalFor(JdbcJournal.Identifier)
 
@@ -33,22 +32,18 @@ class EventsByPersistenceIdAndTagPublisher(persistenceId: String, tag: String, l
 
   def init: Receive = {
     case _: Request ⇒
-      journal ! JdbcJournal.EventsByPersistenceIdAndTagRequest(persistenceId, tag)
+      journal ! JdbcJournal.AllPersistenceIdsRequest
       context.become(active)
     case Cancel ⇒ context.stop(self)
   }
 
   def active: Receive = {
-    case JdbcJournal.EventAppended(envelope) ⇒
-      if (liveQuery) {
-        buf :+= envelope
-        deliverBuf()
-      }
+    case JdbcJournal.PersistenceIdAdded(persistenceId) ⇒
+      buf :+= persistenceId
+      deliverBuf()
 
     case _: Request ⇒
       deliverBuf()
-      if (!liveQuery && buf.isEmpty)
-        onCompleteThenStop()
 
     case Cancel ⇒ context.stop(self)
   }

@@ -6,16 +6,16 @@ Service | Status | Description
 License | [![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt) | Apache 2.0
 Bintray | [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-persistence-jdbc/images/download.svg) ](https://bintray.com/dnvriend/maven/akka-persistence-jdbc/_latestVersion) | Latest Version on Bintray
 
-## Commercial notice
-Please note that the `akka persistence JDBC plugin` uses the Commercial [Typesafe Slick Extensions](http://slick.typesafe.com/doc/3.1.1/extensions.html).
-When you use the `akka persistence plugin` together with either the `Oracle`, `IBM DB2` or `Microsoft SQL Server` database, for use
-other than for development and testing purposes, then you need a commercial Typesafe subscription under the terms and conditions of the 
-[Typesafe Subscription Agreement (PDF)](http://typesafe.com/public/legal/TypesafeSubscriptionAgreement.pdf). 
-A subscription is required for production use, please see http://typesafe.com/how/subscription for details. 
+## Slick Extensions Licensing Changing to Open Source
+The [Typesafe Slick Extensions](http://slick.typesafe.com/doc/3.1.1/extensions.html) have become [open source as 
+of 1 februari 2016 as can read from the slick new website](http://slick.typesafe.com/news/2016/02/01/slick-extensions-licensing-change.html),
+this means that you can use akka-persistence-jdbc with no commercial license from Typesafe when used with `Oracle`, `IBM DB2` or 
+`Microsoft SQL Server`. Thanks [Typesafe](https://www.typesafe.com/)! Of course you will neem a commercial license from
+your database vendor. 
 
-Please note that most of my projects run on [Postgresql](http://www.postgresql.org/), which is the most advanced open source
-database available, with some great features, and it works great together with the JDBC plugin.
-
+Alternatively you can opt to use [Postgresql](http://www.postgresql.org/), which is the most advanced open source database 
+available, with some great features, and it works great together with akka-persistence-jdbc.
+                                 
 ## New release
 The latest version is `v2.2.3` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 

@@ -541,6 +541,10 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
 
+## 2.2.4 (2016-02-08)
+  - Compatibility with Akka 2.4.2-RC2
+  - Refactored the akka-persistence-query extension interfaces to its own jar: `"com.github.dnvriend" %% "akka-persistence-jdbc-query" % "1.0.0"`
+  
 ## 2.2.3 (2016-01-29)
   - Refactored the akka-persistence-query package structure. It wasn't optimized for use with javadsl. Now the name of the ReadJournal is `JdbcReadJournal` for both Java and Scala, only the package name has been changed to reflect which language it is for. 
   - __Scala:__ akka.persistence.jdbc.query.journal.`scaladsl`.JdbcReadJournal

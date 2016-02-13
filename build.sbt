@@ -18,7 +18,7 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.2.5"
+version := "2.2.6"
 
 scalaVersion := "2.11.7"
 
@@ -31,7 +31,7 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
     "com.typesafe.akka" %% "akka-persistence-query-experimental" % akkaVersion,
-    "com.github.dnvriend" %% "akka-persistence-jdbc-query" % "1.0.0",
+    "com.github.dnvriend" %% "akka-persistence-jdbc-query" % "1.0.1",
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.slick" %% "slick" % slickVersion,
     "com.typesafe.slick" %% "slick-extensions" % "3.1.0",

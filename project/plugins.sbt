@@ -28,6 +28,3 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-scalariform" % "1.3.0")
 
 // enable updating file headers eg. for copyright
 addSbtPlugin("de.heikoseeberger" % "sbt-header" % "1.5.0")
-
-// decode scala errors to human readable form
-addSbtPlugin("com.softwaremill.clippy" % "plugin-sbt" % "0.1")

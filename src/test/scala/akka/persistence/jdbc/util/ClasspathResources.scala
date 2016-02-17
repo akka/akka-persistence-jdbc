@@ -19,7 +19,7 @@ package akka.persistence.jdbc.util
 import java.io.InputStream
 
 import akka.NotUsed
-import akka.stream.io.IOResult
+import akka.stream.IOResult
 import akka.stream.scaladsl.{ Source, StreamConverters }
 import akka.util.ByteString
 

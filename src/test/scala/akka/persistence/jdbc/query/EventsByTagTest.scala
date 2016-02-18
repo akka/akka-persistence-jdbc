@@ -22,7 +22,7 @@ import scala.concurrent.duration._
 
 abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
   it should "not find events for unknown tags" in {
-    withTestActors { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) ⇒
       actor1 ! withTags(1, "one")
       actor1 ! withTags(2, "two")
       actor1 ! withTags(3, "three")
@@ -41,7 +41,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
   }
 
   it should "persist and find tagged event for one tag" in {
-    withTestActors { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) ⇒
       withEventsByTag(10.seconds)("one", 0) { tp ⇒
         tp.request(Int.MaxValue)
         tp.expectNoMsg(100.millis)
@@ -84,7 +84,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
   }
 
   it should "persist and find tagged events when stored with multiple tags" in {
-    withTestActors { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) ⇒
       actor1 ! withTags(1, "one", "1", "prime")
       actor1 ! withTags(2, "two", "2", "prime")
       actor1 ! withTags(3, "three", "3", "prime")
@@ -183,6 +183,8 @@ class OracleScalaEventByTagTest extends EventsByTagTest("oracle-application.conf
     clearOracle()
 }
 
+class InMemoryScalaEventsByTagTest extends EventsByTagTest("in-memory-application.conf") with ScalaJdbcReadJournalOperations
+
 class PostgresJavaEventsByTagTest extends EventsByTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
   dropCreate(Postgres())
 }
@@ -200,3 +202,5 @@ class OracleJavaEventByTagTest extends EventsByTagTest("oracle-application.conf"
   override protected def afterAll(): Unit =
     clearOracle()
 }
+
+class InMemoryJavaEventsByTagTest extends EventsByTagTest("in-memory-application.conf") with JavaDslJdbcReadJournalOperations

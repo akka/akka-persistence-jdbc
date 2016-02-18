@@ -21,7 +21,8 @@ import akka.event.LoggingReceive
 import akka.persistence.PersistentActor
 import akka.persistence.jdbc.TestSpec
 import akka.persistence.jdbc.dao.JournalDao
-import akka.persistence.jdbc.extension.DaoRepository
+import akka.persistence.jdbc.dao.inmemory.InMemoryJournalStorage.Clear
+import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DaoRepository }
 import akka.persistence.jdbc.query.journal.javadsl.{ JdbcReadJournal ⇒ JavaJdbcReadJournal }
 import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
 import akka.persistence.journal.Tagged
@@ -31,6 +32,7 @@ import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.javadsl.{ TestSink ⇒ JavaSink }
 import akka.stream.testkit.scaladsl.TestSink
 import slick.driver.PostgresDriver.api._
+import akka.pattern.ask
 
 import scala.concurrent.duration.{ FiniteDuration, _ }
 
@@ -184,8 +186,8 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJ
     system.actorOf(Props(new TestActor(persistenceId)))
   }
 
-  def withTestActors(f: (ActorRef, ActorRef, ActorRef) ⇒ Unit): Unit = {
-    f(setupEmpty(1), setupEmpty(2), setupEmpty(3))
+  def withTestActors(seq: Int = 0)(f: (ActorRef, ActorRef, ActorRef) ⇒ Unit): Unit = {
+    f(setupEmpty(1 + seq), setupEmpty(2 + seq), setupEmpty(3 + seq))
   }
 
   def withTags(payload: Any, tags: String*) = Tagged(payload, Set(tags: _*))
@@ -208,10 +210,14 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJ
   def clearOracle(): Unit =
     withDatabase(_.run(actionsClearOracle).toTry) should be a 'success
 
+  def clearInMemoryJournal(): Unit =
+    (DaoRepository(system).journalStorage ? Clear).toTry should be a 'success
+
   protected override def beforeEach(): Unit =
-    clearPostgres()
+    if (AkkaPersistenceConfig(system).inMemory) clearInMemoryJournal()
+    else clearPostgres()
 
   override protected def afterAll(): Unit =
-    clearPostgres()
-
+    if (AkkaPersistenceConfig(system).inMemory) clearInMemoryJournal()
+    else clearPostgres()
 }

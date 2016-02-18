@@ -124,30 +124,42 @@ trait AkkaPersistenceConfig {
   def deletedToTableConfiguration: DeletedToTableConfiguration
 
   def snapshotTableConfiguration: SnapshotTableConfiguration
+
+  def inMemory: Boolean
 }
 
 class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) extends AkkaPersistenceConfig with Extension {
   val log: LoggingAdapter = Logging(system, this.getClass)
 
   override val slickConfiguration: SlickConfiguration =
-    SlickConfiguration(system.settings.config)
+    if(inMemory) SlickConfiguration("", None)
+    else SlickConfiguration(system.settings.config)
 
   override val persistenceQueryConfiguration: PersistenceQueryConfiguration =
-    PersistenceQueryConfiguration(system.settings.config)
+    if(inMemory) PersistenceQueryConfiguration("")
+    else PersistenceQueryConfiguration(system.settings.config)
 
   override def journalTableConfiguration: JournalTableConfiguration =
-    JournalTableConfiguration(system.settings.config)
+  if(inMemory) JournalTableConfiguration("", None, JournalTableColumnNames("", "", "", "", ""))
+  else JournalTableConfiguration(system.settings.config)
 
   override def deletedToTableConfiguration: DeletedToTableConfiguration =
-    DeletedToTableConfiguration(system.settings.config)
+    if(inMemory) DeletedToTableConfiguration("", None, DeletedToTableColumnNames("", ""))
+    else DeletedToTableConfiguration(system.settings.config)
 
   override def snapshotTableConfiguration: SnapshotTableConfiguration =
-    SnapshotTableConfiguration(system.settings.config)
+    if(inMemory) SnapshotTableConfiguration("", None, SnapshotTableColumnNames("", "", "", ""))
+    else SnapshotTableConfiguration(system.settings.config)
+
+  override def inMemory: Boolean =
+    system.settings.config.getBoolean("akka-persistence-jdbc.inMemory")
 
   def debugInfo: String =
     s"""
        | ====================================
        | Akka Persistence JDBC Configuration:
+       | ====================================
+       | InMemory mode: $inMemory
        | ====================================
        | $slickConfiguration
        | ====================================

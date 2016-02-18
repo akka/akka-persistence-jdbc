@@ -22,7 +22,7 @@ import akka.persistence.query.EventEnvelope
 abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config) {
 
   it should "not find an event by tag for unknown tag" in {
-    withTestActors { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) ⇒
       actor1 ! withTags(1, "one")
       actor1 ! withTags(2, "two")
       actor1 ! withTags(3, "three")
@@ -39,7 +39,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
   }
 
   it should "persist and find a tagged event with one tag" in
-    withTestActors { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) ⇒
       withClue("Persisting a tagged event") {
         actor1 ! withTags(1, "one")
         eventually {
@@ -69,7 +69,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
     }
 
   it should "persist and find a tagged event with multiple tags" in
-    withTestActors { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) ⇒
       withClue("Persisting multiple tagged events") {
         actor1 ! withTags(1, "one", "1", "prime")
         actor1 ! withTags(2, "two", "2", "prime")
@@ -151,6 +151,8 @@ class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-a
     clearOracle()
 }
 
+class InMemoryScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("in-memory-application.conf") with ScalaJdbcReadJournalOperations
+
 class PostgresJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
   dropCreate(Postgres())
 }
@@ -168,3 +170,5 @@ class OracleJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-ap
   override protected def afterAll(): Unit =
     clearOracle()
 }
+
+class InMemoryJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("in-memory-application.conf") with JavaDslJdbcReadJournalOperations

@@ -18,7 +18,7 @@ package akka.persistence.jdbc.dao
 
 import akka.NotUsed
 import akka.persistence.jdbc.dao.JournalTables.{ JournalDeletedToRow, JournalRow }
-import akka.persistence.jdbc.extension.{ DeletedToTableConfiguration, JournalTableConfiguration }
+import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DeletedToTableConfiguration, JournalTableConfiguration }
 import akka.persistence.jdbc.serialization.Serialized
 import akka.persistence.jdbc.util.SlickDriver
 import akka.stream.scaladsl._
@@ -122,7 +122,7 @@ class SlickJournalDaoQueries(val profile: JdbcProfile, override val journalTable
   import profile.api._
 
   def writeList(xs: Iterable[Serialized]) =
-    JournalTable ++= xs.map(ser ⇒ JournalRow(ser.persistenceId, ser.sequenceNr, ser.serialized.array(), ser.created, ser.tags))
+    JournalTable ++= xs.map(ser ⇒ JournalRow(ser.persistenceId, ser.sequenceNr, ser.serialized, ser.created, ser.tags))
 
   def insertDeletedTo(persistenceId: String, highestSequenceNr: Option[Long]) =
     DeletedToTable += JournalDeletedToRow(persistenceId, highestSequenceNr.getOrElse(0L))

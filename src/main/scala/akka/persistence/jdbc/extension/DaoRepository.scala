@@ -16,10 +16,12 @@
 
 package akka.persistence.jdbc.extension
 
-import akka.actor.{ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
+import akka.actor._
 import akka.event.{Logging, LoggingAdapter}
+import akka.persistence.jdbc.dao.inmemory.{InMemoryJournalDao, InMemoryJournalStorage, InMemorySnapshotDao, InMemorySnapshotStorage}
 import akka.persistence.jdbc.dao.{JournalDao, SnapshotDao}
 import akka.stream.{ActorMaterializer, Materializer}
+import akka.util.Timeout
 
 import scala.concurrent.ExecutionContext
 
@@ -42,18 +44,36 @@ class DaoRepositoryImpl()(implicit val system: ExtendedActorSystem) extends DaoR
 
   val log: LoggingAdapter = Logging(system, this.getClass)
 
-  override val journalDao: JournalDao =
-    JournalDao(
-      AkkaPersistenceConfig(system).slickConfiguration.slickDriver,
-      SlickDatabase(system).db,
-      AkkaPersistenceConfig(system).journalTableConfiguration,
-      AkkaPersistenceConfig(system).deletedToTableConfiguration
-    )
+  lazy val journalStorage = system.actorOf(Props(new InMemoryJournalStorage), "InMemoryJournalStorage")
 
-  override val snapshotDao: SnapshotDao =
-    SnapshotDao(
-      AkkaPersistenceConfig(system).slickConfiguration.slickDriver,
-      SlickDatabase(system).db,
-      AkkaPersistenceConfig(system).snapshotTableConfiguration
-    )
+  lazy val snapshotStorage = system.actorOf(Props(new InMemorySnapshotStorage), "InMemorySnapshotStorage")
+
+  override def journalDao: JournalDao =
+    if(AkkaPersistenceConfig(system).inMemory) {
+      import scala.concurrent.duration._
+      implicit val timeout = Timeout(5.seconds)
+      InMemoryJournalDao(journalStorage)
+    }
+    else {
+      JournalDao(
+        AkkaPersistenceConfig(system).slickConfiguration.slickDriver,
+        SlickDatabase(system).db,
+        AkkaPersistenceConfig(system).journalTableConfiguration,
+        AkkaPersistenceConfig(system).deletedToTableConfiguration
+      )
+    }
+
+  override def snapshotDao: SnapshotDao =
+    if(AkkaPersistenceConfig(system).inMemory) {
+      import scala.concurrent.duration._
+      implicit val timeout = Timeout(5.seconds)
+      InMemorySnapshotDao(snapshotStorage)
+    }
+    else {
+      SnapshotDao(
+        AkkaPersistenceConfig(system).slickConfiguration.slickDriver,
+        SlickDatabase(system).db,
+        AkkaPersistenceConfig(system).snapshotTableConfiguration
+      )
+    }
 }

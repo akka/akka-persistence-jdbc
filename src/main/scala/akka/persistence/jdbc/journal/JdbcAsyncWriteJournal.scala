@@ -34,5 +34,9 @@ class JdbcAsyncWriteJournal extends SlickAsyncWriteJournal {
   override val journalDao: JournalDao = DaoRepository(system).journalDao
 
   override val serializationFacade: SerializationFacade =
-    SerializationFacade(system, AkkaPersistenceConfig(context.system).persistenceQueryConfiguration.separator)
+    SerializationFacade(system, separatorChar)
+
+  def separatorChar: String =
+    Option(AkkaPersistenceConfig(context.system).persistenceQueryConfiguration.separator).filterNot(_.isEmpty)
+      .getOrElse(",")
 }

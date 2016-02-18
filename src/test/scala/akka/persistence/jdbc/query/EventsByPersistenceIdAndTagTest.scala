@@ -24,7 +24,7 @@ import scala.concurrent.duration._
 abstract class EventsByPersistenceIdAndTagTest(config: String) extends QueryTestSpec(config) {
 
   it should "not find events for unknown tags" in
-    withTestActors { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) ⇒
       actor1 ! withTags(1, "one")
       actor1 ! withTags(2, "two")
       actor1 ! withTags(3, "three")
@@ -42,7 +42,7 @@ abstract class EventsByPersistenceIdAndTagTest(config: String) extends QueryTest
     }
 
   it should "persist and find tagged event for by tag 'one' and pid 'my-1'" in
-    withTestActors { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) ⇒
       withEventsByPersistenceIdAndTag(10.seconds)("my-1", "one", 0) { tp ⇒
         tp.request(Int.MaxValue)
         tp.expectNoMsg(100.millis)
@@ -100,6 +100,8 @@ class OracleScalaEventsByPersistenceIdAndTagTest extends EventsByPersistenceIdAn
     clearOracle()
 }
 
+class InMemoryScalaEventsByPersistenceIdAndTagTest extends EventsByPersistenceIdAndTagTest("in-memory-application.conf") with ScalaJdbcReadJournalOperations
+
 class PostgresJavaEventsByPersistenceIdAndTagTest extends EventsByPersistenceIdAndTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
   dropCreate(Postgres())
 }
@@ -117,3 +119,5 @@ class OracleJavaEventsByPersistenceIdAndTagTest extends EventsByPersistenceIdAnd
   override protected def afterAll(): Unit =
     clearOracle()
 }
+
+class InMemoryJavaEventsByPersistenceIdAndTagTest extends EventsByPersistenceIdAndTagTest("in-memory-application.conf") with JavaDslJdbcReadJournalOperations

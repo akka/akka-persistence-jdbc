@@ -38,5 +38,7 @@ object SlickDriver {
       com.typesafe.slick.driver.db2.DB2Driver
     case "com.typesafe.slick.driver.ms.SQLServerDriver" ⇒
       com.typesafe.slick.driver.ms.SQLServerDriver
+    case _ ⇒
+      slick.driver.PostgresDriver
   }
 }

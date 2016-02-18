@@ -28,7 +28,7 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
     }
 
   it should "find events for actors" in
-    withTestActors { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) ⇒
       actor1 ! 1
       actor1 ! 2
       actor1 ! 3
@@ -85,6 +85,8 @@ class OracleScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersist
     clearOracle()
 }
 
+class InMemoryScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("in-memory-application.conf") with ScalaJdbcReadJournalOperations
+
 class PostgresJavaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
   dropCreate(Postgres())
 }
@@ -102,3 +104,5 @@ class OracleJavaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersiste
   override protected def afterAll(): Unit =
     clearOracle()
 }
+
+class InMemoryJavaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("in-memory-application.conf") with JavaDslJdbcReadJournalOperations

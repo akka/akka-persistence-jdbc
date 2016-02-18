@@ -28,7 +28,7 @@ import akka.stream.scaladsl.Flow
 import scala.compat.Platform
 import scala.util.{ Failure, Success, Try }
 
-case class Serialized(persistenceId: String, sequenceNr: Long, serialized: ByteBuffer, tags: Option[String] = None, created: Long = Platform.currentTime)
+case class Serialized(persistenceId: String, sequenceNr: Long, serialized: Array[Byte], tags: Option[String] = None, created: Long = Platform.currentTime)
 
 trait SerializationProxy {
   def serialize(o: AnyRef): Try[Array[Byte]]
@@ -90,7 +90,7 @@ class SerializationFacade(proxy: SerializationProxy, separator: String) {
   private def serializeAtomicWrite(atomicWrite: AtomicWrite): Try[Iterable[Serialized]] = {
     def serializeARepr(repr: PersistentRepr, tags: Set[String] = Set.empty[String]): Try[Serialized] = for {
       byteArray ← proxy.serialize(repr)
-    } yield Serialized(repr.persistenceId, repr.sequenceNr, ByteBuffer.wrap(byteArray), encodeTags(tags, separator))
+    } yield Serialized(repr.persistenceId, repr.sequenceNr, byteArray, encodeTags(tags, separator))
 
     def serializeTaggedOrRepr(repr: PersistentRepr): Try[Serialized] = repr.payload match {
       case Tagged(payload, tags) ⇒

@@ -33,7 +33,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
   }
 
   it should "find events for actor with pid 'my-1'" in {
-    withTestActors { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) ⇒
       withEventsByPersistenceId(500.millis)("my-1", 0, Long.MaxValue) { tp ⇒
         tp.request(10)
         tp.expectNoMsg(100.millis)
@@ -53,7 +53,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
   }
 
   it should "find events for actor with pid 'my-1' and persisting messages to other actor" in {
-    withTestActors { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) ⇒
       withEventsByPersistenceId(500.millis)("my-1", 0, Long.MaxValue) { tp ⇒
         tp.request(10)
         tp.expectNoMsg(100.millis)
@@ -78,7 +78,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
   }
 
   it should "find events for actor with pid 'my-2'" in {
-    withTestActors { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) ⇒
       actor2 ! 1
       actor2 ! 2
       actor2 ! 3
@@ -132,6 +132,8 @@ class OracleScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("or
     clearOracle()
 }
 
+class InMemoryScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("in-memory-application.conf") with ScalaJdbcReadJournalOperations
+
 class PostgresJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
   dropCreate(Postgres())
 }
@@ -149,3 +151,5 @@ class OracleJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("ora
   override protected def afterAll(): Unit =
     clearOracle()
 }
+
+class InMemoryJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("in-memory-application.conf") with JavaDslJdbcReadJournalOperations

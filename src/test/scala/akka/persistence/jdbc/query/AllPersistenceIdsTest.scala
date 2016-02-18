@@ -30,7 +30,7 @@ abstract class AllPersistenceIdsTest(config: String) extends QueryTestSpec(confi
     }
 
   it should "find persistenceIds for actors" in
-    withTestActors { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) ⇒
       withAllPersistenceIds(within = 1.second) { tp ⇒
         tp.request(10)
         tp.expectNoMsg(100.millis)
@@ -80,6 +80,8 @@ class OracleScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("oracle-app
     clearOracle()
 }
 
+class InMemoryScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("in-memory-application.conf") with ScalaJdbcReadJournalOperations
+
 class PostgresJavaAllPersistenceIdsTest extends AllPersistenceIdsTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
   dropCreate(Postgres())
 }
@@ -97,3 +99,6 @@ class OracleJavaAllPersistenceIdsTest extends AllPersistenceIdsTest("oracle-appl
   override protected def afterAll(): Unit =
     clearOracle()
 }
+
+class InMemoryJavaAllPersistenceIdsTest extends AllPersistenceIdsTest("in-memory-application.conf") with JavaDslJdbcReadJournalOperations
+

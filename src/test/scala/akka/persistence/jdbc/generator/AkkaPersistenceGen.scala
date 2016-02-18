@@ -38,7 +38,7 @@ object AkkaPersistenceGen {
 
   val genByteBuff = for {
     bytes ← genBytes
-  } yield ByteBuffer.wrap(bytes)
+  } yield bytes
 
   val genSeqNum = Gen.choose(0, Int.MaxValue)
 

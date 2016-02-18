@@ -57,3 +57,5 @@ class MySQLSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("m
 class OracleSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("oracle-application.conf")) {
   dropCreate(Oracle())
 }
+
+class InMemorySnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("in-memory-application.conf"))

@@ -17,7 +17,7 @@ Alternatively you can opt to use [Postgresql](http://www.postgresql.org/), which
 available, with some great features, and it works great together with akka-persistence-jdbc.
                                  
 ## New release
-The latest version is `v2.2.7` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The latest version is `v2.2.8` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -36,7 +36,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.7"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.8"
 ```
 
 ## Configuration
@@ -359,6 +359,19 @@ CREATE TABLE "snapshot" (
 );
 ```
 
+## InMemory Configuration
+The akka-persistence-jdbc also has an in-memory storage option. For practical reasons, ie. the plugin may already 
+be on the classpath. This is useful for testing. I would advice not to use it in production systems, because it 
+uses memory, and the data is persisted in volatile memory, which means that after a JVM restart, all data is lost.
+
+Add to following to enable the in-memory option:
+
+```scala
+akka-persistence-jdbc {
+  inMemory = true
+}
+```
+
 ## How to get the ReadJournal using Scala
 The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery` extension:
 
@@ -540,6 +553,9 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
+
+## 2.2.8 (2016-02-18)
+  - Added InMemory option for journal and snapshot storage, for testing
 
 ## 2.2.7 (2016-02-17)
   - Akka 2.4.2-RC3 -> 2.4.2

@@ -22,7 +22,8 @@ The latest version is `v2.2.8` and breaks backwards compatibility with `v1.x.x` 
 - It uses [Typesafe Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
   - Uses HikariCP for the connection pool,
-  - It has been tested against Postgres, MySQL and Oracle only.
+  - It has been tested against Postgres, MySQL and Oracle only,
+  - It has an option to store journal and snapshot entries in memory, which is useful for testing,
   - It uses a new database schema, dropping some columns and changing the column types,
   - It writes the journal and snapshot entries as byte arrays,
 - It relies on [Akka Serialization](http://doc.akka.io/docs/akka/2.4.1/scala/serialization.html),

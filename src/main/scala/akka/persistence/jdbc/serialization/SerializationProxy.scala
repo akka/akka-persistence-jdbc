@@ -66,7 +66,6 @@ class AkkaSerializationProxy(serialization: Serialization) extends Serialization
  * see: http://doc.akka.io/docs/akka/2.4.1/scala/persistence-schema-evolution.html
  *
  */
-
 object SerializationFacade {
   def apply(system: ActorSystem, separatorChar: String): SerializationFacade =
     new SerializationFacade(new AkkaSerializationProxy(SerializationExtension(system)), separatorChar)

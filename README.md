@@ -363,12 +363,21 @@ CREATE TABLE "snapshot" (
 The akka-persistence-jdbc also has an in-memory storage option. For practical reasons, ie. the plugin may already 
 be on the classpath. This is useful for testing. I would advice not to use it in production systems, because it 
 uses memory, and the data is persisted in volatile memory, which means that after a JVM restart, all data is lost.
+By default the in-memory option is disabled.
 
-Add to following to enable the in-memory option:
+Add the following to `application.conf` enable the in-memory option:
 
 ```scala
 akka-persistence-jdbc {
   inMemory = true
+}
+```
+
+To disable the in-memory option:
+
+```scala
+akka-persistence-jdbc {
+  inMemory = false
 }
 ```
 

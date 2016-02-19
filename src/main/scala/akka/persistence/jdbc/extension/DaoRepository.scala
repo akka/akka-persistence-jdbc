@@ -51,7 +51,7 @@ class DaoRepositoryImpl()(implicit val system: ExtendedActorSystem) extends DaoR
   override def journalDao: JournalDao =
     if(AkkaPersistenceConfig(system).inMemory) {
       import scala.concurrent.duration._
-      implicit val timeout = Timeout(5.seconds)
+      implicit val timeout = Timeout(AkkaPersistenceConfig(system).inMemoryTimeout)
       InMemoryJournalDao(journalStorage)
     }
     else {

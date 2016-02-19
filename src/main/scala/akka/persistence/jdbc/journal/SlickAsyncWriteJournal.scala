@@ -55,24 +55,28 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal
 
   def serializationFacade: SerializationFacade
 
-  override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] = {
-    val persistenceIdsInNewSetOfAtomicWrites = messages.map(_.persistenceId).toList
-    for {
-      xs ← if (hasAllPersistenceIdsSubscribers)
-        journalDao.persistenceIds(persistenceIdsInNewSetOfAtomicWrites)
-          .map(persistenceIdsInNewSetOfAtomicWrites.diff(_))
-      else Future.successful(List.empty[String])
-      xy ← Source.fromIterator(() ⇒ messages.iterator)
-        .via(serializationFacade.serialize)
-        .via(journalDao.writeFlow)
-        .via(addAllPersistenceIdsFlow(xs))
-        .via(eventsByPersistenceIdFlow(messages))
-        .via(eventsByTagFlow(messages))
-        .via(eventsByPersistenceIdAndTagFlow(messages))
-        .map(_.map(_ ⇒ ()))
-        .runFold(List.empty[Try[Unit]])(_ :+ _)
-    } yield xy
-  }
+  /**
+   * Returns the list of persistenceIds that are not yet persisted
+   */
+  def determinePersistenceIdsNotInJournal(persistenceIdsInNewSetOfAtomicWrites: Seq[String]): Future[Seq[String]] =
+    if (hasAllPersistenceIdsSubscribers)
+      journalDao.persistenceIds(persistenceIdsInNewSetOfAtomicWrites)
+        .map(persistenceIdsInNewSetOfAtomicWrites.diff(_))
+    else Future.successful(Seq.empty[String])
+
+  override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] = for {
+    persistenceIdsInNewSetOfAtomicWrites ← Future.successful(messages.map(_.persistenceId))
+    persistenceIdsNotInJournal ← determinePersistenceIdsNotInJournal(persistenceIdsInNewSetOfAtomicWrites)
+    persistAtomicWritesResult ← Source(messages)
+      .via(serializationFacade.serialize)
+      .via(journalDao.writeFlow)
+      .via(addAllPersistenceIdsFlow(persistenceIdsNotInJournal))
+      .via(eventsByPersistenceIdFlow(messages))
+      .via(eventsByTagFlow(messages))
+      .via(eventsByPersistenceIdAndTagFlow(messages))
+      .map(_.map(_ ⇒ ()))
+      .runFold(List.empty[Try[Unit]])(_ :+ _)
+  } yield persistAtomicWritesResult
 
   override def asyncDeleteMessagesTo(persistenceId: String, toSequenceNr: Long): Future[Unit] =
     journalDao.delete(persistenceId, toSequenceNr)
@@ -96,7 +100,8 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal
   }
 
   override def receivePluginInternal: Receive =
-    handleTerminated.orElse(receiveAllPersistenceIdsSubscriber)
+    handleTerminated
+      .orElse(receiveAllPersistenceIdsSubscriber)
       .orElse(receiveEventsByPersistenceIdRegistry)
       .orElse(receiveEventsByTagRegistry)
       .orElse(receiveEventsByPersistenceIdAndTagRegistry)

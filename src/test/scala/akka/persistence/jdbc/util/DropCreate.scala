@@ -66,7 +66,6 @@ trait DropCreate extends ClasspathResources {
       if trimmedLine.nonEmpty
     } yield trimmedLine
   } withStatement { stmt ⇒
-    println(query)
     Try(stmt.executeUpdate(query)).recover {
       case t: Throwable ⇒
         t.printStackTrace()

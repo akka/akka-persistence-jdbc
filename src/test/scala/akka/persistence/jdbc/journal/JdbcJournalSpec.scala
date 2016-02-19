@@ -76,11 +76,3 @@ class OracleJournalSpec extends JdbcJournalSpec(ConfigFactory.load("oracle-appli
 }
 
 class InMemoryJournalSpec extends JdbcJournalSpec(ConfigFactory.load("in-memory-application.conf"))
-
-/**
- * Issue with h2 Long value: org.h2.jdbc.JdbcSQLException: Numeric value out of range: "9223372036854775807"
- */
-@Ignore
-class H2JournalSpec extends JdbcJournalSpec(ConfigFactory.load("h2-inmemory-application.conf")) {
-  dropCreate(H2())
-}

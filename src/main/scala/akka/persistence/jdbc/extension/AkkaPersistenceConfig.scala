@@ -16,10 +16,14 @@
 
 package akka.persistence.jdbc.extension
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.{ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
 import akka.event.{Logging, LoggingAdapter}
 import akka.persistence.jdbc.util.ConfigOps._
 import com.typesafe.config.Config
+
+import scala.concurrent.duration.FiniteDuration
 
 object AkkaPersistenceConfig extends ExtensionId[AkkaPersistenceConfigImpl] with ExtensionIdProvider {
   override def createExtension(system: ExtendedActorSystem): AkkaPersistenceConfigImpl = new AkkaPersistenceConfigImpl()(system)
@@ -126,6 +130,8 @@ trait AkkaPersistenceConfig {
   def snapshotTableConfiguration: SnapshotTableConfiguration
 
   def inMemory: Boolean
+
+  def inMemoryTimeout: FiniteDuration
 }
 
 class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) extends AkkaPersistenceConfig with Extension {
@@ -153,6 +159,9 @@ class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) exte
 
   override def inMemory: Boolean =
     system.settings.config.getBoolean("akka-persistence-jdbc.inMemory")
+
+  override def inMemoryTimeout: FiniteDuration =
+    FiniteDuration(system.settings.config.getDuration("akka-persistence-jdbc.inMemoryTimeout", TimeUnit.SECONDS), TimeUnit.SECONDS)
 
   def debugInfo: String =
     s"""

@@ -60,7 +60,7 @@ trait AllPersistenceIdsSubscriberRegistry { _: SlickAsyncWriteJournal ⇒
       removeAllPersistenceIdsSubscriber(ref)
   }
 
-  protected def addAllPersistenceIdsFlow(persistenceIdsNotInJournal: List[String]): Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], NotUsed] =
+  protected def addAllPersistenceIdsFlow(persistenceIdsNotInJournal: Seq[String]): Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], NotUsed] =
     Flow[Try[Iterable[Serialized]]].map { atomicWriteResult ⇒
       if (hasAllPersistenceIdsSubscribers) {
         for {

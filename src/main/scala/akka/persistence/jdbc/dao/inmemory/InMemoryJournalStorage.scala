@@ -178,6 +178,6 @@ class InMemoryJournalStorage extends Actor with ActorLogging {
     case Delete(persistenceId, toSequenceNr)                        ⇒ delete(sender(), persistenceId, toSequenceNr)
     case Messages(persistenceId, fromSequenceNr, toSequenceNr, max) ⇒ messages(sender(), persistenceId, fromSequenceNr, toSequenceNr, max)
     case Clear                                                      ⇒ clear(sender())
-    case msg                                                        ⇒ println("--> Dropping msg: " + msg.getClass.getName)
+    case msg                                                        ⇒ log.warning("--> Dropping msg: " + msg.getClass.getName)
   }
 }

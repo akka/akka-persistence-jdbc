@@ -18,7 +18,7 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.2.8"
+version := "2.2.9"
 
 scalaVersion := "2.11.7"
 
@@ -74,4 +74,9 @@ headers := Map(
   "conf" -> Apache2_0("2016", "Dennis Vriend", "#")
 )
 
-enablePlugins(AutomateHeaderPlugin)
+// build info configuration //
+buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
+
+buildInfoPackage := "akka.persistence.jdbc"
+
+enablePlugins(AutomateHeaderPlugin, BuildInfoPlugin)

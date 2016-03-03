@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
 import akka.event.{Logging, LoggingAdapter}
+import akka.persistence.jdbc.BuildInfo
 import akka.persistence.jdbc.util.ConfigOps._
 import com.typesafe.config.Config
 
@@ -168,17 +169,36 @@ class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) exte
        | ====================================
        | Akka Persistence JDBC Configuration:
        | ====================================
-       | InMemory mode: $inMemory
+       | Version: ${BuildInfo.version}
+       | inMemory mode: $inMemory
        | ====================================
-       | $slickConfiguration
+       | jndiName: ${slickConfiguration.jndiName}
+       | slickDriver: ${slickConfiguration.slickDriver}
        | ====================================
-       | $persistenceQueryConfiguration
-       | ====================================
-       | $journalTableConfiguration
-       | ====================================
-       | $deletedToTableConfiguration
-       | ====================================
-       | $snapshotTableConfiguration
+       | Tag separator: ${persistenceQueryConfiguration.separator}
+       | === Journal Table Configuration ====
+       | schemaName: ${journalTableConfiguration.schemaName}
+       | tableName: ${journalTableConfiguration.tableName}
+       | columnNames:
+       | - persistenceId: ${journalTableConfiguration.columnNames.persistenceId}
+       | - sequenceNumber: ${journalTableConfiguration.columnNames.sequenceNumber}
+       | - created: ${journalTableConfiguration.columnNames.created}
+       | - tags: ${journalTableConfiguration.columnNames.tags}
+       | - message: ${journalTableConfiguration.columnNames.message}
+       | == DeletedTo Table Configuration ===
+       | schemaName: ${deletedToTableConfiguration.schemaName}
+       | tableName: ${deletedToTableConfiguration.tableName}
+       | columnNames:
+       | - persistenceId: ${deletedToTableConfiguration.columnNames.persistenceId}
+       | - deletedTo: ${deletedToTableConfiguration.columnNames.deletedTo}
+       | === Snapshot Table Configuration ===
+       | schemaName: ${snapshotTableConfiguration.schemaName}
+       | tableName: ${snapshotTableConfiguration.tableName}
+       | columnNames:
+       | - persistenceId: ${snapshotTableConfiguration.columnNames.persistenceId}
+       | - sequenceNumber: ${snapshotTableConfiguration.columnNames.sequenceNumber}
+       | - created: ${snapshotTableConfiguration.columnNames.created}
+       | - snapshot: ${snapshotTableConfiguration.columnNames.snapshot}
        | ====================================
     """.stripMargin
 

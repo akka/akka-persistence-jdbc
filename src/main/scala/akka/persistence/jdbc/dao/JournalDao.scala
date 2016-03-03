@@ -18,16 +18,16 @@ package akka.persistence.jdbc.dao
 
 import akka.NotUsed
 import akka.persistence.jdbc.dao.JournalTables.{ JournalDeletedToRow, JournalRow }
-import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DeletedToTableConfiguration, JournalTableConfiguration }
+import akka.persistence.jdbc.extension.{ DeletedToTableConfiguration, JournalTableConfiguration }
 import akka.persistence.jdbc.serialization.Serialized
 import akka.persistence.jdbc.util.SlickDriver
+import akka.stream.Materializer
 import akka.stream.scaladsl._
-import akka.stream.{ FlowShape, Materializer }
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Success, Try }
+import scala.util.{ Failure, Success, Try }
 
 object JournalDao {
   /**
@@ -100,21 +100,10 @@ trait WriteMessagesFacade {
 }
 
 class FlowGraphWriteMessagesFacade(journalDao: JournalDao)(implicit ec: ExecutionContext, mat: Materializer) extends WriteMessagesFacade {
-  def writeMessages: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], NotUsed] =
-    Flow.fromGraph(GraphDSL.create() { implicit b ⇒
-      import GraphDSL.Implicits._
-      val broadcast = b.add(Broadcast[Try[Iterable[Serialized]]](2))
-      val zip = b.add(Zip[Unit, Try[Iterable[Serialized]]]())
-
-      broadcast.out(0).collect {
-        case Success(xs) ⇒ xs
-      }.mapAsync(1)(journalDao.writeList) ~> zip.in0
-      broadcast.out(1) ~> zip.in1
-
-      FlowShape(broadcast.in, zip.out)
-    }).map {
-      case (x, y) ⇒ y
-    }
+  def writeMessages: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], NotUsed] = Flow[Try[Iterable[Serialized]]].mapAsync(1) {
+    case element @ Success(xs) ⇒ journalDao.writeList(xs).map(_ ⇒ element)
+    case element @ Failure(t)  ⇒ Future.failed(t)
+  }
 }
 
 class SlickJournalDaoQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration, override val deletedToTableCfg: DeletedToTableConfiguration) extends JournalTables {

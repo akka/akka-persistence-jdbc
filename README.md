@@ -17,7 +17,7 @@ Alternatively you can opt to use [Postgresql](http://www.postgresql.org/), which
 available, with some great features, and it works great together with akka-persistence-jdbc.
                                  
 ## New release
-The latest version is `v2.2.8` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The latest version is `v2.2.9` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -37,7 +37,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.8"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.9"
 ```
 
 ## Configuration
@@ -563,6 +563,9 @@ The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-pe
 
 # What's new?
 For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
+
+## 2.2.9 (2016-03-03)
+  - Fix for propagating serialization errors to akka-persistence so that any error regarding the persistence of messages will be handled by the callback handler of the Persistent Actor; `onPersistFailure`.  
 
 ## 2.2.8 (2016-02-18)
   - Added InMemory option for journal and snapshot storage, for testing

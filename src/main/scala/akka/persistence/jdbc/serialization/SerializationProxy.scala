@@ -16,8 +16,6 @@
 
 package akka.persistence.jdbc.serialization
 
-import java.nio.ByteBuffer
-
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.persistence.journal.Tagged
@@ -26,7 +24,7 @@ import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.scaladsl.Flow
 
 import scala.compat.Platform
-import scala.util.{ Failure, Success, Try }
+import scala.util.{ Success, Try }
 
 case class Serialized(persistenceId: String, sequenceNr: Long, serialized: Array[Byte], tags: Option[String] = None, created: Long = Platform.currentTime)
 
@@ -42,8 +40,9 @@ object AkkaSerializationProxy {
 
 class AkkaSerializationProxy(serialization: Serialization) extends SerializationProxy {
   override def serialize(o: AnyRef): Try[Array[Byte]] = o match {
-    case arr: Array[Byte] ⇒ Success(arr) // when you passed an Array[Byte] to be persisted,
+    // when you passed an Array[Byte] to be persisted,
     // you probably don't want to serialize the array
+    case arr: Array[Byte] ⇒ Success(arr)
     case _                ⇒ serialization.serialize(o)
   }
 
@@ -98,7 +97,7 @@ class SerializationFacade(proxy: SerializationProxy, separator: String) {
     }
 
     val xs = atomicWrite.payload.map(serializeTaggedOrRepr)
-    if (xs.exists(_.isFailure)) Failure(new RuntimeException("Could not serialize: " + atomicWrite))
+    if (xs.exists(_.isFailure)) xs.filter(_.isFailure).head.asInstanceOf[Try[Iterable[Serialized]]] // SI-8566
     else Success(xs.foldLeft(List.empty[Serialized]) {
       case (xy, Success(serialized)) ⇒ xy :+ serialized
       case (xy, _)                   ⇒ xy
@@ -106,9 +105,9 @@ class SerializationFacade(proxy: SerializationProxy, separator: String) {
   }
 
   /**
-   * An [[akka.persistence.AtomicWrite]] contains a Sequence of events (with metadata, the PersistentRepr)
+   * An akka.persistence.AtomicWrite contains a Sequence of events (with metadata, the PersistentRepr)
    * that must all be persisted or all fail, what makes the operation atomic. The flow converts
-   * [[akka.persistence.AtomicWrite]] and converts them to a Try[Iterable[Serialized]]. The Try denotes
+   * akka.persistence.AtomicWrite and converts them to a Try[Iterable[Serialized]]. The Try denotes
    * whether there was a problem with the AtomicWrite or not.
    */
   def serialize: Flow[AtomicWrite, Try[Iterable[Serialized]], NotUsed] =

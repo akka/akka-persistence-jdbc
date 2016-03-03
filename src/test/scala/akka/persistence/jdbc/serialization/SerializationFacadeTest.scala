@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc.serialization
 
-import akka.persistence.PersistentRepr
+import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.persistence.jdbc.TestSpec
 import akka.persistence.jdbc.generator.AkkaPersistenceGen
 import akka.stream.scaladsl.Source
@@ -27,7 +27,45 @@ import scala.util.Try
 
 class SerializationFacadeTest extends TestSpec("postgres-application.conf") {
 
-  it should "serialize successfully" in {
+  it should "serialize a serializable message and indicate whether or not the serialization succeeded" in {
+    val facade = new SerializationFacade(AkkaSerializationProxy(serialization), ",")
+    val probe = Source.single(AtomicWrite(PersistentRepr("foo"))).via(facade.serialize)
+      .runWith(TestSink.probe[Try[Iterable[Serialized]]])
+      .request(Int.MaxValue)
+
+    probe.within(10.seconds) {
+      probe.expectNext() should be a 'success
+    }
+  }
+
+  it should "not serialize a non-serializable message and indicate whether or not the serialization succeeded" in {
+    class Test
+    val facade = new SerializationFacade(AkkaSerializationProxy(serialization), ",")
+    val probe = Source.single(AtomicWrite(PersistentRepr(new Test))).via(facade.serialize)
+      .runWith(TestSink.probe[Try[Iterable[Serialized]]])
+      .request(Int.MaxValue)
+
+    probe.within(10.seconds) {
+      probe.expectNext() should be a 'failure
+    }
+  }
+
+  it should "serialize non-serializable and serializable messages and indicate whether or not the serialization succeeded" in {
+    class Test
+    val facade = new SerializationFacade(AkkaSerializationProxy(serialization), ",")
+    val probe = Source(List(AtomicWrite(PersistentRepr(new Test)), AtomicWrite(PersistentRepr("foo")))).via(facade.serialize)
+      .runWith(TestSink.probe[Try[Iterable[Serialized]]])
+      .request(Int.MaxValue)
+
+    probe.within(10.seconds) {
+      probe.expectNext() should be a 'failure
+      probe.expectNext() should be a 'success
+    }
+  }
+
+  // lags the tests
+
+  ignore should "serialize successfully" in {
     val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = false), "$$$")
     forAll(AkkaPersistenceGen.genAtomicWrite) { aw ⇒
       val probe = Source.single(aw).via(facade.serialize)
@@ -40,7 +78,7 @@ class SerializationFacadeTest extends TestSpec("postgres-application.conf") {
     }
   }
 
-  it should "deserialize successfully" in {
+  ignore should "deserialize successfully" in {
     val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = false), "$$$")
     forAll { (bytes: Array[Byte]) ⇒
       val probe = Source.single(bytes).via(facade.deserializeRepr)
@@ -53,7 +91,7 @@ class SerializationFacadeTest extends TestSpec("postgres-application.conf") {
     }
   }
 
-  it should "fail to serialize" in {
+  ignore should "fail to serialize" in {
     val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = true), "$$$")
     forAll(AkkaPersistenceGen.genAtomicWrite) { aw ⇒
       val probe = Source.single(aw).via(facade.serialize)
@@ -66,7 +104,7 @@ class SerializationFacadeTest extends TestSpec("postgres-application.conf") {
     }
   }
 
-  it should "fail to deserialize" in {
+  ignore should "fail to deserialize" in {
     val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = true), "$$$")
     forAll { (bytes: Array[Byte]) ⇒
       val probe = Source.single(bytes).via(facade.deserializeRepr)

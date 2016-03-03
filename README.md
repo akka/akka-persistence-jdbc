@@ -35,6 +35,8 @@ The latest version is `v2.2.9` and breaks backwards compatibility with `v1.x.x` 
 Add the following to your `build.sbt`:
 
 ```scala
+resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-releases/"
+
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
 libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.9"

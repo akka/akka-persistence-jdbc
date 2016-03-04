@@ -35,6 +35,8 @@ The latest version is `v2.2.10` and breaks backwards compatibility with `v1.x.x`
 Add the following to your `build.sbt`:
 
 ```scala
+resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-releases/"
+
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
 libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.10"
@@ -635,11 +637,141 @@ For the full list of what's new see [this wiki page] (https://github.com/dnvrien
 ## 1.2.2 (2015-10-14) - Akka v2.4.x
  - Merged PR #28 [Andrey Kouznetsov](https://github.com/prettynatty) Removing Unused ExecutionContext, thanks!
  
+## 1.2.1 (2015-10-12) 
+ - Merged PR #27 [Andrey Kouznetsov](https://github.com/prettynatty) don't fail on asyncWrite with empty messages, thanks! 
+## 1.2.0 (2015-10-02)
+ - Compatibility with Akka 2.4.0
+ - Akka 2.4.0-RC3 -> 2.4.0
+ - scalikejdbc 2.2.7 -> 2.2.8
+ - No obvious optimalizations are applied, and no schema refactorings are needed (for now)
+ - Fully backwards compatible with akka-persistence-jdbc v1.1.8's schema and configuration 
+
+## 1.2.0-RC3 (2015-09-17) 
+ - Compatibility with Akka 2.4.0-RC3
+ - No obvious optimalizations are applied, and no schema refactorings are needed (for now)
+ - Please note; schema, serialization (strategy) and code refactoring will be iteratively applied on newer release of the 2.4.0-xx branch, but for each step, a migration guide and SQL scripts will be made available.
+ - Use the following library dependency: "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.0-RC3"
+ - Fully backwards compatible with akka-persistence-jdbc v1.1.8's schema and configuration 
+
+## 1.2.0-RC2 (2015-09-07) 
+ - Compatibility with Akka 2.4.0-RC2
+ - No obvious optimalizations are applied, and no schema refactorings are needed (for now)
+ - Please note; schema, serialization (strategy) and code refactoring will be iteratively applied on newer release of the 2.4.0-xx branch, but for each step, a migration guide and SQL scripts will be made available.
+ - Use the following library dependency: "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.0-RC2"
+ - Fully backwards compatible with akka-persistence-jdbc v1.1.8's schema and configuration 
+
 ## 1.1.9 (2015-10-12) - Akka v2.3.x
  - scala 2.10.5 -> 2.10.6
  - akka 2.3.13 -> 2.3.14
  - scalikejdbc 2.2.7 -> 2.2.8
  
+## 1.1.8 (2015-09-04)
+ - Compatibility with Akka 2.3.13
+ - Akka 2.3.12 -> 2.3.13
+
+## 1.1.7 (2015-07-13)
+ - Scala 2.11.6 -> 2.11.7
+ - Akka 2.3.11 -> 2.3.12
+ - ScalaTest 2.1.4 -> 2.2.4
+
+## 1.1.6 (2015-06-22)
+ - ScalikeJdbc 2.2.6 -> 2.2.7
+ - Issue #22 `persistenceId` missing in `JournalTypeConverter.unmarshal(value: String)` signature; added a second parameter `persistenceId: String`, note this breaks the serialization API.
+
+## 1.1.5 (2015-05-12)
+ - Akka 2.3.10 -> 2.3.11
+ - MySQL snapshot statement now uses `INSERT INTO .. ON DUPLICATE UPDATE` for `upserts`
+ - Merged Issue #21 [mwkohout](https://github.com/mwkohout) Use a ParameterBinder to pass snapshot into the merge statement and get rid of the stored procedure, thanks!
+
+## 1.1.4 (2015-05-06)
+ - ScalikeJDBC 2.2.5 -> 2.2.6
+ - Akka 2.3.9 -> 2.3.10
+ - Switched back to a Java 7 binary, to support Java 7 and higher based projects, we need a strategy though when [Scala 2.12](http://www.scala-lang.org/news/2.12-roadmap) will be released. 
+ - Merged Issue #20 [mwkohout](https://github.com/mwkohout) Use apache commons codec Base64 vs the java8-only java.util.Base64 for Java 7 based projects, thanks!
+
+## 1.1.3 (2015-04-15)
+ - ScalikeJDBC 2.2.4 -> 2.2.5
+ - Fixed: 'OutOfMemory error when recovering with a large number of snapshots #17'
+
+## 1.1.2 (2015-03-21)
+ - Initial support for a pluggable serialization architecture. Out of the box the plugin uses the
+   `Base64JournalConverter` and `Base64SnapshotConverter` as serializers. For more information
+   see the [akka-persistence-jdbc-play](https://github.com/dnvriend/akka-persistence-jdbc-play) example
+   project that uses its own JSON serialization format to write journal entries to the data store.
+
+## 1.1.1 (2015-03-17)
+ - ScalikeJDBC 2.2.2 -> 2.2.4
+ - Java 8 binary, so it needs Java 8, you still use Java 6 or 7, upgrade! :P
+ - Using the much faster Java8 java.util.Base64 encoder/decoder
+ - Bulk insert for journal entries (non-oracle only, sorry)
+ - Initial support for JNDI, needs testing though
+ - Merged [Paul Roman](https://github.com/romusz) Fix typo in journal log message #14, thanks!
+ - Merged [Pavel Boldyrev](https://github.com/bpg) Fix MS SQL Server support #15 (can not test it though, needs Vagrant), thanks!
+
+## 1.1.0
+ - Merged [Pavel Boldyrev](https://github.com/bpg) Fix Oracle SQL `MERGE` statement usage #13 which fixes issue #9 (java.sql.SQLRecoverableException: No more data to read from socket #9), thanks!
+ - Change to the Oracle schema, it needs a stored procedure definition.
+
+## 1.0.9 (2015-01-20)
+ - ScalikeJDBC 2.1.2 -> 2.2.2
+ - Merged [miguel-vila](https://github.com/miguel-vila) Adds ´validationQuery´ configuration parameter #10, thanks!
+ - Removed Informix support: I just don't have a working Informix docker image (maybe someone can create one and publish it?)
+
+## 1.0.8
+ - ScalikeJDBC 2.1.1 -> 2.1.2
+ - Moved to bintray
+
+## 1.0.7 (2014-09-16)
+ - Merged [mwkohout](https://github.com/mwkohout) fix using Oracle's MERGE on issue #3, thanks! 
+
+## 1.0.6 
+ - Fixed - Issue3: Handling save attempts with duplicate snapshot ids and persistence ids
+ - Fixed - Issue5: Connection pool is being redefined when using journal and snapshot store
+
+## 1.0.5 (2014-08-26)
+ - Akka 2.3.5 -> 2.3.6
+ - ScalikeJDBC 2.1.0 -> 2.1.1
+
+## 1.0.4 
+ - Added schema name configuration for the journal and snapshot
+ - Added table name configuration for the journal and snapshot
+ - ScalikeJDBC 2.0.5 -> 2.1.0 
+ - Akka 2.3.4 -> 2.3.5 
+
+## 1.0.3 (2014-07-23)
+ - IBM Informix 12.10 supported 
+
+## 1.0.2 
+ - Oracle XE 11g supported
+
+## 1.0.1
+ - scalikejdbc 2.0.4 -> 2.0.5
+ - akka-persistence-testkit 0.3.3 -> 0.3.4
+
+## 1.0.0 (2014-07-03)
+ - Release to Maven Central
+
+## 0.0.6
+ - Tested against MySQL/5.6.19 MySQL Community Server (GPL) 
+ - Tested against H2/1.4.179
+
+## 0.0.5
+ - Added the snapshot store
+
+## 0.0.4
+ -  Refactored the JdbcSyncWriteJournal so it supports the following databases:
+
+## 0.0.3 (2014-07-01)
+ - Using [Martin Krasser's](https://github.com/krasserm) [akka-persistence-testkit](https://github.com/krasserm/akka-persistence-testkit)
+  to test the akka-persistence-jdbc plugin. 
+ - Update to Akka 2.3.4
+
+## 0.0.2 (2014-06-30)
+ - Using [ScalikeJDBC](http://scalikejdbc.org/) as the JDBC access library instead of my home-brew one. 
+
+## 0.0.1 (2014-05-23)
+ - Initial commit
+
 # Code of Conduct
 **Contributors all agree to follow the [W3C Code of Ethics and Professional Conduct](http://www.w3.org/Consortium/cepc/).**
 

@@ -85,7 +85,7 @@ object DeletedToTableConfiguration {
     cfg.withPath("akka-persistence-jdbc.tables.deletedTo") { cfg =>
       DeletedToTableConfiguration(
         cfg.as[String]("tableName", "journal"),
-        cfg.as[String]("schemeName").map(_.trim).filter(_.nonEmpty),
+        cfg.as[String]("schemaName").map(_.trim).filter(_.nonEmpty),
         cfg.withPath("columnNames") { cfg =>
           DeletedToTableColumnNames(
             cfg.as[String]("persistenceId", "persistence_id"),
@@ -105,7 +105,7 @@ object SnapshotTableConfiguration {
     cfg.withPath("akka-persistence-jdbc.tables.snapshot") { cfg =>
       SnapshotTableConfiguration(
         cfg.as[String]("tableName", "journal"),
-        cfg.as[String]("schemeName").map(_.trim).filter(_.nonEmpty),
+        cfg.as[String]("schemaName").map(_.trim).filter(_.nonEmpty),
         cfg.withPath("columnNames") { cfg =>
           SnapshotTableColumnNames(
             cfg.as[String]("persistenceId", "persistence_id"),

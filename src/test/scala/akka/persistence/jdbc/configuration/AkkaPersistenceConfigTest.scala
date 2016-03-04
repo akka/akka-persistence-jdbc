@@ -93,7 +93,7 @@ class AkkaPersistenceConfigTest extends TestSpec {
     )
   }
 
-  "DeletedToTableConfiguration" should "be parsed" in {
+  "DeletedToTableConfiguration" should "be parsed with no schema name" in {
     val config = ConfigFactory.parseString(
       """
         |akka-persistence-jdbc {
@@ -111,6 +111,58 @@ class AkkaPersistenceConfigTest extends TestSpec {
     DeletedToTableConfiguration(config) shouldBe DeletedToTableConfiguration(
       "deleted_to",
       None,
+      DeletedToTableColumnNames(
+        "persistence_id",
+        "deleted_to"
+      )
+    )
+  }
+
+  it should "map custom column names" in {
+    val config = ConfigFactory.parseString(
+      """
+        |akka-persistence-jdbc {
+        |  tables {
+        |      deletedTo {
+        |      tableName = "deleted_to"
+        |      schemaName = ""
+        |      columnNames = {
+        |        persistenceId = "pid"
+        |        deletedTo = "removed_to"
+        |      }
+        |    }
+        |  }
+        |}
+      """.stripMargin
+    )
+    DeletedToTableConfiguration(config) shouldBe DeletedToTableConfiguration(
+      "deleted_to",
+      None,
+      DeletedToTableColumnNames(
+        "pid",
+        "removed_to"
+      )
+    )
+  }
+
+  it should "be parsed with a schemaName" in {
+    val config = ConfigFactory.parseString(
+      """
+        |akka-persistence-jdbc {
+        |  tables {
+        |    deletedTo {
+        |      tableName = "deleted_to"
+        |      schemaName = "public"
+        |      columnNames {
+        |      }
+        |    }
+        |  }
+        |}
+      """.stripMargin
+    )
+    DeletedToTableConfiguration(config) shouldBe DeletedToTableConfiguration(
+      "deleted_to",
+      Some("public"),
       DeletedToTableColumnNames(
         "persistence_id",
         "deleted_to"
@@ -136,6 +188,64 @@ class AkkaPersistenceConfigTest extends TestSpec {
     SnapshotTableConfiguration(config) shouldBe SnapshotTableConfiguration(
       "snapshot",
       None,
+      SnapshotTableColumnNames(
+        "persistence_id",
+        "sequence_nr",
+        "created",
+        "snapshot"
+      )
+    )
+  }
+
+  it should "map custom column names" in {
+    val config = ConfigFactory.parseString(
+      """
+        |akka-persistence-jdbc {
+        |  tables {
+        |    snapshot {
+        |      tableName = "snapshot"
+        |      schemaName = ""
+        |      columnNames {
+        |        persistenceId = "pid"
+        |        sequenceNumber = "seqno"
+        |        created = "millis_from_epoch"
+        |        snapshot = "data"
+        |      }
+        |    }
+        |  }
+        |}
+      """.stripMargin
+    )
+    SnapshotTableConfiguration(config) shouldBe SnapshotTableConfiguration(
+      "snapshot",
+      None,
+      SnapshotTableColumnNames(
+        "pid",
+        "seqno",
+        "millis_from_epoch",
+        "data"
+      )
+    )
+  }
+
+  it should "be parsed with a schemaName" in {
+    val config = ConfigFactory.parseString(
+      """
+        |akka-persistence-jdbc {
+        |  tables {
+        |    snapshot {
+        |      tableName = "snapshot"
+        |      schemaName = "public"
+        |      columnNames {
+        |      }
+        |    }
+        |  }
+        |}
+      """.stripMargin
+    )
+    SnapshotTableConfiguration(config) shouldBe SnapshotTableConfiguration(
+      "snapshot",
+      Some("public"),
       SnapshotTableColumnNames(
         "persistence_id",
         "sequence_nr",

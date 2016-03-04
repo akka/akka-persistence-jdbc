@@ -20,9 +20,14 @@ organization := "com.github.dnvriend"
 
 version := "2.2.10"
 
-scalaVersion := "2.11.7"
-
 resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-releases/"
+
+scalaVersion := "2.11.8"
+
+resolvers ++= Seq(
+  "Scala 2.11.8 Core" at "https://oss.sonatype.org/content/repositories/orgscala-lang-1295/",
+  "Scala 2.11.8 Modules" at "https://oss.sonatype.org/content/repositories/orgscala-lang-1296/"
+)
 
 libraryDependencies ++= {
   val akkaVersion = "2.4.2"

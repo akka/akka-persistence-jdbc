@@ -7,10 +7,10 @@ License | [![License](http://img.shields.io/:license-Apache%202-red.svg)](http:/
 Bintray | [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-persistence-jdbc/images/download.svg) ](https://bintray.com/dnvriend/maven/akka-persistence-jdbc/_latestVersion) | Latest Version on Bintray
 
 ## Slick Extensions Licensing Changing to Open Source
-The [Typesafe Slick Extensions](http://slick.typesafe.com/doc/3.1.1/extensions.html) have become [open source as 
+The [Typesafe/Lightbend Slick Extensions](http://slick.typesafe.com/doc/3.1.1/extensions.html) have become [open source as 
 of 1 februari 2016 as can read from the slick new website](http://slick.typesafe.com/news/2016/02/01/slick-extensions-licensing-change.html),
-this means that you can use akka-persistence-jdbc with no commercial license from Typesafe when used with `Oracle`, `IBM DB2` or 
-`Microsoft SQL Server`. Thanks [Typesafe](https://www.typesafe.com/)! Of course you will neem a commercial license from
+this means that you can use akka-persistence-jdbc with no commercial license from Typesafe/Lightbend when used with `Oracle`, `IBM DB2` or 
+`Microsoft SQL Server`. Thanks [Lightbend](http://www.lightbend.com/)! Of course you will neem a commercial license from
 your database vendor. 
 
 Alternatively you can opt to use [Postgresql](http://www.postgresql.org/), which is the most advanced open source database 
@@ -19,7 +19,7 @@ available, with some great features, and it works great together with akka-persi
 ## New release
 The latest version is `v2.2.10` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
-- It uses [Typesafe Slick](http://slick.typesafe.com/) as the database backend,
+- It uses [Typesafe/Lightbend Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
   - Uses HikariCP for the connection pool,
   - It has been tested against Postgres, MySQL and Oracle only,

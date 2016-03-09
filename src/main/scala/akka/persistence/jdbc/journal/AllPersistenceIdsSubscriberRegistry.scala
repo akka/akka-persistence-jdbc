@@ -19,7 +19,7 @@ package akka.persistence.jdbc.journal
 import akka.NotUsed
 import akka.actor.{ Actor, ActorRef }
 import akka.persistence.jdbc.journal.AllPersistenceIdsSubscriberRegistry.AllPersistenceIdsSubscriberTerminated
-import akka.persistence.jdbc.serialization.Serialized
+import akka.persistence.jdbc.serialization.SerializationResult
 import akka.stream.scaladsl.Flow
 
 import scala.util.Try
@@ -60,8 +60,8 @@ trait AllPersistenceIdsSubscriberRegistry { _: SlickAsyncWriteJournal ⇒
       removeAllPersistenceIdsSubscriber(ref)
   }
 
-  protected def addAllPersistenceIdsFlow(persistenceIdsNotInJournal: Seq[String]): Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], NotUsed] =
-    Flow[Try[Iterable[Serialized]]].map { atomicWriteResult ⇒
+  protected def addAllPersistenceIdsFlow(persistenceIdsNotInJournal: Seq[String]): Flow[Try[Iterable[SerializationResult]], Try[Iterable[SerializationResult]], NotUsed] =
+    Flow[Try[Iterable[SerializationResult]]].map { atomicWriteResult ⇒
       if (hasAllPersistenceIdsSubscribers) {
         for {
           seqSerialized ← atomicWriteResult

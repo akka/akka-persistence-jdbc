@@ -17,7 +17,7 @@
 package akka.persistence.jdbc.dao
 
 import akka.NotUsed
-import akka.persistence.jdbc.serialization.Serialized
+import akka.persistence.jdbc.serialization.{ SerializationResult, Serialized }
 import akka.stream.scaladsl.{ Flow, Source }
 
 import scala.concurrent.Future
@@ -28,11 +28,11 @@ class MockJournalDao(fail: Boolean = false) extends JournalDao {
   override def countJournal: Future[Int] =
     if (fail) Future.failed(new RuntimeException("Mock cannot count")) else Future.successful(0)
 
-  override def writeList(xs: Iterable[Serialized]): Future[Unit] =
+  override def writeList(xs: Iterable[SerializationResult]): Future[Unit] =
     if (fail) Future.failed(new RuntimeException("Mock cannot write message list")) else Future.successful(())
 
-  override def writeFlow: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], NotUsed] =
-    Flow[Try[Iterable[Serialized]]].map { e ⇒ if (fail) throw new RuntimeException("Mock cannot write message flow") else e }
+  override def writeFlow: Flow[Try[Iterable[SerializationResult]], Try[Iterable[SerializationResult]], NotUsed] =
+    Flow[Try[Iterable[SerializationResult]]].map { e ⇒ if (fail) throw new RuntimeException("Mock cannot write message flow") else e }
 
   override def highestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] =
     if (fail) Future.failed(new RuntimeException("Mock cannot request highest sequence number")) else Future.successful(0)
@@ -40,8 +40,8 @@ class MockJournalDao(fail: Boolean = false) extends JournalDao {
   override def delete(persistenceId: String, toSequenceNr: Long): Future[Unit] =
     if (fail) Future.failed(new RuntimeException("Mock cannot delete message to")) else Future.successful(())
 
-  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Array[Byte], NotUsed] =
-    Source.single(Array.empty[Byte]).map(e ⇒ if (fail) throw new RuntimeException("Mock cannot read message") else e)
+  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[SerializationResult, NotUsed] =
+    Source.single(Serialized("", 1, Array.empty[Byte], None)).map(e ⇒ if (fail) throw new RuntimeException("Mock cannot read message") else e)
 
   override def allPersistenceIdsSource: Source[String, NotUsed] =
     Source.single("pid-1").map(e ⇒ if (fail) throw new RuntimeException("Mock cannot read message") else e)
@@ -49,9 +49,9 @@ class MockJournalDao(fail: Boolean = false) extends JournalDao {
   override def persistenceIds(queryListOfPersistenceIds: Iterable[String]): Future[Seq[String]] =
     if (fail) Future.failed(new RuntimeException("Mock cannot delete message to")) else Future.successful(Nil)
 
-  override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], NotUsed] =
-    Source.single(Array.empty[Byte]).map(e ⇒ if (fail) throw new RuntimeException("Mock cannot eventsByTag") else e)
+  override def eventsByTag(tag: String, offset: Long): Source[SerializationResult, NotUsed] =
+    Source.single(Serialized("", 1, Array.empty[Byte], None)).map(e ⇒ if (fail) throw new RuntimeException("Mock cannot eventsByTag") else e)
 
-  override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[Array[Byte], NotUsed] =
-    Source.single(Array.empty[Byte]).map(e ⇒ if (fail) throw new RuntimeException("Mock cannot eventsByPersistenceIdAndTag") else e)
+  override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[SerializationResult, NotUsed] =
+    Source.single(Serialized("", 1, Array.empty[Byte], None)).map(e ⇒ if (fail) throw new RuntimeException("Mock cannot eventsByPersistenceIdAndTag") else e)
 }

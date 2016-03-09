@@ -39,4 +39,6 @@ class JdbcAsyncWriteJournal extends SlickAsyncWriteJournal {
   def separatorChar: String =
     Option(AkkaPersistenceConfig(context.system).persistenceQueryConfiguration.separator).filterNot(_.isEmpty)
       .getOrElse(",")
+
+  override def serialize: Boolean = AkkaPersistenceConfig(system).serializationConfiguration.journal
 }

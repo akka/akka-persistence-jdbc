@@ -20,9 +20,13 @@ import akka.actor._
 import akka.event.{Logging, LoggingAdapter}
 import akka.persistence.jdbc.dao.inmemory.{InMemoryJournalDao, InMemoryJournalStorage, InMemorySnapshotDao, InMemorySnapshotStorage}
 import akka.persistence.jdbc.dao.{JournalDao, SnapshotDao}
+import akka.persistence.jdbc.util.SlickDriver
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.Timeout
+import slick.driver.JdbcProfile
+import slick.jdbc.JdbcBackend
 
+import scala.collection.immutable
 import scala.concurrent.ExecutionContext
 
 object DaoRepository extends ExtensionId[DaoRepositoryImpl] with ExtensionIdProvider {
@@ -55,12 +59,13 @@ class DaoRepositoryImpl()(implicit val system: ExtendedActorSystem) extends DaoR
       InMemoryJournalDao(journalStorage)
     }
     else {
-      JournalDao(
-        AkkaPersistenceConfig(system).slickConfiguration.slickDriver,
-        SlickDatabase(system).db,
-        AkkaPersistenceConfig(system).journalTableConfiguration,
-        AkkaPersistenceConfig(system).deletedToTableConfiguration
-      )
+      val driver = AkkaPersistenceConfig(system).slickConfiguration.slickDriver
+      val fqcn = system.settings.config.getString("akka-persistence-jdbc.dao.journal")
+      system.dynamicAccess.createInstanceFor[JournalDao](fqcn, immutable.Seq(
+        (classOf[JdbcBackend#DatabaseDef], SlickDatabase(system).db),
+        (classOf[JdbcProfile], SlickDriver.forDriverName(driver)),
+        (classOf[ActorSystem], system)
+      )).get
     }
 
   override def snapshotDao: SnapshotDao =

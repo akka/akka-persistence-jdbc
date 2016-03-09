@@ -19,14 +19,14 @@ package akka.persistence.jdbc.dao.inmemory
 import akka.NotUsed
 import akka.actor.ActorRef
 import akka.pattern.ask
-import akka.persistence.jdbc.dao.{ FlowGraphWriteMessagesFacade, JournalDao, WriteMessagesFacade }
-import akka.persistence.jdbc.serialization.Serialized
+import akka.persistence.jdbc.dao.JournalDao
+import akka.persistence.jdbc.serialization.{ SerializationResult, Serialized }
 import akka.stream.Materializer
 import akka.stream.scaladsl._
 import akka.util.Timeout
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
 object InMemoryJournalDao {
   /**
@@ -39,18 +39,20 @@ class InMemoryJournalDao(db: ActorRef)(implicit timeout: Timeout, ec: ExecutionC
 
   import InMemoryJournalStorage._
 
-  val writeMessagesFacade: WriteMessagesFacade = new FlowGraphWriteMessagesFacade(this)
+  private def writeMessages: Flow[Try[Iterable[SerializationResult]], Try[Iterable[SerializationResult]], NotUsed] = Flow[Try[Iterable[SerializationResult]]].mapAsync(1) {
+    case element @ Success(xs) ⇒ writeList(xs).map(_ ⇒ element)
+    case element @ Failure(t)  ⇒ Future.failed(t)
+  }
 
   override def allPersistenceIdsSource: Source[String, NotUsed] =
     Source.fromFuture((db ? AllPersistenceIds).mapTo[Set[String]])
       .mapConcat(identity)
 
-  override def writeFlow: Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], NotUsed] =
-    Flow[Try[Iterable[Serialized]]].via(writeMessagesFacade.writeMessages)
+  override def writeFlow: Flow[Try[Iterable[SerializationResult]], Try[Iterable[SerializationResult]], NotUsed] =
+    Flow[Try[Iterable[SerializationResult]]].via(writeMessages)
 
-  override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[Array[Byte], NotUsed] =
+  override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[SerializationResult, NotUsed] =
     Source.fromFuture((db ? EventsByPersistenceIdAndTag(persistenceId, tag, offset)).mapTo[List[Serialized]])
-      .map(_.map(_.serialized))
       .mapConcat(identity)
 
   override def countJournal: Future[Int] = (db ? CountJournal).mapTo[Int]
@@ -58,24 +60,22 @@ class InMemoryJournalDao(db: ActorRef)(implicit timeout: Timeout, ec: ExecutionC
   override def highestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] =
     (db ? HighestSequenceNr(persistenceId, fromSequenceNr)).mapTo[Long]
 
-  override def eventsByTag(tag: String, offset: Long): Source[Array[Byte], NotUsed] =
+  override def eventsByTag(tag: String, offset: Long): Source[SerializationResult, NotUsed] =
     Source.fromFuture((db ? EventsByTag(tag, offset)).mapTo[List[Serialized]])
-      .map(_.map(_.serialized))
       .mapConcat(identity)
 
   override def persistenceIds(queryListOfPersistenceIds: Iterable[String]): Future[Seq[String]] =
     (db ? PersistenceIds(queryListOfPersistenceIds)).mapTo[Seq[String]]
 
-  override def writeList(xs: Iterable[Serialized]): Future[Unit] = {
+  override def writeList(xs: Iterable[SerializationResult]): Future[Unit] = {
     (db ? WriteList(xs)).map(_ ⇒ ())
   }
 
   override def delete(persistenceId: String, toSequenceNr: Long): Future[Unit] =
     (db ? Delete(persistenceId, toSequenceNr)).map(_ ⇒ ())
 
-  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Array[Byte], NotUsed] = {
-    Source.fromFuture((db ? Messages(persistenceId, fromSequenceNr, toSequenceNr, max)).mapTo[List[Serialized]])
-      .map(_.map(_.serialized))
+  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[SerializationResult, NotUsed] = {
+    Source.fromFuture((db ? Messages(persistenceId, fromSequenceNr, toSequenceNr, max)).mapTo[List[SerializationResult]])
       .mapConcat(identity)
   }
 }

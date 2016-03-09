@@ -19,7 +19,7 @@ package akka.persistence.jdbc.dao.inmemory
 import akka.actor.Status.Success
 import akka.actor.{ Actor, ActorLogging, ActorRef }
 import akka.event.LoggingReceive
-import akka.persistence.jdbc.serialization.{ SerializationFacade, Serialized }
+import akka.persistence.jdbc.serialization.{ SerializationResult, SerializationFacade, Serialized }
 
 import scala.util.Try
 
@@ -44,7 +44,7 @@ object InMemoryJournalStorage {
   case class PersistenceIds(queryListOfPersistenceIds: Iterable[String])
 
   // Success
-  case class WriteList(xs: Iterable[Serialized])
+  case class WriteList(xs: Iterable[SerializationResult])
 
   // Success
   case class Delete(persistenceId: String, toSequenceNr: Long)
@@ -59,7 +59,7 @@ object InMemoryJournalStorage {
 class InMemoryJournalStorage extends Actor with ActorLogging {
   import InMemoryJournalStorage._
 
-  var journal = Map.empty[String, Vector[Serialized]]
+  var journal = Map.empty[String, Vector[SerializationResult]]
 
   var deleted_to = Map.empty[String, Vector[Long]]
 
@@ -76,7 +76,7 @@ class InMemoryJournalStorage extends Actor with ActorLogging {
   }
 
   def eventsByPersistenceIdAndTag(ref: ActorRef, persistenceId: String, tag: String, offset: Long): Unit = {
-    val determine: Option[List[Serialized]] = for {
+    val determine: Option[List[SerializationResult]] = for {
       xs ← journal.get(persistenceId)
     } yield (for {
       x ← xs
@@ -104,7 +104,7 @@ class InMemoryJournalStorage extends Actor with ActorLogging {
 
   def eventsByTag(ref: ActorRef, tag: String, offset: Long): Unit = {
     log.debug(s"[eventsByTag] tag: $tag, offset: $offset, journal: ${journal.mapValues(_.map(s ⇒ s"${s.persistenceId} - ${s.sequenceNr} - ${s.tags}"))}")
-    val determine: List[Serialized] = (for {
+    val determine: List[SerializationResult] = (for {
       xs ← journal.values
       x ← xs
       if x.tags.exists(tags ⇒ SerializationFacade.decodeTags(tags, ",") contains tag)
@@ -126,10 +126,10 @@ class InMemoryJournalStorage extends Actor with ActorLogging {
     ref ! determine
   }
 
-  def writelist(ref: ActorRef, xs: Iterable[Serialized]): Unit = {
-    xs.foreach { (serialized: Serialized) ⇒
+  def writelist(ref: ActorRef, xs: Iterable[SerializationResult]): Unit = {
+    xs.foreach { (serialized: SerializationResult) ⇒
       val key = serialized.persistenceId
-      journal += (key -> (journal.getOrElse(key, Vector.empty[Serialized]) :+ serialized))
+      journal += (key -> (journal.getOrElse(key, Vector.empty[SerializationResult]) :+ serialized))
       log.debug(s"[writelist]: Adding $serialized, ${journal.mapValues(_.sortBy(_.sequenceNr).map(s ⇒ s"${s.persistenceId}:${s.sequenceNr} - ${s.tags}"))},\ndeleted_to: $deleted_to")
     }
     ref ! Success("")
@@ -151,7 +151,7 @@ class InMemoryJournalStorage extends Actor with ActorLogging {
 
   def messages(ref: ActorRef, persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Unit = {
     def toTake = if (max >= Int.MaxValue) Int.MaxValue else max.toInt
-    val determine: Option[List[Serialized]] = for {
+    val determine: Option[List[SerializationResult]] = for {
       xs ← journal.get(persistenceId)
     } yield (for {
       x ← xs

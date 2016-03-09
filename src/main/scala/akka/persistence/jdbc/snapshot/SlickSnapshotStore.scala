@@ -17,7 +17,6 @@
 package akka.persistence.jdbc.snapshot
 
 import akka.persistence.jdbc.dao.SnapshotDao
-import akka.persistence.jdbc.dao.SnapshotDao.SnapshotData
 import akka.persistence.jdbc.serialization.SerializationProxy
 import akka.persistence.serialization.Snapshot
 import akka.persistence.snapshot.SnapshotStore
@@ -25,15 +24,27 @@ import akka.persistence.{ SelectedSnapshot, SnapshotMetadata, SnapshotSelectionC
 import akka.stream.Materializer
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
 object SlickSnapshotStore {
-  def mapToSelectedSnapshot(data: SnapshotData, serializationProxy: SerializationProxy): Try[SelectedSnapshot] = for {
-    snapshot ← serializationProxy.deserialize(data.snapshot, classOf[Snapshot])
-  } yield SelectedSnapshot(SnapshotMetadata(data.persistenceId, data.sequenceNumber, data.created), snapshot.data)
+
+  sealed trait SerializationResult {
+    def metadata: SnapshotMetadata
+  }
+
+  final case class Serialized(metadata: SnapshotMetadata, bytes: Array[Byte]) extends SerializationResult
+
+  final case class NotSerialized(metadata: SnapshotMetadata, snapshot: Any) extends SerializationResult
+
+  def mapToSelectedSnapshot(serializationResult: SerializationResult, serializationProxy: SerializationProxy): Try[SelectedSnapshot] =
+    serializationResult match {
+      case Serialized(meta, bytes)       ⇒ serializationProxy.deserialize(bytes, classOf[Snapshot]).map(snapshot ⇒ SelectedSnapshot(meta, snapshot.data))
+      case NotSerialized(meta, snapshot) ⇒ Success(SelectedSnapshot(meta, snapshot))
+    }
 }
 
 trait SlickSnapshotStore extends SnapshotStore {
+
   import SlickSnapshotStore._
 
   def snapshotDao: SnapshotDao
@@ -43,6 +54,8 @@ trait SlickSnapshotStore extends SnapshotStore {
   implicit def ec: ExecutionContext
 
   def serializationProxy: SerializationProxy
+
+  def serialize: Boolean
 
   override def loadAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] = {
     val result = criteria match {
@@ -60,15 +73,16 @@ trait SlickSnapshotStore extends SnapshotStore {
     for {
       snapshotDataOption ← result
       selectedSnapshot = for {
-        snapshotData: SnapshotData ← snapshotDataOption
+        snapshotData: SerializationResult ← snapshotDataOption
         selectedSnapshot: SelectedSnapshot ← mapToSelectedSnapshot(snapshotData, serializationProxy).toOption
       } yield selectedSnapshot
     } yield selectedSnapshot
   }
 
   override def saveAsync(metadata: SnapshotMetadata, snapshot: Any): Future[Unit] = for {
-    snapshot ← Future.fromTry(serializationProxy.serialize(Snapshot(snapshot)))
-    _ ← snapshotDao.save(metadata.persistenceId, metadata.sequenceNr, metadata.timestamp, snapshot)
+    serializationResult ← if (serialize) Future.fromTry(serializationProxy.serialize(Snapshot(snapshot))).map(arr ⇒ Serialized(metadata, arr))
+    else Future.successful(NotSerialized(metadata, snapshot))
+    _ ← snapshotDao.save(metadata.persistenceId, metadata.sequenceNr, metadata.timestamp, serializationResult)
   } yield ()
 
   override def deleteAsync(metadata: SnapshotMetadata): Future[Unit] = for {

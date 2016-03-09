@@ -16,11 +16,8 @@
 
 package akka.persistence.jdbc.generator
 
-import java.nio.ByteBuffer
-
-import akka.persistence.jdbc.dao.SnapshotDao.SnapshotData
 import akka.persistence.jdbc.serialization.Serialized
-import akka.persistence.{ PersistentRepr, AtomicWrite }
+import akka.persistence.{ AtomicWrite, PersistentRepr }
 import org.scalacheck.Gen
 
 object AkkaPersistenceGen {
@@ -51,11 +48,4 @@ object AkkaPersistenceGen {
   val genListOfSerialized = Gen.listOf(genSerialized)
 
   val genCreated = Gen.choose(10000, 99999)
-
-  val genSnapshotData = for {
-    persistenceId ← Gen.alphaStr
-    sequenceNr ← genSeqNum
-    created ← genCreated
-    snapshot ← genBytes
-  } yield SnapshotData(persistenceId, sequenceNr, created, snapshot)
 }

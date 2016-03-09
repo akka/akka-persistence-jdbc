@@ -118,6 +118,15 @@ object SnapshotTableConfiguration {
     }
 }
 
+case class SerializationConfiguration(journal: Boolean, snapshot: Boolean)
+
+object SerializationConfiguration {
+  def apply(cfg: Config): SerializationConfiguration = SerializationConfiguration(
+    cfg.getBoolean("akka-persistence-jdbc.serialization.journal"),
+    cfg.getBoolean("akka-persistence-jdbc.serialization.snapshot")
+  )
+}
+
 trait AkkaPersistenceConfig {
 
   def slickConfiguration: SlickConfiguration
@@ -133,6 +142,8 @@ trait AkkaPersistenceConfig {
   def inMemory: Boolean
 
   def inMemoryTimeout: FiniteDuration
+
+  def serializationConfiguration: SerializationConfiguration
 }
 
 class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) extends AkkaPersistenceConfig with Extension {
@@ -147,8 +158,8 @@ class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) exte
     else PersistenceQueryConfiguration(system.settings.config)
 
   override def journalTableConfiguration: JournalTableConfiguration =
-  if(inMemory) JournalTableConfiguration("", None, JournalTableColumnNames("", "", "", "", ""))
-  else JournalTableConfiguration(system.settings.config)
+    if(inMemory) JournalTableConfiguration("", None, JournalTableColumnNames("", "", "", "", ""))
+    else JournalTableConfiguration(system.settings.config)
 
   override def deletedToTableConfiguration: DeletedToTableConfiguration =
     if(inMemory) DeletedToTableConfiguration("", None, DeletedToTableColumnNames("", ""))
@@ -164,6 +175,9 @@ class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) exte
   override def inMemoryTimeout: FiniteDuration =
     FiniteDuration(system.settings.config.getDuration("akka-persistence-jdbc.inMemoryTimeout", TimeUnit.SECONDS), TimeUnit.SECONDS)
 
+  override def serializationConfiguration: SerializationConfiguration =
+    SerializationConfiguration(system.settings.config)
+
   def debugInfo: String =
     s"""
        | ====================================
@@ -171,11 +185,15 @@ class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) exte
        | ====================================
        | Version: ${BuildInfo.version}
        | inMemory mode: $inMemory
+       | inMemory timeout: $inMemoryTimeout
        | ====================================
        | jndiName: ${slickConfiguration.jndiName}
        | slickDriver: ${slickConfiguration.slickDriver}
        | ====================================
        | Tag separator: ${persistenceQueryConfiguration.separator}
+       | === Serialization Confguration =====
+       | journal: ${serializationConfiguration.journal}
+       | snapshot: ${serializationConfiguration.snapshot}
        | === Journal Table Configuration ====
        | schemaName: ${journalTableConfiguration.schemaName}
        | tableName: ${journalTableConfiguration.tableName}

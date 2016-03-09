@@ -18,9 +18,11 @@ package akka.persistence.jdbc.dao.inmemory
 
 import akka.actor.Status.Success
 import akka.actor.{ Actor, ActorLogging, ActorRef }
-import akka.persistence.jdbc.dao.SnapshotDao.SnapshotData
+import akka.persistence.jdbc.snapshot.SlickSnapshotStore.SerializationResult
 
 object InMemorySnapshotStorage {
+  case class SnapshotData(persistenceId: String, sequenceNumber: Long, created: Long, snapshot: SerializationResult)
+
   // Success
   case class Delete(persistenceId: String, sequenceNr: Long)
 
@@ -40,15 +42,15 @@ object InMemorySnapshotStorage {
   case object Clear
 
   // Success
-  case class Save(persistenceId: String, sequenceNr: Long, timestamp: Long, snapshot: Array[Byte])
+  case class Save(persistenceId: String, sequenceNr: Long, timestamp: Long, snapshot: SerializationResult)
 
-  // [Option[SnapshotData]]
+  // [Option[SerializationResult]]
   case class SnapshotForMaxSequenceNr(persistenceId: String, sequenceNr: Long)
 
-  // [Option[SnapshotData]]
+  // [Option[SerializationResult]]
   case class SnapshotForMaxSequenceNrAndMaxTimestamp(persistenceId: String, sequenceNr: Long, timestamp: Long)
 
-  // [Option[SnapshotData]]
+  // [Option[SerializationResult]]
   case class SnapshotForMaxTimestamp(persistenceId: String, timestamp: Long)
 }
 
@@ -127,9 +129,9 @@ class InMemorySnapshotStorage extends Actor with ActorLogging {
     ref ! Success("")
   }
 
-  def save(ref: ActorRef, persistenceId: String, sequenceNr: Long, timestamp: Long, data: Array[Byte]): Unit = {
+  def save(ref: ActorRef, persistenceId: String, sequenceNr: Long, timestamp: Long, ser: SerializationResult): Unit = {
     val key = persistenceId
-    snapshot += (key -> (snapshot.getOrElse(key, Vector.empty) :+ SnapshotData(persistenceId, sequenceNr, timestamp, data)))
+    snapshot += (key -> (snapshot.getOrElse(key, Vector.empty) :+ SnapshotData(persistenceId, sequenceNr, timestamp, ser)))
     log.debug(s"[Save]: Saving snapshot: pid: $persistenceId, seqnr: $sequenceNr, timestamp: $timestamp")
     ref ! Success("")
   }
@@ -161,7 +163,7 @@ class InMemorySnapshotStorage extends Actor with ActorLogging {
     case DeleteUpToMaxSequenceNr(persistenceId: String, maxSequenceNr: Long)                                    ⇒ deleteUpToMaxSequenceNr(sender(), persistenceId, maxSequenceNr)
     case DeleteUpToMaxSequenceNrAndMaxTimestamp(persistenceId: String, maxSequenceNr: Long, maxTimestamp: Long) ⇒ deleteUpToMaxSequenceNrAndMaxTimestamp(sender(), persistenceId, maxSequenceNr, maxTimestamp)
     case Clear                                                                                                  ⇒ clear(sender())
-    case Save(persistenceId: String, sequenceNr: Long, timestamp: Long, snapshot: Array[Byte])                  ⇒ save(sender(), persistenceId, sequenceNr, timestamp, snapshot)
+    case Save(persistenceId: String, sequenceNr: Long, timestamp: Long, snapshot: SerializationResult)          ⇒ save(sender(), persistenceId, sequenceNr, timestamp, snapshot)
     case SnapshotForMaxSequenceNr(persistenceId: String, sequenceNr: Long)                                      ⇒ snapshotForMaxSequenceNr(sender(), persistenceId, sequenceNr)
     case SnapshotForMaxSequenceNrAndMaxTimestamp(persistenceId: String, sequenceNr: Long, timestamp: Long)      ⇒ snapshotForMaxSequenceNrAndMaxTimestamp(sender(), persistenceId, sequenceNr, timestamp)
     case SnapshotForMaxTimestamp(persistenceId: String, timestamp: Long)                                        ⇒ snapshotForMaxTimestamp(sender(), persistenceId, timestamp)

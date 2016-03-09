@@ -20,7 +20,7 @@ import akka.NotUsed
 import akka.actor.{ Actor, ActorRef }
 import akka.persistence.AtomicWrite
 import akka.persistence.jdbc.journal.EventsByPersistenceIdRegistry.EventsByPersistenceIdSubscriberTerminated
-import akka.persistence.jdbc.serialization.Serialized
+import akka.persistence.jdbc.serialization.{ SerializationResult, Serialized }
 import akka.persistence.query.EventEnvelope
 import akka.stream.scaladsl.Flow
 
@@ -57,8 +57,8 @@ trait EventsByPersistenceIdRegistry { _: SlickAsyncWriteJournal ⇒
       removeEventsByPersistenceIdSubscriber(ref)
   }
 
-  protected def eventsByPersistenceIdFlow(atomicWrites: Iterable[AtomicWrite]): Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], NotUsed] =
-    Flow[Try[Iterable[Serialized]]].map { atomicWriteResult ⇒
+  protected def eventsByPersistenceIdFlow(atomicWrites: Iterable[AtomicWrite]): Flow[Try[Iterable[SerializationResult]], Try[Iterable[SerializationResult]], NotUsed] =
+    Flow[Try[Iterable[SerializationResult]]].map { atomicWriteResult ⇒
       if (hasEventsByPersistenceIdSubscribers) {
         for {
           seqSerialized ← atomicWriteResult

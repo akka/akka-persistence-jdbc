@@ -55,6 +55,8 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal
 
   def serializationFacade: SerializationFacade
 
+  def serialize: Boolean
+
   /**
    * Returns the list of persistenceIds that are not yet persisted
    */
@@ -68,7 +70,7 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal
     persistenceIdsInNewSetOfAtomicWrites ← Future.successful(messages.map(_.persistenceId))
     persistenceIdsNotInJournal ← determinePersistenceIdsNotInJournal(persistenceIdsInNewSetOfAtomicWrites)
     persistAtomicWritesResult ← Source(messages)
-      .via(serializationFacade.serialize)
+      .via(serializationFacade.serialize(serialize))
       .via(journalDao.writeFlow)
       .via(addAllPersistenceIdsFlow(persistenceIdsNotInJournal))
       .via(eventsByPersistenceIdFlow(messages))

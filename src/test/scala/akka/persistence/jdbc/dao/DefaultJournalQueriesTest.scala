@@ -19,8 +19,8 @@ package akka.persistence.jdbc.dao
 import akka.persistence.jdbc.TestSpec
 import akka.persistence.jdbc.extension.{ DeletedToTableColumnNames, DeletedToTableConfiguration, JournalTableColumnNames, JournalTableConfiguration }
 
-class SlickJournalDaoQueriesTest extends TestSpec {
-  val postgresJournalQueries = new SlickJournalDaoQueries(
+class DefaultJournalQueriesTest extends TestSpec {
+  val postgresJournalQueries = new DefaultJournalQueries(
     slick.driver.PostgresDriver,
     JournalTableConfiguration(
       tableName = "journal",

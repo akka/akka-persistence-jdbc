@@ -19,7 +19,7 @@ package akka.persistence.jdbc.journal
 import akka.NotUsed
 import akka.actor.{ Actor, ActorRef }
 import akka.persistence.AtomicWrite
-import akka.persistence.jdbc.serialization.Serialized
+import akka.persistence.jdbc.serialization.SerializationResult
 import akka.persistence.journal.Tagged
 import akka.persistence.query.EventEnvelope
 import akka.stream.scaladsl.Flow
@@ -64,8 +64,8 @@ trait EventsByPersistenceIdTagSubscriberRegistry { _: SlickAsyncWriteJournal ⇒
     case _                     ⇒ event
   }
 
-  protected def eventsByPersistenceIdAndTagFlow(atomicWrites: Iterable[AtomicWrite]): Flow[Try[Iterable[Serialized]], Try[Iterable[Serialized]], NotUsed] =
-    Flow[Try[Iterable[Serialized]]].map { atomicWriteResult ⇒
+  protected def eventsByPersistenceIdAndTagFlow(atomicWrites: Iterable[AtomicWrite]): Flow[Try[Iterable[SerializationResult]], Try[Iterable[SerializationResult]], NotUsed] =
+    Flow[Try[Iterable[SerializationResult]]].map { atomicWriteResult ⇒
       if (hasEventsByTagSubscribers) {
         for {
           seqSerialized ← atomicWriteResult

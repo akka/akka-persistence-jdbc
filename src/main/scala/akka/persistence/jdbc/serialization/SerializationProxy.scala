@@ -26,7 +26,14 @@ import akka.stream.scaladsl.Flow
 import scala.compat.Platform
 import scala.util.{ Success, Try }
 
-case class Serialized(persistenceId: String, sequenceNr: Long, serialized: Array[Byte], tags: Option[String] = None, created: Long = Platform.currentTime)
+sealed trait SerializationResult {
+  def persistenceId: String
+  def sequenceNr: Long
+  def tags: Option[String]
+  def created: Long
+}
+final case class Serialized(persistenceId: String, sequenceNr: Long, serialized: Array[Byte], tags: Option[String] = None, created: Long = Platform.currentTime) extends SerializationResult
+final case class NotSerialized(persistenceId: String, sequenceNr: Long, persistentRepr: PersistentRepr, tags: Option[String], created: Long = Platform.currentTime) extends SerializationResult
 
 trait SerializationProxy {
   def serialize(o: AnyRef): Try[Array[Byte]]
@@ -85,20 +92,20 @@ class SerializationFacade(proxy: SerializationProxy, separator: String) {
   /**
    * Serializes an [[akka.persistence.AtomicWrite]]
    */
-  private def serializeAtomicWrite(atomicWrite: AtomicWrite): Try[Iterable[Serialized]] = {
-    def serializeARepr(repr: PersistentRepr, tags: Set[String] = Set.empty[String]): Try[Serialized] = for {
-      byteArray ← proxy.serialize(repr)
-    } yield Serialized(repr.persistenceId, repr.sequenceNr, byteArray, encodeTags(tags, separator))
+  private def serializeAtomicWrite(atomicWrite: AtomicWrite, serialize: Boolean): Try[Iterable[SerializationResult]] = {
+    def serializeARepr(repr: PersistentRepr, tags: Set[String] = Set.empty[String]): Try[SerializationResult] =
+      if (serialize) proxy.serialize(repr).map(byteArray ⇒ Serialized(repr.persistenceId, repr.sequenceNr, byteArray, encodeTags(tags, separator)))
+      else Success(NotSerialized(repr.persistenceId, repr.sequenceNr, repr, encodeTags(tags, separator)))
 
-    def serializeTaggedOrRepr(repr: PersistentRepr): Try[Serialized] = repr.payload match {
+    def serializeTaggedOrRepr(repr: PersistentRepr): Try[SerializationResult] = repr.payload match {
       case Tagged(payload, tags) ⇒
         serializeARepr(repr.withPayload(payload), tags)
       case _ ⇒ serializeARepr(repr)
     }
 
     val xs = atomicWrite.payload.map(serializeTaggedOrRepr)
-    if (xs.exists(_.isFailure)) xs.filter(_.isFailure).head.asInstanceOf[Try[Iterable[Serialized]]] // SI-8566
-    else Success(xs.foldLeft(List.empty[Serialized]) {
+    if (xs.exists(_.isFailure)) xs.filter(_.isFailure).head.asInstanceOf[Try[Iterable[SerializationResult]]] // SI-8566
+    else Success(xs.foldLeft(List.empty[SerializationResult]) {
       case (xy, Success(serialized)) ⇒ xy :+ serialized
       case (xy, _)                   ⇒ xy
     })
@@ -110,12 +117,14 @@ class SerializationFacade(proxy: SerializationProxy, separator: String) {
    * akka.persistence.AtomicWrite and converts them to a Try[Iterable[Serialized]]. The Try denotes
    * whether there was a problem with the AtomicWrite or not.
    */
-  def serialize: Flow[AtomicWrite, Try[Iterable[Serialized]], NotUsed] =
-    Flow[AtomicWrite].map(serializeAtomicWrite)
+  def serialize(serialize: Boolean): Flow[AtomicWrite, Try[Iterable[SerializationResult]], NotUsed] =
+    Flow[AtomicWrite].map(aw ⇒ serializeAtomicWrite(aw, serialize))
 
-  def persistentFromByteArray(bytes: Array[Byte]): Try[PersistentRepr] =
-    proxy.deserialize(bytes, classOf[PersistentRepr])
+  def persistentFromSerializationResult(serializationResult: SerializationResult): Try[PersistentRepr] = serializationResult match {
+    case Serialized(_, _, bytes, _, _)   ⇒ proxy.deserialize(bytes, classOf[PersistentRepr])
+    case NotSerialized(_, _, repr, _, _) ⇒ Success(repr)
+  }
 
-  def deserializeRepr: Flow[Array[Byte], Try[PersistentRepr], NotUsed] =
-    Flow[Array[Byte]].map(persistentFromByteArray)
+  def deserializeRepr: Flow[SerializationResult, Try[PersistentRepr], NotUsed] =
+    Flow[SerializationResult].map(persistentFromSerializationResult)
 }

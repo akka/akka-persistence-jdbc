@@ -29,8 +29,8 @@ class SerializationFacadeTest extends TestSpec("postgres-application.conf") {
 
   it should "serialize a serializable message and indicate whether or not the serialization succeeded" in {
     val facade = new SerializationFacade(AkkaSerializationProxy(serialization), ",")
-    val probe = Source.single(AtomicWrite(PersistentRepr("foo"))).via(facade.serialize)
-      .runWith(TestSink.probe[Try[Iterable[Serialized]]])
+    val probe = Source.single(AtomicWrite(PersistentRepr("foo"))).via(facade.serialize(true))
+      .runWith(TestSink.probe[Try[Iterable[SerializationResult]]])
       .request(Int.MaxValue)
 
     probe.within(10.seconds) {
@@ -41,8 +41,8 @@ class SerializationFacadeTest extends TestSpec("postgres-application.conf") {
   it should "not serialize a non-serializable message and indicate whether or not the serialization succeeded" in {
     class Test
     val facade = new SerializationFacade(AkkaSerializationProxy(serialization), ",")
-    val probe = Source.single(AtomicWrite(PersistentRepr(new Test))).via(facade.serialize)
-      .runWith(TestSink.probe[Try[Iterable[Serialized]]])
+    val probe = Source.single(AtomicWrite(PersistentRepr(new Test))).via(facade.serialize(true))
+      .runWith(TestSink.probe[Try[Iterable[SerializationResult]]])
       .request(Int.MaxValue)
 
     probe.within(10.seconds) {
@@ -53,8 +53,8 @@ class SerializationFacadeTest extends TestSpec("postgres-application.conf") {
   it should "serialize non-serializable and serializable messages and indicate whether or not the serialization succeeded" in {
     class Test
     val facade = new SerializationFacade(AkkaSerializationProxy(serialization), ",")
-    val probe = Source(List(AtomicWrite(PersistentRepr(new Test)), AtomicWrite(PersistentRepr("foo")))).via(facade.serialize)
-      .runWith(TestSink.probe[Try[Iterable[Serialized]]])
+    val probe = Source(List(AtomicWrite(PersistentRepr(new Test)), AtomicWrite(PersistentRepr("foo")))).via(facade.serialize(true))
+      .runWith(TestSink.probe[Try[Iterable[SerializationResult]]])
       .request(Int.MaxValue)
 
     probe.within(10.seconds) {
@@ -68,8 +68,8 @@ class SerializationFacadeTest extends TestSpec("postgres-application.conf") {
   ignore should "serialize successfully" in {
     val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = false), "$$$")
     forAll(AkkaPersistenceGen.genAtomicWrite) { aw ⇒
-      val probe = Source.single(aw).via(facade.serialize)
-        .runWith(TestSink.probe[Try[Iterable[Serialized]]])
+      val probe = Source.single(aw).via(facade.serialize(true))
+        .runWith(TestSink.probe[Try[Iterable[SerializationResult]]])
         .request(Int.MaxValue)
 
       probe.within(10.seconds) {
@@ -81,7 +81,7 @@ class SerializationFacadeTest extends TestSpec("postgres-application.conf") {
   ignore should "deserialize successfully" in {
     val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = false), "$$$")
     forAll { (bytes: Array[Byte]) ⇒
-      val probe = Source.single(bytes).via(facade.deserializeRepr)
+      val probe = Source.single(Serialized("", 1L, bytes, None)).via(facade.deserializeRepr)
         .runWith(TestSink.probe[Try[PersistentRepr]])
         .request(Int.MaxValue)
 
@@ -94,8 +94,8 @@ class SerializationFacadeTest extends TestSpec("postgres-application.conf") {
   ignore should "fail to serialize" in {
     val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = true), "$$$")
     forAll(AkkaPersistenceGen.genAtomicWrite) { aw ⇒
-      val probe = Source.single(aw).via(facade.serialize)
-        .runWith(TestSink.probe[Try[Iterable[Serialized]]])
+      val probe = Source.single(aw).via(facade.serialize(true))
+        .runWith(TestSink.probe[Try[Iterable[SerializationResult]]])
         .request(Int.MaxValue)
 
       probe.within(10.seconds) {
@@ -107,7 +107,7 @@ class SerializationFacadeTest extends TestSpec("postgres-application.conf") {
   ignore should "fail to deserialize" in {
     val facade = new SerializationFacade(MockSerializationProxy(PersistentRepr(""), fail = true), "$$$")
     forAll { (bytes: Array[Byte]) ⇒
-      val probe = Source.single(bytes).via(facade.deserializeRepr)
+      val probe = Source.single(Serialized("", 1L, bytes, None)).via(facade.deserializeRepr)
         .runWith(TestSink.probe[Try[PersistentRepr]])
         .request(Int.MaxValue)
 

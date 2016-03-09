@@ -17,7 +17,7 @@ Alternatively you can opt to use [Postgresql](http://www.postgresql.org/), which
 available, with some great features, and it works great together with akka-persistence-jdbc.
                                  
 ## New release
-The latest version is `v2.2.10` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The latest version is `v2.2.11` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe/Lightbend Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -39,7 +39,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.10"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.11"
 ```
 
 ## Configuration
@@ -560,11 +560,56 @@ val willNotCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.event
 val willCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.currentEventsByPersistenceIdAndTag("fruitbasket", "apple", 0L)
 ```
 
-# Usage
-The user manual has been moved to [the wiki](https://github.com/dnvriend/akka-persistence-jdbc/wiki)
+# Custom DAO Implementation
+As of `2.2.11` the plugin supports loading a custom DAO for the journal and snapshot logic. Why would you want to have your own 
+DAO. If you can't answer this answer yourself, please keep using the default implementations that come out of the box.
+
+By means of configuration in `application.conf` a custom DAO can be configured, below the default DAOs are shown:
+
+```bash
+serialization {
+    journal = on // alter only when using a custom dao
+    snapshot = on // alter only when using a custom dao
+  }
+
+  dao {
+    journal = "akka.persistence.jdbc.dao.DefaultJournalDao"
+    snapshot = "akka.persistence.jdbc.dao.DefaultSnapshotDao"
+  }
+```
+
+You should implement a custom DAO if you wish to alter the default persistency strategy in any way, but you wish to reuse 
+all the logic that the plugin already has in place, eg. the Akka Persistence Query API. For example, the default implementation
+serializes messages and stores them as a byte array in a database blob. 
+
+But this is not the only way to store information in a database. For example, you could store messages with full type information
+as a normal database row. By implementing a JournalLog table that stores all persistenceId, sequenceNumber and event type (discriminator field),
+and storing the event data in another table with full typing, it is possible to store and retrieve journal and snapshot entries. 
+
+You only have to implement two interfaces `akka.persistence.jdbc.dao.JournalDao` and/or `akka.persistence.jdbc.dao.SnapshotDao`. 
+
+For example, take a look at the following two custom DAOs:
+ 
+```scala
+class MyCustomJournalDao(db: JdbcBackend#Database, val profile: JdbcProfile, system: ActorSystem) extends JournalDao {
+    // snip 
+}
+
+class MyCustomSnapshotDao(db: JdbcBackend#Database, val profile: JdbcProfile, system: ActorSystem) extends SnapshotDao {
+    // snip
+}
+```
+
+As you can see, the custom DAOs get a Slick database, a slick profile and an ActorSystem injected after constructed. You should 
+register the Fully Qualified Class Name in `application.conf` so that the custom DAOs will be used.
+
+For more information please review the two default implementations `akka.persistence.jdbc.dao.DefaultJournalDao` and `akka.persistence.jdbc.dao.DefaultSnapshotDao`.
 
 # What's new?
-For the full list of what's new see [this wiki page] (https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
+## 2.2.11 (2016-03-09)
+  - Configurable custom DAO implementation through configuration,
+  - Enable/Disable Serialization, the default journal and snapshot DAO rely on serialization, only disable when you known what you are doing, 
+  - Scala 2.11.7 -> 2.11.8
 
 ## 2.2.10 (2016-03-04)
   - Fix for parsing the schema name configuration for the `deleted_to` and `snapshot` table configuration.  

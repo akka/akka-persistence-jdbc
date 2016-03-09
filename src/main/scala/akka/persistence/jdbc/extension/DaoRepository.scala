@@ -75,10 +75,12 @@ class DaoRepositoryImpl()(implicit val system: ExtendedActorSystem) extends DaoR
       InMemorySnapshotDao(snapshotStorage)
     }
     else {
-      SnapshotDao(
-        AkkaPersistenceConfig(system).slickConfiguration.slickDriver,
-        SlickDatabase(system).db,
-        AkkaPersistenceConfig(system).snapshotTableConfiguration
-      )
+      val driver = AkkaPersistenceConfig(system).slickConfiguration.slickDriver
+      val fqcn = system.settings.config.getString("akka-persistence-jdbc.dao.snapshot")
+      system.dynamicAccess.createInstanceFor[SnapshotDao](fqcn, immutable.Seq(
+        (classOf[JdbcBackend#DatabaseDef], SlickDatabase(system).db),
+        (classOf[JdbcProfile], SlickDriver.forDriverName(driver)),
+        (classOf[ActorSystem], system)
+      )).get
     }
 }

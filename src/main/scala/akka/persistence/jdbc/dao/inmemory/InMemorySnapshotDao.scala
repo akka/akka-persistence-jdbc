@@ -17,11 +17,11 @@
 package akka.persistence.jdbc.dao.inmemory
 
 import akka.actor.ActorRef
+import akka.pattern.ask
 import akka.persistence.jdbc.dao.SnapshotDao
-import akka.persistence.jdbc.dao.SnapshotDao.SnapshotData
+import akka.persistence.jdbc.snapshot.SlickSnapshotStore.{ NotSerialized, Serialized, SerializationResult }
 import akka.stream.Materializer
 import akka.util.Timeout
-import akka.pattern.ask
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -50,18 +50,38 @@ class InMemorySnapshotDao(db: ActorRef)(implicit timeout: Timeout, ec: Execution
   override def deleteUpToMaxSequenceNr(persistenceId: String, maxSequenceNr: Long): Future[Unit] =
     (db ? DeleteUpToMaxSequenceNr(persistenceId, maxSequenceNr)).map(_ ⇒ ())
 
-  override def save(persistenceId: String, sequenceNr: Long, timestamp: Long, snapshot: Array[Byte]): Future[Unit] =
+  override def save(persistenceId: String, sequenceNr: Long, timestamp: Long, snapshot: SerializationResult): Future[Unit] =
     (db ? Save(persistenceId, sequenceNr, timestamp, snapshot)).map(_ ⇒ ())
 
-  override def snapshotForMaxSequenceNr(persistenceId: String): Future[Option[SnapshotData]] =
+  override def snapshotForMaxSequenceNr(persistenceId: String): Future[Option[SerializationResult]] =
     (db ? SnapshotForMaxSequenceNr(persistenceId, Long.MaxValue)).mapTo[Option[SnapshotData]]
+      .map {
+        case Some(SnapshotData(_, _, _, ser: Serialized))    ⇒ Some(ser)
+        case Some(SnapshotData(_, _, _, ser: NotSerialized)) ⇒ Some(ser)
+        case None                                            ⇒ None
+      }
 
-  override def snapshotForMaxSequenceNr(persistenceId: String, sequenceNr: Long): Future[Option[SnapshotData]] =
+  override def snapshotForMaxSequenceNr(persistenceId: String, sequenceNr: Long): Future[Option[SerializationResult]] =
     (db ? SnapshotForMaxSequenceNr(persistenceId, sequenceNr)).mapTo[Option[SnapshotData]]
+      .map {
+        case Some(SnapshotData(_, _, _, ser: Serialized))    ⇒ Some(ser)
+        case Some(SnapshotData(_, _, _, ser: NotSerialized)) ⇒ Some(ser)
+        case None                                            ⇒ None
+      }
 
-  override def snapshotForMaxTimestamp(persistenceId: String, timestamp: Long): Future[Option[SnapshotData]] =
+  override def snapshotForMaxTimestamp(persistenceId: String, timestamp: Long): Future[Option[SerializationResult]] =
     (db ? SnapshotForMaxTimestamp(persistenceId, timestamp)).mapTo[Option[SnapshotData]]
+      .map {
+        case Some(SnapshotData(_, _, _, ser: Serialized))    ⇒ Some(ser)
+        case Some(SnapshotData(_, _, _, ser: NotSerialized)) ⇒ Some(ser)
+        case None                                            ⇒ None
+      }
 
-  override def snapshotForMaxSequenceNrAndMaxTimestamp(persistenceId: String, sequenceNr: Long, timestamp: Long): Future[Option[SnapshotData]] =
+  override def snapshotForMaxSequenceNrAndMaxTimestamp(persistenceId: String, sequenceNr: Long, timestamp: Long): Future[Option[SerializationResult]] =
     (db ? SnapshotForMaxSequenceNrAndMaxTimestamp(persistenceId, sequenceNr, timestamp)).mapTo[Option[SnapshotData]]
+      .map {
+        case Some(SnapshotData(_, _, _, ser: Serialized))    ⇒ Some(ser)
+        case Some(SnapshotData(_, _, _, ser: NotSerialized)) ⇒ Some(ser)
+        case None                                            ⇒ None
+      }
 }

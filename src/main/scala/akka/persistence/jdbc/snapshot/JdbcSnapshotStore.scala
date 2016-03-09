@@ -18,7 +18,7 @@ package akka.persistence.jdbc.snapshot
 
 import akka.actor.ActorSystem
 import akka.persistence.jdbc.dao.SnapshotDao
-import akka.persistence.jdbc.extension.DaoRepository
+import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DaoRepository }
 import akka.persistence.jdbc.serialization.AkkaSerializationProxy
 import akka.serialization.SerializationExtension
 import akka.stream.{ ActorMaterializer, Materializer }
@@ -35,4 +35,6 @@ class JdbcSnapshotStore extends SlickSnapshotStore {
   override val snapshotDao: SnapshotDao = DaoRepository(system).snapshotDao
 
   override val serializationProxy = new AkkaSerializationProxy(SerializationExtension(system))
+
+  override val serialize: Boolean = AkkaPersistenceConfig(system).serializationConfiguration.snapshot
 }

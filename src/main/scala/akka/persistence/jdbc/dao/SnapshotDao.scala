@@ -16,25 +16,9 @@
 
 package akka.persistence.jdbc.dao
 
-import akka.persistence.jdbc.dao.SnapshotDao.SnapshotData
-import akka.persistence.jdbc.dao.SnapshotTables.SnapshotRow
-import akka.persistence.jdbc.extension.SnapshotTableConfiguration
-import akka.persistence.jdbc.util.SlickDriver
-import akka.stream.Materializer
-import slick.driver.JdbcProfile
-import slick.jdbc.JdbcBackend
+import akka.persistence.jdbc.snapshot.SlickSnapshotStore.SerializationResult
 
-import scala.concurrent.{ ExecutionContext, Future }
-
-object SnapshotDao {
-
-  case class SnapshotData(persistenceId: String, sequenceNumber: Long, created: Long, snapshot: Array[Byte])
-
-  def apply(driver: String, db: JdbcBackend#Database, snapshotTableCfg: SnapshotTableConfiguration)(implicit ec: ExecutionContext, mat: Materializer): SnapshotDao =
-    if (SlickDriver.forDriverName.isDefinedAt(driver)) {
-      new JdbcSlickSnapshotDao(db, SlickDriver.forDriverName(driver), snapshotTableCfg)
-    } else throw new IllegalArgumentException("Unknown slick driver: " + driver)
-}
+import scala.concurrent.Future
 
 trait SnapshotDao {
   def deleteAllSnapshots(persistenceId: String): Future[Unit]
@@ -45,106 +29,15 @@ trait SnapshotDao {
 
   def deleteUpToMaxSequenceNrAndMaxTimestamp(persistenceId: String, maxSequenceNr: Long, maxTimestamp: Long): Future[Unit]
 
-  def snapshotForMaxSequenceNr(persistenceId: String): Future[Option[SnapshotData]]
+  def snapshotForMaxSequenceNr(persistenceId: String): Future[Option[SerializationResult]]
 
-  def snapshotForMaxTimestamp(persistenceId: String, timestamp: Long): Future[Option[SnapshotData]]
+  def snapshotForMaxTimestamp(persistenceId: String, timestamp: Long): Future[Option[SerializationResult]]
 
-  def snapshotForMaxSequenceNr(persistenceId: String, sequenceNr: Long): Future[Option[SnapshotData]]
+  def snapshotForMaxSequenceNr(persistenceId: String, sequenceNr: Long): Future[Option[SerializationResult]]
 
-  def snapshotForMaxSequenceNrAndMaxTimestamp(persistenceId: String, sequenceNr: Long, timestamp: Long): Future[Option[SnapshotData]]
+  def snapshotForMaxSequenceNrAndMaxTimestamp(persistenceId: String, sequenceNr: Long, timestamp: Long): Future[Option[SerializationResult]]
 
   def delete(persistenceId: String, sequenceNr: Long): Future[Unit]
 
-  def save(persistenceId: String, sequenceNr: Long, timestamp: Long, snapshot: Array[Byte]): Future[Unit]
-}
-
-class SlickSnapshotDaoQueries(val profile: JdbcProfile, override val snapshotTableCfg: SnapshotTableConfiguration) extends SnapshotTables {
-  import profile.api._
-
-  def maxSeqNrForPersistenceId(persistenceId: String) =
-    selectAll(persistenceId).map(_.sequenceNumber).max
-
-  def insertOrUpdate(persistenceId: String, sequenceNr: Long, created: Long, snapshot: Array[Byte]) =
-    SnapshotTable.insertOrUpdate(SnapshotRow(persistenceId, sequenceNr, created, snapshot))
-
-  def selectAll(persistenceId: String) =
-    SnapshotTable.filter(_.persistenceId === persistenceId).sortBy(_.sequenceNumber.desc)
-
-  def selectByPersistenceIdAndMaxSeqNr(persistenceId: String) =
-    selectAll(persistenceId).filter(_.sequenceNumber === maxSeqNrForPersistenceId(persistenceId))
-
-  def selectByPersistenceIdAndSeqNr(persistenceId: String, sequenceNr: Long) =
-    selectAll(persistenceId).filter(_.sequenceNumber === sequenceNr)
-
-  def selectByPersistenceIdAndMaxTimestamp(persistenceId: String, maxTimestamp: Long) =
-    selectAll(persistenceId).filter(_.created <= maxTimestamp)
-
-  def selectByPersistenceIdAndMaxSequenceNr(persistenceId: String, maxSequenceNr: Long) =
-    selectAll(persistenceId).filter(_.sequenceNumber <= maxSequenceNr)
-
-  def selectByPersistenceIdAndMaxSequenceNrAndMaxTimestamp(persistenceId: String, maxSequenceNr: Long, maxTimestamp: Long) =
-    selectByPersistenceIdAndMaxSequenceNr(persistenceId, maxSequenceNr).filter(_.created <= maxTimestamp)
-}
-
-trait SlickSnapshotDao extends SnapshotDao {
-  val profile: slick.driver.JdbcProfile
-
-  import profile.api._
-
-  implicit def ec: ExecutionContext
-
-  implicit def mat: Materializer
-
-  def db: JdbcBackend#Database
-
-  def snapshotTableCfg: SnapshotTableConfiguration
-
-  def queries: SlickSnapshotDaoQueries
-
-  def mapToSnapshotData(row: SnapshotRow): SnapshotData =
-    SnapshotData(row.persistenceId, row.sequenceNumber, row.created, row.snapshot)
-
-  override def snapshotForMaxSequenceNr(persistenceId: String): Future[Option[SnapshotData]] = for {
-    rows ← db.run(queries.selectByPersistenceIdAndMaxSeqNr(persistenceId).result)
-  } yield rows.headOption map mapToSnapshotData
-
-  override def snapshotForMaxTimestamp(persistenceId: String, maxTimestamp: Long): Future[Option[SnapshotData]] = for {
-    rows ← db.run(queries.selectByPersistenceIdAndMaxTimestamp(persistenceId, maxTimestamp).result)
-  } yield rows.headOption map mapToSnapshotData
-
-  override def snapshotForMaxSequenceNr(persistenceId: String, maxSequenceNr: Long): Future[Option[SnapshotData]] = for {
-    rows ← db.run(queries.selectByPersistenceIdAndMaxSequenceNr(persistenceId, maxSequenceNr).result)
-  } yield rows.headOption map mapToSnapshotData
-
-  override def snapshotForMaxSequenceNrAndMaxTimestamp(persistenceId: String, maxSequenceNr: Long, maxTimestamp: Long): Future[Option[SnapshotData]] = for {
-    rows ← db.run(queries.selectByPersistenceIdAndMaxSequenceNrAndMaxTimestamp(persistenceId, maxSequenceNr, maxTimestamp).result)
-  } yield rows.headOption map mapToSnapshotData
-
-  override def save(persistenceId: String, sequenceNr: Long, created: Long, snapshot: Array[Byte]): Future[Unit] = for {
-    _ ← db.run(queries.insertOrUpdate(persistenceId, sequenceNr, created, snapshot))
-  } yield ()
-
-  override def delete(persistenceId: String, sequenceNr: Long): Future[Unit] = for {
-    _ ← db.run(queries.selectByPersistenceIdAndSeqNr(persistenceId, sequenceNr).delete)
-  } yield ()
-
-  override def deleteAllSnapshots(persistenceId: String): Future[Unit] = for {
-    _ ← db.run(queries.selectAll(persistenceId).delete)
-  } yield ()
-
-  override def deleteUpToMaxSequenceNr(persistenceId: String, maxSequenceNr: Long): Future[Unit] = for {
-    _ ← db.run(queries.selectByPersistenceIdAndMaxSequenceNr(persistenceId, maxSequenceNr).delete)
-  } yield ()
-
-  override def deleteUpToMaxTimestamp(persistenceId: String, maxTimestamp: Long): Future[Unit] = for {
-    _ ← db.run(queries.selectByPersistenceIdAndMaxTimestamp(persistenceId, maxTimestamp).delete)
-  } yield ()
-
-  override def deleteUpToMaxSequenceNrAndMaxTimestamp(persistenceId: String, maxSequenceNr: Long, maxTimestamp: Long): Future[Unit] = for {
-    _ ← db.run(queries.selectByPersistenceIdAndMaxSequenceNrAndMaxTimestamp(persistenceId, maxSequenceNr, maxTimestamp).delete)
-  } yield ()
-}
-
-class JdbcSlickSnapshotDao(val db: JdbcBackend#Database, override val profile: JdbcProfile, override val snapshotTableCfg: SnapshotTableConfiguration)(implicit val ec: ExecutionContext, val mat: Materializer) extends SlickSnapshotDao {
-  override val queries: SlickSnapshotDaoQueries = new SlickSnapshotDaoQueries(profile, snapshotTableCfg)
+  def save(persistenceId: String, sequenceNr: Long, timestamp: Long, serializationResult: SerializationResult): Future[Unit]
 }

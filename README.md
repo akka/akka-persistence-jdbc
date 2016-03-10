@@ -600,10 +600,9 @@ class MyCustomSnapshotDao(db: JdbcBackend#Database, val profile: JdbcProfile, sy
 }
 ```
 
-As you can see, the custom DAOs get a Slick database, a slick profile and an ActorSystem injected after constructed. You should 
-register the Fully Qualified Class Name in `application.conf` so that the custom DAOs will be used.
+As you can see, the custom DAOs get a Slick database, a slick profile and an ActorSystem injected after constructed. You should register the Fully Qualified Class Name in `application.conf` so that the custom DAOs will be used.
 
-For more information please review the two default implementations `akka.persistence.jdbc.dao.DefaultJournalDao` and `akka.persistence.jdbc.dao.DefaultSnapshotDao`.
+For more information please review the two default implementations `akka.persistence.jdbc.dao.DefaultJournalDao` and `akka.persistence.jdbc.dao.DefaultSnapshotDao` or the demo custom custom `CounterJournalDao` example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) site.
 
 # What's new?
 ## 2.2.11 (2016-03-09)

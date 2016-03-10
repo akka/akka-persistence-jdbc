@@ -561,8 +561,7 @@ val willCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.currentE
 ```
 
 # Custom DAO Implementation
-As of `2.2.11` the plugin supports loading a custom DAO for the journal and snapshot logic. Why would you want to have your own 
-DAO. If you can't answer this answer yourself, please keep using the default implementations that come out of the box.
+As of `2.2.11` the plugin supports loading a custom DAO for the journal and snapshot. You should implement a custom DAO if you wish to alter the default persistency strategy in any way, but wish to reuse all the logic that the plugin already has in place, eg. the Akka Persistence Query API. For example, the default persistency strategy that the plugin supports serializes journal and snapshot messages using a serializer of your choice and stores them as byte arrays in the database.
 
 By means of configuration in `application.conf` a custom DAO can be configured, below the default DAOs are shown:
 
@@ -578,15 +577,9 @@ serialization {
   }
 ```
 
-You should implement a custom DAO if you wish to alter the default persistency strategy in any way, but you wish to reuse 
-all the logic that the plugin already has in place, eg. the Akka Persistence Query API. For example, the default implementation
-serializes messages and stores them as a byte array in a database blob. 
+Storing messages as byte arrays in blobs arenot the only way to store information in a database. For example, you could store messages with full type information as a normal database rows, each event type having its own table. For example, implementing a Journal Log table that stores all persistenceId, sequenceNumber and event type discriminator field, and storing the event data in another table with full typing
 
-But this is not the only way to store information in a database. For example, you could store messages with full type information
-as a normal database row. By implementing a JournalLog table that stores all persistenceId, sequenceNumber and event type (discriminator field),
-and storing the event data in another table with full typing, it is possible to store and retrieve journal and snapshot entries. 
-
-You only have to implement two interfaces `akka.persistence.jdbc.dao.JournalDao` and/or `akka.persistence.jdbc.dao.SnapshotDao`. 
+You only have to implement two interfaces `akka.persistence.jdbc.dao.JournalDao` and/or `akka.persistence.jdbc.dao.SnapshotDao`. As these APIs are only now exposed for public use, the interfaces may change when the API needs to change for whatever reason eg. to make it more stable.
 
 For example, take a look at the following two custom DAOs:
  
@@ -602,11 +595,11 @@ class MyCustomSnapshotDao(db: JdbcBackend#Database, val profile: JdbcProfile, sy
 
 As you can see, the custom DAOs get a Slick database, a slick profile and an ActorSystem injected after constructed. You should register the Fully Qualified Class Name in `application.conf` so that the custom DAOs will be used.
 
-For more information please review the two default implementations `akka.persistence.jdbc.dao.DefaultJournalDao` and `akka.persistence.jdbc.dao.DefaultSnapshotDao` or the demo custom custom `CounterJournalDao` example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) site.
+For more information please review the two default implementations `akka.persistence.jdbc.dao.DefaultJournalDao` and `akka.persistence.jdbc.dao.DefaultSnapshotDao` or the demo custom custom [CounterJournalDao](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) site.
 
 # What's new?
 ## 2.2.11 (2016-03-09)
-  - Configurable custom DAO implementation through configuration,
+  - Journal and SnapshotDAO implementation are configurable, when you need to implement your own persistency strategy,
   - Enable/Disable Serialization, the default journal and snapshot DAO rely on serialization, only disable when you known what you are doing, 
   - Scala 2.11.7 -> 2.11.8
 

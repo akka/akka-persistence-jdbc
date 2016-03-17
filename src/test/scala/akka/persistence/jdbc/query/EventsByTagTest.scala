@@ -24,8 +24,8 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
   it should "not find events for unknown tags" in {
     withTestActors() { (actor1, actor2, actor3) ⇒
       actor1 ! withTags(1, "one")
-      actor1 ! withTags(2, "two")
-      actor1 ! withTags(3, "three")
+      actor2 ! withTags(2, "two")
+      actor3 ! withTags(3, "three")
 
       eventually {
         journalDao.countJournal.futureValue shouldBe 3
@@ -40,11 +40,36 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
     }
   }
 
-  it should "find events from an offset" in {
+  it should "find all events by tag" in {
     withTestActors() { (actor1, actor2, actor3) ⇒
       actor1 ! withTags(1, "number")
-      actor1 ! withTags(2, "number")
-      actor1 ! withTags(3, "number")
+      actor2 ! withTags(2, "number")
+      actor3 ! withTags(3, "number")
+
+      eventually {
+        journalDao.countJournal.futureValue shouldBe 3
+      }
+
+      withEventsByTag()("number", 0) { tp ⇒
+        tp.request(Int.MaxValue)
+        tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
+        tp.expectNoMsg(100.millis)
+
+        actor1 ! withTags(4, "number")
+        tp.expectNextPF { case EventEnvelope(4, _, _, _) ⇒ }
+        tp.cancel()
+        tp.expectNoMsg(100.millis)
+      }
+    }
+  }
+
+  it should "find events by tag from an offset" in {
+    withTestActors() { (actor1, actor2, actor3) ⇒
+      actor1 ! withTags(1, "number")
+      actor2 ! withTags(2, "number")
+      actor3 ! withTags(3, "number")
 
       eventually {
         journalDao.countJournal.futureValue shouldBe 3
@@ -52,12 +77,11 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
 
       withEventsByTag()("number", 2) { tp ⇒
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(2, "my-1", 2, 2))
-        tp.expectNext(EventEnvelope(3, "my-1", 3, 3))
+        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
 
         actor1 ! withTags(4, "number")
-        tp.expectNext(EventEnvelope(4, "my-1", 4, 4))
+        tp.expectNextPF { case EventEnvelope(4, _, _, _) ⇒ }
         tp.cancel()
         tp.expectNoMsg(100.millis)
       }
@@ -71,15 +95,15 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.expectNoMsg(100.millis)
 
         actor1 ! withTags(1, "one")
-        tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
+        tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
 
         actor2 ! withTags(1, "one")
-        tp.expectNext(EventEnvelope(1, "my-2", 1, 1))
+        tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
 
         actor3 ! withTags(1, "one")
-        tp.expectNext(EventEnvelope(1, "my-3", 1, 1))
+        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
 
         actor1 ! withTags(2, "two")
@@ -90,15 +114,15 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.expectNoMsg(100.millis)
 
         actor1 ! withTags(3, "one")
-        tp.expectNext(EventEnvelope(3, "my-1", 3, 3))
+        tp.expectNextPF { case EventEnvelope(4, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
 
         actor2 ! withTags(3, "one")
-        tp.expectNext(EventEnvelope(3, "my-2", 3, 3))
+        tp.expectNextPF { case EventEnvelope(5, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
 
         actor3 ! withTags(3, "one")
-        tp.expectNext(EventEnvelope(3, "my-3", 3, 3))
+        tp.expectNextPF { case EventEnvelope(6, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
 
         tp.cancel()
@@ -129,59 +153,53 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
 
       withEventsByTag(10.seconds)("prime", 0) { tp ⇒
         tp.request(Int.MaxValue)
-        tp.expectNextUnordered(
-          EventEnvelope(1, "my-1", 1, 1),
-          EventEnvelope(2, "my-1", 2, 2),
-          EventEnvelope(3, "my-1", 3, 3),
-          EventEnvelope(5, "my-1", 5, 5),
-          EventEnvelope(1, "my-2", 1, 3),
-          EventEnvelope(1, "my-3", 1, 3)
-        )
+        tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(4, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(5, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(6, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
         tp.cancel()
       }
 
       withEventsByTag(10.seconds)("three", 0) { tp ⇒
         tp.request(Int.MaxValue)
-        tp.expectNextUnordered(
-          EventEnvelope(3, "my-1", 3, 3),
-          EventEnvelope(1, "my-2", 1, 3),
-          EventEnvelope(1, "my-3", 1, 3)
-        )
+        tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
         tp.cancel()
       }
 
       withEventsByTag(10.seconds)("3", 0) { tp ⇒
         tp.request(Int.MaxValue)
-        tp.expectNextUnordered(
-          EventEnvelope(3, "my-1", 3, 3),
-          EventEnvelope(1, "my-2", 1, 3),
-          EventEnvelope(1, "my-3", 1, 3)
-        )
+        tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
         tp.cancel()
       }
 
       withEventsByTag(10.seconds)("one", 0) { tp ⇒
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
+        tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
         tp.cancel()
       }
 
       withEventsByPersistenceId()("my-1", 0, Int.MaxValue) { tp ⇒
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
-        tp.expectNext(EventEnvelope(2, "my-1", 2, 2))
-        tp.expectNext(EventEnvelope(3, "my-1", 3, 3))
-        tp.expectNext(EventEnvelope(4, "my-1", 4, 4))
-        tp.expectNext(EventEnvelope(5, "my-1", 5, 5))
-        tp.expectNext(EventEnvelope(6, "my-1", 6, 6))
-        tp.expectNext(EventEnvelope(7, "my-1", 7, 7))
-        tp.expectNext(EventEnvelope(8, "my-1", 8, 8))
-        tp.expectNext(EventEnvelope(9, "my-1", 9, 9))
-        tp.expectNext(EventEnvelope(10, "my-1", 10, 10))
+        tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(4, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(5, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(6, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(7, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(8, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(9, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(10, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
         tp.cancel()
       }

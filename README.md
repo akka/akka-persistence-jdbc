@@ -57,7 +57,7 @@ Configure `slick`:
   - `slick.driver.PostgresDriver`
   - `slick.driver.MySQLDriver`
   - `com.typesafe.slick.driver.oracle.OracleDriver`
-   
+
 ## DataSource lookup by JNDI name
 The plugin uses `slick` as the database access library. Slick [supports jndi](http://slick.typesafe.com/doc/3.1.1/database.html#using-a-jndi-name)
 for looking up [DataSource](http://docs.oracle.com/javase/7/docs/api/javax/sql/DataSource.html)s. 
@@ -535,6 +535,10 @@ event is provided in the EventEnvelope, which makes it possible to resume the st
 In addition to the offset the EventEnvelope also provides persistenceId and sequenceNr for each event. The sequenceNr is 
 the sequence number for the persistent actor with the persistenceId that persisted the event. The persistenceId + sequenceNr 
 is an unique identifier for the event.
+
+The returned event stream contains only events that correspond to the given tag, and is ordered by the creation time of the events,
+The same stream elements (in same order) are returned for multiple executions of the same query. Deleted events are not deleted
+from the tagged event stream.
 
 ## EventsByPersistenceIdAndTag and CurrentEventsByPersistenceIdAndTag
 `eventsByPersistenceIdAndTag` and `currentEventsByPersistenceIdAndTag` is used for retrieving specific events identified 

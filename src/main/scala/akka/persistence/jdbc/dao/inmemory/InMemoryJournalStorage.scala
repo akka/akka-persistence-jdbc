@@ -108,9 +108,8 @@ class InMemoryJournalStorage extends Actor with ActorLogging {
     val determine: List[SerializationResult] = (for {
       xs ← journal.values
       x ← xs
-      if x.sequenceNr >= offset
       if x.tags.exists(tags ⇒ SerializationFacade.decodeTags(tags, ",") contains tag)
-    } yield x).toList
+    } yield x).toList.sortBy(_.created).drop(offset.toInt)
     log.debug(s"[eventsByTag]: sending: $determine")
     ref ! determine
   }

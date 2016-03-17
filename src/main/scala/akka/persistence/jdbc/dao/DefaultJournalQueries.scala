@@ -72,7 +72,7 @@ class DefaultJournalQueries(val profile: JdbcProfile, override val journalTableC
       .take(max)
 
   def eventsByTag(tag: String, offset: Long): Query[Journal, JournalRow, Seq] =
-    JournalTable.filter(_.tags like s"%$tag%").sortBy(_.sequenceNumber.asc).filter(_.sequenceNumber >= offset)
+    JournalTable.filter(_.tags like s"%$tag%").sortBy(_.created.asc).drop(offset)
 
   def eventsByTagAndPersistenceId(persistenceId: String, tag: String, offset: Long): Query[Journal, JournalRow, Seq] =
     JournalTable.filter(_.persistenceId === persistenceId).filter(_.tags like s"%$tag%").sortBy(_.sequenceNumber.asc).filter(_.sequenceNumber >= offset)

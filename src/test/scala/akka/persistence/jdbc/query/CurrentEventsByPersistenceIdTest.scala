@@ -27,6 +27,26 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
       tp.expectComplete()
     }
 
+  it should "find events from an offset" in {
+    withTestActors() { (actor1, actor2, actor3) ⇒
+      actor1 ! 1
+      actor1 ! 2
+      actor1 ! 3
+      actor1 ! 4
+
+      eventually {
+        journalDao.countJournal.futureValue shouldBe 4
+      }
+
+      withCurrentEventsByPersistenceid()("my-1", 2, 3) { tp ⇒
+        tp.request(Int.MaxValue)
+        tp.expectNext(EventEnvelope(2, "my-1", 2, 2))
+        tp.expectNext(EventEnvelope(3, "my-1", 3, 3))
+        tp.expectComplete()
+      }
+    }
+  }
+
   it should "find events for actors" in
     withTestActors() { (actor1, actor2, actor3) ⇒
       actor1 ! 1

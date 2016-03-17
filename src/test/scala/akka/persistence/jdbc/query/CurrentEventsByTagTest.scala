@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.jdbc.util.Schema.{ Oracle, MySQL, Postgres }
+import akka.persistence.jdbc.util.Schema.{ MySQL, Oracle, Postgres }
 import akka.persistence.query.EventEnvelope
 
 abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config) {
@@ -33,6 +33,25 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
 
       withCurrentEventsByTag()("unknown", 0) { tp ⇒
         tp.request(Int.MaxValue)
+        tp.expectComplete()
+      }
+    }
+  }
+
+  it should "find events from an offset" in {
+    withTestActors() { (actor1, actor2, actor3) ⇒
+      actor1 ! withTags(1, "number")
+      actor1 ! withTags(2, "number")
+      actor1 ! withTags(3, "number")
+
+      eventually {
+        journalDao.countJournal.futureValue shouldBe 3
+      }
+
+      withCurrentEventsByTag()("number", 2) { tp ⇒
+        tp.request(Int.MaxValue)
+        tp.expectNext(EventEnvelope(2, "my-1", 2, 2))
+        tp.expectNext(EventEnvelope(3, "my-1", 3, 3))
         tp.expectComplete()
       }
     }

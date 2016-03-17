@@ -41,6 +41,30 @@ abstract class EventsByPersistenceIdAndTagTest(config: String) extends QueryTest
       }
     }
 
+  it should "find events from an offset" in {
+    withTestActors() { (actor1, actor2, actor3) ⇒
+      actor1 ! withTags(1, "number")
+      actor1 ! withTags(2, "number")
+      actor1 ! withTags(3, "number")
+
+      eventually {
+        journalDao.countJournal.futureValue shouldBe 3
+      }
+
+      withEventsByPersistenceIdAndTag()("my-1", "number", 2) { tp ⇒
+        tp.request(Int.MaxValue)
+        tp.expectNext(EventEnvelope(2, "my-1", 2, 2))
+        tp.expectNext(EventEnvelope(3, "my-1", 3, 3))
+        tp.expectNoMsg(100.millis)
+
+        actor1 ! withTags(4, "number")
+        tp.expectNext(EventEnvelope(4, "my-1", 4, 4))
+        tp.cancel()
+        tp.expectNoMsg(100.millis)
+      }
+    }
+  }
+
   it should "persist and find tagged event for by tag 'one' and pid 'my-1'" in
     withTestActors() { (actor1, actor2, actor3) ⇒
       withEventsByPersistenceIdAndTag(10.seconds)("my-1", "one", 0) { tp ⇒

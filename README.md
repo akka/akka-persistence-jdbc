@@ -4,7 +4,7 @@ Akka-persistence-jdbc is a plugin for akka-persistence that asynchronously write
 Service | Status | Description
 ------- | ------ | -----------
 License | [![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt) | Apache 2.0
-Bintray | [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-persistence-jdbc/images/download.svg) ](https://bintray.com/dnvriend/maven/akka-persistence-jdbc/_latestVersion) | Latest Version on Bintray
+Bintray | [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-persistence-jdbc/images/download.svg)](https://bintray.com/dnvriend/maven/akka-persistence-jdbc/_latestVersion) | Latest Version on Bintray
 
 ## Slick Extensions Licensing Changing to Open Source
 The [Typesafe/Lightbend Slick Extensions](http://slick.typesafe.com/doc/3.1.1/extensions.html) have become [open source as 
@@ -17,7 +17,7 @@ Alternatively you can opt to use [Postgresql](http://www.postgresql.org/), which
 available, with some great features, and it works great together with akka-persistence-jdbc.
                                  
 ## New release
-The latest version is `v2.2.12` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The latest version is `2.2.14` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe/Lightbend Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -39,7 +39,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.12"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.14"
 ```
 
 ## Configuration
@@ -534,10 +534,6 @@ In addition to the offset the EventEnvelope also provides persistenceId and sequ
 the sequence number for the persistent actor with the persistenceId that persisted the event. The persistenceId + sequenceNr 
 is an unique identifier for the event.
 
-The returned event stream contains only events that correspond to the given tag, and is ordered by the creation time of the events, 
-The same stream elements (in same order) are returned for multiple executions of the same query. Deleted events are not deleted 
-from the tagged event stream. 
-
 ## EventsByPersistenceIdAndTag and CurrentEventsByPersistenceIdAndTag
 `eventsByPersistenceIdAndTag` and `currentEventsByPersistenceIdAndTag` is used for retrieving specific events identified 
 by a specific tag for a specific PersistentActor identified by persistenceId. These two queries basically are 
@@ -598,6 +594,9 @@ As you can see, the custom DAOs get a Slick database, a slick profile and an Act
 For more information please review the two default implementations `akka.persistence.jdbc.dao.DefaultJournalDao` and `akka.persistence.jdbc.dao.DefaultSnapshotDao` or the demo custom custom [CounterJournalDao](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) site.
 
 # What's new?
+## 2.2.14 (2016-03-17)
+  - Determine events where appropriate by using an offset using the query api was not tested and thus the implementation was incorrect. This has been corrected and the documentation altered where appropriate.
+
 ## 2.2.13 (2016-03-17)
   - Release to enable Bintray to sync with JCenter, so no big changes here  
   
@@ -655,7 +654,7 @@ For more information please review the two default implementations `akka.persist
   - Please note the configuration change. 
 
 ## 2.1.0 (2016-01-24) 
- - Support for the `currentEventsByTag` query, the tagged events will be sorted by event creation time.
+ - Support for the `currentEventsByTag` query, the tagged events will be sorted by event sequence number.
  - Table column names are configurable.
  - Schema change for the journal table, added two columns, `tags` and `created`, please update your schema.
 

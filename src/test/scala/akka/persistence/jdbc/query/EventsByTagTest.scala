@@ -40,6 +40,30 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
     }
   }
 
+  it should "find events from an offset" in {
+    withTestActors() { (actor1, actor2, actor3) ⇒
+      actor1 ! withTags(1, "number")
+      actor1 ! withTags(2, "number")
+      actor1 ! withTags(3, "number")
+
+      eventually {
+        journalDao.countJournal.futureValue shouldBe 3
+      }
+
+      withEventsByTag()("number", 2) { tp ⇒
+        tp.request(Int.MaxValue)
+        tp.expectNext(EventEnvelope(2, "my-1", 2, 2))
+        tp.expectNext(EventEnvelope(3, "my-1", 3, 3))
+        tp.expectNoMsg(100.millis)
+
+        actor1 ! withTags(4, "number")
+        tp.expectNext(EventEnvelope(4, "my-1", 4, 4))
+        tp.cancel()
+        tp.expectNoMsg(100.millis)
+      }
+    }
+  }
+
   it should "persist and find tagged event for one tag" in {
     withTestActors() { (actor1, actor2, actor3) ⇒
       withEventsByTag(10.seconds)("one", 0) { tp ⇒

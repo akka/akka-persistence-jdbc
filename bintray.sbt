@@ -14,13 +14,33 @@
  * limitations under the License.
  */
 
-import bintray.Plugin._
+// enable publishing to jcenter
+homepage := Some(url("https://github.com/dnvriend/demo-akka-persistence-jdbc"))
 
-bintray.Plugin.bintraySettings
+pomIncludeRepository := (_ => false)
 
-bintray.Keys.packageLabels in bintray.Keys.bintray := Seq("akka", "jdbc", "persistence")
-
-bintray.Keys.packageAttributes in bintray.Keys.bintray ~=
-  ((_: bintray.AttrMap) ++ Map("website_url" -> Seq(bintry.StringAttr("https://github.com/dnvriend/akka-persistence-jdbc")), "github_repo" -> Seq(bintry.StringAttr("https://github.com/dnvriend/akka-persistence-jdbc.git")), "issue_tracker_url" -> Seq(bintry.StringAttr("https://github.com/dnvriend/akka-persistence-jdbc/issues/"))))
+pomExtra := <scm>
+  <url>https://github.com/dnvriend/demo-akka-persistence-jdbc</url>
+  <connection>scm:git@github.com:dnvriend/demo-akka-persistence-jdbc.git</connection>
+</scm>
+  <developers>
+    <developer>
+      <id>dnvriend</id>
+      <name>Dennis Vriend</name>
+      <url>https://github.com/dnvriend</url>
+    </developer>
+  </developers>
 
 publishMavenStyle := true
+
+bintrayPackageLabels := Seq("akka", "persistence", "jdbc")
+
+bintrayPackageAttributes ~=
+  (_ ++ Map(
+    "website_url" -> Seq(bintry.Attr.String("https://github.com/dnvriend/demo-akka-persistence-jdbc")),
+    "github_repo" -> Seq(bintry.Attr.String("https://github.com/dnvriend/akka-persistence-jdbc.git")),
+    "issue_tracker_url" -> Seq(bintry.Attr.String("https://github.com/dnvriend/akka-persistence-jdbc/issues/"))
+  )
+    )
+
+//bintrayRepository := "maven"

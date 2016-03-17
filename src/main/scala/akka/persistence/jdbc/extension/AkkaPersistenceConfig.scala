@@ -18,8 +18,8 @@ package akka.persistence.jdbc.extension
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
-import akka.event.{Logging, LoggingAdapter}
+import akka.actor.{ ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider }
+import akka.event.{ Logging, LoggingAdapter }
 import akka.persistence.jdbc.BuildInfo
 import akka.persistence.jdbc.util.ConfigOps._
 import com.typesafe.config.Config
@@ -34,7 +34,7 @@ object AkkaPersistenceConfig extends ExtensionId[AkkaPersistenceConfigImpl] with
 
 object SlickConfiguration {
   def apply(cfg: Config): SlickConfiguration =
-    cfg.withPath("akka-persistence-jdbc.slick") { cfg =>
+    cfg.withPath("akka-persistence-jdbc.slick") { cfg ⇒
       SlickConfiguration(
         cfg.as[String]("driver", "slick.driver.PostgresDriver"),
         cfg.as[String]("jndiName")
@@ -46,7 +46,7 @@ case class SlickConfiguration(slickDriver: String, jndiName: Option[String])
 
 object PersistenceQueryConfiguration {
   def apply(cfg: Config): PersistenceQueryConfiguration =
-    cfg.withPath("akka-persistence-jdbc.query") { cfg =>
+    cfg.withPath("akka-persistence-jdbc.query") { cfg ⇒
       PersistenceQueryConfiguration(cfg.as[String]("separator", ","))
     }
 }
@@ -59,11 +59,11 @@ case class JournalTableConfiguration(tableName: String, schemaName: Option[Strin
 
 object JournalTableConfiguration {
   def apply(cfg: Config): JournalTableConfiguration =
-    cfg.withPath("akka-persistence-jdbc.tables.journal") { cfg =>
+    cfg.withPath("akka-persistence-jdbc.tables.journal") { cfg ⇒
       JournalTableConfiguration(
         cfg.as[String]("tableName", "journal"),
         cfg.as[String]("schemaName").map(_.trim).filter(_.nonEmpty),
-        cfg.withPath("columnNames") { cfg =>
+        cfg.withPath("columnNames") { cfg ⇒
           JournalTableColumnNames(
             cfg.as[String]("persistenceId", "persistence_id"),
             cfg.as[String]("sequenceNumber", "sequence_nr"),
@@ -82,11 +82,11 @@ case class DeletedToTableConfiguration(tableName: String, schemaName: Option[Str
 
 object DeletedToTableConfiguration {
   def apply(cfg: Config): DeletedToTableConfiguration =
-    cfg.withPath("akka-persistence-jdbc.tables.deletedTo") { cfg =>
+    cfg.withPath("akka-persistence-jdbc.tables.deletedTo") { cfg ⇒
       DeletedToTableConfiguration(
         cfg.as[String]("tableName", "journal"),
         cfg.as[String]("schemaName").map(_.trim).filter(_.nonEmpty),
-        cfg.withPath("columnNames") { cfg =>
+        cfg.withPath("columnNames") { cfg ⇒
           DeletedToTableColumnNames(
             cfg.as[String]("persistenceId", "persistence_id"),
             cfg.as[String]("deletedTo", "deleted_to")
@@ -102,11 +102,11 @@ case class SnapshotTableConfiguration(tableName: String, schemaName: Option[Stri
 
 object SnapshotTableConfiguration {
   def apply(cfg: Config): SnapshotTableConfiguration =
-    cfg.withPath("akka-persistence-jdbc.tables.snapshot") { cfg =>
+    cfg.withPath("akka-persistence-jdbc.tables.snapshot") { cfg ⇒
       SnapshotTableConfiguration(
         cfg.as[String]("tableName", "journal"),
         cfg.as[String]("schemaName").map(_.trim).filter(_.nonEmpty),
-        cfg.withPath("columnNames") { cfg =>
+        cfg.withPath("columnNames") { cfg ⇒
           SnapshotTableColumnNames(
             cfg.as[String]("persistenceId", "persistence_id"),
             cfg.as[String]("sequenceNumber", "sequence_nr"),
@@ -150,23 +150,23 @@ class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) exte
   val log: LoggingAdapter = Logging(system, this.getClass)
 
   override val slickConfiguration: SlickConfiguration =
-    if(inMemory) SlickConfiguration("", None)
+    if (inMemory) SlickConfiguration("", None)
     else SlickConfiguration(system.settings.config)
 
   override val persistenceQueryConfiguration: PersistenceQueryConfiguration =
-    if(inMemory) PersistenceQueryConfiguration("")
+    if (inMemory) PersistenceQueryConfiguration("")
     else PersistenceQueryConfiguration(system.settings.config)
 
   override def journalTableConfiguration: JournalTableConfiguration =
-    if(inMemory) JournalTableConfiguration("", None, JournalTableColumnNames("", "", "", "", ""))
+    if (inMemory) JournalTableConfiguration("", None, JournalTableColumnNames("", "", "", "", ""))
     else JournalTableConfiguration(system.settings.config)
 
   override def deletedToTableConfiguration: DeletedToTableConfiguration =
-    if(inMemory) DeletedToTableConfiguration("", None, DeletedToTableColumnNames("", ""))
+    if (inMemory) DeletedToTableConfiguration("", None, DeletedToTableColumnNames("", ""))
     else DeletedToTableConfiguration(system.settings.config)
 
   override def snapshotTableConfiguration: SnapshotTableConfiguration =
-    if(inMemory) SnapshotTableConfiguration("", None, SnapshotTableColumnNames("", "", "", ""))
+    if (inMemory) SnapshotTableConfiguration("", None, SnapshotTableColumnNames("", "", "", ""))
     else SnapshotTableConfiguration(system.settings.config)
 
   override def inMemory: Boolean =

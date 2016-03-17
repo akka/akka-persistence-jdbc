@@ -17,7 +17,7 @@ Alternatively you can opt to use [Postgresql](http://www.postgresql.org/), which
 available, with some great features, and it works great together with akka-persistence-jdbc.
                                  
 ## New release
-The latest version is `v2.2.11` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The latest version is `v2.2.12` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe/Lightbend Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -39,7 +39,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 
 resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.11"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.12"
 ```
 
 ## Configuration
@@ -598,6 +598,10 @@ As you can see, the custom DAOs get a Slick database, a slick profile and an Act
 For more information please review the two default implementations `akka.persistence.jdbc.dao.DefaultJournalDao` and `akka.persistence.jdbc.dao.DefaultSnapshotDao` or the demo custom custom [CounterJournalDao](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) site.
 
 # What's new?
+## 2.2.12 (2016-03-17)
+  - Added the appropriate Maven POM resources to be publishing to Bintray's JCenter
+  - Refactored the akka-persistence-query interfaces, integrated it back again in one jar, for jcenter deployment simplicity
+
 ## 2.2.11 (2016-03-09)
   - Journal and SnapshotDAO implementation are configurable, when you need to implement your own persistency strategy,
   - Enable/Disable Serialization, the default journal and snapshot DAO rely on serialization, only disable when you known what you are doing, 

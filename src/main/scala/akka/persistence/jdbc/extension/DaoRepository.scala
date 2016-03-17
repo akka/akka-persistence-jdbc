@@ -17,11 +17,11 @@
 package akka.persistence.jdbc.extension
 
 import akka.actor._
-import akka.event.{Logging, LoggingAdapter}
-import akka.persistence.jdbc.dao.inmemory.{InMemoryJournalDao, InMemoryJournalStorage, InMemorySnapshotDao, InMemorySnapshotStorage}
-import akka.persistence.jdbc.dao.{JournalDao, SnapshotDao}
+import akka.event.{ Logging, LoggingAdapter }
+import akka.persistence.jdbc.dao.inmemory.{ InMemoryJournalDao, InMemoryJournalStorage, InMemorySnapshotDao, InMemorySnapshotStorage }
+import akka.persistence.jdbc.dao.{ JournalDao, SnapshotDao }
 import akka.persistence.jdbc.util.SlickDriver
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.{ ActorMaterializer, Materializer }
 import akka.util.Timeout
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend
@@ -53,12 +53,11 @@ class DaoRepositoryImpl()(implicit val system: ExtendedActorSystem) extends DaoR
   lazy val snapshotStorage = system.actorOf(Props(new InMemorySnapshotStorage), "InMemorySnapshotStorage")
 
   override def journalDao: JournalDao =
-    if(AkkaPersistenceConfig(system).inMemory) {
+    if (AkkaPersistenceConfig(system).inMemory) {
       import scala.concurrent.duration._
       implicit val timeout = Timeout(AkkaPersistenceConfig(system).inMemoryTimeout)
       InMemoryJournalDao(journalStorage)
-    }
-    else {
+    } else {
       val driver = AkkaPersistenceConfig(system).slickConfiguration.slickDriver
       val fqcn = system.settings.config.getString("akka-persistence-jdbc.dao.journal")
       system.dynamicAccess.createInstanceFor[JournalDao](fqcn, immutable.Seq(
@@ -69,12 +68,11 @@ class DaoRepositoryImpl()(implicit val system: ExtendedActorSystem) extends DaoR
     }
 
   override def snapshotDao: SnapshotDao =
-    if(AkkaPersistenceConfig(system).inMemory) {
+    if (AkkaPersistenceConfig(system).inMemory) {
       import scala.concurrent.duration._
       implicit val timeout = Timeout(5.seconds)
       InMemorySnapshotDao(snapshotStorage)
-    }
-    else {
+    } else {
       val driver = AkkaPersistenceConfig(system).slickConfiguration.slickDriver
       val fqcn = system.settings.config.getString("akka-persistence-jdbc.dao.snapshot")
       system.dynamicAccess.createInstanceFor[SnapshotDao](fqcn, immutable.Seq(

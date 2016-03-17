@@ -129,7 +129,7 @@ class InMemoryJournalStorage extends Actor with ActorLogging {
   def writelist(ref: ActorRef, xs: Iterable[SerializationResult]): Unit = {
     xs.foreach { (serialized: SerializationResult) ⇒
       val key = serialized.persistenceId
-      journal += (key -> (journal.getOrElse(key, Vector.empty[SerializationResult]) :+ serialized))
+      journal += (key → (journal.getOrElse(key, Vector.empty[SerializationResult]) :+ serialized))
       log.debug(s"[writelist]: Adding $serialized, ${journal.mapValues(_.sortBy(_.sequenceNr).map(s ⇒ s"${s.persistenceId}:${s.sequenceNr} - ${s.tags}"))},\ndeleted_to: $deleted_to")
     }
     ref ! Success("")
@@ -142,8 +142,8 @@ class InMemoryJournalStorage extends Actor with ActorLogging {
       if x.sequenceNr <= toSequenceNr
     } {
       val key = persistenceId
-      journal += (key -> journal.getOrElse(key, Vector.empty).filterNot(_.sequenceNr == x.sequenceNr))
-      deleted_to += (key -> (deleted_to.getOrElse(key, Vector.empty) :+ x.sequenceNr))
+      journal += (key → journal.getOrElse(key, Vector.empty).filterNot(_.sequenceNr == x.sequenceNr))
+      deleted_to += (key → (deleted_to.getOrElse(key, Vector.empty) :+ x.sequenceNr))
       log.debug(s"[delete]: $x,\njournal: ${journal.mapValues(_.map(s ⇒ s"${s.persistenceId} - ${s.sequenceNr}"))},\ndeleted_to: $deleted_to")
     }
     ref ! Success("")

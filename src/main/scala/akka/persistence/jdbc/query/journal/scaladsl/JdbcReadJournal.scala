@@ -103,6 +103,8 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     AkkaPersistenceConfig(system)
 
   override val serializationFacade: SerializationFacade =
-    new SerializationFacade(new AkkaSerializationProxy(SerializationExtension(system)),
-      AkkaPersistenceConfig(system).persistenceQueryConfiguration.separator)
+    new SerializationFacade(
+      new AkkaSerializationProxy(SerializationExtension(system)),
+      AkkaPersistenceConfig(system).persistenceQueryConfiguration.separator
+    )
 }

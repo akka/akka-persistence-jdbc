@@ -72,7 +72,7 @@ class InMemorySnapshotStorage extends Actor with ActorLogging {
       if x.sequenceNumber == sequenceNr
     } {
       val key = persistenceId
-      snapshot += (key -> snapshot.getOrElse(key, Vector.empty).filterNot(_.sequenceNumber == sequenceNr))
+      snapshot += (key → snapshot.getOrElse(key, Vector.empty).filterNot(_.sequenceNumber == sequenceNr))
       log.debug(s"[deleting]: ${x.persistenceId} - ${x.sequenceNumber}, rest: ${snapshot.get(persistenceId).map(_.sortBy(_.sequenceNumber).map(s ⇒ s"${s.persistenceId} - ${s.sequenceNumber}"))}")
     }
     log.debug(s"s[delete-finished]: pid: $persistenceId, seqno: $sequenceNr, snapshotStore: ${snapshot.get(persistenceId).map(_.sortBy(_.sequenceNumber).map(s ⇒ s"${s.persistenceId} - ${s.sequenceNumber}"))}")
@@ -87,7 +87,7 @@ class InMemorySnapshotStorage extends Actor with ActorLogging {
     } {
       log.debug(s"[deleting]: $x, rest: ${snapshot.get(persistenceId)}")
       val key = persistenceId
-      snapshot += (key -> snapshot.getOrElse(key, Vector.empty).filterNot(_.sequenceNumber == x.sequenceNumber))
+      snapshot += (key → snapshot.getOrElse(key, Vector.empty).filterNot(_.sequenceNumber == x.sequenceNumber))
     }
 
     log.debug(s"[deleteUpToMaxSequenceNr]: pid: $persistenceId, maxSeqNo: $maxSequenceNr")
@@ -108,7 +108,7 @@ class InMemorySnapshotStorage extends Actor with ActorLogging {
     } {
       log.debug(s"[deleting]: $x, rest: ${snapshot.get(persistenceId)}")
       val key = persistenceId
-      snapshot += (key -> snapshot.getOrElse(key, Vector.empty).filterNot(_.sequenceNumber == x.sequenceNumber))
+      snapshot += (key → snapshot.getOrElse(key, Vector.empty).filterNot(_.sequenceNumber == x.sequenceNumber))
     }
 
     log.debug(s"[deleteUpToMaxTimestamp]: pid: $persistenceId, maxTimestamp: $maxTimestamp")
@@ -122,7 +122,7 @@ class InMemorySnapshotStorage extends Actor with ActorLogging {
       if x.sequenceNumber <= maxSequenceNr && x.created <= maxTimestamp
     } {
       val key = persistenceId
-      snapshot += (key -> snapshot.getOrElse(key, Vector.empty).filterNot(_.sequenceNumber == x.sequenceNumber))
+      snapshot += (key → snapshot.getOrElse(key, Vector.empty).filterNot(_.sequenceNumber == x.sequenceNumber))
       log.debug(s"[deleting]: $x rest: ${snapshot.get(persistenceId)}")
     }
     log.debug(s"[deleteUpToMaxSequenceNrAndMaxTimestamp]: pid: $persistenceId, maxSeqNo: $maxSequenceNr, maxTimestamp: $maxTimestamp")
@@ -131,7 +131,7 @@ class InMemorySnapshotStorage extends Actor with ActorLogging {
 
   def save(ref: ActorRef, persistenceId: String, sequenceNr: Long, timestamp: Long, ser: SerializationResult): Unit = {
     val key = persistenceId
-    snapshot += (key -> (snapshot.getOrElse(key, Vector.empty) :+ SnapshotData(persistenceId, sequenceNr, timestamp, ser)))
+    snapshot += (key → (snapshot.getOrElse(key, Vector.empty) :+ SnapshotData(persistenceId, sequenceNr, timestamp, ser)))
     log.debug(s"[Save]: Saving snapshot: pid: $persistenceId, seqnr: $sequenceNr, timestamp: $timestamp")
     ref ! Success("")
   }

@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc.extension
 
-import akka.actor.{ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
+import akka.actor.{ ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider }
 import slick.jdbc.JdbcBackend
 
 object SlickDatabase extends ExtensionId[SlickDatabaseImpl] with ExtensionIdProvider {
@@ -27,8 +27,8 @@ object SlickDatabase extends ExtensionId[SlickDatabaseImpl] with ExtensionIdProv
 
 class SlickDatabaseImpl()(implicit val system: ExtendedActorSystem) extends JdbcBackend with Extension {
   val db: Database =
-    if(AkkaPersistenceConfig(system).inMemory) null
-    else if(AkkaPersistenceConfig(system).slickConfiguration.jndiName.isDefined)
+    if (AkkaPersistenceConfig(system).inMemory) null
+    else if (AkkaPersistenceConfig(system).slickConfiguration.jndiName.isDefined)
       Database.forName(AkkaPersistenceConfig(system).slickConfiguration.jndiName.get)
     else Database.forConfig("akka-persistence-jdbc.slick.db", system.settings.config)
 }

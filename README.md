@@ -598,6 +598,9 @@ As you can see, the custom DAOs get a Slick database, a slick profile and an Act
 For more information please review the two default implementations `akka.persistence.jdbc.dao.DefaultJournalDao` and `akka.persistence.jdbc.dao.DefaultSnapshotDao` or the demo custom custom [CounterJournalDao](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) site.
 
 # What's new?
+## 2.2.13 (2016-03-17)
+  - Release to enable Bintray to sync with JCenter, so no big changes here  
+  
 ## 2.2.12 (2016-03-17)
   - Added the appropriate Maven POM resources to be publishing to Bintray's JCenter
   - Refactored the akka-persistence-query interfaces, integrated it back again in one jar, for jcenter deployment simplicity

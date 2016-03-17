@@ -25,8 +25,13 @@ class DefaultJournalQueries(val profile: JdbcProfile, override val journalTableC
 
   import profile.api._
 
+  protected final val CollectSerializedPF: PartialFunction[SerializationResult, Serialized] = {
+    case e: Serialized ⇒ e
+  }
+
   def writeList(xs: Iterable[SerializationResult]) =
-    JournalTable ++= xs.collect { case e: Serialized ⇒ e }.map(ser ⇒ JournalRow(ser.persistenceId, ser.sequenceNr, ser.serialized, ser.created, ser.tags))
+    JournalTable ++= xs.collect(CollectSerializedPF)
+      .map(serialized ⇒ JournalRow(serialized.persistenceId, serialized.sequenceNr, serialized.serialized, serialized.created, serialized.tags))
 
   def insertDeletedTo(persistenceId: String, highestSequenceNr: Option[Long]) =
     DeletedToTable += JournalDeletedToRow(persistenceId, highestSequenceNr.getOrElse(0L))

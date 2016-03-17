@@ -35,9 +35,11 @@ The latest version is `2.2.14` and breaks backwards compatibility with `v1.x.x` 
 Add the following to your `build.sbt`:
 
 ```scala
+// to resolve the slick-extensions you need the following repo
 resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-releases/"
 
-resolvers += "dnvriend at bintray" at "http://dl.bintray.com/dnvriend/maven"
+// akka-persistence-jdbc is available in Bintray's JCenter
+resolvers += Resolver.jcenterRepo
 
 libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.14"
 ```

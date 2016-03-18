@@ -17,7 +17,7 @@ Alternatively you can opt to use [Postgresql](http://www.postgresql.org/), which
 available, with some great features, and it works great together with akka-persistence-jdbc.
                                  
 ## New release
-The latest version is `2.2.14` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The latest version is `2.2.15` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe/Lightbend Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -41,7 +41,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.14"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.15"
 ```
 
 ## Configuration
@@ -600,6 +600,9 @@ As you can see, the custom DAOs get a Slick database, a slick profile and an Act
 For more information please review the two default implementations `akka.persistence.jdbc.dao.DefaultJournalDao` and `akka.persistence.jdbc.dao.DefaultSnapshotDao` or the demo custom custom [CounterJournalDao](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) site.
 
 # What's new?
+## 2.2.15 (2016-03-18)
+  - Merged PR #37 [William Turner]https://github.com/wwwiiilll) Make offset sequential on eventsByTag queries, thanks!
+  
 ## 2.2.14 (2016-03-17)
   - Determine events where appropriate by using an offset using the query api was not tested and thus the implementation was incorrect. This has been corrected and the documentation altered where appropriate.
 

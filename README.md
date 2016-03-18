@@ -601,7 +601,7 @@ For more information please review the two default implementations `akka.persist
 
 # What's new?
 ## 2.2.15 (2016-03-18)
-  - Merged PR #37 [William Turner]https://github.com/wwwiiilll) Make offset sequential on eventsByTag queries, thanks!
+  - Merged PR #37 [William Turner](https://github.com/wwwiiilll) Make offset sequential on eventsByTag queries, thanks!
   
 ## 2.2.14 (2016-03-17)
   - Determine events where appropriate by using an offset using the query api was not tested and thus the implementation was incorrect. This has been corrected and the documentation altered where appropriate.

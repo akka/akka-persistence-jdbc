@@ -64,7 +64,7 @@ abstract class CurrentEventsByPersistenceIdAndTagTest(config: String) extends Qu
       withClue("query should find the event by persistenceId and tag") {
         withCurrentEventsByPersistenceIdAndTag()("my-1", "two", 0) { tp ⇒
           tp.request(Int.MaxValue)
-          tp.expectNext(EventEnvelope(2, "my-1", 2, 2))
+          tp.expectNext(EventEnvelope(1, "my-1", 2, 2))
           tp.expectComplete()
         }
       }

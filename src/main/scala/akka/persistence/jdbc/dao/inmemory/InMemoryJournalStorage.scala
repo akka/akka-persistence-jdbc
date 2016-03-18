@@ -80,9 +80,8 @@ class InMemoryJournalStorage extends Actor with ActorLogging {
       xs ← journal.get(persistenceId)
     } yield (for {
       x ← xs
-      if x.sequenceNr >= offset
       if x.tags.exists(tags ⇒ SerializationFacade.decodeTags(tags, ",") contains tag)
-    } yield x).toList.sortBy(_.sequenceNr)
+    } yield x).toList.sortBy(_.sequenceNr).drop(offset.toInt)
     log.debug(s"[eventsByPersistenceIdAndTag]: $determine")
     ref ! determine.getOrElse(Nil)
   }

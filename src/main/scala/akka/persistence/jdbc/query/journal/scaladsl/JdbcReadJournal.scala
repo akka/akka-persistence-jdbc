@@ -89,11 +89,16 @@ trait SlickReadJournal extends ReadJournal
     journalDao.eventsByPersistenceIdAndTag(persistenceId, tag, offset)
       .via(serializationFacade.deserializeRepr)
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
-      .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
+      .zipWith(Source(Stream.from(offset.toInt + 1))) { // Needs a better way
+        case (repr, i) ⇒ EventEnvelope(i, repr.persistenceId, repr.sequenceNr, repr.payload)
+      }
 
   override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     currentEventsByPersistenceIdAndTag(persistenceId, tag, offset)
       .concat(Source.actorPublisher[EventEnvelope](Props(classOf[EventsByPersistenceIdAndTagPublisher], persistenceId, tag)))
+      .zipWith(Source(Stream.from(offset.toInt + 1))) { // Needs a better way
+        case (orig, i) ⇒ orig.copy(offset = i)
+      }
 }
 
 class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) extends SlickReadJournal {

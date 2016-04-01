@@ -18,14 +18,14 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.2.16-SNAPSHOT"
+version := "2.2.16"
 
 resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-releases/"
 
 scalaVersion := "2.11.8"
 
 libraryDependencies ++= {
-  val akkaVersion = "2.4.2"
+  val akkaVersion = "2.4.3"
   val slickVersion = "3.1.1"
   Seq(
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,

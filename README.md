@@ -601,7 +601,6 @@ For more information please review the two default implementations `akka.persist
 
 # What's new?
 ## 2.2.16 (2015-04-01)
-  - Scala 2.11.7 -> 2.11.8
   - Akka 2.4.2 -> 2.4.3
 
 ## 2.2.15 (2016-03-18)

@@ -20,7 +20,7 @@ organization := "com.github.dnvriend"
 
 version := "2.2.16"
 
-resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-releases/"
+resolvers += Resolver.typesafeRepo("releases")
 
 scalaVersion := "2.11.8"
 

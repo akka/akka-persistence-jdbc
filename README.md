@@ -8,7 +8,7 @@ Bintray | [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-pers
 
 ## Slick Extensions Licensing Changing to Open Source
 The [Typesafe/Lightbend Slick Extensions](http://slick.typesafe.com/doc/3.1.1/extensions.html) have become [open source as 
-of 1 februari 2016 as can read from the slick new website](http://slick.typesafe.com/news/2016/02/01/slick-extensions-licensing-change.html),
+of 1 february 2016 as can read from the slick new website](http://slick.typesafe.com/news/2016/02/01/slick-extensions-licensing-change.html),
 this means that you can use akka-persistence-jdbc with no commercial license from Typesafe/Lightbend when used with `Oracle`, `IBM DB2` or 
 `Microsoft SQL Server`. Thanks [Lightbend](http://www.lightbend.com/)! Of course you will neem a commercial license from
 your database vendor. 

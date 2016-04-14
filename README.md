@@ -599,8 +599,32 @@ As you can see, the custom DAOs get a Slick database, a slick profile and an Act
 
 For more information please review the two default implementations `akka.persistence.jdbc.dao.DefaultJournalDao` and `akka.persistence.jdbc.dao.DefaultSnapshotDao` or the demo custom custom [CounterJournalDao](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) site.
 
+# Explicitly shutting down the database connections
+Plugin version `v2.2.17` and higher automatically shut down the database connections when the actor system terminates but you can also explicitly shut down the database connections by 
+first getting an instance of the Slick database by calling `akka.persistence.jdbc.extension.SlickDatabase(system)` and then explicitly calling the `close()`, which does a blocking shutdown or 
+`shutdown()`, which does an asynchronously shutdown of the connection pool. 
+
+```scala
+import akka.persistence.jdbc.extension.SlickDatabase
+import akka.actor.ActorSystem
+
+val system = ActorSystem()
+SlickDatabase(system).close()
+```
+
+Please note, the plugin automatically shuts down the HikariCP connection pool only when the ActorSystem is explicitly terminated.
+It is advisable to register a shutdown hook to be run when the VM exits that terminates the ActorSystem: 
+
+```scala
+sys.addShutdownHook(system.terminate())
+```
+
 # What's new?
-## 2.2.16 (2015-04-01)
+## 2.2.17 (2016-04-14)
+  - Fix for [Issue #41 - Provide a way to shut-down connections explicitly](https://github.com/dnvriend/akka-persistence-jdbc/issues/41), the database connections will be automatically shut down when the ActorSystem shuts down when calling `system.terminate()` in which `system` is the ActorSystem instance.
+  - Akka 2.4.3 -> 2.4.4
+
+## 2.2.16 (2016-04-01)
   - Akka 2.4.2 -> 2.4.3
 
 ## 2.2.15 (2016-03-18)

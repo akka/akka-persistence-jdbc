@@ -184,6 +184,7 @@ class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) exte
        | Akka Persistence JDBC Configuration:
        | ====================================
        | Version: ${BuildInfo.version}
+       | BuildNumber: ${BuildInfo.buildInfoBuildNumber}
        | inMemory mode: $inMemory
        | inMemory timeout: $inMemoryTimeout
        | ====================================

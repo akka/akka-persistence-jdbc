@@ -217,7 +217,9 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJ
     if (AkkaPersistenceConfig(system).inMemory) clearInMemoryJournal()
     else clearPostgres()
 
-  override protected def afterAll(): Unit =
+  override protected def afterAll(): Unit = {
     if (AkkaPersistenceConfig(system).inMemory) clearInMemoryJournal()
     else clearPostgres()
+    system.terminate().toTry should be a 'success
+  }
 }

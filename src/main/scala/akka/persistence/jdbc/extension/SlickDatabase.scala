@@ -19,16 +19,42 @@ package akka.persistence.jdbc.extension
 import akka.actor.{ ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider }
 import slick.jdbc.JdbcBackend
 
+import scala.concurrent.Future
+
 object SlickDatabase extends ExtensionId[SlickDatabaseImpl] with ExtensionIdProvider {
   override def createExtension(system: ExtendedActorSystem): SlickDatabaseImpl = new SlickDatabaseImpl()(system)
 
   override def lookup(): ExtensionId[_ <: Extension] = SlickDatabase
 }
 
-class SlickDatabaseImpl()(implicit val system: ExtendedActorSystem) extends JdbcBackend with Extension {
+trait SlickDatabase {
+  /**
+   * Free all resources allocated by Slick for this Database. This is done asynchronously, so
+   * you need to wait for the returned `Future` to complete in order to ensure that everything
+   * has been shut down.
+   */
+  def shutdown: Future[Unit]
+
+  /**
+   * Free all resources allocated by Slick for this Database, blocking the current thread until
+   * everything has been shut down.
+   */
+  def close: Unit
+}
+
+class SlickDatabaseImpl()(implicit val system: ExtendedActorSystem) extends JdbcBackend with Extension with SlickDatabase {
   val db: Database =
     if (AkkaPersistenceConfig(system).inMemory) null
     else if (AkkaPersistenceConfig(system).slickConfiguration.jndiName.isDefined)
       Database.forName(AkkaPersistenceConfig(system).slickConfiguration.jndiName.get)
     else Database.forConfig("akka-persistence-jdbc.slick.db", system.settings.config)
+
+  override def shutdown: Future[Unit] = db.shutdown
+
+  override def close(): Unit = db.close()
+
+  /**
+   * Register closing the database connections after ActorSystem.shutdown has been issued.
+   */
+  system.registerOnTermination(close())
 }

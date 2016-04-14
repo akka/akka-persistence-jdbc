@@ -18,14 +18,16 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.2.16"
+version := "2.2.17"
+
+isSnapshot := true
 
 resolvers += Resolver.typesafeRepo("releases")
 
 scalaVersion := "2.11.8"
 
 libraryDependencies ++= {
-  val akkaVersion = "2.4.3"
+  val akkaVersion = "2.4.4"
   val slickVersion = "3.1.1"
   Seq(
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
@@ -36,14 +38,14 @@ libraryDependencies ++= {
     "com.typesafe.slick" %% "slick-extensions" % "3.1.0",
     "com.typesafe.slick" %% "slick-hikaricp" % slickVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion % Test,
-    "ch.qos.logback" % "logback-classic" % "1.1.2" % Test,
+    "ch.qos.logback" % "logback-classic" % "1.1.3" % Test,
     "com.typesafe.akka" %% "akka-persistence-tck" % akkaVersion % Test,
     "org.postgresql" % "postgresql" % "9.4-1206-jdbc42" % Test,
     "mysql" % "mysql-connector-java" % "5.1.33" % Test,
     "com.h2database" % "h2" % "1.4.191" % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
-    "org.scalatest" %% "scalatest" % "2.2.4" % Test,
+    "org.scalatest" %% "scalatest" % "2.2.5" % Test,
     "org.scalacheck" %% "scalacheck" % "1.12.5" % Test
   )
 }
@@ -74,7 +76,7 @@ headers := Map(
 )
 
 // build info configuration //
-buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
+buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, buildInfoBuildNumber)
 
 buildInfoPackage := "akka.persistence.jdbc"
 

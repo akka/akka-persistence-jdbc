@@ -17,7 +17,7 @@ Alternatively you can opt to use [Postgresql](http://www.postgresql.org/), which
 available, with some great features, and it works great together with akka-persistence-jdbc.
                                  
 ## New release
-The latest version is `2.2.16` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The latest version is `2.2.17` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe/Lightbend Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -41,7 +41,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.16"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.17"
 ```
 
 ## Configuration

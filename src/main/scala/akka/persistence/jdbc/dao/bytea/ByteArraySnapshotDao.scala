@@ -14,27 +14,28 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao
+package akka.persistence.jdbc.dao.bytea
 
 import akka.actor.ActorSystem
 import akka.persistence.SnapshotMetadata
-import akka.persistence.jdbc.dao.SnapshotTables.SnapshotRow
+import SnapshotTables.SnapshotRow
+import akka.persistence.jdbc.dao.SnapshotDao
 import akka.persistence.jdbc.extension.AkkaPersistenceConfig
-import akka.persistence.jdbc.snapshot.SlickSnapshotStore.{ SerializationResult, Serialized }
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.persistence.jdbc.snapshot.SlickSnapshotStore.{SerializationResult, Serialized}
+import akka.stream.{ActorMaterializer, Materializer}
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
-class DefaultSnapshotDao(db: JdbcBackend#Database, val profile: JdbcProfile, system: ActorSystem) extends SnapshotDao {
+class ByteArraySnapshotDao(db: JdbcBackend#Database, val profile: JdbcProfile, system: ActorSystem) extends ByteArraySnapshotDao {
   import profile.api._
 
   implicit val ec: ExecutionContext = system.dispatcher
 
   implicit val mat: Materializer = ActorMaterializer()(system)
 
-  val queries = new DefaultSnapshotQueries(profile, AkkaPersistenceConfig(system).snapshotTableConfiguration)
+  val queries = new SnapshotQueries(profile, AkkaPersistenceConfig(system).snapshotTableConfiguration)
 
   def mapToSnapshotData(row: SnapshotRow): SerializationResult =
     Serialized(SnapshotMetadata(row.persistenceId, row.sequenceNumber, row.created), row.snapshot)

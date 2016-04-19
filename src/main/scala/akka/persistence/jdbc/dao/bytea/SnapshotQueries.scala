@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao
+package akka.persistence.jdbc.dao.bytea
 
-import akka.persistence.jdbc.dao.SnapshotTables.SnapshotRow
+import SnapshotTables.SnapshotRow
 import akka.persistence.jdbc.extension.SnapshotTableConfiguration
 import slick.driver.JdbcProfile
 
-class DefaultSnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: SnapshotTableConfiguration) extends SnapshotTables {
+class SnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: SnapshotTableConfiguration) extends SnapshotTables {
   import profile.api._
 
   def maxSeqNrForPersistenceId(persistenceId: String) =

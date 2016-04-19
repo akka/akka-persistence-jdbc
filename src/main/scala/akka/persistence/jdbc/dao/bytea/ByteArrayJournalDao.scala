@@ -14,31 +14,32 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao
+package akka.persistence.jdbc.dao.bytea
 
 import akka.NotUsed
 import akka.actor.ActorSystem
+import akka.persistence.jdbc.dao.JournalDao
 import akka.persistence.jdbc.extension.AkkaPersistenceConfig
-import akka.persistence.jdbc.serialization.{ Serialized, SerializationResult }
-import akka.stream.scaladsl.{ Source, Flow }
+import akka.persistence.jdbc.serialization.{ SerializationResult, Serialized }
+import akka.stream.scaladsl.{ Flow, Source }
 import akka.stream.{ ActorMaterializer, Materializer }
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend
 
-import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
 
 /**
  * The DefaultJournalDao contains all the knowledge to persist and load serialized journal entries
  */
-class DefaultJournalDao(db: JdbcBackend#Database, val profile: JdbcProfile, system: ActorSystem) extends JournalDao {
+class ByteArrayJournalDao(db: JdbcBackend#Database, val profile: JdbcProfile, system: ActorSystem) extends ByteArrayJournalDao {
   import profile.api._
 
   implicit val ec: ExecutionContext = system.dispatcher
 
   implicit val mat: Materializer = ActorMaterializer()(system)
 
-  val queries = new DefaultJournalQueries(profile, AkkaPersistenceConfig(system).journalTableConfiguration, AkkaPersistenceConfig(system).deletedToTableConfiguration)
+  val queries = new JournalQueries(profile, AkkaPersistenceConfig(system).journalTableConfiguration, AkkaPersistenceConfig(system).deletedToTableConfiguration)
 
   private def writeMessages: Flow[Try[Iterable[SerializationResult]], Try[Iterable[SerializationResult]], NotUsed] = Flow[Try[Iterable[SerializationResult]]].mapAsync(1) {
     case element @ Success(xs) ⇒ writeList(xs).map(_ ⇒ element)

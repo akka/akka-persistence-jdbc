@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao
+package akka.persistence.jdbc.dao.bytea
 
-import akka.persistence.jdbc.dao.JournalTables.{ JournalDeletedToRow, JournalRow }
+import akka.persistence.jdbc.dao.bytea.JournalTables.{ JournalDeletedToRow, JournalRow }
 import akka.persistence.jdbc.extension.{ DeletedToTableConfiguration, JournalTableConfiguration }
-import akka.persistence.jdbc.serialization.{ Serialized, SerializationResult }
+import akka.persistence.jdbc.serialization.{ SerializationResult, Serialized }
 import slick.driver.JdbcProfile
 
-class DefaultJournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration, override val deletedToTableCfg: DeletedToTableConfiguration) extends JournalTables {
+class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration, override val deletedToTableCfg: DeletedToTableConfiguration) extends JournalTables {
 
   import profile.api._
 

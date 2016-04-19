@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao
+package akka.persistence.jdbc.dao.bytea
 
-import akka.persistence.jdbc.dao.SnapshotTables.SnapshotRow
 import akka.persistence.jdbc.extension.SnapshotTableConfiguration
 
 object SnapshotTables {

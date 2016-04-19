@@ -20,7 +20,7 @@ import java.sql.Statement
 
 import akka.actor.ActorSystem
 import akka.persistence.jdbc.extension.SlickDatabase
-import akka.persistence.jdbc.util.Schema.{ Oracle, SchemaType }
+import akka.persistence.jdbc.util.Schema.{ Oracle, OracleVarchar, SchemaType }
 import slick.driver.PostgresDriver.api._
 
 import scala.util.{ Failure, Try }
@@ -46,18 +46,23 @@ trait DropCreate extends ClasspathResources {
     """DROP TABLE "snapshot" CASCADE CONSTRAINT"""
   )
 
+  def dropOracle = withStatement { stmt ⇒
+    for {
+      ddl ← oracleQueries
+      result ← Try(stmt.executeUpdate(ddl)) recoverWith {
+        case t: Throwable ⇒
+          t.printStackTrace()
+          Failure(t)
+      }
+    } ()
+  }
+
   def dropCreate(schemaType: SchemaType) = schemaType match {
     case Oracle(schema) ⇒
-      withStatement { stmt ⇒
-        for {
-          ddl ← oracleQueries
-          result ← Try(stmt.executeUpdate(ddl)) recoverWith {
-            case t: Throwable ⇒
-              t.printStackTrace()
-              Failure(t)
-          }
-        } ()
-      }
+      dropOracle
+      create(schema)
+    case OracleVarchar(schema) ⇒
+      dropOracle
       create(schema)
     case s: SchemaType ⇒ create(s.schema)
   }

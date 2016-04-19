@@ -15,9 +15,13 @@ your database vendor.
 
 Alternatively you can opt to use [Postgresql](http://www.postgresql.org/), which is the most advanced open source database 
 available, with some great features, and it works great together with akka-persistence-jdbc.
+                  
+## Notice for Akka Persistence Query API
+All async queries do not work as expected. I must refactor the async query api to do polling. Please only use
+the `current*` commands and do your own client-side polling strategy for now.  
                                  
 ## New release
-The latest version is `2.2.17` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The latest version is `2.2.18` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe/Lightbend Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -41,7 +45,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.17"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.18"
 ```
 
 ## Configuration
@@ -619,7 +623,80 @@ It is advisable to register a shutdown hook to be run when the VM exits that ter
 sys.addShutdownHook(system.terminate())
 ```
 
+## Text based serialization formats
+Plugin version `v2.2.18` and higher supports using a text based serialization format and storage in the Journal and Snapshot tables.
+You should configure the plugin to use the `akka.persistence.jdbc.dao.varchar.VarcharJournalDao` and the `akka.persistence.jdbc.dao.varchar.VarcharSnapshotDao`
+data access objects. 
+  
+```scala
+akka-persistence-jdbc {
+
+    dao {
+        journal = "akka.persistence.jdbc.dao.varchar.VarcharJournalDao"
+        snapshot = "akka.persistence.jdbc.dao.varchar.VarcharSnapshotDao"
+      }
+    
+    serialization.varchar.serializerIdentity = 1000
+}
+```
+Both DAOs will look for an akka serializer that has been registered in `akka.actor.serialization-identifiers`. That serialization id 
+will be used to serialize the result to a text based format just before the journal or snapshot record will be written. 
+For an example see `akka.persistence.jdbc.serialization.Base64Serializer`. Please note that the output of the custom 
+text based serializer will be a byte array that will be converted to a String using `UTF-8` and that String will be stored 
+in the database. 
+
+The `akka-persistence-jdbc.serialization.varchar.serializerIdentity` must point to the id that has been registered in `akka.actor.serialization-identifiers`.
+
+An akka serializer can be registered in:
+
+```
+akka.actor {
+  serialize-messages = on
+  warn-about-java-serializer-usage = on
+
+  serializers {
+    base64Serializer = "akka.persistence.jdbc.serialization.Base64Serializer"
+  }
+
+  serialization-identifiers {
+    "akka.persistence.jdbc.serialization.Base64Serializer" = 1000
+  }
+}
+```
+
+### Serialization / Deserialization
+A serializer must serializer must deconstruct a PersistentRepr from a byte array and create a serialization format
+that contains all of the fields necessary to reconstruct a PersistentRepr at a later time. The Serializer must do the following:
+
+### Serialize
+- Deconstruct a byte array to a PersistentRepr,
+- Serialize the PersistentRepr to a text based format so it can be reconstructed by that serializer when the event must be read,
+- It must get the following fields from the PersistentRepr:
+ - payload,
+ - sequenceNr,
+ - persistenceId,
+ - manifest,
+ - deleted,
+ - sender,
+ - writerUUid
+- It must serialize the payload to a text based format
+- It must create a wrapper format that contains all the fields above,
+- It must serialize the wrapper to a tet based format
+
+### Deserialize
+- Deconstruct the text based wrapper format in a PersistentRepr
+- Construct the payload from the text based format,
+- Construct a PersistentRepr,
+- Look for a serializer for the PersistentRepr,
+- Serialize the PersistentRepr using the found PersistentRepr serializer to a byte array,
+
+### Text based database schema
+Please look in the path `src/main/resources/schema` for the text based database schema to use.
+
 # What's new?
+## 2.2.18 (2016-04-19)
+  - Text based serialization formats
+
 ## 2.2.17 (2016-04-14)
   - Fix for [Issue #41 - Provide a way to shut-down connections explicitly](https://github.com/dnvriend/akka-persistence-jdbc/issues/41), the database connections will be automatically shut down when the ActorSystem shuts down when calling `system.terminate()` in which `system` is the ActorSystem instance.
   - Akka 2.4.3 -> 2.4.4

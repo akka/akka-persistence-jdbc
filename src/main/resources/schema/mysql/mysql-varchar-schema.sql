@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS journal (
   sequence_number BIGINT NOT NULL,
   created BIGINT NOT NULL,
   tags VARCHAR(255) DEFAULT NULL,
-  message BLOB NOT NULL,
+  message MEDIUMTEXT NOT NULL,
   PRIMARY KEY(persistence_id, sequence_number)
 );
 
@@ -22,6 +22,6 @@ CREATE TABLE IF NOT EXISTS snapshot (
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
   created BIGINT NOT NULL,
-  snapshot BLOB NOT NULL,
+  snapshot MEDIUMTEXT NOT NULL,
   PRIMARY KEY (persistence_id, sequence_number)
 );

@@ -16,19 +16,11 @@
 
 package akka.persistence.jdbc.serialization
 
-import akka.actor.{ActorSystem, ExtendedActorSystem}
+import akka.actor.ExtendedActorSystem
 import akka.persistence.jdbc.serialization.Base64Serializer._
 import akka.serialization._
 
 object Base64Serializer {
-  final val JavaSerializerId = 1
-
-  def serializeObject(obj: AnyRef)(implicit system: ActorSystem): Array[Byte] =
-    SerializationExtension(system).serializerByIdentity(JavaSerializerId).toBinary(obj)
-
-  def deserializeObject(bytes: Array[Byte])(implicit system: ActorSystem): AnyRef =
-    SerializationExtension(system).serializerByIdentity(JavaSerializerId).fromBinary(bytes)
-
   def encodeBase64(bytes: Array[Byte]): Array[Byte] =
     java.util.Base64.getUrlEncoder.encode(bytes)
 
@@ -36,24 +28,26 @@ object Base64Serializer {
     java.util.Base64.getUrlDecoder.decode(bytes)
 }
 
-
 /**
- * The Base64 serializer must be used in conjunction with the JavaSerializer
+ * Encodes/decodes a PersistentRepr
  */
 class Base64Serializer(val system: ExtendedActorSystem) extends BaseSerializer {
-  implicit val theActorSystem = system
-
   override def includeManifest: Boolean = false
 
   /**
-   * Decodes a Base64 encoded byte array and then deserializes
+   * Assumes the received byte array is a Base64 encoded PersistentRepr
    */
   override def fromBinary(bytes: Array[Byte], manifest: Option[Class[_]]): AnyRef =
-    (decodeBase64 _ andThen deserializeObject _)(bytes)
+    decodeBase64(bytes)
 
   /**
-   * Serializes a Java object and then encodes it to Base64
+   * Assumes the received object is a Serialized PersistentRepr in either
+   * String encoding or byte array encoding
    */
-  override def toBinary(obj: AnyRef): Array[Byte] =
-    (serializeObject _ andThen encodeBase64 _)(obj)
+  override def toBinary(obj: AnyRef): Array[Byte] = obj match {
+    case str: String     ⇒ encodeBase64(str.getBytes("UTF-8"))
+    case xs: Array[Byte] ⇒ encodeBase64(xs)
+    case other           ⇒ throw new IllegalArgumentException("Base64Serializer only serializes byte arrays and strings not [" + other + "]")
+  }
+
 }

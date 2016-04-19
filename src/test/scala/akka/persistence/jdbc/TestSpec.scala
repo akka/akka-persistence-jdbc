@@ -26,12 +26,13 @@ import akka.stream.{ ActorMaterializer, Materializer }
 import akka.testkit.TestProbe
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import org.scalatest.BeforeAndAfterAll
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContextExecutor, Future }
 import scala.util.Try
 
-abstract class TestSpec(config: String = "postgres-application.conf") extends SimpleSpec with DropCreate {
+abstract class TestSpec(config: String = "postgres-application.conf") extends SimpleSpec with DropCreate with BeforeAndAfterAll {
   implicit val system: ActorSystem = ActorSystem("test", ConfigFactory.load(config))
   implicit val mat: Materializer = ActorMaterializer()
   implicit val ec: ExecutionContextExecutor = system.dispatcher
@@ -56,8 +57,8 @@ abstract class TestSpec(config: String = "postgres-application.conf") extends Si
   def cleanup(actors: ActorRef*): Unit = {
     val tp = probe
     actors.foreach { (actor: ActorRef) ⇒
-      actor ! PoisonPill
       tp watch actor
+      actor ! PoisonPill
       tp.expectTerminated(actor)
     }
   }
@@ -68,5 +69,9 @@ abstract class TestSpec(config: String = "postgres-application.conf") extends Si
 
   implicit class PimpedFuture[T](self: Future[T]) {
     def toTry: Try[T] = Try(self.futureValue)
+  }
+
+  override protected def afterAll(): Unit = {
+    system.terminate().toTry should be a 'success
   }
 }

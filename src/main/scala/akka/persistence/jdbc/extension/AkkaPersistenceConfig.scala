@@ -25,6 +25,7 @@ import akka.persistence.jdbc.util.ConfigOps._
 import com.typesafe.config.Config
 
 import scala.concurrent.duration.FiniteDuration
+import scala.util.Try
 
 object AkkaPersistenceConfig extends ExtensionId[AkkaPersistenceConfigImpl] with ExtensionIdProvider {
   override def createExtension(system: ExtendedActorSystem): AkkaPersistenceConfigImpl = new AkkaPersistenceConfigImpl()(system)
@@ -118,12 +119,13 @@ object SnapshotTableConfiguration {
     }
 }
 
-case class SerializationConfiguration(journal: Boolean, snapshot: Boolean)
+case class SerializationConfiguration(journal: Boolean, snapshot: Boolean, serializationIdentity: Option[Int])
 
 object SerializationConfiguration {
   def apply(cfg: Config): SerializationConfiguration = SerializationConfiguration(
     cfg.getBoolean("akka-persistence-jdbc.serialization.journal"),
-    cfg.getBoolean("akka-persistence-jdbc.serialization.snapshot")
+    cfg.getBoolean("akka-persistence-jdbc.serialization.snapshot"),
+    Try(cfg.getInt("akka-persistence-jdbc.serialization.varchar.serializerIdentity")).toOption
   )
 }
 

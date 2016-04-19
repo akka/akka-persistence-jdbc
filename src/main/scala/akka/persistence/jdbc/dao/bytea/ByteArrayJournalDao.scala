@@ -32,7 +32,7 @@ import scala.util.{ Failure, Success, Try }
 /**
  * The DefaultJournalDao contains all the knowledge to persist and load serialized journal entries
  */
-class ByteArrayJournalDao(db: JdbcBackend#Database, val profile: JdbcProfile, system: ActorSystem) extends ByteArrayJournalDao {
+class ByteArrayJournalDao(db: JdbcBackend#Database, val profile: JdbcProfile, system: ActorSystem) extends JournalDao {
   import profile.api._
 
   implicit val ec: ExecutionContext = system.dispatcher

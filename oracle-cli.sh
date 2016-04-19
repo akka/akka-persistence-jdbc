@@ -1,4 +1,4 @@
 #!/bin/bash
-echo "==================   Help for mysql cli  ========================="
+echo "==================  Help for oracle cli  ========================"
 echo "================================================================="
-docker exec -it mysql mysql --user=root --password=root mysql
+docker exec -it oracle sqlplus system/oracle

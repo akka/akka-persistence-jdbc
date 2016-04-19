@@ -1,6 +1,6 @@
 postgres:
   image: postgres:latest
-  container_name: postgres
+#  container_name: postgres
   environment:
     - "TZ=Europe/Amsterdam"
     - "POSTGRES_USER=docker"
@@ -24,11 +24,3 @@ oracle:
     - "TZ=Europe/Amsterdam"
   ports:
     - "1521:1521" # credentials (system:oracle)
-
-#h2:
-#  image: viliusl/ubuntu-h2-server
-#  container_name: h2
-#  environment:
-#    - "TZ=Europe/Amsterdam"
-#  ports:
-#    - "1522:1521"

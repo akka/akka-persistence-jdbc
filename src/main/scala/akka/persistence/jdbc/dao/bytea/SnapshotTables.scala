@@ -16,6 +16,7 @@
 
 package akka.persistence.jdbc.dao.bytea
 
+import akka.persistence.jdbc.dao.bytea.SnapshotTables._
 import akka.persistence.jdbc.extension.SnapshotTableConfiguration
 
 object SnapshotTables {

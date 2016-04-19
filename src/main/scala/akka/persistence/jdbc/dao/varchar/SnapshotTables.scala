@@ -16,11 +16,11 @@
 
 package akka.persistence.jdbc.dao.varchar
 
-import akka.persistence.jdbc.dao.bytea.SnapshotTables._
+import akka.persistence.jdbc.dao.varchar.SnapshotTables._
 import akka.persistence.jdbc.extension.SnapshotTableConfiguration
 
 object SnapshotTables {
-  case class SnapshotRow(persistenceId: String, sequenceNumber: Long, created: Long, snapshot: Array[Byte])
+  case class SnapshotRow(persistenceId: String, sequenceNumber: Long, created: Long, snapshot: String)
 }
 
 trait SnapshotTables {
@@ -36,7 +36,7 @@ trait SnapshotTables {
     val persistenceId: Rep[String] = column[String](snapshotTableCfg.columnNames.persistenceId, O.Length(255, varying = true), O.PrimaryKey)
     val sequenceNumber: Rep[Long] = column[Long](snapshotTableCfg.columnNames.sequenceNumber, O.PrimaryKey)
     val created: Rep[Long] = column[Long](snapshotTableCfg.columnNames.created)
-    val snapshot: Rep[Array[Byte]] = column[Array[Byte]](snapshotTableCfg.columnNames.snapshot)
+    val snapshot: Rep[String] = column[String](snapshotTableCfg.columnNames.snapshot)
     val pk = primaryKey("snapshot_pk", (persistenceId, sequenceNumber))
   }
 

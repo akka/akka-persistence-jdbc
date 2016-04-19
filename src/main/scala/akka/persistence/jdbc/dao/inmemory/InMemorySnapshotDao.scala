@@ -19,7 +19,7 @@ package akka.persistence.jdbc.dao.inmemory
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.persistence.jdbc.dao.SnapshotDao
-import akka.persistence.jdbc.snapshot.SlickSnapshotStore.{ NotSerialized, Serialized, SerializationResult }
+import akka.persistence.jdbc.snapshot.SlickSnapshotStore.{ NotSerialized, SerializationResult, Serialized }
 import akka.stream.Materializer
 import akka.util.Timeout
 

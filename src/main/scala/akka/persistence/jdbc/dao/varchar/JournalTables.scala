@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea
+package akka.persistence.jdbc.dao.varchar
 
-import akka.persistence.jdbc.dao.bytea.JournalTables._
+import akka.persistence.jdbc.dao.varchar.JournalTables._
 import akka.persistence.jdbc.extension.{ DeletedToTableConfiguration, JournalTableConfiguration }
 
 object JournalTables {
-  case class JournalRow(persistenceId: String, sequenceNumber: Long, message: Array[Byte], created: Long, tags: Option[String] = None)
+  case class JournalRow(persistenceId: String, sequenceNumber: Long, message: String, created: Long, tags: Option[String] = None)
 
   case class JournalDeletedToRow(persistenceId: String, deletedTo: Long)
 }
@@ -41,7 +41,7 @@ trait JournalTables {
     val sequenceNumber: Rep[Long] = column[Long](journalTableCfg.columnNames.sequenceNumber)
     val created: Rep[Long] = column[Long](journalTableCfg.columnNames.created)
     val tags: Rep[Option[String]] = column[String](journalTableCfg.columnNames.tags, O.Length(255, varying = true))
-    val message: Rep[Array[Byte]] = column[Array[Byte]](journalTableCfg.columnNames.message)
+    val message: Rep[String] = column[String](journalTableCfg.columnNames.message)
     val pk = primaryKey("journal_pk", (persistenceId, sequenceNumber))
   }
 

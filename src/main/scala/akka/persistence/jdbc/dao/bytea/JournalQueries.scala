@@ -36,26 +36,31 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
   def insertDeletedTo(persistenceId: String, highestSequenceNr: Option[Long]) =
     DeletedToTable += JournalDeletedToRow(persistenceId, highestSequenceNr.getOrElse(0L))
 
-  def selectAllDeletedTo(persistenceId: String): Query[DeletedTo, JournalDeletedToRow, Seq] =
+  private def selectAllDeletedTo(persistenceId: Rep[String]): Query[DeletedTo, JournalDeletedToRow, Seq] =
     DeletedToTable.filter(_.persistenceId === persistenceId)
 
-  def selectAllJournalForPersistenceId(persistenceId: String): Query[Journal, JournalRow, Seq] =
+  private def selectAllJournalForPersistenceId(persistenceId: Rep[String]): Query[Journal, JournalRow, Seq] =
     JournalTable.filter(_.persistenceId === persistenceId).sortBy(_.sequenceNumber.desc)
 
-  def highestSequenceNrForPersistenceId(persistenceId: String): Rep[Option[Long]] =
+  private def _highestSequenceNrForPersistenceId(persistenceId: Rep[String]): Rep[Option[Long]] =
     selectAllJournalForPersistenceId(persistenceId).map(_.sequenceNumber).max
+  val highestSequenceNrForPersistenceId = Compiled(_highestSequenceNrForPersistenceId _)
 
-  def selectByPersistenceIdAndMaxSequenceNumber(persistenceId: String, maxSequenceNr: Long): Query[Journal, JournalRow, Seq] =
+  private def _selectByPersistenceIdAndMaxSequenceNumber(persistenceId: Rep[String], maxSequenceNr: Rep[Long]): Query[Journal, JournalRow, Seq] =
     selectAllJournalForPersistenceId(persistenceId).filter(_.sequenceNumber <= maxSequenceNr)
+  val selectByPersistenceIdAndMaxSequenceNumber = Compiled(_selectByPersistenceIdAndMaxSequenceNumber _)
 
-  def highestSequenceNumberFromJournalForPersistenceIdFromSequenceNr(persistenceId: String, fromSequenceNr: Long): Rep[Option[Long]] =
+  private def _highestSequenceNumberFromJournalForPersistenceIdFromSequenceNr(persistenceId: Rep[String], fromSequenceNr: Rep[Long]): Rep[Option[Long]] =
     selectAllJournalForPersistenceId(persistenceId).filter(_.sequenceNumber >= fromSequenceNr).map(_.sequenceNumber).max
+  val highestSequenceNumberFromJournalForPersistenceIdFromSequenceNr = Compiled(_highestSequenceNumberFromJournalForPersistenceIdFromSequenceNr _)
 
-  def selectHighestSequenceNrFromDeletedTo(persistenceId: String): Rep[Option[Long]] =
+  private def _selectHighestSequenceNrFromDeletedTo(persistenceId: Rep[String]): Rep[Option[Long]] =
     selectAllDeletedTo(persistenceId).map(_.deletedTo).max
+  val selectHighestSequenceNrFromDeletedTo = Compiled(_selectHighestSequenceNrFromDeletedTo _)
 
-  def allPersistenceIdsDistinct: Query[Rep[String], String, Seq] =
+  private def _allPersistenceIdsDistinct: Query[Rep[String], String, Seq] =
     JournalTable.map(_.persistenceId).distinct
+  val allPersistenceIdsDistinct = Compiled(_allPersistenceIdsDistinct)
 
   def journalRowByPersistenceIds(persistenceIds: Iterable[String]): Query[Rep[String], String, Seq] =
     for {
@@ -63,19 +68,22 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
       if query inSetBind persistenceIds
     } yield query
 
-  def messagesQuery(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Query[Journal, JournalRow, Seq] =
+  private def _messagesQuery(persistenceId: Rep[String], fromSequenceNr: Rep[Long], toSequenceNr: Rep[Long], max: ConstColumn[Long]): Query[Journal, JournalRow, Seq] =
     JournalTable
       .filter(_.persistenceId === persistenceId)
       .filter(_.sequenceNumber >= fromSequenceNr)
       .filter(_.sequenceNumber <= toSequenceNr)
       .sortBy(_.sequenceNumber.asc)
       .take(max)
+  val messagesQuery = Compiled(_messagesQuery _)
 
-  def eventsByTag(tag: String, offset: Long): Query[Journal, JournalRow, Seq] =
+  private def _eventsByTag(tag: Rep[String], offset: ConstColumn[Long]): Query[Journal, JournalRow, Seq] =
     JournalTable.filter(_.tags like s"%$tag%").sortBy(_.created.asc).drop(offset)
+  val eventsByTag = Compiled(_eventsByTag _)
 
-  def eventsByTagAndPersistenceId(persistenceId: String, tag: String, offset: Long): Query[Journal, JournalRow, Seq] =
+  private def _eventsByTagAndPersistenceId(persistenceId: Rep[String], tag: Rep[String], offset: ConstColumn[Long]): Query[Journal, JournalRow, Seq] =
     JournalTable.filter(_.persistenceId === persistenceId).filter(_.tags like s"%$tag%").sortBy(_.sequenceNumber.asc).drop(offset)
+  val eventsByTagAndPersistenceId = Compiled(_eventsByTagAndPersistenceId _)
 
   def countJournal: Rep[Int] =
     JournalTable.length

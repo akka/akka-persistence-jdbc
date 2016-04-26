@@ -16,6 +16,8 @@
 
 package akka.persistence.jdbc.extension
 
+import javax.naming.InitialContext
+
 import akka.actor.{ ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider }
 import slick.jdbc.JdbcBackend
 
@@ -47,6 +49,8 @@ class SlickDatabaseImpl()(implicit val system: ExtendedActorSystem) extends Jdbc
     if (AkkaPersistenceConfig(system).inMemory) null
     else if (AkkaPersistenceConfig(system).slickConfiguration.jndiName.isDefined)
       Database.forName(AkkaPersistenceConfig(system).slickConfiguration.jndiName.get)
+    else if (AkkaPersistenceConfig(system).slickConfiguration.jndiDbName.isDefined)
+      new InitialContext().lookup(AkkaPersistenceConfig(system).slickConfiguration.jndiDbName.get).asInstanceOf[Database]
     else Database.forConfig("akka-persistence-jdbc.slick.db", system.settings.config)
 
   override def shutdown: Future[Unit] = db.shutdown

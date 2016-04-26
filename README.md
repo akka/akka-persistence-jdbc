@@ -696,6 +696,8 @@ Please look in the path `src/main/resources/schema` for the text based database 
 # What's new?
 ## 2.2.19-SNAPSHOT (2016-??-??)
   - Merged PR #46 [Andrey Kouznetsov](https://github.com/prettynatty) Significant performance boost by using compiled queries, thanks!
+  - Merged PR #47 [Andrey Kouznetsov](https://github.com/prettynatty) Ability to get Database instance from JNDI, thanks!
+  - Disable the async queries as they are implemented very sketchy, please use the synchronous query API with client side polling.  
 
 ## 2.2.18 (2016-04-19)
   - Text based serialization formats

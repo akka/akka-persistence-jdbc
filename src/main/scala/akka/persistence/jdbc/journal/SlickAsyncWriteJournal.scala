@@ -57,25 +57,10 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal
 
   def serialize: Boolean
 
-  /**
-   * Returns the list of persistenceIds that are not yet persisted
-   */
-  def determinePersistenceIdsNotInJournal(persistenceIdsInNewSetOfAtomicWrites: Seq[String]): Future[Seq[String]] =
-    if (hasAllPersistenceIdsSubscribers)
-      journalDao.persistenceIds(persistenceIdsInNewSetOfAtomicWrites)
-        .map(persistenceIdsInNewSetOfAtomicWrites.diff(_))
-    else Future.successful(Seq.empty[String])
-
   override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] = for {
-    persistenceIdsInNewSetOfAtomicWrites ← Future.successful(messages.map(_.persistenceId))
-    persistenceIdsNotInJournal ← determinePersistenceIdsNotInJournal(persistenceIdsInNewSetOfAtomicWrites)
     persistAtomicWritesResult ← Source(messages)
       .via(serializationFacade.serialize(serialize))
       .via(journalDao.writeFlow)
-      .via(addAllPersistenceIdsFlow(persistenceIdsNotInJournal))
-      .via(eventsByPersistenceIdFlow(messages))
-      .via(eventsByTagFlow(messages))
-      .via(eventsByPersistenceIdAndTagFlow(messages))
       .map(_.map(_ ⇒ ()))
       .runFold(List.empty[Try[Unit]])(_ :+ _)
   } yield persistAtomicWritesResult

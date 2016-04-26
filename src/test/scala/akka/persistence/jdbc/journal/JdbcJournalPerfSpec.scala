@@ -39,13 +39,13 @@ abstract class JdbcJournalPerfSpec(config: Config) extends JournalPerfSpec(confi
 
   override protected def supportsRejectingNonSerializableObjects: CapabilityFlag = false
 
-  implicit val pc: PatienceConfig = PatienceConfig(timeout = 30.seconds)
-
   implicit val ec = system.dispatcher
 
-  override def awaitDurationMillis: Long = 30.seconds.toMillis
+  implicit def pc: PatienceConfig = PatienceConfig(timeout = 60.seconds)
 
-  override def measurementIterations: Int = 1
+  override def awaitDurationMillis: Long = 60.seconds.toMillis
+
+  override def measurementIterations: Int = 10
 
   val db = SlickDatabase(system).db
 
@@ -61,24 +61,58 @@ abstract class JdbcJournalPerfSpec(config: Config) extends JournalPerfSpec(confi
 
 class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-application.conf")) {
   dropCreate(Postgres())
+
+  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 30.seconds)
+
+  override def awaitDurationMillis: Long = 30.seconds.toMillis
 }
 
 class PostgresVarcharPerfJournalSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-varchar-application.conf")) {
   dropCreate(PostgresVarchar())
+
+  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 30.seconds)
+
+  override def awaitDurationMillis: Long = 30.seconds.toMillis
 }
 
 class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-application.conf")) {
   dropCreate(MySQL())
+
+  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 60.seconds)
+
+  override def awaitDurationMillis: Long = 60.seconds.toMillis
+
+  override def measurementIterations: Int = 1
+
+  override def eventsCount: Int = 1000 // mysql is very slow on my macbook / docker / virtualbox
 }
 
 class MySQLVarcharJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-varchar-application.conf")) {
   dropCreate(MySQLVarchar())
+
+  override def awaitDurationMillis: Long = 60.seconds.toMillis
+
+  override def measurementIterations: Int = 1
+
+  override def eventsCount: Int = 1000 // mysql is very slow on my macbook / docker / virtualbox
 }
 
 class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-application.conf")) {
   dropCreate(Oracle())
+
+  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
+
+  override def awaitDurationMillis: Long = 180.seconds.toMillis
+
+  override def measurementIterations: Int = 5
 }
 
 class OracleVarcharJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-varchar-application.conf")) {
   dropCreate(OracleVarchar())
+
+  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
+
+  override def awaitDurationMillis: Long = 180.seconds.toMillis
+
+  override def measurementIterations: Int = 5
 }

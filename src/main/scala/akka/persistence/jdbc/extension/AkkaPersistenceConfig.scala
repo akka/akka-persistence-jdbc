@@ -38,12 +38,13 @@ object SlickConfiguration {
     cfg.withPath("akka-persistence-jdbc.slick") { cfg ⇒
       SlickConfiguration(
         cfg.as[String]("driver", "slick.driver.PostgresDriver"),
-        cfg.as[String]("jndiName")
+        cfg.as[String]("jndiName"),
+        cfg.as[String]("jndiDbName")
       )
     }
 }
 
-case class SlickConfiguration(slickDriver: String, jndiName: Option[String])
+case class SlickConfiguration(slickDriver: String, jndiName: Option[String], jndiDbName: Option[String])
 
 object PersistenceQueryConfiguration {
   def apply(cfg: Config): PersistenceQueryConfiguration =
@@ -152,7 +153,7 @@ class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) exte
   val log: LoggingAdapter = Logging(system, this.getClass)
 
   override val slickConfiguration: SlickConfiguration =
-    if (inMemory) SlickConfiguration("", None)
+    if (inMemory) SlickConfiguration("", None, None)
     else SlickConfiguration(system.settings.config)
 
   override val persistenceQueryConfiguration: PersistenceQueryConfiguration =

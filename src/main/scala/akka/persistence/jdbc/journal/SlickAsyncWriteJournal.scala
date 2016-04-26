@@ -19,12 +19,12 @@ package akka.persistence.jdbc.journal
 import akka.persistence.jdbc.dao.JournalDao
 import akka.persistence.jdbc.serialization.SerializationFacade
 import akka.persistence.journal.AsyncWriteJournal
-import akka.persistence.{AtomicWrite, PersistentRepr}
+import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 
 import scala.collection.immutable
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
 object JdbcJournal {

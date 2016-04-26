@@ -17,7 +17,7 @@
 package akka.persistence.jdbc.query.journal
 
 import akka.NotUsed
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{ Actor, ActorRef }
 import akka.persistence.jdbc.journal.SlickAsyncWriteJournal
 import akka.persistence.jdbc.query.journal.AllPersistenceIdsSubscriberRegistry.AllPersistenceIdsSubscriberTerminated
 import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal

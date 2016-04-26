@@ -17,7 +17,7 @@
 package akka.persistence.jdbc.query.journal
 
 import akka.NotUsed
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{ Actor, ActorRef }
 import akka.persistence.AtomicWrite
 import akka.persistence.jdbc.journal.SlickAsyncWriteJournal
 import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
@@ -26,7 +26,7 @@ import akka.persistence.journal.Tagged
 import akka.persistence.query.EventEnvelope
 import akka.stream.scaladsl.Flow
 
-import scala.collection.{Iterable, mutable}
+import scala.collection.{ Iterable, mutable }
 import scala.util.Try
 
 object EventsByPersistenceIdTagSubscriberRegistry {

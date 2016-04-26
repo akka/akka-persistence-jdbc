@@ -19,6 +19,7 @@ package akka.persistence.jdbc.query.journal.publisher
 import akka.actor.{ ActorLogging, ActorRef }
 import akka.persistence.Persistence
 import akka.persistence.jdbc.journal.JdbcJournal
+import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
 import akka.persistence.query.journal.leveldb.DeliveryBuffer
 import akka.stream.actor.ActorPublisher
 import akka.stream.actor.ActorPublisherMessage.{ Cancel, Request }
@@ -32,13 +33,13 @@ class AllPersistenceIdsPublisher extends ActorPublisher[String]
 
   def init: Receive = {
     case _: Request ⇒
-      journal ! JdbcJournal.AllPersistenceIdsRequest
+      journal ! JdbcReadJournal.AllPersistenceIdsRequest
       context.become(active)
     case Cancel ⇒ context.stop(self)
   }
 
   def active: Receive = {
-    case JdbcJournal.PersistenceIdAdded(persistenceId) ⇒
+    case JdbcReadJournal.PersistenceIdAdded(persistenceId) ⇒
       buf :+= persistenceId
       deliverBuf()
 

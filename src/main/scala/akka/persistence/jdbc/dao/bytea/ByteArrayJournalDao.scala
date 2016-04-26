@@ -87,10 +87,10 @@ class ByteArrayJournalDao(db: JdbcBackend#Database, val profile: JdbcProfile, sy
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct.result))
 
   override def eventsByTag(tag: String, offset: Long): Source[SerializationResult, NotUsed] =
-    Source.fromPublisher(db.stream(queries.eventsByTag(tag, offset).result))
+    Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", offset).result))
       .map(row ⇒ Serialized(row.persistenceId, row.sequenceNumber, row.message, row.tags, row.created))
 
   override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[SerializationResult, NotUsed] =
-    Source.fromPublisher(db.stream(queries.eventsByTagAndPersistenceId(persistenceId, tag, offset).result))
+    Source.fromPublisher(db.stream(queries.eventsByTagAndPersistenceId(persistenceId, s"%$tag%", offset).result))
       .map(row ⇒ Serialized(row.persistenceId, row.sequenceNumber, row.message, row.tags, row.created))
 }

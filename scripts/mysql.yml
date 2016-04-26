@@ -1,0 +1,8 @@
+mysql:
+  image: mysql:latest
+  container_name: mysql
+  environment:
+    - "TZ=Europe/Amsterdam"
+    - "MYSQL_ROOT_PASSWORD=root"
+  ports:
+    - "3306:3306" # credentials (root:root)

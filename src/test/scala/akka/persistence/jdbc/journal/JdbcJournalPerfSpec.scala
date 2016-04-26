@@ -43,6 +43,10 @@ abstract class JdbcJournalPerfSpec(config: Config) extends JournalPerfSpec(confi
 
   implicit val ec = system.dispatcher
 
+  override def awaitDurationMillis: Long = 30.seconds.toMillis
+
+  override def measurementIterations: Int = 1
+
   val db = SlickDatabase(system).db
 
   override def journalTableCfg: JournalTableConfiguration =

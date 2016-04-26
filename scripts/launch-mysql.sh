@@ -32,7 +32,7 @@ done;
 }
 
 docker rm -f $(docker ps -aq)
-docker-compose -f scripts/oracle.yml up -d
-#wait 3306 MySQL
+docker-compose -f scripts/mysql.yml up -d
+wait 3306 MySQL
 #wait 5432 Postgres
-wait 1521 Oracle
+#wait 1521 Oracle

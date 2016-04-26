@@ -19,7 +19,7 @@ package akka.persistence.jdbc.journal
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.dao.bytea.JournalTables
 import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DeletedToTableConfiguration, JournalTableConfiguration, SlickDatabase }
-import akka.persistence.jdbc.util.Schema.Postgres
+import akka.persistence.jdbc.util.Schema._
 import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDriver }
 import akka.persistence.journal.JournalPerfSpec
 import com.typesafe.config.{ Config, ConfigFactory }
@@ -39,7 +39,7 @@ abstract class JdbcJournalPerfSpec(config: Config) extends JournalPerfSpec(confi
 
   override protected def supportsRejectingNonSerializableObjects: CapabilityFlag = false
 
-  implicit val pc: PatienceConfig = PatienceConfig(timeout = 10.seconds)
+  implicit val pc: PatienceConfig = PatienceConfig(timeout = 30.seconds)
 
   implicit val ec = system.dispatcher
 
@@ -57,4 +57,24 @@ abstract class JdbcJournalPerfSpec(config: Config) extends JournalPerfSpec(confi
 
 class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-application.conf")) {
   dropCreate(Postgres())
+}
+
+class PostgresVarcharPerfJournalSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-varchar-application.conf")) {
+  dropCreate(PostgresVarchar())
+}
+
+class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-application.conf")) {
+  dropCreate(MySQL())
+}
+
+class MySQLVarcharJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-varchar-application.conf")) {
+  dropCreate(MySQLVarchar())
+}
+
+class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-application.conf")) {
+  dropCreate(Oracle())
+}
+
+class OracleVarcharJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-varchar-application.conf")) {
+  dropCreate(OracleVarchar())
 }

@@ -1,0 +1,7 @@
+oracle:
+  image: alexeiled/docker-oracle-xe-11g
+  container_name: oracle
+  environment:
+    - "TZ=Europe/Amsterdam"
+  ports:
+    - "1521:1521" # credentials (system:oracle)

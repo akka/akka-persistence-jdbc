@@ -105,6 +105,8 @@ class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("orac
   override def awaitDurationMillis: Long = 180.seconds.toMillis
 
   override def measurementIterations: Int = 5
+
+  override def eventsCount: Int = 1000
 }
 
 class OracleVarcharJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-varchar-application.conf")) {
@@ -115,4 +117,6 @@ class OracleVarcharJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.loa
   override def awaitDurationMillis: Long = 180.seconds.toMillis
 
   override def measurementIterations: Int = 5
+
+  override def eventsCount: Int = 1000
 }

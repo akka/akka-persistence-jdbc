@@ -58,7 +58,7 @@ trait SlickReadJournal extends ReadJournal
 
   override def allPersistenceIds(): Source[String, NotUsed] =
     currentPersistenceIds()
-      .concat(Source.actorPublisher[String](Props(classOf[AllPersistenceIdsPublisher])))
+  //      .concat(Source.actorPublisher[String](Props(classOf[AllPersistenceIdsPublisher])))
 
   override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     journalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, Long.MaxValue)
@@ -68,7 +68,7 @@ trait SlickReadJournal extends ReadJournal
 
   override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr)
-      .concat(Source.actorPublisher[EventEnvelope](Props(classOf[EventsByPersistenceIdPublisher], persistenceId)))
+  //      .concat(Source.actorPublisher[EventEnvelope](Props(classOf[EventsByPersistenceIdPublisher], persistenceId)))
 
   override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     journalDao.eventsByTag(tag, offset)
@@ -80,10 +80,10 @@ trait SlickReadJournal extends ReadJournal
 
   override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     currentEventsByTag(tag, offset)
-      .concat(Source.actorPublisher[EventEnvelope](Props(classOf[EventsByTagPublisher], tag)))
-      .zipWith(Source(Stream.from(offset.toInt + 1))) { // Needs a better way
-        case (orig, i) ⇒ orig.copy(offset = i)
-      }
+  //      .concat(Source.actorPublisher[EventEnvelope](Props(classOf[EventsByTagPublisher], tag)))
+  //      .zipWith(Source(Stream.from(offset.toInt + 1))) { // Needs a better way
+  //        case (orig, i) ⇒ orig.copy(offset = i)
+  //      }
 
   override def currentEventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     journalDao.eventsByPersistenceIdAndTag(persistenceId, tag, offset)
@@ -95,10 +95,10 @@ trait SlickReadJournal extends ReadJournal
 
   override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     currentEventsByPersistenceIdAndTag(persistenceId, tag, offset)
-      .concat(Source.actorPublisher[EventEnvelope](Props(classOf[EventsByPersistenceIdAndTagPublisher], persistenceId, tag)))
-      .zipWith(Source(Stream.from(offset.toInt + 1))) { // Needs a better way
-        case (orig, i) ⇒ orig.copy(offset = i)
-      }
+  //      .concat(Source.actorPublisher[EventEnvelope](Props(classOf[EventsByPersistenceIdAndTagPublisher], persistenceId, tag)))
+  //      .zipWith(Source(Stream.from(offset.toInt + 1))) { // Needs a better way
+  //        case (orig, i) ⇒ orig.copy(offset = i)
+  //      }
 }
 
 class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) extends SlickReadJournal {

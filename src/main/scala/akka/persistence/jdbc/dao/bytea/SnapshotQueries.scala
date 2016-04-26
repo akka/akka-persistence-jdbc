@@ -23,27 +23,33 @@ import slick.driver.JdbcProfile
 class SnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: SnapshotTableConfiguration) extends SnapshotTables {
   import profile.api._
 
-  def maxSeqNrForPersistenceId(persistenceId: String) =
-    selectAll(persistenceId).map(_.sequenceNumber).max
+  private def maxSeqNrForPersistenceId(persistenceId: Rep[String]) =
+    _selectAll(persistenceId).map(_.sequenceNumber).max
 
   def insertOrUpdate(persistenceId: String, sequenceNr: Long, created: Long, snapshot: Array[Byte]) =
     SnapshotTable.insertOrUpdate(SnapshotRow(persistenceId, sequenceNr, created, snapshot))
 
-  def selectAll(persistenceId: String) =
+  private def _selectAll(persistenceId: Rep[String]) =
     SnapshotTable.filter(_.persistenceId === persistenceId).sortBy(_.sequenceNumber.desc)
+  val selectAll = Compiled(_selectAll _)
 
-  def selectByPersistenceIdAndMaxSeqNr(persistenceId: String) =
-    selectAll(persistenceId).filter(_.sequenceNumber === maxSeqNrForPersistenceId(persistenceId))
+  private def _selectByPersistenceIdAndMaxSeqNr(persistenceId: Rep[String]) =
+    _selectAll(persistenceId).filter(_.sequenceNumber === maxSeqNrForPersistenceId(persistenceId))
+  val selectByPersistenceIdAndMaxSeqNr = Compiled(_selectByPersistenceIdAndMaxSeqNr _)
 
-  def selectByPersistenceIdAndSeqNr(persistenceId: String, sequenceNr: Long) =
-    selectAll(persistenceId).filter(_.sequenceNumber === sequenceNr)
+  private def _selectByPersistenceIdAndSeqNr(persistenceId: Rep[String], sequenceNr: Rep[Long]) =
+    _selectAll(persistenceId).filter(_.sequenceNumber === sequenceNr)
+  val selectByPersistenceIdAndSeqNr = Compiled(_selectByPersistenceIdAndSeqNr _)
 
-  def selectByPersistenceIdAndMaxTimestamp(persistenceId: String, maxTimestamp: Long) =
-    selectAll(persistenceId).filter(_.created <= maxTimestamp)
+  private def _selectByPersistenceIdAndMaxTimestamp(persistenceId: Rep[String], maxTimestamp: Rep[Long]) =
+    _selectAll(persistenceId).filter(_.created <= maxTimestamp)
+  val selectByPersistenceIdAndMaxTimestamp = Compiled(_selectByPersistenceIdAndMaxTimestamp _)
 
-  def selectByPersistenceIdAndMaxSequenceNr(persistenceId: String, maxSequenceNr: Long) =
-    selectAll(persistenceId).filter(_.sequenceNumber <= maxSequenceNr)
+  private def _selectByPersistenceIdAndMaxSequenceNr(persistenceId: Rep[String], maxSequenceNr: Rep[Long]) =
+    _selectAll(persistenceId).filter(_.sequenceNumber <= maxSequenceNr)
+  val selectByPersistenceIdAndMaxSequenceNr = Compiled(_selectByPersistenceIdAndMaxSequenceNr _)
 
-  def selectByPersistenceIdAndMaxSequenceNrAndMaxTimestamp(persistenceId: String, maxSequenceNr: Long, maxTimestamp: Long) =
-    selectByPersistenceIdAndMaxSequenceNr(persistenceId, maxSequenceNr).filter(_.created <= maxTimestamp)
+  private def _selectByPersistenceIdAndMaxSequenceNrAndMaxTimestamp(persistenceId: Rep[String], maxSequenceNr: Rep[Long], maxTimestamp: Rep[Long]) =
+    _selectByPersistenceIdAndMaxSequenceNr(persistenceId, maxSequenceNr).filter(_.created <= maxTimestamp)
+  val selectByPersistenceIdAndMaxSequenceNrAndMaxTimestamp = Compiled(_selectByPersistenceIdAndMaxSequenceNrAndMaxTimestamp _)
 }

@@ -33,6 +33,18 @@ import scala.concurrent.Future
 
 object JdbcReadJournal {
   final val Identifier = "jdbc-read-journal"
+
+  final case class EventsByPersistenceIdAndTagRequest(persistenceId: String, tag: String)
+
+  final case class EventsByTagRequest(tag: String)
+
+  final case class EventsByPersistenceIdRequest(persistenceId: String)
+
+  final case class EventAppended(envelope: EventEnvelope)
+
+  case object AllPersistenceIdsRequest
+
+  final case class PersistenceIdAdded(persistenceId: String)
 }
 
 trait SlickReadJournal extends ReadJournal

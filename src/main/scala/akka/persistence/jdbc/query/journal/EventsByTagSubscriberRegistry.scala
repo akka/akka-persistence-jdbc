@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.journal
+package akka.persistence.jdbc.query.journal
 
 import akka.NotUsed
-import akka.actor.{ Actor, ActorRef }
+import akka.actor.{Actor, ActorRef}
 import akka.persistence.AtomicWrite
-import akka.persistence.jdbc.serialization.{ SerializationResult, Serialized }
+import akka.persistence.jdbc.journal.SlickAsyncWriteJournal
+import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
+import akka.persistence.jdbc.serialization.SerializationResult
 import akka.persistence.journal.Tagged
 import akka.persistence.query.EventEnvelope
 import akka.stream.scaladsl.Flow
 
-import scala.collection.{ Iterable, mutable }
+import scala.collection.{Iterable, mutable}
 import scala.util.Try
 
 object EventsByTagSubscriberRegistry {
@@ -49,7 +51,7 @@ trait EventsByTagSubscriberRegistry { _: SlickAsyncWriteJournal ⇒
     self ! EventsByTagSubscriberTerminated(ref)
 
   protected def receiveEventsByTagRegistry: Actor.Receive = {
-    case JdbcJournal.EventsByTagRequest(tag) ⇒
+    case JdbcReadJournal.EventsByTagRequest(tag) ⇒
       addEventsByTagSubscriber(sender(), tag)
       context.watch(sender())
 
@@ -77,7 +79,7 @@ trait EventsByTagSubscriberRegistry { _: SlickAsyncWriteJournal ⇒
           if persistentRepr.sequenceNr == serialized.sequenceNr
           subscriber ← eventsByTagSubscribers(tag)
           envelope = EventEnvelope(persistentRepr.sequenceNr, persistentRepr.persistenceId, persistentRepr.sequenceNr, unwrapTagged(persistentRepr.payload))
-          eventAppended = JdbcJournal.EventAppended(envelope)
+          eventAppended = JdbcReadJournal.EventAppended(envelope)
         } subscriber ! eventAppended
       }
       atomicWriteResult

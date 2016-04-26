@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.journal
+package akka.persistence.jdbc.query.journal
 
 import akka.NotUsed
-import akka.actor.{ Actor, ActorRef }
-import akka.persistence.jdbc.journal.AllPersistenceIdsSubscriberRegistry.AllPersistenceIdsSubscriberTerminated
+import akka.actor.{Actor, ActorRef}
+import akka.persistence.jdbc.journal.SlickAsyncWriteJournal
+import akka.persistence.jdbc.query.journal.AllPersistenceIdsSubscriberRegistry.AllPersistenceIdsSubscriberTerminated
+import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
 import akka.persistence.jdbc.serialization.SerializationResult
 import akka.stream.scaladsl.Flow
 
@@ -43,7 +45,7 @@ trait AllPersistenceIdsSubscriberRegistry { _: SlickAsyncWriteJournal ⇒
 
   private def newPersistenceIdAdded(id: String): Unit = {
     if (hasAllPersistenceIdsSubscribers) {
-      val added = JdbcJournal.PersistenceIdAdded(id)
+      val added = JdbcReadJournal.PersistenceIdAdded(id)
       allPersistenceIdsSubscribers.foreach(_ ! added)
     }
   }
@@ -52,7 +54,7 @@ trait AllPersistenceIdsSubscriberRegistry { _: SlickAsyncWriteJournal ⇒
     self ! AllPersistenceIdsSubscriberTerminated(ref)
 
   protected def receiveAllPersistenceIdsSubscriber: Actor.Receive = {
-    case JdbcJournal.AllPersistenceIdsRequest ⇒
+    case JdbcReadJournal.AllPersistenceIdsRequest ⇒
       addAllPersistenceIdsSubscriber(sender())
       context.watch(sender())
 

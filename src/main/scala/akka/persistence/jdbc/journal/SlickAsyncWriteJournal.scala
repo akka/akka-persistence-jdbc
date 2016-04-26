@@ -16,36 +16,22 @@
 
 package akka.persistence.jdbc.journal
 
-import akka.actor.Terminated
 import akka.persistence.jdbc.dao.JournalDao
 import akka.persistence.jdbc.serialization.SerializationFacade
 import akka.persistence.journal.AsyncWriteJournal
-import akka.persistence.query.EventEnvelope
-import akka.persistence.{ AtomicWrite, PersistentRepr }
+import akka.persistence.{AtomicWrite, PersistentRepr}
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 
 import scala.collection.immutable
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 object JdbcJournal {
   final val Identifier = "jdbc-journal"
-
-  final case class EventsByPersistenceIdAndTagRequest(persistenceId: String, tag: String)
-  final case class EventsByTagRequest(tag: String)
-  final case class EventsByPersistenceIdRequest(persistenceId: String)
-  final case class EventAppended(envelope: EventEnvelope)
-
-  case object AllPersistenceIdsRequest
-  final case class PersistenceIdAdded(persistenceId: String)
 }
 
-trait SlickAsyncWriteJournal extends AsyncWriteJournal
-    with AllPersistenceIdsSubscriberRegistry
-    with EventsByPersistenceIdRegistry
-    with EventsByTagSubscriberRegistry
-    with EventsByPersistenceIdTagSubscriberRegistry {
+trait SlickAsyncWriteJournal extends AsyncWriteJournal {
 
   def journalDao: JournalDao
 
@@ -57,13 +43,12 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal
 
   def serialize: Boolean
 
-  override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] = for {
-    persistAtomicWritesResult ← Source(messages)
+  override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] =
+    Source(messages)
       .via(serializationFacade.serialize(serialize))
       .via(journalDao.writeFlow)
       .map(_.map(_ ⇒ ()))
       .runFold(List.empty[Try[Unit]])(_ :+ _)
-  } yield persistAtomicWritesResult
 
   override def asyncDeleteMessagesTo(persistenceId: String, toSequenceNr: Long): Future[Unit] =
     journalDao.delete(persistenceId, toSequenceNr)
@@ -77,19 +62,4 @@ trait SlickAsyncWriteJournal extends AsyncWriteJournal
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
       .runForeach(recoveryCallback)
       .map(_ ⇒ ())
-
-  def handleTerminated: Receive = {
-    case Terminated(ref) ⇒
-      sendAllPersistenceIdsSubscriberTerminated(ref)
-      sendEventsByPersistenceIdSubscriberTerminated(ref)
-      sendEventsByTagSubscriberTerminated(ref)
-      sendEventsByPersistenceIdAndTagSubscriberTerminated(ref)
-  }
-
-  override def receivePluginInternal: Receive =
-    handleTerminated
-      .orElse(receiveAllPersistenceIdsSubscriber)
-      .orElse(receiveEventsByPersistenceIdRegistry)
-      .orElse(receiveEventsByTagRegistry)
-      .orElse(receiveEventsByPersistenceIdAndTagRegistry)
 }

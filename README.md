@@ -5,6 +5,7 @@ Service | Status | Description
 ------- | ------ | -----------
 License | [![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt) | Apache 2.0
 Bintray | [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-persistence-jdbc/images/download.svg)](https://bintray.com/dnvriend/maven/akka-persistence-jdbc/_latestVersion) | Latest Version on Bintray
+Gitter | [![Join the chat at https://gitter.im/dnvriend/akka-persistence-jdbc](https://badges.gitter.im/dnvriend/akka-persistence-jdbc.svg)](https://gitter.im/dnvriend/akka-persistence-jdbc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) | Gitter
 
 ## Slick Extensions Licensing Changing to Open Source
 The [Typesafe/Lightbend Slick Extensions](http://slick.typesafe.com/doc/3.1.1/extensions.html) have become [open source as 

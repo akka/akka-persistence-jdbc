@@ -22,7 +22,7 @@ All async queries do not work as expected. I must refactor the async query api t
 the `current*` commands and do your own client-side polling strategy for now.  
                                  
 ## New release
-The latest version is `2.2.19` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The latest version is `2.2.20` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe/Lightbend Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -46,7 +46,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.19"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.20"
 ```
 
 ## Configuration
@@ -695,6 +695,9 @@ that contains all of the fields necessary to reconstruct a PersistentRepr at a l
 Please look in the path `src/main/resources/schema` for the text based database schema to use.
 
 # What's new?
+## 2.2.20 (2016-04-29)
+  - Merged PR #50 [Andrey Kouznetsov](https://github.com/prettynatty) for issue [#44 - Leaking connections](https://github.com/dnvriend/akka-persistence-jdbc/issues/44), thanks! 
+
 ## 2.2.19 (2016-04-26)
   - Merged PR #46 [Andrey Kouznetsov](https://github.com/prettynatty) Significant performance boost by using compiled queries, thanks!
   - Merged PR #47 [Andrey Kouznetsov](https://github.com/prettynatty) Ability to get Database instance from JNDI, thanks!

@@ -67,11 +67,11 @@ class ByteArrayJournalDao(db: JdbcBackend#Database, val profile: JdbcProfile, sy
   }
 
   override def highestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] = {
-    val actions = (for {
+    val actions = for {
       seqNumFoundInJournalTable ← queries.highestSequenceNumberFromJournalForPersistenceIdFromSequenceNr(persistenceId, fromSequenceNr).result
       highestSeqNumberFoundInDeletedToTable ← queries.selectHighestSequenceNrFromDeletedTo(persistenceId).result
       highestSequenceNumber = seqNumFoundInJournalTable.getOrElse(highestSeqNumberFoundInDeletedToTable.getOrElse(0L))
-    } yield highestSequenceNumber).transactionally
+    } yield highestSequenceNumber
     db.run(actions)
   }
 

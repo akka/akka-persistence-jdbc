@@ -18,7 +18,7 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.2.20"
+version := "2.2.21"
 
 isSnapshot := true
 
@@ -36,13 +36,13 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.slick" %% "slick" % slickVersion,
     "com.typesafe.slick" %% "slick-extensions" % "3.1.0",
-    "com.typesafe.slick" %% "slick-hikaricp" % slickVersion,
+    "com.typesafe.slick" %% "slick-hikaricp" % slickVersion exclude("com.zaxxer", "HikariCP-java6"),
+    "com.zaxxer" % "HikariCP" % "2.4.6",
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion % Test,
     "ch.qos.logback" % "logback-classic" % "1.1.3" % Test,
     "com.typesafe.akka" %% "akka-persistence-tck" % akkaVersion % Test,
-    "org.postgresql" % "postgresql" % "9.4-1206-jdbc42" % Test,
-    "mysql" % "mysql-connector-java" % "5.1.33" % Test,
-    "com.h2database" % "h2" % "1.4.191" % Test,
+    "org.postgresql" % "postgresql" % "9.4.1208.jre7" % Test,
+    "mysql" % "mysql-connector-java" % "5.1.38" % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
     "org.scalatest" %% "scalatest" % "2.2.5" % Test,

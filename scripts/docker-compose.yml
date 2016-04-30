@@ -1,6 +1,6 @@
 postgres:
   image: postgres:latest
-#  container_name: postgres
+  container_name: postgres
   environment:
     - "TZ=Europe/Amsterdam"
     - "POSTGRES_USER=docker"

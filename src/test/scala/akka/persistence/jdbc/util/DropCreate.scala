@@ -23,41 +23,46 @@ import akka.persistence.jdbc.extension.SlickDatabase
 import akka.persistence.jdbc.util.Schema.{ Oracle, OracleVarchar, SchemaType }
 import slick.driver.PostgresDriver.api._
 
-import scala.util.{ Failure, Try }
-
 object Schema {
-  sealed trait SchemaType { def schema: String }
+
+  sealed trait SchemaType {
+    def schema: String
+  }
+
   final case class Postgres(val schema: String = "schema/postgres/postgres-schema.sql") extends SchemaType
+
   final case class PostgresVarchar(val schema: String = "schema/postgres/postgres-varchar-schema.sql") extends SchemaType
+
   final case class MySQL(val schema: String = "schema/mysql/mysql-schema.sql") extends SchemaType
+
   final case class MySQLVarchar(val schema: String = "schema/mysql/mysql-varchar-schema.sql") extends SchemaType
+
   final case class Oracle(val schema: String = "schema/oracle/oracle-schema.sql") extends SchemaType
+
   final case class OracleVarchar(val schema: String = "schema/oracle/oracle-varchar-schema.sql") extends SchemaType
-  final case class H2(val schema: String = "schema/mysql/mysql-schema.sql") extends SchemaType
+
 }
 
 trait DropCreate extends ClasspathResources {
 
   def system: ActorSystem
 
-  val oracleQueries = List(
+  val listOfOracleDropQueries = List(
     """DROP TABLE "journal" CASCADE CONSTRAINT""",
     """DROP TABLE "deleted_to" CASCADE CONSTRAINT""",
     """DROP TABLE "snapshot" CASCADE CONSTRAINT"""
   )
 
-  def dropOracle = withStatement { stmt ⇒
-    for {
-      ddl ← oracleQueries
-      result ← Try(stmt.executeUpdate(ddl)) recoverWith {
-        case t: Throwable ⇒
-          t.printStackTrace()
-          Failure(t)
+  def dropOracle: Unit = withStatement { stmt ⇒
+    listOfOracleDropQueries.foreach { ddl ⇒
+      try stmt.executeUpdate(ddl) catch {
+        case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" ⇒ // suppress known error message in the test
+        case t: Throwable                                                             ⇒ t.printStackTrace()
       }
-    } ()
+    }
   }
 
-  def dropCreate(schemaType: SchemaType) = schemaType match {
+  def dropCreate(schemaType: SchemaType): Unit = schemaType match {
     case Oracle(schema) ⇒
       dropOracle
       create(schema)
@@ -67,16 +72,16 @@ trait DropCreate extends ClasspathResources {
     case s: SchemaType ⇒ create(s.schema)
   }
 
-  def create(schema: String) = for {
+  def create(schema: String): Unit = for {
     schema ← Option(fromClasspathAsString(schema))
-    query ← for {
-      trimmedLine ← schema.split(";").map(_.trim)
+    ddl ← for {
+      trimmedLine ← schema.split(";") map (_.trim)
       if trimmedLine.nonEmpty
     } yield trimmedLine
   } withStatement { stmt ⇒
-    Try(stmt.executeUpdate(query)).recover {
-      case t: Throwable ⇒
-        t.printStackTrace()
+    try stmt.executeUpdate(ddl) catch {
+      case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" ⇒ // suppress known error message in the test
+      case t: Throwable                                                             ⇒ t.printStackTrace()
     }
   }
 

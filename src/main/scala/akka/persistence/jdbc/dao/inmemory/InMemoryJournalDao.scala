@@ -41,7 +41,7 @@ class InMemoryJournalDao(db: ActorRef)(implicit timeout: Timeout, ec: ExecutionC
 
   private def writeMessages: Flow[Try[Iterable[SerializationResult]], Try[Iterable[SerializationResult]], NotUsed] = Flow[Try[Iterable[SerializationResult]]].mapAsync(1) {
     case element @ Success(xs) ⇒ writeList(xs).map(_ ⇒ element)
-    case element @ Failure(t)  ⇒ Future.failed(t)
+    case element @ Failure(t)  ⇒ Future.successful(element)
   }
 
   override def allPersistenceIdsSource: Source[String, NotUsed] =

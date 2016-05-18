@@ -199,7 +199,7 @@ class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) exte
        | journal: ${serializationConfiguration.journal}
        | snapshot: ${serializationConfiguration.snapshot}
        | === Journal Table Configuration ====
-       | schemaName: ${journalTableConfiguration.schemaName}
+       | schemaName: ${journalTableConfiguration.schemaName.getOrElse("None")}
        | tableName: ${journalTableConfiguration.tableName}
        | columnNames:
        | - persistenceId: ${journalTableConfiguration.columnNames.persistenceId}
@@ -208,13 +208,13 @@ class AkkaPersistenceConfigImpl()(implicit val system: ExtendedActorSystem) exte
        | - tags: ${journalTableConfiguration.columnNames.tags}
        | - message: ${journalTableConfiguration.columnNames.message}
        | == DeletedTo Table Configuration ===
-       | schemaName: ${deletedToTableConfiguration.schemaName}
+       | schemaName: ${deletedToTableConfiguration.schemaName.getOrElse("None")}
        | tableName: ${deletedToTableConfiguration.tableName}
        | columnNames:
        | - persistenceId: ${deletedToTableConfiguration.columnNames.persistenceId}
        | - deletedTo: ${deletedToTableConfiguration.columnNames.deletedTo}
        | === Snapshot Table Configuration ===
-       | schemaName: ${snapshotTableConfiguration.schemaName}
+       | schemaName: ${snapshotTableConfiguration.schemaName.getOrElse("None")}
        | tableName: ${snapshotTableConfiguration.tableName}
        | columnNames:
        | - persistenceId: ${snapshotTableConfiguration.columnNames.persistenceId}

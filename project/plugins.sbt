@@ -21,13 +21,17 @@ resolvers += "bintray-sbt-plugin-releases" at "http://dl.bintray.com/content/sbt
 addSbtPlugin("me.lessis" % "bintray-sbt" % "0.3.0")
 
 // to show a dependency graph
+// see: https://github.com/jrudolph/sbt-dependency-graph/releases
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
 
 // to format scala source code
+// see: https://github.com/sbt/sbt-scalariform
 addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.6.0")
 
 // enable updating file headers eg. for copyright
+// see: https://github.com/sbt/sbt-header
 addSbtPlugin("de.heikoseeberger" % "sbt-header" % "1.5.1")
 
 // generates Scala source from your build definitions //
-addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.5.0")
+// see: https://github.com/sbt/sbt-buildinfo
+addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.6.1")

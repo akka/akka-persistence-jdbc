@@ -37,7 +37,7 @@ abstract class JdbcJournalPerfSpec(config: Config) extends JournalPerfSpec(confi
     with ClasspathResources
     with DropCreate {
 
-  override protected def supportsRejectingNonSerializableObjects: CapabilityFlag = false
+  override protected def supportsRejectingNonSerializableObjects: CapabilityFlag = true
 
   implicit val ec = system.dispatcher
 
@@ -64,7 +64,11 @@ class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("po
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 30.seconds)
 
-  override def awaitDurationMillis: Long = 30.seconds.toMillis
+  override def awaitDurationMillis: Long = 180.seconds.toMillis
+
+  override def measurementIterations: Int = 1
+
+  override def eventsCount: Int = 1000 // postgres is very slow on my macbook / docker / virtualbox
 }
 
 class PostgresVarcharPerfJournalSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-varchar-application.conf")) {
@@ -72,7 +76,11 @@ class PostgresVarcharPerfJournalSpec extends JdbcJournalPerfSpec(ConfigFactory.l
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 30.seconds)
 
-  override def awaitDurationMillis: Long = 30.seconds.toMillis
+  override def awaitDurationMillis: Long = 180.seconds.toMillis
+
+  override def measurementIterations: Int = 1
+
+  override def eventsCount: Int = 1000 // postgres is very slow on my macbook / docker / virtualbox
 }
 
 class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-application.conf")) {
@@ -80,7 +88,7 @@ class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 60.seconds)
 
-  override def awaitDurationMillis: Long = 60.seconds.toMillis
+  override def awaitDurationMillis: Long = 180.seconds.toMillis
 
   override def measurementIterations: Int = 1
 
@@ -90,7 +98,7 @@ class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql
 class MySQLVarcharJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-varchar-application.conf")) {
   dropCreate(MySQLVarchar())
 
-  override def awaitDurationMillis: Long = 60.seconds.toMillis
+  override def awaitDurationMillis: Long = 180.seconds.toMillis
 
   override def measurementIterations: Int = 1
 
@@ -104,9 +112,9 @@ class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("orac
 
   override def awaitDurationMillis: Long = 180.seconds.toMillis
 
-  override def measurementIterations: Int = 5
+  override def measurementIterations: Int = 1
 
-  override def eventsCount: Int = 1000
+  override def eventsCount: Int = 1000 // oracle is very slow on my macbook / docker / virtualbox
 }
 
 class OracleVarcharJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-varchar-application.conf")) {
@@ -116,7 +124,7 @@ class OracleVarcharJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.loa
 
   override def awaitDurationMillis: Long = 180.seconds.toMillis
 
-  override def measurementIterations: Int = 5
+  override def measurementIterations: Int = 1
 
-  override def eventsCount: Int = 1000
+  override def eventsCount: Int = 1000 // oracle is very slow on my macbook / docker / virtualbox
 }

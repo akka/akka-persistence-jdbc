@@ -18,17 +18,16 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.2.22"
-
-isSnapshot := true
+version := "2.2.23"
 
 resolvers += Resolver.typesafeRepo("releases")
 
 scalaVersion := "2.11.8"
 
 libraryDependencies ++= {
-  val akkaVersion = "2.4.5"
+  val akkaVersion = "2.4.6"
   val slickVersion = "3.1.1"
+  val hikariCPVersion = "2.4.6"
   Seq(
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
@@ -37,7 +36,7 @@ libraryDependencies ++= {
     "com.typesafe.slick" %% "slick" % slickVersion,
     "com.typesafe.slick" %% "slick-extensions" % "3.1.0",
     "com.typesafe.slick" %% "slick-hikaricp" % slickVersion exclude("com.zaxxer", "HikariCP-java6"),
-    "com.zaxxer" % "HikariCP" % "2.4.6",
+    "com.zaxxer" % "HikariCP" % hikariCPVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion % Test,
     "ch.qos.logback" % "logback-classic" % "1.1.3" % Test,
     "com.typesafe.akka" %% "akka-persistence-tck" % akkaVersion % Test,
@@ -45,7 +44,7 @@ libraryDependencies ++= {
     "mysql" % "mysql-connector-java" % "5.1.38" % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
-    "org.scalatest" %% "scalatest" % "2.2.5" % Test,
+    "org.scalatest" %% "scalatest" % "2.2.6" % Test,
     "org.scalacheck" %% "scalacheck" % "1.12.5" % Test
   )
 }

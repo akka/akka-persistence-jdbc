@@ -18,14 +18,14 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.2.23"
+version := "2.2.24"
 
 resolvers += Resolver.typesafeRepo("releases")
 
 scalaVersion := "2.11.8"
 
 libraryDependencies ++= {
-  val akkaVersion = "2.4.6"
+  val akkaVersion = "2.4.7"
   val slickVersion = "3.1.1"
   val hikariCPVersion = "2.4.6"
   Seq(

@@ -1,4 +1,4 @@
-# akka-persistence-jdbc
+# akka-persistence-jdbc v2.2.24
 Akka-persistence-jdbc is a plugin for akka-persistence that asynchronously writes journal and snapshot entries entries to a configured JDBC store. It supports writing journal messages and snapshots to two tables: the `journal` table and the `snapshot` table.
 
 Service | Status | Description
@@ -22,7 +22,7 @@ All async queries do not work as expected. I must refactor the async query api t
 the `current*` commands and do your own client-side polling strategy for now.  
                                  
 ## New release
-The latest version is `2.2.23` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The latest version is `2.2.24` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
 
 - It uses [Typesafe/Lightbend Slick](http://slick.typesafe.com/) as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -46,7 +46,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.23"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.24"
 ```
 
 ## Configuration
@@ -695,6 +695,9 @@ that contains all of the fields necessary to reconstruct a PersistentRepr at a l
 Please look in the path `src/main/resources/schema` for the text based database schema to use.
 
 # What's new?
+## 2.2.24 (2016-06-05)
+  - Akka 2.4.6 -> 2.4.7
+
 ## 2.2.23 (2016-05-25)
   - Akka 2.4.5 -> 2.4.6
   

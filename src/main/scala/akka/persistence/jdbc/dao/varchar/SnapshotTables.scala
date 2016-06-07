@@ -30,7 +30,7 @@ trait SnapshotTables {
 
   def snapshotTableCfg: SnapshotTableConfiguration
 
-  class Snapshot(_tableTag: Tag) extends Table[SnapshotRow](_tableTag, _schemaName = None, _tableName = snapshotTableCfg.tableName) {
+  class Snapshot(_tableTag: Tag) extends Table[SnapshotRow](_tableTag, _schemaName = snapshotTableCfg.schemaName, _tableName = snapshotTableCfg.tableName) {
     def * = (persistenceId, sequenceNumber, created, snapshot) <> (SnapshotRow.tupled, SnapshotRow.unapply)
 
     val persistenceId: Rep[String] = column[String](snapshotTableCfg.columnNames.persistenceId, O.Length(255, varying = true), O.PrimaryKey)

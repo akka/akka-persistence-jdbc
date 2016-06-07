@@ -106,7 +106,7 @@ object SnapshotTableConfiguration {
   def apply(cfg: Config): SnapshotTableConfiguration =
     cfg.withPath("akka-persistence-jdbc.tables.snapshot") { cfg ⇒
       SnapshotTableConfiguration(
-        cfg.as[String]("tableName", "journal"),
+        cfg.as[String]("tableName", "snapshot"),
         cfg.as[String]("schemaName").map(_.trim).filter(_.nonEmpty),
         cfg.withPath("columnNames") { cfg ⇒
           SnapshotTableColumnNames(

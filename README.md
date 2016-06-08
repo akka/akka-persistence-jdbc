@@ -11,7 +11,7 @@ Gitter | [![Join the chat at https://gitter.im/dnvriend/akka-persistence-jdbc](h
 The [Typesafe/Lightbend Slick Extensions][slick-ex] have become [open source as 
 of 1 february 2016 as can read from the slick new website][slick-ex-lic],
 this means that you can use akka-persistence-jdbc with no commercial license from Typesafe/Lightbend when used with `Oracle`, `IBM DB2` or 
-`Microsoft SQL Server`. Thanks [Lightbend][lightbend]! Of course you will neem a commercial license from
+`Microsoft SQL Server`. Thanks [Lightbend][lightbend]! Of course you will need a commercial license from
 your database vendor. 
 
 Alternatively you can opt to use [Postgresql][postgres], which is the most advanced open source database 

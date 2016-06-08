@@ -1,4 +1,4 @@
-# akka-persistence-jdbc v2.2.24
+# akka-persistence-jdbc 2.2.25
 Akka-persistence-jdbc is a plugin for akka-persistence that asynchronously writes journal and snapshot entries entries to a configured JDBC store. It supports writing journal messages and snapshots to two tables: the `journal` table and the `snapshot` table.
 
 Service | Status | Description
@@ -8,13 +8,13 @@ Bintray | [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-pers
 Gitter | [![Join the chat at https://gitter.im/dnvriend/akka-persistence-jdbc](https://badges.gitter.im/dnvriend/akka-persistence-jdbc.svg)](https://gitter.im/dnvriend/akka-persistence-jdbc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) | Gitter
 
 ## Slick Extensions Licensing Changing to Open Source
-The [Typesafe/Lightbend Slick Extensions](http://slick.typesafe.com/doc/3.1.1/extensions.html) have become [open source as 
-of 1 february 2016 as can read from the slick new website](http://slick.typesafe.com/news/2016/02/01/slick-extensions-licensing-change.html),
+The [Typesafe/Lightbend Slick Extensions][slick-ex] have become [open source as 
+of 1 february 2016 as can read from the slick new website][slick-ex-lic],
 this means that you can use akka-persistence-jdbc with no commercial license from Typesafe/Lightbend when used with `Oracle`, `IBM DB2` or 
-`Microsoft SQL Server`. Thanks [Lightbend](http://www.lightbend.com/)! Of course you will neem a commercial license from
+`Microsoft SQL Server`. Thanks [Lightbend][lightbend]! Of course you will neem a commercial license from
 your database vendor. 
 
-Alternatively you can opt to use [Postgresql](http://www.postgresql.org/), which is the most advanced open source database 
+Alternatively you can opt to use [Postgresql][postgres], which is the most advanced open source database 
 available, with some great features, and it works great together with akka-persistence-jdbc.
                   
 ## Notice for Akka Persistence Query API
@@ -22,16 +22,16 @@ All async queries do not work as expected. I must refactor the async query api t
 the `current*` commands and do your own client-side polling strategy for now.  
                                  
 ## New release
-The latest version is `2.2.24` and breaks backwards compatibility with `v1.x.x` in a big way. New features:
+The new release breaks backwards compatibility with `v1.x.x` in a big way. New features are:
 
-- It uses [Typesafe/Lightbend Slick](http://slick.typesafe.com/) as the database backend,
+- It uses [Typesafe/Lightbend Slick][slick] as the database backend,
   - Using the typesafe config for the Slick database configuration,
   - Uses HikariCP for the connection pool,
   - It has been tested against Postgres, MySQL and Oracle only,
   - It has an option to store journal and snapshot entries in memory, which is useful for testing,
   - It uses a new database schema, dropping some columns and changing the column types,
   - It writes the journal and snapshot entries as byte arrays,
-- It relies on [Akka Serialization](http://doc.akka.io/docs/akka/2.4.1/scala/serialization.html),
+- It relies on [Akka Serialization][ser],
   - For serializing, please split the domain model from the storage model, and use a binary format for the storage model that support schema versioning like [Google's protocol buffers](https://developers.google.com/protocol-buffers/docs/overview), as it is used by Akka Persistence, and is available as a dependent library. For an example on how to use Akka Serialization with protocol buffers, you can examine the [akka-serialization-test](https://github.com/dnvriend/akka-serialization-test) study project,
 - It supports the `Persistence Query` interface for both Java and Scala thus providing a universal ~~a~~synchronous stream based query interface (see notice above),
 - Table, column and schema names are configurable, but note, if you change those, you'll need to change the DDL scripts.
@@ -46,7 +46,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.24"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.25"
 ```
 
 ## Configuration
@@ -64,8 +64,8 @@ Configure `slick`:
   - `com.typesafe.slick.driver.oracle.OracleDriver`
 
 ## DataSource lookup by JNDI name
-The plugin uses `slick` as the database access library. Slick [supports jndi](http://slick.typesafe.com/doc/3.1.1/database.html#using-a-jndi-name)
-for looking up [DataSource](http://docs.oracle.com/javase/7/docs/api/javax/sql/DataSource.html)s. 
+The plugin uses `slick` as the database access library. Slick [supports jndi][slick-jndi]
+for looking up [DataSource][ds]s. 
 
 To enable the JNDI lookup, you must add the following to your `application.conf`:
 
@@ -489,7 +489,7 @@ val willNotCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.event
 val willCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.currentEventsByTag("apple", 0L)
 ```
 
-To tag events you'll need to create an [Event Adapter](http://doc.akka.io/docs/akka/2.4.1/scala/persistence.html#event-adapters-scala) 
+To tag events you'll need to create an [Event Adapter][event-adapter] 
 that will wrap the event in a [akka.persistence.journal.Tagged](http://doc.akka.io/api/akka/2.4.1/#akka.persistence.journal.Tagged) 
 class with the given tags. The `Tagged` class will instruct `akka-persistence-jdbc` to tag the event with the given set of tags.
 The persistence plugin will __not__ store the `Tagged` class in the journal. It will strip the `tags` and `payload` from the `Tagged` class,
@@ -695,6 +695,10 @@ that contains all of the fields necessary to reconstruct a PersistentRepr at a l
 Please look in the path `src/main/resources/schema` for the text based database schema to use.
 
 # What's new?
+## 2.2.25 (2016-06-08)
+  - Merged PR #54 [Charith Ellawala][ellawala] Honour the schemaName setting for the snapshot table, thanks!
+  - Compiling for Java 8 as Akka 2.4.x dropped support for Java 6 and 7 and only works on Java 8 and above  
+  
 ## 2.2.24 (2016-06-05)
   - Akka 2.4.6 -> 2.4.7
 
@@ -702,7 +706,7 @@ Please look in the path `src/main/resources/schema` for the text based database 
   - Akka 2.4.5 -> 2.4.6
   
 ## 2.2.22 (2016-05-18)
-  - Merged PR #52 [Gopal Shah](https://github.com/gopalsaob) for issue [#44 - Unable to differentiate between persistence failures and serialization issues](https://github.com/dnvriend/akka-persistence-jdbc/issues/51), thanks!
+  - Merged PR #52 [Gopal Shah][shah] for issue [#44 - Unable to differentiate between persistence failures and serialization issues](https://github.com/dnvriend/akka-persistence-jdbc/issues/51), thanks!
   - Akka 2.4.4 -> 2.4.5
 
 ## 2.2.21 (2016-04-30)
@@ -710,11 +714,11 @@ Please look in the path `src/main/resources/schema` for the text based database 
   - Added dependency on HikariCP v2.4.6 for better performance and bug fixes
 
 ## 2.2.20 (2016-04-29)
-  - Merged PR #50 [Andrey Kouznetsov](https://github.com/prettynatty) for issue [#44 - Leaking connections](https://github.com/dnvriend/akka-persistence-jdbc/issues/44), thanks! 
+  - Merged PR #50 [Andrey Kouznetsov][kouznetsov] for issue [#44 - Leaking connections](https://github.com/dnvriend/akka-persistence-jdbc/issues/44), thanks! 
 
 ## 2.2.19 (2016-04-26)
-  - Merged PR #46 [Andrey Kouznetsov](https://github.com/prettynatty) Significant performance boost by using compiled queries, thanks!
-  - Merged PR #47 [Andrey Kouznetsov](https://github.com/prettynatty) Ability to get Database instance from JNDI, thanks!
+  - Merged PR #46 [Andrey Kouznetsov][kouznetsov] Significant performance boost by using compiled queries, thanks!
+  - Merged PR #47 [Andrey Kouznetsov][kouznetsov] Ability to get Database instance from JNDI, thanks!
   - **_Disable the async queries as they are implemented very sketchy, please use the synchronous query API with client side polling._**  
 
 ## 2.2.18 (2016-04-19)
@@ -728,7 +732,7 @@ Please look in the path `src/main/resources/schema` for the text based database 
   - Akka 2.4.2 -> 2.4.3
 
 ## 2.2.15 (2016-03-18)
-  - Merged PR #37 [William Turner](https://github.com/wwwiiilll) Make offset sequential on eventsByTag queries, thanks!
+  - Merged PR #37 [William Turner][turner] Make offset sequential on eventsByTag queries, thanks!
   
 ## 2.2.14 (2016-03-17)
   - Determine events where appropriate by using an offset using the query api was not tested and thus the implementation was incorrect. This has been corrected and the documentation altered where appropriate.
@@ -811,13 +815,13 @@ Please look in the path `src/main/resources/schema` for the text based database 
  - Support for the `allPersistenceIds` live query
 
 ## 2.0.0 (2016-01-16)
- - A complete rewrite using [slick](http://slick.typesafe.com/) as the database backend, breaking backwards compatibility in a big way.
+ - A complete rewrite using [slick][slick] as the database backend, breaking backwards compatibility in a big way.
 
 ## 1.2.2 (2015-10-14) - Akka v2.4.x
- - Merged PR #28 [Andrey Kouznetsov](https://github.com/prettynatty) Removing Unused ExecutionContext, thanks!
+ - Merged PR #28 [Andrey Kouznetsov][kouznetsov] Removing Unused ExecutionContext, thanks!
  
 ## 1.2.1 (2015-10-12) 
- - Merged PR #27 [Andrey Kouznetsov](https://github.com/prettynatty) don't fail on asyncWrite with empty messages, thanks! 
+ - Merged PR #27 [Andrey Kouznetsov][kouznetsov] don't fail on asyncWrite with empty messages, thanks! 
 ## 1.2.0 (2015-10-02)
  - Compatibility with Akka 2.4.0
  - Akka 2.4.0-RC3 -> 2.4.0
@@ -860,13 +864,13 @@ Please look in the path `src/main/resources/schema` for the text based database 
 ## 1.1.5 (2015-05-12)
  - Akka 2.3.10 -> 2.3.11
  - MySQL snapshot statement now uses `INSERT INTO .. ON DUPLICATE UPDATE` for `upserts`
- - Merged Issue #21 [mwkohout](https://github.com/mwkohout) Use a ParameterBinder to pass snapshot into the merge statement and get rid of the stored procedure, thanks!
+ - Merged Issue #21 [mwkohout][mwkohout] Use a ParameterBinder to pass snapshot into the merge statement and get rid of the stored procedure, thanks!
 
 ## 1.1.4 (2015-05-06)
  - ScalikeJDBC 2.2.5 -> 2.2.6
  - Akka 2.3.9 -> 2.3.10
  - Switched back to a Java 7 binary, to support Java 7 and higher based projects, we need a strategy though when [Scala 2.12](http://www.scala-lang.org/news/2.12-roadmap) will be released. 
- - Merged Issue #20 [mwkohout](https://github.com/mwkohout) Use apache commons codec Base64 vs the java8-only java.util.Base64 for Java 7 based projects, thanks!
+ - Merged Issue #20 [mwkohout][mwkohout] Use apache commons codec Base64 vs the java8-only java.util.Base64 for Java 7 based projects, thanks!
 
 ## 1.1.3 (2015-04-15)
  - ScalikeJDBC 2.2.4 -> 2.2.5
@@ -884,8 +888,8 @@ Please look in the path `src/main/resources/schema` for the text based database 
  - Using the much faster Java8 java.util.Base64 encoder/decoder
  - Bulk insert for journal entries (non-oracle only, sorry)
  - Initial support for JNDI, needs testing though
- - Merged [Paul Roman](https://github.com/romusz) Fix typo in journal log message #14, thanks!
- - Merged [Pavel Boldyrev](https://github.com/bpg) Fix MS SQL Server support #15 (can not test it though, needs Vagrant), thanks!
+ - Merged [Paul Roman][roman] Fix typo in journal log message #14, thanks!
+ - Merged [Pavel Boldyrev][boldyrev] Fix MS SQL Server support #15 (can not test it though, needs Vagrant), thanks!
 
 ## 1.1.0
  - Merged [Pavel Boldyrev](https://github.com/bpg) Fix Oracle SQL `MERGE` statement usage #13 which fixes issue #9 (java.sql.SQLRecoverableException: No more data to read from socket #9), thanks!
@@ -893,7 +897,7 @@ Please look in the path `src/main/resources/schema` for the text based database 
 
 ## 1.0.9 (2015-01-20)
  - ScalikeJDBC 2.1.2 -> 2.2.2
- - Merged [miguel-vila](https://github.com/miguel-vila) Adds ´validationQuery´ configuration parameter #10, thanks!
+ - Merged [miguel-vila][vila] Adds ´validationQuery´ configuration parameter #10, thanks!
  - Removed Informix support: I just don't have a working Informix docker image (maybe someone can create one and publish it?)
 
 ## 1.0.8
@@ -901,7 +905,7 @@ Please look in the path `src/main/resources/schema` for the text based database 
  - Moved to bintray
 
 ## 1.0.7 (2014-09-16)
- - Merged [mwkohout](https://github.com/mwkohout) fix using Oracle's MERGE on issue #3, thanks! 
+ - Merged [mwkohout][mwkohout] fix using Oracle's MERGE on issue #3, thanks! 
 
 ## 1.0.6 
  - Fixed - Issue3: Handling save attempts with duplicate snapshot ids and persistence ids
@@ -941,22 +945,51 @@ Please look in the path `src/main/resources/schema` for the text based database 
  -  Refactored the JdbcSyncWriteJournal so it supports the following databases:
 
 ## 0.0.3 (2014-07-01)
- - Using [Martin Krasser's](https://github.com/krasserm) [akka-persistence-testkit](https://github.com/krasserm/akka-persistence-testkit)
+ - Using [Martin Krasser's][krasser] [akka-persistence-testkit][ap-testkit]
   to test the akka-persistence-jdbc plugin. 
  - Update to Akka 2.3.4
 
 ## 0.0.2 (2014-06-30)
- - Using [ScalikeJDBC](http://scalikejdbc.org/) as the JDBC access library instead of my home-brew one. 
+ - Using [ScalikeJDBC][scalikejdbc] as the JDBC access library instead of my home-brew one. 
 
 ## 0.0.1 (2014-05-23)
  - Initial commit
 
 # Code of Conduct
-**Contributors all agree to follow the [W3C Code of Ethics and Professional Conduct](http://www.w3.org/Consortium/cepc/).**
+**Contributors all agree to follow the [W3C Code of Ethics and Professional Conduct][w3c-cond].**
 
-If you want to take action, feel free to contact Dennis Vriend <dnvriend@gmail.com>. You can also contact W3C Staff as explained in [W3C Procedures](http://www.w3.org/Consortium/pwe/#Procedures).
+If you want to take action, feel free to contact Dennis Vriend <dnvriend@gmail.com>. You can also contact W3C Staff as explained in [W3C Procedures][w3c-proc].
 
 # License
-This source code is made available under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0). The [quick summary of what this license means is available here](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0))
+This source code is made available under the [Apache 2.0 License][apache]. The [quick summary of what this license means is available here](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0))
 
 Have fun!
+
+[ellawala]: https://github.com/charithe
+[turner]: https://github.com/wwwiiilll
+[kouznetsov]: https://github.com/prettynatty
+[boldyrev]: https://github.com/bpg
+[roman]: https://github.com/romusz
+[vila]: https://github.com/miguel-vila
+[mwkohout]: https://github.com/mwkohout 
+[krasser]: https://github.com/krasserm
+[shah]: https://github.com/gopalsaob
+
+[scalikejdbc]: http://scalikejdbc.org/
+[slick]: http://slick.typesafe.com/
+[slick-jndi]: http://slick.typesafe.com/doc/3.1.1/database.html#using-a-jndi-name
+[slick-ex]: http://slick.typesafe.com/doc/3.1.1/extensions.html
+[slick-ex-lic]: http://slick.typesafe.com/news/2016/02/01/slick-extensions-licensing-change.html
+
+[apache]: http://www.apache.org/licenses/LICENSE-2.0
+[w3c-cond]: http://www.w3.org/Consortium/cepc/
+[w3c-proc]: http://www.w3.org/Consortium/pwe/#Procedures
+[lightbend]: http://www.lightbend.com/
+
+[postgres]: http://www.postgresql.org/
+[ap-testkit]: https://github.com/krasserm/akka-persistence-testkit
+[ds]: http://docs.oracle.com/javase/7/docs/api/javax/sql/DataSource.html
+
+
+[ser]: http://doc.akka.io/docs/akka/2.4.7/scala/serialization.html
+[event-adapter]: http://doc.akka.io/docs/akka/2.4.7/scala/persistence.html#event-adapters-scala

@@ -254,4 +254,104 @@ class AkkaPersistenceConfigTest extends TestSpec {
       )
     )
   }
+
+  "all config" should "be parsed" in {
+    val config = ConfigFactory.parseString(
+      """
+        |akka-persistence-jdbc {
+        |
+        |  inMemory = off
+        |  inMemoryTimeout = 5s
+        |
+        |  tables {
+        |    journal {
+        |      tableName = "journal"
+        |      schemaName = "journal_schema_name"
+        |      columnNames {
+        |        persistenceId = "persistence_id"
+        |        sequenceNumber = "sequence_number"
+        |        created = "created"
+        |        tags = "tags"
+        |        message = "message"
+        |      }
+        |    }
+        |
+        |    deletedTo {
+        |      tableName = "deleted_to"
+        |      schemaName = "deleted_to_schema_name"
+        |      columnNames = {
+        |        persistenceId = "persistence_id"
+        |        deletedTo = "deleted_to"
+        |      }
+        |    }
+        |
+        |    snapshot {
+        |      tableName = "snapshot"
+        |      schemaName = "snapshot_schema_name"
+        |      columnNames {
+        |        persistenceId = "persistence_id"
+        |        sequenceNumber = "sequence_number"
+        |        created = "created"
+        |        snapshot = "snapshot"
+        |      }
+        |    }
+        |  }
+        |
+        |  query {
+        |    separator = ","
+        |  }
+        |
+        |  serialization {
+        |    journal = on // alter only when using a custom dao
+        |    snapshot = on // alter only when using a custom dao
+        |  }
+        |
+        |  dao {
+        |    journal = "akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao"
+        |    snapshot = "akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao"
+        |  }
+        |
+        |  serialization.varchar.serializerIdentity = 1000
+        |}
+      """.stripMargin
+    )
+
+    JournalTableConfiguration(config) shouldBe JournalTableConfiguration(
+      tableName = "journal",
+      schemaName = Some("journal_schema_name"),
+      columnNames = JournalTableColumnNames(
+        persistenceId = "persistence_id",
+        sequenceNumber = "sequence_number",
+        created = "created",
+        tags = "tags",
+        message = "message"
+      )
+    )
+
+    DeletedToTableConfiguration(config) shouldBe DeletedToTableConfiguration(
+      tableName = "deleted_to",
+      schemaName = Some("deleted_to_schema_name"),
+      columnNames = DeletedToTableColumnNames(
+        persistenceId = "persistence_id",
+        deletedTo = "deleted_to"
+      )
+    )
+
+    SnapshotTableConfiguration(config) shouldBe SnapshotTableConfiguration(
+      tableName = "snapshot",
+      schemaName = Some("snapshot_schema_name"),
+      columnNames = SnapshotTableColumnNames(
+        persistenceId = "persistence_id",
+        sequenceNumber = "sequence_number",
+        created = "created",
+        snapshot = "snapshot"
+      )
+    )
+
+    SerializationConfiguration(config) shouldBe SerializationConfiguration(
+      journal = true,
+      snapshot = true,
+      serializationIdentity = Some(1000)
+    )
+  }
 }

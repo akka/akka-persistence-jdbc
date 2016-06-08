@@ -41,7 +41,7 @@ trait SlickDatabase {
    * Free all resources allocated by Slick for this Database, blocking the current thread until
    * everything has been shut down.
    */
-  def close: Unit
+  def close(): Unit
 }
 
 class SlickDatabaseImpl()(implicit val system: ExtendedActorSystem) extends JdbcBackend with Extension with SlickDatabase {

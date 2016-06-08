@@ -18,7 +18,7 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.2.24"
+version := "2.2.25-SNAPSHOT"
 
 resolvers += Resolver.typesafeRepo("releases")
 
@@ -38,10 +38,10 @@ libraryDependencies ++= {
     "com.typesafe.slick" %% "slick-hikaricp" % slickVersion exclude("com.zaxxer", "HikariCP-java6"),
     "com.zaxxer" % "HikariCP" % hikariCPVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion % Test,
-    "ch.qos.logback" % "logback-classic" % "1.1.3" % Test,
+    "ch.qos.logback" % "logback-classic" % "1.1.7" % Test,
     "com.typesafe.akka" %% "akka-persistence-tck" % akkaVersion % Test,
-    "org.postgresql" % "postgresql" % "9.4.1208.jre7" % Test,
-    "mysql" % "mysql-connector-java" % "5.1.38" % Test,
+    "org.postgresql" % "postgresql" % "9.4.1208" % Test,
+    "mysql" % "mysql-connector-java" % "5.1.39" % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
     "org.scalatest" %% "scalatest" % "2.2.6" % Test,
@@ -54,6 +54,8 @@ fork in Test := true
 parallelExecution in Test := false
 
 licenses +=("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php"))
+
+scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-target:jvm-1.8", "-deprecation", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint")
 
 // enable scala code formatting //
 import scalariform.formatter.preferences._

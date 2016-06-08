@@ -40,7 +40,5 @@ bintrayPackageAttributes ~=
     "website_url" -> Seq(bintry.Attr.String("https://github.com/dnvriend/demo-akka-persistence-jdbc")),
     "github_repo" -> Seq(bintry.Attr.String("https://github.com/dnvriend/akka-persistence-jdbc.git")),
     "issue_tracker_url" -> Seq(bintry.Attr.String("https://github.com/dnvriend/akka-persistence-jdbc/issues/"))
-  )
     )
-
-//bintrayRepository := "maven"
+  )

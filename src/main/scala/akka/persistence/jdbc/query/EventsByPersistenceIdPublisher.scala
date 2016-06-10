@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.query.journal.scaladsl
+package akka.persistence.jdbc.query
 
-import akka.NotUsed
+import akka.actor.ActorLogging
 import akka.persistence.query.EventEnvelope
-import akka.persistence.query.scaladsl.ReadJournal
-import akka.stream.scaladsl.Source
+import akka.persistence.query.journal.leveldb.DeliveryBuffer
+import akka.stream.actor.ActorPublisher
 
-trait EventsByPersistenceIdAndTagQuery extends ReadJournal {
-  /**
-   * Query events that have a specific persistenceId/tag combination
-   * This is an optimization query as the database can filter out the
-   * events for a specific persistenceId
-   */
-  def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, NotUsed]
+class EventsByPersistenceIdPublisher(persistenceId: String) extends ActorPublisher[EventEnvelope] with DeliveryBuffer[EventEnvelope] with ActorLogging {
+  def receive = PartialFunction.empty
 }
+

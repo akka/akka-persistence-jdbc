@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc.dao
 
-import akka.persistence.jdbc.snapshot.SlickSnapshotStore.SerializationResult
+import akka.persistence.jdbc.snapshot.JdbcSnapshotStore.SerializationResult
 
 import scala.concurrent.Future
 

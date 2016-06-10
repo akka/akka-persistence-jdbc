@@ -24,7 +24,6 @@ import akka.persistence.jdbc.dao.JournalDao
 import akka.persistence.jdbc.dao.inmemory.InMemoryJournalStorage.Clear
 import akka.persistence.jdbc.config.{ AkkaPersistenceConfig, DaoRepository }
 import akka.persistence.jdbc.query.journal.javadsl.{ JdbcReadJournal ⇒ JavaJdbcReadJournal }
-import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
 import akka.persistence.journal.Tagged
 import akka.persistence.query.{ EventEnvelope, PersistenceQuery }
 import akka.stream.Materializer
@@ -33,6 +32,7 @@ import akka.stream.testkit.javadsl.{ TestSink ⇒ JavaSink }
 import akka.stream.testkit.scaladsl.TestSink
 import slick.driver.PostgresDriver.api._
 import akka.pattern.ask
+import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 
 import scala.concurrent.duration.{ FiniteDuration, _ }
 
@@ -100,7 +100,7 @@ trait JavaDslJdbcReadJournalOperations extends ReadJournalOperations {
 
   implicit def mat: Materializer
 
-  lazy val readJournal = PersistenceQuery.get(system).getReadJournalFor(classOf[JavaJdbcReadJournal], JavaJdbcReadJournal.Identifier)
+  lazy val readJournal = PersistenceQuery.get(system).getReadJournalFor(classOf[javadsl.JdbcReadJournal], JavaJdbcReadJournal.Identifier)
 
   def withCurrentPersistenceIds(within: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit = {
     val tp = readJournal.currentPersistenceIds().runWith(JavaSink.probe(system), mat)

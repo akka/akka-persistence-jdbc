@@ -57,7 +57,7 @@ parallelExecution in Test := false
 
 licenses +=("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php"))
 
-scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-target:jvm-1.8", "-deprecation", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint")
+//scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-target:jvm-1.8", "-deprecation", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint")
 
 // enable scala code formatting //
 import scalariform.formatter.preferences._

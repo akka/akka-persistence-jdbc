@@ -22,7 +22,7 @@ import akka.persistence.PersistentActor
 import akka.persistence.jdbc.TestSpec
 import akka.persistence.jdbc.dao.JournalDao
 import akka.persistence.jdbc.dao.inmemory.InMemoryJournalStorage.Clear
-import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DaoRepository }
+import akka.persistence.jdbc.config.{ AkkaPersistenceConfig, DaoRepository }
 import akka.persistence.jdbc.query.journal.javadsl.{ JdbcReadJournal ⇒ JavaJdbcReadJournal }
 import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
 import akka.persistence.journal.Tagged

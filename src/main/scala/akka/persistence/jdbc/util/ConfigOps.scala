@@ -16,30 +16,68 @@
 
 package akka.persistence.jdbc.util
 
+import java.util.Locale
+import java.util.concurrent.TimeUnit
+
 import com.typesafe.config.Config
 
+import scala.concurrent.duration.{ Duration, FiniteDuration }
 import scala.util.{ Failure, Try }
 
 object ConfigOps {
   implicit class ConfigOperations(val config: Config) extends AnyVal {
-    def as[A](path: String): Try[A] =
-      Try(config.getAnyRef(path)).map(_.asInstanceOf[A])
-    def as[A](path: String, default: A): A = {
-      Try(config.getAnyRef(path)).map(_.asInstanceOf[A]).recoverWith {
+    def as[A](key: String): Try[A] =
+      Try(config.getAnyRef(key)).map(_.asInstanceOf[A])
+
+    def as[A](key: String, default: A): A = {
+      Try(config.getAnyRef(key)).map(_.asInstanceOf[A]).recoverWith {
         case t: Throwable ⇒
           println(t.getMessage)
           Failure(t)
       }.getOrElse(default)
     }
 
-    def ?[A](path: String): Try[A] = as(path)
-    def ?:[A](path: String, default: A) = as(path, default)
-    def withPath[A](path: String)(f: Config ⇒ A): A = f(config.getConfig(path))
+    def asDuration(key: String): Duration =
+      config.getString(key).toLowerCase(Locale.ROOT) match {
+        case "off" ⇒ Duration.Undefined
+        case _     ⇒ config.getMillisDuration(key) requiring (_ > Duration.Zero, key + " >0s, or off")
+      }
+
+    def getMillisDuration(key: String): FiniteDuration = getDuration(key, TimeUnit.MILLISECONDS)
+
+    def getNanosDuration(key: String): FiniteDuration = getDuration(key, TimeUnit.NANOSECONDS)
+
+    def getDuration(key: String, unit: TimeUnit): FiniteDuration = Duration(config.getDuration(key, unit), unit)
+
+    def ?[A](key: String): Try[A] = as(key)
+
+    def ?:[A](key: String, default: A) = as(key, default)
+
+    def withkey[A](key: String)(f: Config ⇒ A): A = f(config.getConfig(key))
   }
 
   implicit def TryToOption[A](t: Try[A]): Option[A] = t.toOption
 
-  implicit class TryOps[A](val t: Try[A]) extends AnyVal {
+  final implicit class TryOps[A](val t: Try[A]) extends AnyVal {
     def ?:(default: A): A = t.getOrElse(default)
+  }
+
+  final implicit class StringTryOps(val t: Try[String]) extends AnyVal {
+    /**
+     * Trim the String content, when empty, return None
+     */
+    def trim: Option[String] = t.map(_.trim).filter(_.nonEmpty)
+  }
+
+  final implicit class Requiring[A](val value: A) extends AnyVal {
+    @inline def requiring(cond: Boolean, msg: ⇒ Any): A = {
+      require(cond, msg)
+      value
+    }
+
+    @inline def requiring(cond: A ⇒ Boolean, msg: ⇒ Any): A = {
+      require(cond(value), msg)
+      value
+    }
   }
 }

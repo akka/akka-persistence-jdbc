@@ -18,7 +18,7 @@ package akka.persistence.jdbc.journal
 
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.dao.bytea.JournalTables
-import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DeletedToTableConfiguration, JournalTableConfiguration, SlickDatabase }
+import akka.persistence.jdbc.config.{ AkkaPersistenceConfig, DeletedToTableConfiguration, JournalTableConfiguration, SlickDatabase }
 import akka.persistence.jdbc.util.Schema._
 import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDriver }
 import akka.persistence.journal.JournalPerfSpec
@@ -71,18 +71,6 @@ class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("po
   override def eventsCount: Int = 1000 // postgres is very slow on my macbook / docker / virtualbox
 }
 
-class PostgresVarcharPerfJournalSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-varchar-application.conf")) {
-  dropCreate(PostgresVarchar())
-
-  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 30.seconds)
-
-  override def awaitDurationMillis: Long = 180.seconds.toMillis
-
-  override def measurementIterations: Int = 1
-
-  override def eventsCount: Int = 1000 // postgres is very slow on my macbook / docker / virtualbox
-}
-
 class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-application.conf")) {
   dropCreate(MySQL())
 
@@ -95,30 +83,8 @@ class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql
   override def eventsCount: Int = 1000 // mysql is very slow on my macbook / docker / virtualbox
 }
 
-class MySQLVarcharJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-varchar-application.conf")) {
-  dropCreate(MySQLVarchar())
-
-  override def awaitDurationMillis: Long = 180.seconds.toMillis
-
-  override def measurementIterations: Int = 1
-
-  override def eventsCount: Int = 1000 // mysql is very slow on my macbook / docker / virtualbox
-}
-
 class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-application.conf")) {
   dropCreate(Oracle())
-
-  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
-
-  override def awaitDurationMillis: Long = 180.seconds.toMillis
-
-  override def measurementIterations: Int = 1
-
-  override def eventsCount: Int = 1000 // oracle is very slow on my macbook / docker / virtualbox
-}
-
-class OracleVarcharJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-varchar-application.conf")) {
-  dropCreate(OracleVarchar())
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
 

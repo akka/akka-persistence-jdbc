@@ -32,9 +32,7 @@ class JdbcReadJournal(journal: ScalaJdbcReadJournal) extends ReadJournal
     with CurrentEventsByPersistenceIdQuery
     with EventsByPersistenceIdQuery
     with CurrentEventsByTagQuery
-    with EventsByTagQuery
-    with CurrentEventsByPersistenceIdAndTagQuery
-    with EventsByPersistenceIdAndTagQuery {
+    with EventsByTagQuery {
 
   override def currentPersistenceIds(): Source[String, NotUsed] =
     journal.currentPersistenceIds().asJava
@@ -53,10 +51,4 @@ class JdbcReadJournal(journal: ScalaJdbcReadJournal) extends ReadJournal
 
   override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     journal.eventsByTag(tag, offset).asJava
-
-  override def currentEventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    journal.currentEventsByPersistenceIdAndTag(persistenceId, tag, offset).asJava
-
-  override def eventsByPersistenceIdAndTag(persistenceId: String, tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    journal.eventsByPersistenceIdAndTag(persistenceId, tag, offset).asJava
 }

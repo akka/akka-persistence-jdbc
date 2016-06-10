@@ -624,77 +624,16 @@ It is advisable to register a shutdown hook to be run when the VM exits that ter
 sys.addShutdownHook(system.terminate())
 ```
 
-## Text based serialization formats
-Plugin version `v2.2.18` and higher supports using a text based serialization format and storage in the Journal and Snapshot tables.
-You should configure the plugin to use the `akka.persistence.jdbc.dao.varchar.VarcharJournalDao` and the `akka.persistence.jdbc.dao.varchar.VarcharSnapshotDao`
-data access objects. 
-  
-```scala
-akka-persistence-jdbc {
-
-    dao {
-        journal = "akka.persistence.jdbc.dao.varchar.VarcharJournalDao"
-        snapshot = "akka.persistence.jdbc.dao.varchar.VarcharSnapshotDao"
-      }
-    
-    serialization.varchar.serializerIdentity = 1000
-}
-```
-Both DAOs will look for an akka serializer that has been registered in `akka.actor.serialization-identifiers`. That serialization id 
-will be used to serialize the result to a text based format just before the journal or snapshot record will be written. 
-For an example see `akka.persistence.jdbc.serialization.Base64Serializer`. Please note that the output of the custom 
-text based serializer will be a byte array that will be converted to a String using `UTF-8` and that String will be stored 
-in the database. 
-
-The `akka-persistence-jdbc.serialization.varchar.serializerIdentity` must point to the id that has been registered in `akka.actor.serialization-identifiers`.
-
-An akka serializer can be registered in:
-
-```
-akka.actor {
-  serialize-messages = on
-  warn-about-java-serializer-usage = on
-
-  serializers {
-    base64Serializer = "akka.persistence.jdbc.serialization.Base64Serializer"
-  }
-
-  serialization-identifiers {
-    "akka.persistence.jdbc.serialization.Base64Serializer" = 1000
-  }
-}
-```
-
-### Serialization / Deserialization
-A serializer must serializer must deconstruct a PersistentRepr from a byte array and create a serialization format
-that contains all of the fields necessary to reconstruct a PersistentRepr at a later time. The Serializer must do the following:
-
-### Serialize
-- Deconstruct a byte array to a PersistentRepr,
-- Serialize the PersistentRepr to a text based format so it can be reconstructed by that serializer when the event must be read,
-- It must get the following fields from the PersistentRepr:
- - payload,
- - sequenceNr,
- - persistenceId,
- - manifest,
- - deleted,
- - sender,
- - writerUUid
-- It must serialize the payload to a text based format
-- It must create a wrapper format that contains all the fields above,
-- It must serialize the wrapper to a tet based format
-
-### Deserialize
-- Deconstruct the text based wrapper format in a PersistentRepr
-- Construct the payload from the text based format,
-- Construct a PersistentRepr,
-- Look for a serializer for the PersistentRepr,
-- Serialize the PersistentRepr using the found PersistentRepr serializer to a byte array,
-
-### Text based database schema
-Please look in the path `src/main/resources/schema` for the text based database schema to use.
-
 # What's new?
+## 2.3.0 (2016-06-??)
+  - This is a feature, configuration and (maybe) API breaking release when you rely on the DAO's, my apologies.
+  - Killed some [feature-creep], this will result in a better design of the plugin. 
+    - Removed support for the Varchar (base64/text based serialization),
+    - Removed support for the in-memory storage, please use the [akka.persistence-inmemory][inmemory] plugin,
+    - Removed the queries `eventsByPersistenceIdAndTag` and `currentEventsByPersistenceIdAndTag` as they are not supported by Akka natively and can be configured by filtering the event stream.
+  - Implemented async queries, fixes issue #53 All async queries do not work as expected
+  - Implemented akka persistence plugin scoping strategy, fixes issue #42 Make it possible to have multiple instances of the plugin (configured differently)
+
 ## 2.2.25 (2016-06-08)
   - Merged PR #54 [Charith Ellawala][ellawala] Honour the schemaName setting for the snapshot table, thanks!
   - Compiling for Java 8 as Akka 2.4.x dropped support for Java 6 and 7 and only works on Java 8 and above  
@@ -988,8 +927,9 @@ Have fun!
 
 [postgres]: http://www.postgresql.org/
 [ap-testkit]: https://github.com/krasserm/akka-persistence-testkit
-[ds]: http://docs.oracle.com/javase/7/docs/api/javax/sql/DataSource.html
+[ds]: http://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html
 
+[ser]: http://doc.akka.io/docs/akka/current/scala/serialization.html
+[event-adapter]: http://doc.akka.io/docs/akka/current/scala/persistence.html#event-adapters-scala
 
-[ser]: http://doc.akka.io/docs/akka/2.4.7/scala/serialization.html
-[event-adapter]: http://doc.akka.io/docs/akka/2.4.7/scala/persistence.html#event-adapters-scala
+[inmemory][https://github.com/dnvriend/akka-persistence-inmemory]

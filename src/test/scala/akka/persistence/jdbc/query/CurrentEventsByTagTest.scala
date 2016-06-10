@@ -185,8 +185,6 @@ class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-a
     clearOracle()
 }
 
-class InMemoryScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("in-memory-application.conf") with ScalaJdbcReadJournalOperations
-
 class PostgresJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
   dropCreate(Postgres())
 }
@@ -204,5 +202,3 @@ class OracleJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-ap
   override protected def afterAll(): Unit =
     clearOracle()
 }
-
-class InMemoryJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("in-memory-application.conf") with JavaDslJdbcReadJournalOperations

@@ -19,7 +19,7 @@ package akka.persistence.jdbc.util
 import java.sql.Statement
 
 import akka.actor.ActorSystem
-import akka.persistence.jdbc.extension.SlickDatabase
+import akka.persistence.jdbc.config.SlickDatabase
 import akka.persistence.jdbc.util.Schema.{ Oracle, OracleVarchar, SchemaType }
 import slick.driver.PostgresDriver.api._
 

@@ -16,7 +16,12 @@
 
 package akka.persistence.jdbc.util
 
+import javax.naming.InitialContext
+
+import akka.persistence.jdbc.config.SlickConfiguration
+import com.typesafe.config.Config
 import slick.driver.JdbcDriver
+import slick.jdbc.JdbcBackend._
 
 object SlickDriver {
   def forDriverName: PartialFunction[String, JdbcDriver] = {
@@ -40,5 +45,15 @@ object SlickDriver {
       com.typesafe.slick.driver.ms.SQLServerDriver
     case _ ⇒
       slick.driver.PostgresDriver
+  }
+}
+
+object SlickDatabase {
+  def forConfig(config: Config, slickConfiguration: SlickConfiguration): Database = {
+    if (slickConfiguration.jndiName.isDefined)
+      Database.forName(slickConfiguration.jndiName.get)
+    else if (slickConfiguration.jndiDbName.isDefined)
+      new InitialContext().lookup(slickConfiguration.jndiDbName.get).asInstanceOf[Database]
+    else Database.forConfig("slick.db", config)
   }
 }

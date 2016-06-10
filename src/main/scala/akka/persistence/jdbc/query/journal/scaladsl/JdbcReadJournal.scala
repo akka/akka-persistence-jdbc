@@ -19,7 +19,7 @@ package akka.persistence.jdbc.query.journal.scaladsl
 import akka.NotUsed
 import akka.actor.{ ExtendedActorSystem, Props }
 import akka.persistence.jdbc.dao.JournalDao
-import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DaoRepository }
+import akka.persistence.jdbc.config.{ AkkaPersistenceConfig, DaoRepository }
 import akka.persistence.jdbc.query.journal.publisher.{ AllPersistenceIdsPublisher, EventsByPersistenceIdAndTagPublisher, EventsByPersistenceIdPublisher, EventsByTagPublisher }
 import akka.persistence.jdbc.serialization.{ AkkaSerializationProxy, SerializationFacade }
 import akka.persistence.query.EventEnvelope

@@ -105,8 +105,6 @@ class OracleScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersist
     clearOracle()
 }
 
-class InMemoryScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("in-memory-application.conf") with ScalaJdbcReadJournalOperations
-
 class PostgresJavaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
   dropCreate(Postgres())
 }
@@ -124,5 +122,3 @@ class OracleJavaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersiste
   override protected def afterAll(): Unit =
     clearOracle()
 }
-
-class InMemoryJavaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("in-memory-application.conf") with JavaDslJdbcReadJournalOperations

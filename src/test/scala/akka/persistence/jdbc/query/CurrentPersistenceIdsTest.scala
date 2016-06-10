@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.jdbc.util.Schema.{ MySQL, Oracle, Postgres }
+import akka.persistence.jdbc.util.Schema.{MySQL, Oracle, Postgres}
 
 abstract class CurrentPersistenceIdsTest(config: String) extends QueryTestSpec(config) {
 
@@ -60,8 +60,6 @@ class OracleScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("or
     clearOracle()
 }
 
-class InMemoryScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("in-memory-application.conf") with ScalaJdbcReadJournalOperations
-
 class PostgresJavaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
   dropCreate(Postgres())
 }
@@ -79,5 +77,3 @@ class OracleJavaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("ora
   override protected def afterAll(): Unit =
     clearOracle()
 }
-
-class InMemoryJavaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("in-memory-application.conf") with JavaDslJdbcReadJournalOperations

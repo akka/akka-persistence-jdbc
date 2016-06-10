@@ -18,7 +18,7 @@ package akka.persistence.jdbc.journal
 
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.dao.bytea.JournalTables
-import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DeletedToTableConfiguration, JournalTableConfiguration, SlickDatabase }
+import akka.persistence.jdbc.config.{ AkkaPersistenceConfig, DeletedToTableConfiguration, JournalTableConfiguration, SlickDatabase }
 import akka.persistence.jdbc.util.Schema._
 import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDriver }
 import akka.persistence.journal.JournalSpec
@@ -64,14 +64,6 @@ class PostgresJournalSpec extends JdbcJournalSpec(ConfigFactory.load("postgres-a
 }
 
 /**
- * Use the postgres DDL script that is available on the website, for some reason slick generates incorrect DDL,
- * but the Slick Tables definition must not change, else it breaks the UPSERT feature...
- */
-class PostgresVarcharJournalSpec extends JdbcJournalSpec(ConfigFactory.load("postgres-varchar-application.conf")) {
-  dropCreate(PostgresVarchar())
-}
-
-/**
  * Does not (yet) work because Slick generates double quotes to escape field names
  * for some reason when creating the DDL
  */
@@ -79,16 +71,6 @@ class MySQLJournalSpec extends JdbcJournalSpec(ConfigFactory.load("mysql-applica
   dropCreate(MySQL())
 }
 
-class MySQLVarcharJournalSpec extends JdbcJournalSpec(ConfigFactory.load("mysql-varchar-application.conf")) {
-  dropCreate(MySQLVarchar())
-}
-
 class OracleJournalSpec extends JdbcJournalSpec(ConfigFactory.load("oracle-application.conf")) {
   dropCreate(Oracle())
 }
-
-class OracleVarcharJournalSpec extends JdbcJournalSpec(ConfigFactory.load("oracle-varchar-application.conf")) {
-  dropCreate(OracleVarchar())
-}
-
-class InMemoryJournalSpec extends JdbcJournalSpec(ConfigFactory.load("in-memory-application.conf"))

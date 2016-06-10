@@ -17,7 +17,7 @@
 package akka.persistence.jdbc.dao.bytea
 
 import akka.persistence.jdbc.dao.bytea.JournalTables.{ JournalDeletedToRow, JournalRow }
-import akka.persistence.jdbc.extension.{ DeletedToTableConfiguration, JournalTableConfiguration }
+import akka.persistence.jdbc.config.{ DeletedToTableConfiguration, JournalTableConfiguration }
 import akka.persistence.jdbc.serialization.{ SerializationResult, Serialized }
 import slick.driver.JdbcProfile
 
@@ -76,14 +76,4 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
       .sortBy(_.sequenceNumber.asc)
       .take(max)
   val messagesQuery = Compiled(_messagesQuery _)
-
-  private def _eventsByTag(tag: Rep[String], offset: ConstColumn[Long]): Query[Journal, JournalRow, Seq] =
-    JournalTable.filter(_.tags like tag).sortBy(_.created.asc).drop(offset)
-  val eventsByTag = Compiled(_eventsByTag _)
-
-  private def _eventsByTagAndPersistenceId(persistenceId: Rep[String], tag: Rep[String], offset: ConstColumn[Long]): Query[Journal, JournalRow, Seq] =
-    JournalTable.filter(_.persistenceId === persistenceId).filter(_.tags like tag).sortBy(_.sequenceNumber.asc).drop(offset)
-  val eventsByTagAndPersistenceId = Compiled(_eventsByTagAndPersistenceId _)
-
-  def countJournal: Rep[Int] = JournalTable.length
 }

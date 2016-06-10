@@ -17,7 +17,7 @@
 package akka.persistence.jdbc.configuration
 
 import akka.persistence.jdbc.TestSpec
-import akka.persistence.jdbc.extension._
+import akka.persistence.jdbc.config._
 import com.typesafe.config.ConfigFactory
 
 class AkkaPersistenceConfigTest extends TestSpec {

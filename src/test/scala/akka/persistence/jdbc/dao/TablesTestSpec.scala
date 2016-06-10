@@ -17,7 +17,7 @@
 package akka.persistence.jdbc.dao
 
 import akka.persistence.jdbc.TestSpec
-import akka.persistence.jdbc.extension.{ DeletedToTableConfiguration, JournalTableConfiguration, SnapshotTableConfiguration }
+import akka.persistence.jdbc.config.{ DeletedToTableConfiguration, JournalTableConfiguration, SnapshotTableConfiguration }
 import com.typesafe.config.ConfigFactory
 
 class TablesTestSpec extends TestSpec {

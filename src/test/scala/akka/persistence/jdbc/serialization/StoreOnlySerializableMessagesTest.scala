@@ -128,5 +128,3 @@ class MySQLStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessag
 class OracleStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("oracle-application.conf") {
   dropCreate(Oracle())
 }
-
-class InMemoryStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("in-memory-application.conf")

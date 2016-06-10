@@ -17,7 +17,7 @@
 package akka.persistence.jdbc.snapshot
 
 import akka.persistence.jdbc.dao.bytea.JournalTables
-import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DeletedToTableConfiguration, JournalTableConfiguration, SlickDatabase }
+import akka.persistence.jdbc.config.{ AkkaPersistenceConfig, DeletedToTableConfiguration, JournalTableConfiguration, SlickDatabase }
 import akka.persistence.jdbc.util.Schema._
 import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDriver }
 import akka.persistence.snapshot.SnapshotStoreSpec
@@ -50,24 +50,10 @@ class PostgresSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load
   dropCreate(Postgres())
 }
 
-class PostgresVarcharSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("postgres-varchar-application.conf")) {
-  dropCreate(PostgresVarchar())
-}
-
 class MySQLSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("mysql-application.conf")) {
   dropCreate(MySQL())
-}
-
-class MySQLVarcharSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("mysql-varchar-application.conf")) {
-  dropCreate(MySQLVarchar())
 }
 
 class OracleSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("oracle-application.conf")) {
   dropCreate(Oracle())
 }
-
-class OracleVarcharSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("oracle-varchar-application.conf")) {
-  dropCreate(OracleVarchar())
-}
-
-class InMemorySnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("in-memory-application.conf"))

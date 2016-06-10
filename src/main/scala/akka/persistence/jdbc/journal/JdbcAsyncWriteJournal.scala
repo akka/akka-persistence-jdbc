@@ -16,29 +16,69 @@
 
 package akka.persistence.jdbc.journal
 
-import akka.actor.ActorSystem
+import akka.actor.{ ActorSystem, ExtendedActorSystem }
+import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.dao.JournalDao
-import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DaoRepository }
 import akka.persistence.jdbc.serialization.SerializationFacade
+import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
+import akka.persistence.journal.AsyncWriteJournal
+import akka.persistence.{ AtomicWrite, PersistentRepr }
+import akka.stream.scaladsl.Source
 import akka.stream.{ ActorMaterializer, Materializer }
+import com.typesafe.config.Config
+import slick.driver.JdbcProfile
+import slick.jdbc.JdbcBackend._
 
-import scala.concurrent.ExecutionContext
+import scala.collection.immutable
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.Try
 
-class JdbcAsyncWriteJournal extends SlickAsyncWriteJournal {
+class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   implicit val ec: ExecutionContext = context.dispatcher
-
   implicit val system: ActorSystem = context.system
+  implicit val mat: Materializer = ActorMaterializer()
+  val journalConfig = new JournalConfig(config)
 
-  override implicit val mat: Materializer = ActorMaterializer()
+  val db: Database = SlickDatabase.forConfig(config, journalConfig.slickConfiguration)
 
-  override val journalDao: JournalDao = DaoRepository(system).journalDao
+  val journalDao: JournalDao = {
+    val driver = journalConfig.slickConfiguration.slickDriver
+    val fqcn = journalConfig.pluginConfig.dao
+    val args = immutable.Seq(
+      (classOf[Database], db),
+      (classOf[JdbcProfile], SlickDriver.forDriverName(driver)),
+      (classOf[JournalConfig], journalConfig),
+      (classOf[ExecutionContext], ec),
+      (classOf[Materializer], mat)
+    )
+    system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[JournalDao](fqcn, args).get
+  }
 
-  override val serializationFacade: SerializationFacade =
-    SerializationFacade(system, separatorChar)
+  val serializationFacade: SerializationFacade =
+    SerializationFacade(system, journalConfig.pluginConfig.tagSeparator)
 
-  def separatorChar: String =
-    Option(AkkaPersistenceConfig(context.system).persistenceQueryConfiguration.separator).filterNot(_.isEmpty)
-      .getOrElse(",")
+  override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] =
+    Source(messages)
+      .via(serializationFacade.serialize(journalConfig.pluginConfig.serialization))
+      .via(journalDao.writeFlow)
+      .map(_.map(_ ⇒ ()))
+      .runFold(List.empty[Try[Unit]])(_ :+ _)
 
-  override val serialize: Boolean = AkkaPersistenceConfig(system).serializationConfiguration.journal
+  override def asyncDeleteMessagesTo(persistenceId: String, toSequenceNr: Long): Future[Unit] =
+    journalDao.delete(persistenceId, toSequenceNr)
+
+  override def asyncReadHighestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] =
+    journalDao.highestSequenceNr(persistenceId, fromSequenceNr)
+
+  override def asyncReplayMessages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(recoveryCallback: (PersistentRepr) ⇒ Unit): Future[Unit] =
+    journalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, max)
+      .via(serializationFacade.deserializeRepr)
+      .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
+      .runForeach(recoveryCallback)
+      .map(_ ⇒ ())
+
+  override def postStop(): Unit = {
+    db.close()
+    super.postStop()
+  }
 }

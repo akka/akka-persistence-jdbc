@@ -74,7 +74,7 @@ class AllPersistenceIdsPublisher(readJournalDao: ReadJournalDao, refreshInterval
 
     case DetermineSchedulePoll ⇒ determineSchedulePoll()
 
-    case Request(_)            ⇒ deliverBuf()
+    case _: Request            ⇒ deliverBuf()
 
     case Cancel                ⇒ context.stop(self)
   }

@@ -20,7 +20,7 @@ import akka.NotUsed
 import akka.actor.{ ExtendedActorSystem, Props }
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.dao.ReadJournalDao
-import akka.persistence.jdbc.query.AllPersistenceIdsPublisher
+import akka.persistence.jdbc.query.{ AllPersistenceIdsPublisher, EventsByPersistenceIdPublisher }
 import akka.persistence.jdbc.serialization.SerializationFacade
 import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
 import akka.persistence.query.EventEnvelope
@@ -82,7 +82,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
       .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
 
   override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
-    currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr)
+    Source.actorPublisher[EventEnvelope](Props(new EventsByPersistenceIdPublisher(persistenceId, fromSequenceNr, toSequenceNr, readJournalDao, serializationFacade, readJournalConfig.refreshInterval, readJournalConfig.maxBufferSize))).mapMaterializedValue(_ ⇒ NotUsed)
 
   override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     readJournalDao.eventsByTag(tag, offset)

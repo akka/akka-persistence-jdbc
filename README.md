@@ -180,7 +180,7 @@ The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery`
 
 ```scala
 import akka.persistence.query.PersistenceQuery
-import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
+import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
  
 val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 ```
@@ -190,7 +190,7 @@ The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery`
 
 ```java
 import akka.persistence.query.PersistenceQuery
-import akka.persistence.jdbc.query.journal.javadsl.JdbcReadJournal
+import akka.persistence.jdbc.query.javadsl.JdbcReadJournal
 
 final JdbcReadJournal readJournal = PersistenceQuery.get(system).getReadJournalFor(JdbcReadJournal.class, JdbcReadJournal.Identifier());
 ```
@@ -206,7 +206,7 @@ import akka.actor.ActorSystem
 import akka.stream.{Materializer, ActorMaterializer}
 import akka.stream.scaladsl.Source
 import akka.persistence.query.PersistenceQuery
-import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
+import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 
 implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
@@ -236,7 +236,7 @@ import akka.actor.ActorSystem
 import akka.stream.{Materializer, ActorMaterializer}
 import akka.stream.scaladsl.Source
 import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
-import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
+import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 
 implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
@@ -262,7 +262,7 @@ import akka.actor.ActorSystem
 import akka.stream.{Materializer, ActorMaterializer}
 import akka.stream.scaladsl.Source
 import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
-import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
+import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 
 implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
@@ -273,6 +273,7 @@ val willNotCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.event
 val willCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.currentEventsByTag("apple", 0L)
 ```
 
+## Tagging events
 To tag events you'll need to create an [Event Adapter][event-adapter] 
 that will wrap the event in a [akka.persistence.journal.Tagged](http://doc.akka.io/api/akka/2.4.1/#akka.persistence.journal.Tagged) 
 class with the given tags. The `Tagged` class will instruct `akka-persistence-jdbc` to tag the event with the given set of tags.
@@ -329,79 +330,52 @@ The returned event stream contains only events that correspond to the given tag,
 The same stream elements (in same order) are returned for multiple executions of the same query. Deleted events are not deleted
 from the tagged event stream.
 
-## EventsByPersistenceIdAndTag and CurrentEventsByPersistenceIdAndTag
-`eventsByPersistenceIdAndTag` and `currentEventsByPersistenceIdAndTag` is used for retrieving specific events identified 
-by a specific tag for a specific PersistentActor identified by persistenceId. These two queries basically are 
-convenience operations that optimize the lookup of events because the database can efficiently filter out the initial 
-persistenceId/tag combination. 
-
-```scala
-import akka.actor.ActorSystem
-import akka.stream.{Materializer, ActorMaterializer}
-import akka.stream.scaladsl.Source
-import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
-import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
-
-implicit val system: ActorSystem = ActorSystem()
-implicit val mat: Materializer = ActorMaterializer()(system)
-val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
-
-val willNotCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.eventsByPersistenceIdAndTag("fruitbasket", "apple", 0L)
-
-val willCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.currentEventsByPersistenceIdAndTag("fruitbasket", "apple", 0L)
-```
-
 # Custom DAO Implementation
-As of `2.2.11` the plugin supports loading a custom DAO for the journal and snapshot. You should implement a custom DAO if you wish to alter the default persistency strategy in any way, but wish to reuse all the logic that the plugin already has in place, eg. the Akka Persistence Query API. For example, the default persistency strategy that the plugin supports serializes journal and snapshot messages using a serializer of your choice and stores them as byte arrays in the database.
+As of `2.2.11` the plugin supports loading a custom DAO for the journal and snapshot. You should implement a custom Data Access Object (DAO) if you wish to alter the default persistency strategy in 
+any way, but wish to reuse all the logic that the plugin already has in place, eg. the Akka Persistence Query API. For example, the default persistency strategy that the plugin 
+supports serializes journal and snapshot messages using a serializer of your choice and stores them as byte arrays in the database.
 
-By means of configuration in `application.conf` a custom DAO can be configured, below the default DAOs are shown:
+By means of configuration in `application.conf` a DAO can be configured, below the default DAOs are shown:
 
 ```bash
-serialization {
-    journal = on // alter only when using a custom dao
-    snapshot = on // alter only when using a custom dao
-  }
+jdbc-journal {
+  dao = "akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao"
+}
 
-  dao {
-    journal = "akka.persistence.jdbc.dao.DefaultJournalDao"
-    snapshot = "akka.persistence.jdbc.dao.DefaultSnapshotDao"
-  }
+jdbc-snapshot-store {
+  dao = "akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao"
+}
+
+jdbc-read-journal {
+  dao = "akka.persistence.jdbc.dao.bytea.ByteArrayReadJournalDao"
+}
 ```
 
-Storing messages as byte arrays in blobs arenot the only way to store information in a database. For example, you could store messages with full type information as a normal database rows, each event type having its own table. For example, implementing a Journal Log table that stores all persistenceId, sequenceNumber and event type discriminator field, and storing the event data in another table with full typing
+Storing messages as byte arrays in blobs is not the only way to store information in a database. For example, you could store messages with full type information as a normal database rows, each event type having its own table. 
+For example, implementing a Journal Log table that stores all persistenceId, sequenceNumber and event type discriminator field, and storing the event data in another table with full typing
 
-You only have to implement two interfaces `akka.persistence.jdbc.dao.JournalDao` and/or `akka.persistence.jdbc.dao.SnapshotDao`. As these APIs are only now exposed for public use, the interfaces may change when the API needs to change for whatever reason eg. to make it more stable.
+You only have to implement two interfaces `akka.persistence.jdbc.dao.JournalDao` and/or `akka.persistence.jdbc.dao.SnapshotDao`. As these APIs are only now exposed for public use, the interfaces may change when the API needs to 
+change for whatever reason eg. to make it more stable.
 
 For example, take a look at the following two custom DAOs:
  
 ```scala
-class MyCustomJournalDao(db: JdbcBackend#Database, val profile: JdbcProfile, system: ActorSystem) extends JournalDao {
+class MyCustomJournalDao(db: Database, val profile: JdbcProfile, journalConfig: JournalConfig)(implicit ec: ExecutionContext, mat: Materializer) extends JournalDao {
     // snip 
 }
 
-class MyCustomSnapshotDao(db: JdbcBackend#Database, val profile: JdbcProfile, system: ActorSystem) extends SnapshotDao {
+class MyCustomSnapshotDao(db: JdbcBackend#Database, val profile: JdbcProfile, snapshotConfig: SnapshotConfig)(implicit ec: ExecutionContext, val mat: Materializer) extends SnapshotDao {
     // snip
 }
 ```
 
-As you can see, the custom DAOs get a Slick database, a slick profile and an ActorSystem injected after constructed. You should register the Fully Qualified Class Name in `application.conf` so that the custom DAOs will be used.
+As you can see, the custom DAOs get a _Slick database_, a _Slick profile_, the journal or snapshot _configuration_, an _ExecutionContext_ and _Materializer_ injected after constructed. 
+You should register the Fully Qualified Class Name in `application.conf` so that the custom DAOs will be used.
 
-For more information please review the two default implementations `akka.persistence.jdbc.dao.DefaultJournalDao` and `akka.persistence.jdbc.dao.DefaultSnapshotDao` or the demo custom custom [CounterJournalDao](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) site.
+For more information please review the two default implementations `akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao` and `akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao` or the demo custom DAO example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc) site.
 
 # Explicitly shutting down the database connections
-Plugin version `v2.2.17` and higher automatically shut down the database connections when the actor system terminates but you can also explicitly shut down the database connections by 
-first getting an instance of the Slick database by calling `akka.persistence.jdbc.extension.SlickDatabase(system)` and then explicitly calling the `close()`, which does a blocking shutdown or 
-`shutdown()`, which does an asynchronously shutdown of the connection pool. 
-
-```scala
-import akka.persistence.jdbc.extension.SlickDatabase
-import akka.actor.ActorSystem
-
-val system = ActorSystem()
-SlickDatabase(system).close()
-```
-
-Please note, the plugin automatically shuts down the HikariCP connection pool only when the ActorSystem is explicitly terminated.
+The plugin automatically shuts down the HikariCP connection pool only when the ActorSystem is explicitly terminated.
 It is advisable to register a shutdown hook to be run when the VM exits that terminates the ActorSystem: 
 
 ```scala
@@ -716,4 +690,7 @@ Have fun!
 [ser]: http://doc.akka.io/docs/akka/current/scala/serialization.html
 [event-adapter]: http://doc.akka.io/docs/akka/current/scala/persistence.html#event-adapters-scala
 
-[inmemory][https://github.com/dnvriend/akka-persistence-inmemory]
+[inmemory]: https://github.com/dnvriend/akka-persistence-inmemory
+[postgres-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/postgres-application.conf
+[mysql-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/mysql-application.conf
+[oracle-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/oracle-application.conf

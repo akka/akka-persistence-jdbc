@@ -163,20 +163,20 @@ class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-a
     clearOracle()
 }
 
-class PostgresJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
-  dropCreate(Postgres())
-}
-
-class MySQLJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
-  dropCreate(MySQL())
-}
-
-class OracleJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
-  dropCreate(Oracle())
-
-  protected override def beforeEach(): Unit =
-    clearOracle()
-
-  override protected def afterAll(): Unit =
-    clearOracle()
-}
+//class PostgresJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
+//  dropCreate(Postgres())
+//}
+//
+//class MySQLJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
+//  dropCreate(MySQL())
+//}
+//
+//class OracleJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
+//  dropCreate(Oracle())
+//
+//  protected override def beforeEach(): Unit =
+//    clearOracle()
+//
+//  override protected def afterAll(): Unit =
+//    clearOracle()
+//}

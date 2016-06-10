@@ -56,7 +56,6 @@ class EventsByTagPublisher(tag: String, offset: Int, readJournalDao: ReadJournal
         .zipWith(Source(Stream.from(offset))) {
           case (repr, i) ⇒ EventEnvelope(i, repr.persistenceId, repr.sequenceNr, repr.payload)
         }
-        .map { e ⇒ println(e); e }
         .runFold(List.empty[EventEnvelope])(_ :+ _)
         .map { xs ⇒
           buf = buf ++ xs

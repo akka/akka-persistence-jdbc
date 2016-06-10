@@ -209,20 +209,20 @@ class OracleScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("or
     clearOracle()
 }
 
-class PostgresJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
-  dropCreate(Postgres())
-}
-
-class MySQLJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
-  dropCreate(MySQL())
-}
-
-class OracleJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
-  dropCreate(Oracle())
-
-  protected override def beforeEach(): Unit =
-    clearOracle()
-
-  override protected def afterAll(): Unit =
-    clearOracle()
-}
+//class PostgresJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
+//  dropCreate(Postgres())
+//}
+//
+//class MySQLJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
+//  dropCreate(MySQL())
+//}
+//
+//class OracleJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
+//  dropCreate(Oracle())
+//
+//  protected override def beforeEach(): Unit =
+//    clearOracle()
+//
+//  override protected def afterAll(): Unit =
+//    clearOracle()
+//}

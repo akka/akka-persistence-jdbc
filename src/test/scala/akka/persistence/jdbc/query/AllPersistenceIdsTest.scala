@@ -80,20 +80,20 @@ class OracleScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("oracle-app
     clearOracle()
 }
 
-class PostgresJavaAllPersistenceIdsTest extends AllPersistenceIdsTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
-  dropCreate(Postgres())
-}
-
-class MySQLJavaAllPersistenceIdsTest extends AllPersistenceIdsTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
-  dropCreate(MySQL())
-}
-
-class OracleJavaAllPersistenceIdsTest extends AllPersistenceIdsTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
-  dropCreate(Oracle())
-
-  protected override def beforeEach(): Unit =
-    clearOracle()
-
-  override protected def afterAll(): Unit =
-    clearOracle()
-}
+//class PostgresJavaAllPersistenceIdsTest extends AllPersistenceIdsTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
+//  dropCreate(Postgres())
+//}
+//
+//class MySQLJavaAllPersistenceIdsTest extends AllPersistenceIdsTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
+//  dropCreate(MySQL())
+//}
+//
+//class OracleJavaAllPersistenceIdsTest extends AllPersistenceIdsTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
+//  dropCreate(Oracle())
+//
+//  protected override def beforeEach(): Unit =
+//    clearOracle()
+//
+//  override protected def afterAll(): Unit =
+//    clearOracle()
+//}

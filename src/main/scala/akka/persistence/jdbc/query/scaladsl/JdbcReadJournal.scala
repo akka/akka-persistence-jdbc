@@ -46,7 +46,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     with CurrentEventsByTagQuery
     with EventsByTagQuery {
 
-  implicit val ec: ExecutionContext = system.dispatcher
+  implicit val ec: ExecutionContext = system.dispatchers.lookup("jdbc-plugin-blocking-dispatcher")
   implicit val mat: Materializer = ActorMaterializer()
   val readJournalConfig = new ReadJournalConfig(config)
   val db = SlickDatabase.forConfig(config, readJournalConfig.slickConfiguration)

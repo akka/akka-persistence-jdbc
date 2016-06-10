@@ -223,22 +223,6 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.expectNoMsg(100.millis)
         tp.cancel()
       }
-
-      withEventsByPersistenceId()("my-1", 0, Int.MaxValue) { tp ⇒
-        tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(4, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(5, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(6, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(7, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(8, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(9, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(10, _, _, _) ⇒ }
-        tp.expectNoMsg(100.millis)
-        tp.cancel()
-      }
     }
   }
 }
@@ -261,20 +245,20 @@ class OracleScalaEventByTagTest extends EventsByTagTest("oracle-application.conf
     clearOracle()
 }
 
-class PostgresJavaEventsByTagTest extends EventsByTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
-  dropCreate(Postgres())
-}
-
-class MySQLJavaEventByTagTest extends EventsByTagTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
-  dropCreate(MySQL())
-}
-
-class OracleJavaEventByTagTest extends EventsByTagTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
-  dropCreate(Oracle())
-
-  protected override def beforeEach(): Unit =
-    clearOracle()
-
-  override protected def afterAll(): Unit =
-    clearOracle()
-}
+//class PostgresJavaEventsByTagTest extends EventsByTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
+//  dropCreate(Postgres())
+//}
+//
+//class MySQLJavaEventByTagTest extends EventsByTagTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
+//  dropCreate(MySQL())
+//}
+//
+//class OracleJavaEventByTagTest extends EventsByTagTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
+//  dropCreate(Oracle())
+//
+//  protected override def beforeEach(): Unit =
+//    clearOracle()
+//
+//  override protected def afterAll(): Unit =
+//    clearOracle()
+//}

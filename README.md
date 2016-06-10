@@ -377,13 +377,10 @@ Alternatively you can opt to use [Postgresql][postgres], which is the most advan
 available, with some great features, and it works great together with akka-persistence-jdbc.
 
 # What's new?
-<<<<<<< HEAD
 ## 2.3.1 (2016-06-10)
   - Async queries should take a max number of elements from the result set according to the 
   `jdbc-read-journal.max-buffer-size` configuration. This should result in better memory usage and better IO performance.
   
-=======
->>>>>>> 25e2f6a63912d25b3d6314e10ff4470af15c5a5a
 ## 2.3.0 (2016-06-10)
   - This is a feature, configuration and (maybe) API breaking release when you rely on the DAO's, my apologies.
   - Killed some [feature-creep], this will result in a better design of the plugin. 

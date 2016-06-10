@@ -1,4 +1,4 @@
-# akka-persistence-jdbc 2.2.25
+# akka-persistence-jdbc 2.3.0
 Akka-persistence-jdbc is a plugin for akka-persistence that asynchronously writes journal and snapshot entries entries to a configured JDBC store. It supports writing journal messages and snapshots to two tables: the `journal` table and the `snapshot` table.
 
 Service | Status | Description
@@ -22,7 +22,8 @@ All async queries do not work as expected. I must refactor the async query api t
 the `current*` commands and do your own client-side polling strategy for now.  
                                  
 ## New release
-The new release breaks backwards compatibility with `v1.x.x` in a big way. New features are:
+Version 2.3.0 is a 'killing feature creep' and async query release and breaks backwards compatibility with v2.2x and older, 
+please read the _What's new_ section at the bottom of the page. 
 
 - It uses [Typesafe/Lightbend Slick][slick] as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -46,7 +47,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.25"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.3.0"
 ```
 
 ## Configuration
@@ -79,74 +80,9 @@ akka-persistence-jdbc {
 ```
    
 # Postgres configuration   
-```bash
-akka {
-  persistence {
-    journal.plugin = "jdbc-journal"
-    snapshot-store.plugin = "jdbc-snapshot-store"
-  }
-}
+Base your akka-persistence-jdbc `application.conf` on [this config file][postgres-application.conf]  
 
-akka-persistence-jdbc {
-  slick {
-    driver = "slick.driver.PostgresDriver"
-    db {
-      host = "boot2docker"
-      host = ${?POSTGRES_HOST}
-      port = "5432"
-      port = ${?POSTGRES_PORT}
-      name = "docker"
-
-      url = "jdbc:postgresql://"${akka-persistence-jdbc.slick.db.host}":"${akka-persistence-jdbc.slick.db.port}"/"${akka-persistence-jdbc.slick.db.name}
-      user = "docker"
-      password = "docker"
-      driver = "org.postgresql.Driver"
-      keepAliveConnection = on
-      numThreads = 2
-      queueSize = 100
-    }
-  }
-
-  tables {
-    journal {
-      tableName = "journal"
-      schemaName = ""
-      columnNames {
-        persistenceId = "persistence_id"
-        sequenceNumber = "sequence_number"
-        created = "created"
-        tags = "tags"
-        message = "message"
-      }
-    }
-
-    deletedTo {
-      tableName = "deleted_to"
-      schemaName = ""
-      columnNames = {
-        persistenceId = "persistence_id"
-        deletedTo = "deleted_to"
-      }
-    }
-
-    snapshot {
-      tableName = "snapshot"
-      schemaName = ""
-      columnNames {
-        persistenceId = "persistence_id"
-        sequenceNumber = "sequence_number"
-        created = "created"
-        snapshot = "snapshot"
-      }
-    }
-  }
-
-  query {
-    separator = ","
-  }
-}
-```
-
+# Postgres schema
 ```sql
 DROP TABLE IF EXISTS public.journal;
 
@@ -178,74 +114,9 @@ CREATE TABLE IF NOT EXISTS public.snapshot (
 ```
 
 ## MySQL configuration
-```bash
-akka {
-  persistence {
-    journal.plugin = "jdbc-journal"
-    snapshot-store.plugin = "jdbc-snapshot-store"
-  }
-}
+Base your akka-persistence-jdbc `application.conf` on [this config file][mysql-application.conf]  
 
-akka-persistence-jdbc {
-  slick {
-      driver = "slick.driver.MySQLDriver"
-      db {
-        host = "boot2docker"
-        host = ${?MYSQL_HOST}
-        port = "3306"
-        port = ${?MYSQL_PORT}
-        name = "mysql"
-  
-        url = "jdbc:mysql://"${akka-persistence-jdbc.slick.db.host}":"${akka-persistence-jdbc.slick.db.port}"/"${akka-persistence-jdbc.slick.db.name}
-        user = "root"
-        password = "root"
-        driver = "com.mysql.jdbc.Driver"
-        keepAliveConnection = on
-        numThreads = 2
-        queueSize = 100
-      }
-    }
-
-  tables {
-    journal {
-      tableName = "journal"
-      schemaName = ""
-      columnNames {
-        persistenceId = "persistence_id"
-        sequenceNumber = "sequence_number"
-        created = "created"
-        tags = "tags"
-        message = "message"
-      }
-    }
-
-    deletedTo {
-      tableName = "deleted_to"
-      schemaName = ""
-      columnNames = {
-        persistenceId = "persistence_id"
-        deletedTo = "deleted_to"
-      }
-    }
-
-    snapshot {
-      tableName = "snapshot"
-      schemaName = ""
-      columnNames {
-        persistenceId = "persistence_id"
-        sequenceNumber = "sequence_number"
-        created = "created"
-        snapshot = "snapshot"
-      }
-    }
-  }
-
-  query {
-    separator = ","
-  }
-}
-```
-
+## MySQL schema
 ```sql
 DROP TABLE IF EXISTS journal;
 
@@ -277,74 +148,9 @@ CREATE TABLE IF NOT EXISTS snapshot (
 ```
 
 ## Oracle configuration
-```bash
-akka {
-  persistence {
-    journal.plugin = "jdbc-journal"
-    snapshot-store.plugin = "jdbc-snapshot-store"
-  }
-}
+Base your akka-persistence-jdbc `application.conf` on [this config file][oracle-application.conf]  
 
-akka-persistence-jdbc {
-  slick {
-    driver = "com.typesafe.slick.driver.oracle.OracleDriver"
-    db {
-      host = "boot2docker"
-      host = ${?ORACLE_HOST}
-      port = "1521"
-      port = ${?ORACLE_PORT}
-      name = "xe"
-
-      url = "jdbc:oracle:thin:@//"${akka-persistence-jdbc.slick.db.host}":"${akka-persistence-jdbc.slick.db.port}"/"${akka-persistence-jdbc.slick.db.name}
-      user = "system"
-      password = "oracle"
-      driver = "oracle.jdbc.OracleDriver"
-      keepAliveConnection = on
-      numThreads = 2
-      queueSize = 100
-    }
-  }
-
-  tables {
-    journal {
-      tableName = "journal"
-      schemaName = "SYSTEM"
-      columnNames {
-        persistenceId = "persistence_id"
-        sequenceNumber = "sequence_number"
-        created = "created"
-        tags = "tags"
-        message = "message"
-      }
-    }
-
-    deletedTo {
-      tableName = "deleted_to"
-      schemaName = "SYSTEM"
-      columnNames = {
-        persistenceId = "persistence_id"
-        deletedTo = "deleted_to"
-      }
-    }
-
-    snapshot {
-      tableName = "snapshot"
-      schemaName = "SYSTEM"
-      columnNames {
-        persistenceId = "persistence_id"
-        sequenceNumber = "sequence_number"
-        created = "created"
-        snapshot = "snapshot"
-      }
-    }
-  }
-
-  query {
-    separator = ","
-  }
-}
-```
-
+## Oracle schema
 ```sql
 CREATE TABLE "journal" (
   "persistence_id" VARCHAR(255) NOT NULL,
@@ -369,34 +175,12 @@ CREATE TABLE "snapshot" (
 );
 ```
 
-## InMemory Configuration
-The akka-persistence-jdbc also has an in-memory storage option. For practical reasons, ie. the plugin may already 
-be on the classpath. This is useful for testing. I would advice not to use it in production systems, because it 
-uses memory, and the data is persisted in volatile memory, which means that after a JVM restart, all data is lost.
-By default the in-memory option is disabled.
-
-Add the following to `application.conf` enable the in-memory option:
-
-```scala
-akka-persistence-jdbc {
-  inMemory = true
-}
-```
-
-To disable the in-memory option:
-
-```scala
-akka-persistence-jdbc {
-  inMemory = false
-}
-```
-
 ## How to get the ReadJournal using Scala
 The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery` extension:
 
 ```scala
 import akka.persistence.query.PersistenceQuery
-import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
+import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
  
 val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 ```
@@ -406,7 +190,7 @@ The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery`
 
 ```java
 import akka.persistence.query.PersistenceQuery
-import akka.persistence.jdbc.query.journal.javadsl.JdbcReadJournal
+import akka.persistence.jdbc.query.javadsl.JdbcReadJournal
 
 final JdbcReadJournal readJournal = PersistenceQuery.get(system).getReadJournalFor(JdbcReadJournal.class, JdbcReadJournal.Identifier());
 ```
@@ -422,7 +206,7 @@ import akka.actor.ActorSystem
 import akka.stream.{Materializer, ActorMaterializer}
 import akka.stream.scaladsl.Source
 import akka.persistence.query.PersistenceQuery
-import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
+import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 
 implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
@@ -452,7 +236,7 @@ import akka.actor.ActorSystem
 import akka.stream.{Materializer, ActorMaterializer}
 import akka.stream.scaladsl.Source
 import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
-import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
+import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 
 implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
@@ -478,7 +262,7 @@ import akka.actor.ActorSystem
 import akka.stream.{Materializer, ActorMaterializer}
 import akka.stream.scaladsl.Source
 import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
-import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
+import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 
 implicit val system: ActorSystem = ActorSystem()
 implicit val mat: Materializer = ActorMaterializer()(system)
@@ -489,6 +273,7 @@ val willNotCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.event
 val willCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.currentEventsByTag("apple", 0L)
 ```
 
+## Tagging events
 To tag events you'll need to create an [Event Adapter][event-adapter] 
 that will wrap the event in a [akka.persistence.journal.Tagged](http://doc.akka.io/api/akka/2.4.1/#akka.persistence.journal.Tagged) 
 class with the given tags. The `Tagged` class will instruct `akka-persistence-jdbc` to tag the event with the given set of tags.
@@ -545,156 +330,68 @@ The returned event stream contains only events that correspond to the given tag,
 The same stream elements (in same order) are returned for multiple executions of the same query. Deleted events are not deleted
 from the tagged event stream.
 
-## EventsByPersistenceIdAndTag and CurrentEventsByPersistenceIdAndTag
-`eventsByPersistenceIdAndTag` and `currentEventsByPersistenceIdAndTag` is used for retrieving specific events identified 
-by a specific tag for a specific PersistentActor identified by persistenceId. These two queries basically are 
-convenience operations that optimize the lookup of events because the database can efficiently filter out the initial 
-persistenceId/tag combination. 
-
-```scala
-import akka.actor.ActorSystem
-import akka.stream.{Materializer, ActorMaterializer}
-import akka.stream.scaladsl.Source
-import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
-import akka.persistence.jdbc.query.journal.scaladsl.JdbcReadJournal
-
-implicit val system: ActorSystem = ActorSystem()
-implicit val mat: Materializer = ActorMaterializer()(system)
-val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
-
-val willNotCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.eventsByPersistenceIdAndTag("fruitbasket", "apple", 0L)
-
-val willCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.currentEventsByPersistenceIdAndTag("fruitbasket", "apple", 0L)
-```
-
 # Custom DAO Implementation
-As of `2.2.11` the plugin supports loading a custom DAO for the journal and snapshot. You should implement a custom DAO if you wish to alter the default persistency strategy in any way, but wish to reuse all the logic that the plugin already has in place, eg. the Akka Persistence Query API. For example, the default persistency strategy that the plugin supports serializes journal and snapshot messages using a serializer of your choice and stores them as byte arrays in the database.
+As of `2.2.11` the plugin supports loading a custom DAO for the journal and snapshot. You should implement a custom Data Access Object (DAO) if you wish to alter the default persistency strategy in 
+any way, but wish to reuse all the logic that the plugin already has in place, eg. the Akka Persistence Query API. For example, the default persistency strategy that the plugin 
+supports serializes journal and snapshot messages using a serializer of your choice and stores them as byte arrays in the database.
 
-By means of configuration in `application.conf` a custom DAO can be configured, below the default DAOs are shown:
+By means of configuration in `application.conf` a DAO can be configured, below the default DAOs are shown:
 
 ```bash
-serialization {
-    journal = on // alter only when using a custom dao
-    snapshot = on // alter only when using a custom dao
-  }
+jdbc-journal {
+  dao = "akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao"
+}
 
-  dao {
-    journal = "akka.persistence.jdbc.dao.DefaultJournalDao"
-    snapshot = "akka.persistence.jdbc.dao.DefaultSnapshotDao"
-  }
+jdbc-snapshot-store {
+  dao = "akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao"
+}
+
+jdbc-read-journal {
+  dao = "akka.persistence.jdbc.dao.bytea.ByteArrayReadJournalDao"
+}
 ```
 
-Storing messages as byte arrays in blobs arenot the only way to store information in a database. For example, you could store messages with full type information as a normal database rows, each event type having its own table. For example, implementing a Journal Log table that stores all persistenceId, sequenceNumber and event type discriminator field, and storing the event data in another table with full typing
+Storing messages as byte arrays in blobs is not the only way to store information in a database. For example, you could store messages with full type information as a normal database rows, each event type having its own table. 
+For example, implementing a Journal Log table that stores all persistenceId, sequenceNumber and event type discriminator field, and storing the event data in another table with full typing
 
-You only have to implement two interfaces `akka.persistence.jdbc.dao.JournalDao` and/or `akka.persistence.jdbc.dao.SnapshotDao`. As these APIs are only now exposed for public use, the interfaces may change when the API needs to change for whatever reason eg. to make it more stable.
+You only have to implement two interfaces `akka.persistence.jdbc.dao.JournalDao` and/or `akka.persistence.jdbc.dao.SnapshotDao`. As these APIs are only now exposed for public use, the interfaces may change when the API needs to 
+change for whatever reason eg. to make it more stable.
 
 For example, take a look at the following two custom DAOs:
  
 ```scala
-class MyCustomJournalDao(db: JdbcBackend#Database, val profile: JdbcProfile, system: ActorSystem) extends JournalDao {
+class MyCustomJournalDao(db: Database, val profile: JdbcProfile, journalConfig: JournalConfig)(implicit ec: ExecutionContext, mat: Materializer) extends JournalDao {
     // snip 
 }
 
-class MyCustomSnapshotDao(db: JdbcBackend#Database, val profile: JdbcProfile, system: ActorSystem) extends SnapshotDao {
+class MyCustomSnapshotDao(db: JdbcBackend#Database, val profile: JdbcProfile, snapshotConfig: SnapshotConfig)(implicit ec: ExecutionContext, val mat: Materializer) extends SnapshotDao {
     // snip
 }
 ```
 
-As you can see, the custom DAOs get a Slick database, a slick profile and an ActorSystem injected after constructed. You should register the Fully Qualified Class Name in `application.conf` so that the custom DAOs will be used.
+As you can see, the custom DAOs get a _Slick database_, a _Slick profile_, the journal or snapshot _configuration_, an _ExecutionContext_ and _Materializer_ injected after constructed. 
+You should register the Fully Qualified Class Name in `application.conf` so that the custom DAOs will be used.
 
-For more information please review the two default implementations `akka.persistence.jdbc.dao.DefaultJournalDao` and `akka.persistence.jdbc.dao.DefaultSnapshotDao` or the demo custom custom [CounterJournalDao](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc/blob/master/src/main/scala/com/github/dnvriend/dao/CounterJournalDao.scala) site.
+For more information please review the two default implementations `akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao` and `akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao` or the demo custom DAO example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc) site.
 
 # Explicitly shutting down the database connections
-Plugin version `v2.2.17` and higher automatically shut down the database connections when the actor system terminates but you can also explicitly shut down the database connections by 
-first getting an instance of the Slick database by calling `akka.persistence.jdbc.extension.SlickDatabase(system)` and then explicitly calling the `close()`, which does a blocking shutdown or 
-`shutdown()`, which does an asynchronously shutdown of the connection pool. 
-
-```scala
-import akka.persistence.jdbc.extension.SlickDatabase
-import akka.actor.ActorSystem
-
-val system = ActorSystem()
-SlickDatabase(system).close()
-```
-
-Please note, the plugin automatically shuts down the HikariCP connection pool only when the ActorSystem is explicitly terminated.
+The plugin automatically shuts down the HikariCP connection pool only when the ActorSystem is explicitly terminated.
 It is advisable to register a shutdown hook to be run when the VM exits that terminates the ActorSystem: 
 
 ```scala
 sys.addShutdownHook(system.terminate())
 ```
 
-## Text based serialization formats
-Plugin version `v2.2.18` and higher supports using a text based serialization format and storage in the Journal and Snapshot tables.
-You should configure the plugin to use the `akka.persistence.jdbc.dao.varchar.VarcharJournalDao` and the `akka.persistence.jdbc.dao.varchar.VarcharSnapshotDao`
-data access objects. 
-  
-```scala
-akka-persistence-jdbc {
-
-    dao {
-        journal = "akka.persistence.jdbc.dao.varchar.VarcharJournalDao"
-        snapshot = "akka.persistence.jdbc.dao.varchar.VarcharSnapshotDao"
-      }
-    
-    serialization.varchar.serializerIdentity = 1000
-}
-```
-Both DAOs will look for an akka serializer that has been registered in `akka.actor.serialization-identifiers`. That serialization id 
-will be used to serialize the result to a text based format just before the journal or snapshot record will be written. 
-For an example see `akka.persistence.jdbc.serialization.Base64Serializer`. Please note that the output of the custom 
-text based serializer will be a byte array that will be converted to a String using `UTF-8` and that String will be stored 
-in the database. 
-
-The `akka-persistence-jdbc.serialization.varchar.serializerIdentity` must point to the id that has been registered in `akka.actor.serialization-identifiers`.
-
-An akka serializer can be registered in:
-
-```
-akka.actor {
-  serialize-messages = on
-  warn-about-java-serializer-usage = on
-
-  serializers {
-    base64Serializer = "akka.persistence.jdbc.serialization.Base64Serializer"
-  }
-
-  serialization-identifiers {
-    "akka.persistence.jdbc.serialization.Base64Serializer" = 1000
-  }
-}
-```
-
-### Serialization / Deserialization
-A serializer must serializer must deconstruct a PersistentRepr from a byte array and create a serialization format
-that contains all of the fields necessary to reconstruct a PersistentRepr at a later time. The Serializer must do the following:
-
-### Serialize
-- Deconstruct a byte array to a PersistentRepr,
-- Serialize the PersistentRepr to a text based format so it can be reconstructed by that serializer when the event must be read,
-- It must get the following fields from the PersistentRepr:
- - payload,
- - sequenceNr,
- - persistenceId,
- - manifest,
- - deleted,
- - sender,
- - writerUUid
-- It must serialize the payload to a text based format
-- It must create a wrapper format that contains all the fields above,
-- It must serialize the wrapper to a tet based format
-
-### Deserialize
-- Deconstruct the text based wrapper format in a PersistentRepr
-- Construct the payload from the text based format,
-- Construct a PersistentRepr,
-- Look for a serializer for the PersistentRepr,
-- Serialize the PersistentRepr using the found PersistentRepr serializer to a byte array,
-
-### Text based database schema
-Please look in the path `src/main/resources/schema` for the text based database schema to use.
-
 # What's new?
+## 2.3.0 (2016-06-??)
+  - This is a feature, configuration and (maybe) API breaking release when you rely on the DAO's, my apologies.
+  - Killed some [feature-creep], this will result in a better design of the plugin. 
+    - Removed support for the Varchar (base64/text based serialization),
+    - Removed support for the in-memory storage, please use the [akka.persistence-inmemory][inmemory] plugin,
+    - Removed the queries `eventsByPersistenceIdAndTag` and `currentEventsByPersistenceIdAndTag` as they are not supported by Akka natively and can be configured by filtering the event stream.
+  - Implemented async queries, fixes issue #53 All async queries do not work as expected
+  - Implemented akka persistence plugin scoping strategy, fixes issue #42 Make it possible to have multiple instances of the plugin (configured differently)
+
 ## 2.2.25 (2016-06-08)
   - Merged PR #54 [Charith Ellawala][ellawala] Honour the schemaName setting for the snapshot table, thanks!
   - Compiling for Java 8 as Akka 2.4.x dropped support for Java 6 and 7 and only works on Java 8 and above  
@@ -988,8 +685,12 @@ Have fun!
 
 [postgres]: http://www.postgresql.org/
 [ap-testkit]: https://github.com/krasserm/akka-persistence-testkit
-[ds]: http://docs.oracle.com/javase/7/docs/api/javax/sql/DataSource.html
+[ds]: http://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html
 
+[ser]: http://doc.akka.io/docs/akka/current/scala/serialization.html
+[event-adapter]: http://doc.akka.io/docs/akka/current/scala/persistence.html#event-adapters-scala
 
-[ser]: http://doc.akka.io/docs/akka/2.4.7/scala/serialization.html
-[event-adapter]: http://doc.akka.io/docs/akka/2.4.7/scala/persistence.html#event-adapters-scala
+[inmemory]: https://github.com/dnvriend/akka-persistence-inmemory
+[postgres-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/postgres-application.conf
+[mysql-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/mysql-application.conf
+[oracle-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/oracle-application.conf

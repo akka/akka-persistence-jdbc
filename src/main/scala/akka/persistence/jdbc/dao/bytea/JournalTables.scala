@@ -17,7 +17,7 @@
 package akka.persistence.jdbc.dao.bytea
 
 import akka.persistence.jdbc.dao.bytea.JournalTables._
-import akka.persistence.jdbc.extension.{ DeletedToTableConfiguration, JournalTableConfiguration }
+import akka.persistence.jdbc.config.{ DeletedToTableConfiguration, JournalTableConfiguration }
 
 object JournalTables {
   case class JournalRow(persistenceId: String, sequenceNumber: Long, message: Array[Byte], created: Long, tags: Option[String] = None)

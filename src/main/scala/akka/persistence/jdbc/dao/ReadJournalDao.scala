@@ -18,30 +18,22 @@ package akka.persistence.jdbc.dao
 
 import akka.NotUsed
 import akka.persistence.jdbc.serialization.SerializationResult
-import akka.stream.scaladsl._
+import akka.stream.scaladsl.Source
 
-import scala.concurrent.Future
-import scala.util.Try
-
-trait JournalDao {
+trait ReadJournalDao {
   /**
-   * Deletes all persistent messages up to toSequenceNr (inclusive) for the persistenceId
+   * Returns distinct stream of persistenceIds
    */
-  def delete(persistenceId: String, toSequenceNr: Long): Future[Unit]
+  def allPersistenceIdsSource: Source[String, NotUsed]
 
   /**
-   * Returns the highest sequence number for the events that are stored for that `persistenceId`. When no events are
-   * found for the `persistenceId`, 0L will be the highest sequence number
+   * Returns a Source of bytes for certain tag from an offset. The result is sorted by
+   * created time asc thus the offset is relative to the creation time
    */
-  def highestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long]
+  def eventsByTag(tag: String, offset: Long): Source[SerializationResult, NotUsed]
 
   /**
    * Returns a Source of bytes for a certain persistenceId
    */
   def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[SerializationResult, NotUsed]
-
-  /**
-   * Writes serialized messages
-   */
-  def writeFlow: Flow[Try[Iterable[SerializationResult]], Try[Iterable[SerializationResult]], NotUsed]
 }

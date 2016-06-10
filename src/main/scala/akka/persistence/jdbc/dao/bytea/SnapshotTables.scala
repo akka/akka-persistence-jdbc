@@ -17,7 +17,7 @@
 package akka.persistence.jdbc.dao.bytea
 
 import akka.persistence.jdbc.dao.bytea.SnapshotTables._
-import akka.persistence.jdbc.extension.SnapshotTableConfiguration
+import akka.persistence.jdbc.config.SnapshotTableConfiguration
 
 object SnapshotTables {
   case class SnapshotRow(persistenceId: String, sequenceNumber: Long, created: Long, snapshot: Array[Byte])

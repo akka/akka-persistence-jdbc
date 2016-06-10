@@ -28,7 +28,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
       actor3 ! withTags(3, "three")
 
       eventually {
-        journalDao.countJournal.futureValue shouldBe 3
+        countJournal.futureValue shouldBe 3
       }
 
       withCurrentEventsByTag()("unknown", 0) { tp ⇒
@@ -45,7 +45,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
       actor3 ! withTags(3, "number")
 
       eventually {
-        journalDao.countJournal.futureValue shouldBe 3
+        countJournal.futureValue shouldBe 3
       }
 
       withCurrentEventsByTag()("number", 0) { tp ⇒
@@ -55,56 +55,34 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
         tp.expectComplete()
       }
-    }
-  }
 
-  it should "find events from an offset" in {
-    withTestActors() { (actor1, actor2, actor3) ⇒
-      actor1 ! withTags(1, "number")
-      actor2 ! withTags(2, "number")
-      actor3 ! withTags(3, "number")
-
-      eventually {
-        journalDao.countJournal.futureValue shouldBe 3
+      withCurrentEventsByTag()("number", 1) { tp ⇒
+        tp.request(Int.MaxValue)
+        tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
+        tp.expectComplete()
       }
 
       withCurrentEventsByTag()("number", 2) { tp ⇒
         tp.request(Int.MaxValue)
+        tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
         tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
+        tp.expectComplete()
+      }
+
+      withCurrentEventsByTag()("number", 3) { tp ⇒
+        tp.request(Int.MaxValue)
+        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
+        tp.expectComplete()
+      }
+
+      withCurrentEventsByTag()("number", 4) { tp ⇒
+        tp.request(Int.MaxValue)
         tp.expectComplete()
       }
     }
   }
-
-  it should "persist and find a tagged event with one tag" in
-    withTestActors() { (actor1, actor2, actor3) ⇒
-      withClue("Persisting a tagged event") {
-        actor1 ! withTags(1, "one")
-        eventually {
-          withCurrentEventsByPersistenceid()("my-1") { tp ⇒
-            tp.request(Long.MaxValue)
-            tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
-            tp.expectComplete()
-          }
-        }
-      }
-
-      withClue("query should find the event by tag") {
-        withCurrentEventsByTag()("one", 0) { tp ⇒
-          tp.request(Int.MaxValue)
-          tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
-          tp.expectComplete()
-        }
-      }
-
-      withClue("query should find the event by persistenceId") {
-        withCurrentEventsByPersistenceid()("my-1", 1, 1) { tp ⇒
-          tp.request(Int.MaxValue)
-          tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
-          tp.expectComplete()
-        }
-      }
-    }
 
   it should "persist and find a tagged event with multiple tags" in
     withTestActors() { (actor1, actor2, actor3) ⇒
@@ -122,7 +100,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         actor1 ! 1
 
         eventually {
-          journalDao.countJournal.futureValue shouldBe 9
+          countJournal.futureValue shouldBe 9
         }
       }
 
@@ -185,24 +163,20 @@ class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-a
     clearOracle()
 }
 
-class InMemoryScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("in-memory-application.conf") with ScalaJdbcReadJournalOperations
-
-class PostgresJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
-  dropCreate(Postgres())
-}
-
-class MySQLJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
-  dropCreate(MySQL())
-}
-
-class OracleJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
-  dropCreate(Oracle())
-
-  protected override def beforeEach(): Unit =
-    clearOracle()
-
-  override protected def afterAll(): Unit =
-    clearOracle()
-}
-
-class InMemoryJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("in-memory-application.conf") with JavaDslJdbcReadJournalOperations
+//class PostgresJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
+//  dropCreate(Postgres())
+//}
+//
+//class MySQLJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
+//  dropCreate(MySQL())
+//}
+//
+//class OracleJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
+//  dropCreate(Oracle())
+//
+//  protected override def beforeEach(): Unit =
+//    clearOracle()
+//
+//  override protected def afterAll(): Unit =
+//    clearOracle()
+//}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.query.journal
+package akka.persistence.jdbc.query
 
 import akka.actor.ExtendedActorSystem
 import akka.persistence.query.ReadJournalProvider

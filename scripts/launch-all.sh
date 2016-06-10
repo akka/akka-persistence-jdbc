@@ -1,3 +1,4 @@
+#
 # Copyright 2016 Dennis Vriend
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,36 +12,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+#!/bin/bash
+export VM_HOST="${VM_HOST:-boot2docker}"
 
-include "general.conf"
-
-akka-persistence-jdbc {
-  slick {
-    driver = "slick.driver.H2Driver"
-    db {
-      url = "jdbc:h2:mem:test;DATABASE_TO_UPPER=false"
-      driver = "org.h2.Driver"
-    }
-  }
-
-  tables {
-    journal {
-      tableName = "journal"
-      schemaName = ""
-    }
-
-    deletedTo {
-      tableName = "deleted_to"
-      schemaName = ""
-    }
-
-    snapshot {
-      tableName = "snapshot"
-      schemaName = ""
-    }
-  }
-
-  query {
-    separator = ","
-  }
+# Wait for a certain service to become available
+# Usage: wait 3306 Mysql
+wait() {
+while true; do
+  if ! nc -z $VM_HOST $1
+  then
+    echo "$2 not available, retrying..."
+    sleep 1
+  else
+    echo "$2 is available"
+    break;
+  fi
+done;
 }
+
+docker rm -f $(docker ps -aq)
+docker-compose -f scripts/docker-compose.yml up -d
+wait 3306 MySQL
+wait 5432 Postgres
+wait 1521 Oracle

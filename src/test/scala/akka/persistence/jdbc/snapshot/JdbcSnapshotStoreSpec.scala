@@ -16,58 +16,37 @@
 
 package akka.persistence.jdbc.snapshot
 
-import akka.persistence.jdbc.dao.bytea.JournalTables
-import akka.persistence.jdbc.extension.{ AkkaPersistenceConfig, DeletedToTableConfiguration, JournalTableConfiguration, SlickDatabase }
+import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDriver }
+import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDatabase }
 import akka.persistence.snapshot.SnapshotStoreSpec
 import com.typesafe.config.{ Config, ConfigFactory }
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
-import slick.driver.JdbcProfile
 
 import scala.concurrent.duration._
 
-abstract class JdbcSnapshotStoreSpec(config: Config) extends SnapshotStoreSpec(config) with BeforeAndAfterAll with ScalaFutures with JournalTables with ClasspathResources with DropCreate {
+abstract class JdbcSnapshotStoreSpec(config: Config) extends SnapshotStoreSpec(config) with BeforeAndAfterAll with ScalaFutures with ClasspathResources with DropCreate {
 
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 10.seconds)
 
   implicit val ec = system.dispatcher
 
-  val db = SlickDatabase(system).db
+  val cfg = system.settings.config.getConfig("jdbc-journal")
 
-  override def journalTableCfg: JournalTableConfiguration =
-    AkkaPersistenceConfig(system).journalTableConfiguration
+  val journalConfig = new JournalConfig(cfg)
 
-  override def deletedToTableCfg: DeletedToTableConfiguration =
-    AkkaPersistenceConfig(system).deletedToTableConfiguration
-
-  override val profile: JdbcProfile =
-    SlickDriver.forDriverName(AkkaPersistenceConfig(system).slickConfiguration.slickDriver)
+  val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
 }
 
 class PostgresSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("postgres-application.conf")) {
   dropCreate(Postgres())
 }
 
-class PostgresVarcharSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("postgres-varchar-application.conf")) {
-  dropCreate(PostgresVarchar())
-}
-
 class MySQLSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("mysql-application.conf")) {
   dropCreate(MySQL())
-}
-
-class MySQLVarcharSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("mysql-varchar-application.conf")) {
-  dropCreate(MySQLVarchar())
 }
 
 class OracleSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("oracle-application.conf")) {
   dropCreate(Oracle())
 }
-
-class OracleVarcharSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("oracle-varchar-application.conf")) {
-  dropCreate(OracleVarchar())
-}
-
-class InMemorySnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("in-memory-application.conf"))

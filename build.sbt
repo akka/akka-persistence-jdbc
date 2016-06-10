@@ -18,7 +18,7 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.3.0-SNAPSHOT"
+version := "2.3.0"
 
 isSnapshot := true
 
@@ -57,7 +57,21 @@ parallelExecution in Test := false
 
 licenses +=("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php"))
 
-//scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-target:jvm-1.8", "-deprecation", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint")
+scalacOptions ++= Seq(
+  "-encoding",
+  "UTF-8",
+  "-deprecation",
+  "-feature",
+  "-unchecked",
+  "-Xlog-reflective-calls",
+//  "-Xlint",
+  "-language:higherKinds",
+  "-language:implicitConversions",
+  "-Ybackend:GenBCode",
+  "-Ydelambdafy:method",
+  "-target:jvm-1.8",
+  "-Xexperimental"
+)
 
 // enable scala code formatting //
 import scalariform.formatter.preferences._

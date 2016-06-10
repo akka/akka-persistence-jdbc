@@ -6,35 +6,19 @@ Service | Status | Description
 License | [![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt) | Apache 2.0
 Bintray | [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-persistence-jdbc/images/download.svg)](https://bintray.com/dnvriend/maven/akka-persistence-jdbc/_latestVersion) | Latest Version on Bintray
 Gitter | [![Join the chat at https://gitter.im/dnvriend/akka-persistence-jdbc](https://badges.gitter.im/dnvriend/akka-persistence-jdbc.svg)](https://gitter.im/dnvriend/akka-persistence-jdbc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) | Gitter
-
-## Slick Extensions Licensing Changing to Open Source
-The [Typesafe/Lightbend Slick Extensions][slick-ex] have become [open source as 
-of 1 february 2016 as can read from the slick new website][slick-ex-lic],
-this means that you can use akka-persistence-jdbc with no commercial license from Typesafe/Lightbend when used with `Oracle`, `IBM DB2` or 
-`Microsoft SQL Server`. Thanks [Lightbend][lightbend]! Of course you will need a commercial license from
-your database vendor. 
-
-Alternatively you can opt to use [Postgresql][postgres], which is the most advanced open source database 
-available, with some great features, and it works great together with akka-persistence-jdbc.
-                  
-## Notice for Akka Persistence Query API
-All async queries do not work as expected. I must refactor the async query api to do polling. Please only use
-the `current*` commands and do your own client-side polling strategy for now.  
-                                 
+                                                   
 ## New release
 Version 2.3.0 is a 'killing feature creep' and async query release and breaks backwards compatibility with v2.2x and older, 
-please read the _What's new_ section at the bottom of the page. 
+please read the _What's new_ section at the bottom of the page. **Please review the changes in configuration!!** 
 
 - It uses [Typesafe/Lightbend Slick][slick] as the database backend,
   - Using the typesafe config for the Slick database configuration,
   - Uses HikariCP for the connection pool,
   - It has been tested against Postgres, MySQL and Oracle only,
-  - It has an option to store journal and snapshot entries in memory, which is useful for testing,
-  - It uses a new database schema, dropping some columns and changing the column types,
   - It writes the journal and snapshot entries as byte arrays,
 - It relies on [Akka Serialization][ser],
   - For serializing, please split the domain model from the storage model, and use a binary format for the storage model that support schema versioning like [Google's protocol buffers](https://developers.google.com/protocol-buffers/docs/overview), as it is used by Akka Persistence, and is available as a dependent library. For an example on how to use Akka Serialization with protocol buffers, you can examine the [akka-serialization-test](https://github.com/dnvriend/akka-serialization-test) study project,
-- It supports the `Persistence Query` interface for both Java and Scala thus providing a universal ~~a~~synchronous stream based query interface (see notice above),
+- It supports the `Persistence Query` interface for both Java and Scala thus providing a universal asynchronous stream based query interface,
 - Table, column and schema names are configurable, but note, if you change those, you'll need to change the DDL scripts.
 
 ## Installation
@@ -381,6 +365,16 @@ It is advisable to register a shutdown hook to be run when the VM exits that ter
 ```scala
 sys.addShutdownHook(system.terminate())
 ```
+
+## Slick Extensions Licensing Changing to Open Source
+The [Typesafe/Lightbend Slick Extensions][slick-ex] have become [open source as 
+of 1 february 2016 as can read from the slick new website][slick-ex-lic],
+this means that you can use akka-persistence-jdbc with no commercial license from Typesafe/Lightbend when used with `Oracle`, `IBM DB2` or 
+`Microsoft SQL Server`. Thanks [Lightbend][lightbend]! Of course you will need a commercial license from
+your database vendor. 
+
+Alternatively you can opt to use [Postgresql][postgres], which is the most advanced open source database 
+available, with some great features, and it works great together with akka-persistence-jdbc.
 
 # What's new?
 ## 2.3.0 (2016-06-??)

@@ -35,7 +35,7 @@ class ByteArrayReadJournalDao(db: Database, val profile: JdbcProfile, readJourna
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct.result))
 
   override def eventsByTag(tag: String, offset: Long): Source[SerializationResult, NotUsed] =
-    Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", offset).result))
+    Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", Math.max(1, offset) - 1).result))
       .map(row ⇒ Serialized(row.persistenceId, row.sequenceNumber, row.message, row.tags, row.created))
 
   override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[SerializationResult, NotUsed] =

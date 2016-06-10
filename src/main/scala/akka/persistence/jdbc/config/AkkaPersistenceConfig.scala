@@ -20,7 +20,7 @@ import akka.persistence.jdbc.util.ConfigOps._
 import com.typesafe.config.Config
 
 class SlickConfiguration(config: Config) {
-  val cfg = config.getConfig("slick")
+  private val cfg = config.getConfig("slick")
   val slickDriver: String = cfg.as[String]("driver", "slick.driver.PostgresDriver")
   val jndiName: Option[String] = cfg.as[String]("jndiName").trim
   val jndiDbName: Option[String] = cfg.as[String]("jndiDbName")
@@ -28,7 +28,7 @@ class SlickConfiguration(config: Config) {
 }
 
 class JournalTableColumnNames(config: Config) {
-  val cfg = config.getConfig("tables.journal.columnNames")
+  private val cfg = config.getConfig("tables.journal.columnNames")
   val persistenceId: String = cfg.as[String]("persistenceId", "persistence_id")
   val sequenceNumber: String = cfg.as[String]("sequenceNumber", "sequence_nr")
   val created: String = cfg.as[String]("created", "created")
@@ -37,27 +37,27 @@ class JournalTableColumnNames(config: Config) {
 }
 
 class JournalTableConfiguration(config: Config) {
-  val cfg = config.getConfig("tables.journal")
+  private val cfg = config.getConfig("tables.journal")
   val tableName: String = cfg.as[String]("tableName", "journal")
   val schemaName: Option[String] = cfg.as[String]("schemaName").trim
   val columnNames: JournalTableColumnNames = new JournalTableColumnNames(config)
 }
 
 class DeletedToTableColumnNames(config: Config) {
-  val cfg = config.getConfig("tables.deletedTo.columnNames")
+  private val cfg = config.getConfig("tables.deletedTo.columnNames")
   val persistenceId: String = cfg.as[String]("persistenceId", "persistence_id")
   val deletedTo: String = cfg.as[String]("deletedTo", "deleted_to")
 }
 
 class DeletedToTableConfiguration(config: Config) {
-  val cfg = config.getConfig("tables.deletedTo")
+  private val cfg = config.getConfig("tables.deletedTo")
   val tableName: String = cfg.as[String]("tableName", "journal")
   val schemaName: Option[String] = cfg.as[String]("schemaName").trim
   val columnNames: DeletedToTableColumnNames = new DeletedToTableColumnNames(config)
 }
 
 class SnapshotTableColumnNames(config: Config) {
-  val cfg = config.getConfig("tables.snapshot.columnNames")
+  private val cfg = config.getConfig("tables.snapshot.columnNames")
   val persistenceId: String = cfg.as[String]("persistenceId", "persistence_id")
   val sequenceNumber: String = cfg.as[String]("sequenceNumber", "sequence_nr")
   val created: String = cfg.as[String]("created", "created")
@@ -71,15 +71,9 @@ class SnapshotTableConfiguration(config: Config) {
   val columnNames: SnapshotTableColumnNames = new SnapshotTableColumnNames(config)
 }
 
-class SerializationConfiguration(config: Config) {
-  val cfg = config.getConfig("serialization")
-  val serializeJournal: Boolean = cfg.getBoolean("journal")
-  val serializeSnapshot: Boolean = cfg.getBoolean("snapshot")
-}
-
 class PluginConfig(config: Config) {
   val tagSeparator: String = config.as[String]("tagSeparator", ",")
-  val serialization: Boolean = config.as[Boolean]("serialization", true)
+  val serialization: Boolean = config.getBoolean("serialization")
   val dao: String = config.getString("dao")
 }
 
@@ -95,7 +89,6 @@ class JournalConfig(config: Config) {
 class SnapshotConfig(config: Config) {
   val slickConfiguration = new SlickConfiguration(config)
   val snapshotTableConfiguration = new SnapshotTableConfiguration(config)
-  val serializationConfiguration = new SerializationConfiguration(config)
   val pluginConfig = new PluginConfig(config)
 }
 

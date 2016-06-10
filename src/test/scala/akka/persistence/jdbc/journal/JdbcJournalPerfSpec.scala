@@ -17,15 +17,13 @@
 package akka.persistence.jdbc.journal
 
 import akka.persistence.CapabilityFlag
-import akka.persistence.jdbc.dao.bytea.JournalTables
-import akka.persistence.jdbc.config.{ AkkaPersistenceConfig, DeletedToTableConfiguration, JournalTableConfiguration, SlickDatabase }
+import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDriver }
+import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDatabase }
 import akka.persistence.journal.JournalPerfSpec
 import com.typesafe.config.{ Config, ConfigFactory }
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
-import slick.driver.JdbcProfile
 
 import scala.concurrent.duration._
 
@@ -33,7 +31,6 @@ abstract class JdbcJournalPerfSpec(config: Config) extends JournalPerfSpec(confi
     with BeforeAndAfterAll
     with BeforeAndAfterEach
     with ScalaFutures
-    with JournalTables
     with ClasspathResources
     with DropCreate {
 
@@ -47,16 +44,16 @@ abstract class JdbcJournalPerfSpec(config: Config) extends JournalPerfSpec(confi
 
   override def measurementIterations: Int = 10
 
-  val db = SlickDatabase(system).db
+  val cfg = system.settings.config.getConfig("jdbc-journal")
 
-  override def journalTableCfg: JournalTableConfiguration =
-    AkkaPersistenceConfig(system).journalTableConfiguration
+  val journalConfig = new JournalConfig(cfg)
 
-  override def deletedToTableCfg: DeletedToTableConfiguration =
-    AkkaPersistenceConfig(system).deletedToTableConfiguration
+  val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
 
-  override val profile: JdbcProfile =
-    SlickDriver.forDriverName(AkkaPersistenceConfig(system).slickConfiguration.slickDriver)
+  protected override def afterAll(): Unit = {
+    db.close()
+    super.afterAll()
+  }
 }
 
 class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-application.conf")) {

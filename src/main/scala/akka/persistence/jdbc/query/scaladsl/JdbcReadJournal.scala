@@ -54,9 +54,10 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   val readJournalDao: ReadJournalDao = {
     val driver = readJournalConfig.slickConfiguration.slickDriver
     val fqcn = readJournalConfig.pluginConfig.dao
+    val profile: JdbcProfile = SlickDriver.forDriverName(driver)
     val args = immutable.Seq(
       (classOf[Database], db),
-      (classOf[JdbcProfile], SlickDriver.forDriverName(driver)),
+      (classOf[JdbcProfile], profile),
       (classOf[ReadJournalConfig], readJournalConfig),
       (classOf[ExecutionContext], ec),
       (classOf[Materializer], mat)

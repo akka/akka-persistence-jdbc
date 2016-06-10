@@ -44,9 +44,10 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   val journalDao: JournalDao = {
     val driver = journalConfig.slickConfiguration.slickDriver
     val fqcn = journalConfig.pluginConfig.dao
+    val profile: JdbcProfile = SlickDriver.forDriverName(driver)
     val args = immutable.Seq(
       (classOf[Database], db),
-      (classOf[JdbcProfile], SlickDriver.forDriverName(driver)),
+      (classOf[JdbcProfile], profile),
       (classOf[JournalConfig], journalConfig),
       (classOf[ExecutionContext], ec),
       (classOf[Materializer], mat)

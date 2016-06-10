@@ -20,7 +20,8 @@ import java.util.UUID
 
 import akka.actor.{ ActorRef, ActorSystem, PoisonPill }
 import akka.event.{ Logging, LoggingAdapter }
-import akka.persistence.jdbc.util.DropCreate
+import akka.persistence.jdbc.config.JournalConfig
+import akka.persistence.jdbc.util.{ DropCreate, SlickDatabase }
 import akka.serialization.SerializationExtension
 import akka.stream.{ ActorMaterializer, Materializer }
 import akka.testkit.TestProbe
@@ -40,6 +41,10 @@ abstract class TestSpec(config: String = "postgres-application.conf") extends Si
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 3.seconds)
   implicit val timeout = Timeout(30.seconds)
   val serialization = SerializationExtension(system)
+
+  val cfg = system.settings.config.getConfig("jdbc-journal")
+  val journalConfig = new JournalConfig(cfg)
+  val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
 
   /**
    * TestKit-based probe which allows sending, reception and reply.
@@ -72,6 +77,7 @@ abstract class TestSpec(config: String = "postgres-application.conf") extends Si
   }
 
   override protected def afterAll(): Unit = {
+    db.close()
     system.terminate().toTry should be a 'success
   }
 }

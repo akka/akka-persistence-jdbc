@@ -19,33 +19,22 @@ package akka.persistence.jdbc.util
 import java.sql.Statement
 
 import akka.actor.ActorSystem
-import akka.persistence.jdbc.config.SlickDatabase
-import akka.persistence.jdbc.util.Schema.{ Oracle, OracleVarchar, SchemaType }
-import slick.driver.PostgresDriver.api._
+import akka.persistence.jdbc.util.Schema.{ Oracle, SchemaType }
+import slick.jdbc.JdbcBackend
 
 object Schema {
 
-  sealed trait SchemaType {
-    def schema: String
-  }
-
+  sealed trait SchemaType { def schema: String }
   final case class Postgres(val schema: String = "schema/postgres/postgres-schema.sql") extends SchemaType
-
-  final case class PostgresVarchar(val schema: String = "schema/postgres/postgres-varchar-schema.sql") extends SchemaType
-
   final case class MySQL(val schema: String = "schema/mysql/mysql-schema.sql") extends SchemaType
-
-  final case class MySQLVarchar(val schema: String = "schema/mysql/mysql-varchar-schema.sql") extends SchemaType
-
   final case class Oracle(val schema: String = "schema/oracle/oracle-schema.sql") extends SchemaType
-
-  final case class OracleVarchar(val schema: String = "schema/oracle/oracle-varchar-schema.sql") extends SchemaType
-
 }
 
 trait DropCreate extends ClasspathResources {
 
   def system: ActorSystem
+
+  def db: JdbcBackend#Database
 
   val listOfOracleDropQueries = List(
     """DROP TABLE "journal" CASCADE CONSTRAINT""",
@@ -66,9 +55,6 @@ trait DropCreate extends ClasspathResources {
     case Oracle(schema) ⇒
       dropOracle
       create(schema)
-    case OracleVarchar(schema) ⇒
-      dropOracle
-      create(schema)
     case s: SchemaType ⇒ create(s.schema)
   }
 
@@ -85,10 +71,10 @@ trait DropCreate extends ClasspathResources {
     }
   }
 
-  def withDatabase[A](f: Database ⇒ A): A =
-    f(SlickDatabase(system).db)
+  def withDatabase[A](f: JdbcBackend#Database ⇒ A): A =
+    f(db)
 
-  def withSession[A](f: Session ⇒ A): A = {
+  def withSession[A](f: JdbcBackend#Session ⇒ A): A = {
     withDatabase { db ⇒
       val session = db.createSession()
       try f(session) finally session.close()

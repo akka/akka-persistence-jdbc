@@ -20,10 +20,8 @@ import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.event.LoggingReceive
 import akka.persistence.PersistentActor
 import akka.persistence.jdbc.TestSpec
-import akka.persistence.jdbc.dao.JournalDao
-import akka.persistence.jdbc.dao.inmemory.InMemoryJournalStorage.Clear
-import akka.persistence.jdbc.config.{ AkkaPersistenceConfig, DaoRepository }
-import akka.persistence.jdbc.query.journal.javadsl.{ JdbcReadJournal ⇒ JavaJdbcReadJournal }
+import akka.persistence.jdbc.query.javadsl.{ JdbcReadJournal ⇒ JavaJdbcReadJournal }
+import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 import akka.persistence.journal.Tagged
 import akka.persistence.query.{ EventEnvelope, PersistenceQuery }
 import akka.stream.Materializer
@@ -31,8 +29,6 @@ import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.javadsl.{ TestSink ⇒ JavaSink }
 import akka.stream.testkit.scaladsl.TestSink
 import slick.driver.PostgresDriver.api._
-import akka.pattern.ask
-import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 
 import scala.concurrent.duration.{ FiniteDuration, _ }
 
@@ -83,16 +79,6 @@ trait ScalaJdbcReadJournalOperations extends ReadJournalOperations {
     val tp = readJournal.eventsByTag(tag, offset).runWith(TestSink.probe[EventEnvelope])
     tp.within(within)(f(tp))
   }
-
-  def withCurrentEventsByPersistenceIdAndTag(within: FiniteDuration = 1.second)(persistenceId: String, tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit = {
-    val tp = readJournal.currentEventsByPersistenceIdAndTag(persistenceId, tag, offset).runWith(TestSink.probe[EventEnvelope])
-    tp.within(within)(f(tp))
-  }
-
-  def withEventsByPersistenceIdAndTag(within: FiniteDuration = 1.second)(persistenceId: String, tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit = {
-    val tp = readJournal.eventsByPersistenceIdAndTag(persistenceId, tag, offset).runWith(TestSink.probe[EventEnvelope])
-    tp.within(within)(f(tp))
-  }
 }
 
 trait JavaDslJdbcReadJournalOperations extends ReadJournalOperations {
@@ -131,21 +117,9 @@ trait JavaDslJdbcReadJournalOperations extends ReadJournalOperations {
     val tp = readJournal.eventsByTag(tag, offset).runWith(JavaSink.probe(system), mat)
     tp.within(within)(f(tp))
   }
-
-  def withCurrentEventsByPersistenceIdAndTag(within: FiniteDuration = 1.second)(persistenceId: String, tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit = {
-    val tp = readJournal.currentEventsByPersistenceIdAndTag(persistenceId, tag, offset).runWith(JavaSink.probe(system), mat)
-    tp.within(within)(f(tp))
-  }
-
-  def withEventsByPersistenceIdAndTag(within: FiniteDuration = 1.second)(persistenceId: String, tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit = {
-    val tp = readJournal.eventsByPersistenceIdAndTag(persistenceId, tag, offset).runWith(JavaSink.probe(system), mat)
-    tp.within(within)(f(tp))
-  }
 }
 
 abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJournalOperations {
-
-  lazy val journalDao: JournalDao = DaoRepository(system).journalDao
 
   case class DeleteCmd(toSequenceNr: Long = Long.MaxValue) extends Serializable
 
@@ -210,16 +184,11 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJ
   def clearOracle(): Unit =
     withDatabase(_.run(actionsClearOracle).toTry) should be a 'success
 
-  def clearInMemoryJournal(): Unit =
-    (DaoRepository(system).journalStorage ? Clear).toTry should be a 'success
-
   protected override def beforeEach(): Unit =
-    if (AkkaPersistenceConfig(system).inMemory) clearInMemoryJournal()
-    else clearPostgres()
+    clearPostgres()
 
   override protected def afterAll(): Unit = {
-    if (AkkaPersistenceConfig(system).inMemory) clearInMemoryJournal()
-    else clearPostgres()
+    clearPostgres()
     system.terminate().toTry should be a 'success
   }
 }

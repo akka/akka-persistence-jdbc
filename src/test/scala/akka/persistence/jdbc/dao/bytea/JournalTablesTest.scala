@@ -21,6 +21,9 @@ import slick.driver.JdbcProfile
 
 class JournalTablesTest extends TablesTestSpec {
 
+  val journalTableConfiguration = journalConfig.journalTableConfiguration
+  val deletedToTableConfiguration = journalConfig.deletedToTableConfiguration
+
   object TestByteAJournalTables extends JournalTables {
     override val profile: JdbcProfile = slick.driver.PostgresDriver
     override val journalTableCfg = journalTableConfiguration

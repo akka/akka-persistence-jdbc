@@ -20,7 +20,7 @@ import akka.NotUsed
 import akka.actor.{ ExtendedActorSystem, Props }
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.dao.ReadJournalDao
-import akka.persistence.jdbc.query.{ AllPersistenceIdsPublisher, EventsByPersistenceIdPublisher }
+import akka.persistence.jdbc.query.{ AllPersistenceIdsPublisher, EventsByPersistenceIdPublisher, EventsByTagPublisher }
 import akka.persistence.jdbc.serialization.SerializationFacade
 import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
 import akka.persistence.query.EventEnvelope
@@ -88,10 +88,11 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     readJournalDao.eventsByTag(tag, offset)
       .via(serializationFacade.deserializeRepr)
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
-      .zipWith(Source(Stream.from(Math.max(1, offset.toInt)))) { // Needs a better way
+      .zipWith(Source(Stream.from(Math.max(1, offset.toInt)))) {
+        // Needs a better way
         case (repr, i) ⇒ EventEnvelope(i, repr.persistenceId, repr.sequenceNr, repr.payload)
       }
 
   override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    currentEventsByTag(tag, offset)
+    Source.actorPublisher[EventEnvelope](Props(new EventsByTagPublisher(tag, offset.toInt, readJournalDao, serializationFacade, readJournalConfig.refreshInterval, readJournalConfig.maxBufferSize))).mapMaterializedValue(_ ⇒ NotUsed)
 }

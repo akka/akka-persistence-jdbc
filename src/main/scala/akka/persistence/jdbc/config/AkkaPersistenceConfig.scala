@@ -16,8 +16,12 @@
 
 package akka.persistence.jdbc.config
 
+import java.util.concurrent.TimeUnit
+
 import akka.persistence.jdbc.util.ConfigOps._
 import com.typesafe.config.Config
+
+import scala.concurrent.duration.FiniteDuration
 
 class SlickConfiguration(config: Config) {
   private val cfg = config.getConfig("slick")
@@ -96,4 +100,6 @@ class ReadJournalConfig(config: Config) {
   val slickConfiguration = new SlickConfiguration(config)
   val journalTableConfiguration = new JournalTableConfiguration(config)
   val pluginConfig = new PluginConfig(config)
+  val refreshInterval: FiniteDuration = FiniteDuration(config.getDuration("refresh-interval").toMillis, TimeUnit.MILLISECONDS)
+  val maxBufferSize: Int = config.getString("max-buffer-size").toInt
 }

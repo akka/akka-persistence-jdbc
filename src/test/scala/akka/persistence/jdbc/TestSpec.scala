@@ -38,7 +38,7 @@ abstract class TestSpec(config: String = "postgres-application.conf") extends Si
   implicit val mat: Materializer = ActorMaterializer()
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   val log: LoggingAdapter = Logging(system, this.getClass)
-  implicit val pc: PatienceConfig = PatienceConfig(timeout = 3.seconds)
+  implicit val pc: PatienceConfig = PatienceConfig(timeout = 60.seconds)
   implicit val timeout = Timeout(30.seconds)
   val serialization = SerializationExtension(system)
 

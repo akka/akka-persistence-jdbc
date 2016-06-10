@@ -10,9 +10,9 @@
         </encoder>
     </appender>
 
-    <!--<logger name="org.github.dnvriend" level="debug">-->
-        <!--<appender-ref ref="console"/>-->
-    <!--</logger>-->
+    <logger name="org.github.dnvriend" level="debug">
+        <appender-ref ref="console"/>
+    </logger>
     <!--<logger name="slick.backend.DatabaseComponent.action" level="debug">-->
         <!--<appender-ref ref="console"/>-->
     <!--</logger>-->

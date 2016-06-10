@@ -17,9 +17,10 @@
 package akka.persistence.jdbc.query.scaladsl
 
 import akka.NotUsed
-import akka.actor.ExtendedActorSystem
+import akka.actor.{ ExtendedActorSystem, Props }
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.dao.ReadJournalDao
+import akka.persistence.jdbc.query.AllPersistenceIdsPublisher
 import akka.persistence.jdbc.serialization.SerializationFacade
 import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
 import akka.persistence.query.EventEnvelope
@@ -72,7 +73,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     readJournalDao.allPersistenceIdsSource
 
   override def allPersistenceIds(): Source[String, NotUsed] =
-    currentPersistenceIds()
+    Source.actorPublisher[String](Props(new AllPersistenceIdsPublisher(readJournalDao, readJournalConfig.refreshInterval, readJournalConfig.maxBufferSize))).mapMaterializedValue(_ ⇒ NotUsed)
 
   override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     readJournalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, Long.MaxValue)

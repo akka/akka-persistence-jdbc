@@ -34,12 +34,12 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration.{ FiniteDuration, _ }
 
 trait ReadJournalOperations {
-  def withCurrentPersistenceIds(within: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit
-  def withAllPersistenceIds(within: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit
-  def withCurrentEventsByPersistenceId(within: FiniteDuration = 1.second)(persistenceId: String, fromSequenceNr: Long = 0, toSequenceNr: Long = Long.MaxValue)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit
-  def withEventsByPersistenceId(within: FiniteDuration = 1.second)(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit
-  def withCurrentEventsByTag(within: FiniteDuration = 1.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit
-  def withEventsByTag(within: FiniteDuration = 1.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit
+  def withCurrentPersistenceIds(within: FiniteDuration = 10.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit
+  def withAllPersistenceIds(within: FiniteDuration = 10.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit
+  def withCurrentEventsByPersistenceId(within: FiniteDuration = 10.second)(persistenceId: String, fromSequenceNr: Long = 0, toSequenceNr: Long = Long.MaxValue)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit
+  def withEventsByPersistenceId(within: FiniteDuration = 10.second)(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit
+  def withCurrentEventsByTag(within: FiniteDuration = 10.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit
+  def withEventsByTag(within: FiniteDuration = 10.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] ⇒ Unit): Unit
   def countJournal: Future[Long]
 }
 

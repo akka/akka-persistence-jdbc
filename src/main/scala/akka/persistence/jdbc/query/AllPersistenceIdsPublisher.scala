@@ -17,9 +17,70 @@
 package akka.persistence.jdbc.query
 
 import akka.actor.ActorLogging
+import akka.event.LoggingReceive
+import akka.persistence.jdbc.dao.ReadJournalDao
 import akka.persistence.query.journal.leveldb.DeliveryBuffer
+import akka.stream.Materializer
 import akka.stream.actor.ActorPublisher
+import akka.stream.actor.ActorPublisherMessage.{ Cancel, Request }
 
-class AllPersistenceIdsPublisher extends ActorPublisher[String] with DeliveryBuffer[String] with ActorLogging {
-  def receive = PartialFunction.empty
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.FiniteDuration
+
+object AllPersistenceIdsPublisher {
+  sealed trait Command
+  case object GetAllPersistenceIds extends Command
+  case object BecomePolling extends Command
+  case object DetermineSchedulePoll extends Command
+}
+class AllPersistenceIdsPublisher(readJournalDao: ReadJournalDao, refreshInterval: FiniteDuration, maxBufferSize: Int)(implicit ec: ExecutionContext, mat: Materializer) extends ActorPublisher[String] with DeliveryBuffer[String] with ActorLogging {
+  import AllPersistenceIdsPublisher._
+  def determineSchedulePoll(): Unit = {
+    if (buf.size < maxBufferSize && totalDemand > 0)
+      context.system.scheduler.scheduleOnce(0.seconds, self, BecomePolling)
+  }
+
+  val checkPoller = context.system.scheduler.schedule(0.seconds, refreshInterval, self, DetermineSchedulePoll)
+
+  def receive = active(Set.empty[String])
+
+  /**
+   * Will only handle GetAllPersistenceIds and Cancel messages,
+   * as they will not change the state.
+   */
+  def polling(knownIds: Set[String]): Receive = LoggingReceive {
+    case GetAllPersistenceIds ⇒
+      readJournalDao.allPersistenceIdsSource.runFold(List.empty[String])(_ :+ _).map { ids ⇒
+        val xs = ids.toSet.diff(knownIds).toVector
+        buf = buf ++ xs
+        log.debug(s"ids in journal: $ids, known ids: $knownIds, new known ids: ${knownIds ++ xs}, buff: $buf")
+        deliverBuf()
+        context.become(active(knownIds ++ xs))
+      }.recover {
+        case t: Throwable ⇒
+          log.error(t, "Error while polling allPersistenceIds")
+          onError(t)
+          context.stop(self)
+      }
+
+    case Cancel ⇒ context.stop(self)
+  }
+
+  def active(knownIds: Set[String]): Receive = LoggingReceive {
+    case BecomePolling ⇒
+      context.become(polling(knownIds))
+      self ! GetAllPersistenceIds
+
+    case DetermineSchedulePoll ⇒ determineSchedulePoll()
+
+    case Request(_)            ⇒ deliverBuf()
+
+    case Cancel                ⇒ context.stop(self)
+  }
+
+  override def postStop(): Unit = {
+    checkPoller.cancel()
+    super.postStop()
+  }
 }

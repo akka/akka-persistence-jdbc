@@ -1,4 +1,4 @@
-# akka-persistence-jdbc 2.2.25
+# akka-persistence-jdbc 2.3.0
 Akka-persistence-jdbc is a plugin for akka-persistence that asynchronously writes journal and snapshot entries entries to a configured JDBC store. It supports writing journal messages and snapshots to two tables: the `journal` table and the `snapshot` table.
 
 Service | Status | Description
@@ -22,7 +22,8 @@ All async queries do not work as expected. I must refactor the async query api t
 the `current*` commands and do your own client-side polling strategy for now.  
                                  
 ## New release
-The new release breaks backwards compatibility with `v1.x.x` in a big way. New features are:
+Version 2.3.0 is a 'killing feature creep' and async query release and breaks backwards compatibility with v2.2x and older, 
+please read the _What's new_ section at the bottom of the page. 
 
 - It uses [Typesafe/Lightbend Slick][slick] as the database backend,
   - Using the typesafe config for the Slick database configuration,
@@ -46,7 +47,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.2.25"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.3.0"
 ```
 
 ## Configuration
@@ -79,74 +80,9 @@ akka-persistence-jdbc {
 ```
    
 # Postgres configuration   
-```bash
-akka {
-  persistence {
-    journal.plugin = "jdbc-journal"
-    snapshot-store.plugin = "jdbc-snapshot-store"
-  }
-}
+Base your akka-persistence-jdbc `application.conf` on [this config file][postgres-application.conf]  
 
-akka-persistence-jdbc {
-  slick {
-    driver = "slick.driver.PostgresDriver"
-    db {
-      host = "boot2docker"
-      host = ${?POSTGRES_HOST}
-      port = "5432"
-      port = ${?POSTGRES_PORT}
-      name = "docker"
-
-      url = "jdbc:postgresql://"${akka-persistence-jdbc.slick.db.host}":"${akka-persistence-jdbc.slick.db.port}"/"${akka-persistence-jdbc.slick.db.name}
-      user = "docker"
-      password = "docker"
-      driver = "org.postgresql.Driver"
-      keepAliveConnection = on
-      numThreads = 2
-      queueSize = 100
-    }
-  }
-
-  tables {
-    journal {
-      tableName = "journal"
-      schemaName = ""
-      columnNames {
-        persistenceId = "persistence_id"
-        sequenceNumber = "sequence_number"
-        created = "created"
-        tags = "tags"
-        message = "message"
-      }
-    }
-
-    deletedTo {
-      tableName = "deleted_to"
-      schemaName = ""
-      columnNames = {
-        persistenceId = "persistence_id"
-        deletedTo = "deleted_to"
-      }
-    }
-
-    snapshot {
-      tableName = "snapshot"
-      schemaName = ""
-      columnNames {
-        persistenceId = "persistence_id"
-        sequenceNumber = "sequence_number"
-        created = "created"
-        snapshot = "snapshot"
-      }
-    }
-  }
-
-  query {
-    separator = ","
-  }
-}
-```
-
+# Postgres schema
 ```sql
 DROP TABLE IF EXISTS public.journal;
 
@@ -178,74 +114,9 @@ CREATE TABLE IF NOT EXISTS public.snapshot (
 ```
 
 ## MySQL configuration
-```bash
-akka {
-  persistence {
-    journal.plugin = "jdbc-journal"
-    snapshot-store.plugin = "jdbc-snapshot-store"
-  }
-}
+Base your akka-persistence-jdbc `application.conf` on [this config file][mysql-application.conf]  
 
-akka-persistence-jdbc {
-  slick {
-      driver = "slick.driver.MySQLDriver"
-      db {
-        host = "boot2docker"
-        host = ${?MYSQL_HOST}
-        port = "3306"
-        port = ${?MYSQL_PORT}
-        name = "mysql"
-  
-        url = "jdbc:mysql://"${akka-persistence-jdbc.slick.db.host}":"${akka-persistence-jdbc.slick.db.port}"/"${akka-persistence-jdbc.slick.db.name}
-        user = "root"
-        password = "root"
-        driver = "com.mysql.jdbc.Driver"
-        keepAliveConnection = on
-        numThreads = 2
-        queueSize = 100
-      }
-    }
-
-  tables {
-    journal {
-      tableName = "journal"
-      schemaName = ""
-      columnNames {
-        persistenceId = "persistence_id"
-        sequenceNumber = "sequence_number"
-        created = "created"
-        tags = "tags"
-        message = "message"
-      }
-    }
-
-    deletedTo {
-      tableName = "deleted_to"
-      schemaName = ""
-      columnNames = {
-        persistenceId = "persistence_id"
-        deletedTo = "deleted_to"
-      }
-    }
-
-    snapshot {
-      tableName = "snapshot"
-      schemaName = ""
-      columnNames {
-        persistenceId = "persistence_id"
-        sequenceNumber = "sequence_number"
-        created = "created"
-        snapshot = "snapshot"
-      }
-    }
-  }
-
-  query {
-    separator = ","
-  }
-}
-```
-
+## MySQL schema
 ```sql
 DROP TABLE IF EXISTS journal;
 
@@ -277,74 +148,9 @@ CREATE TABLE IF NOT EXISTS snapshot (
 ```
 
 ## Oracle configuration
-```bash
-akka {
-  persistence {
-    journal.plugin = "jdbc-journal"
-    snapshot-store.plugin = "jdbc-snapshot-store"
-  }
-}
+Base your akka-persistence-jdbc `application.conf` on [this config file][oracle-application.conf]  
 
-akka-persistence-jdbc {
-  slick {
-    driver = "com.typesafe.slick.driver.oracle.OracleDriver"
-    db {
-      host = "boot2docker"
-      host = ${?ORACLE_HOST}
-      port = "1521"
-      port = ${?ORACLE_PORT}
-      name = "xe"
-
-      url = "jdbc:oracle:thin:@//"${akka-persistence-jdbc.slick.db.host}":"${akka-persistence-jdbc.slick.db.port}"/"${akka-persistence-jdbc.slick.db.name}
-      user = "system"
-      password = "oracle"
-      driver = "oracle.jdbc.OracleDriver"
-      keepAliveConnection = on
-      numThreads = 2
-      queueSize = 100
-    }
-  }
-
-  tables {
-    journal {
-      tableName = "journal"
-      schemaName = "SYSTEM"
-      columnNames {
-        persistenceId = "persistence_id"
-        sequenceNumber = "sequence_number"
-        created = "created"
-        tags = "tags"
-        message = "message"
-      }
-    }
-
-    deletedTo {
-      tableName = "deleted_to"
-      schemaName = "SYSTEM"
-      columnNames = {
-        persistenceId = "persistence_id"
-        deletedTo = "deleted_to"
-      }
-    }
-
-    snapshot {
-      tableName = "snapshot"
-      schemaName = "SYSTEM"
-      columnNames {
-        persistenceId = "persistence_id"
-        sequenceNumber = "sequence_number"
-        created = "created"
-        snapshot = "snapshot"
-      }
-    }
-  }
-
-  query {
-    separator = ","
-  }
-}
-```
-
+## Oracle schema
 ```sql
 CREATE TABLE "journal" (
   "persistence_id" VARCHAR(255) NOT NULL,
@@ -367,28 +173,6 @@ CREATE TABLE "snapshot" (
   "snapshot" BLOB NOT NULL,
   PRIMARY KEY ("persistence_id", "sequence_number")
 );
-```
-
-## InMemory Configuration
-The akka-persistence-jdbc also has an in-memory storage option. For practical reasons, ie. the plugin may already 
-be on the classpath. This is useful for testing. I would advice not to use it in production systems, because it 
-uses memory, and the data is persisted in volatile memory, which means that after a JVM restart, all data is lost.
-By default the in-memory option is disabled.
-
-Add the following to `application.conf` enable the in-memory option:
-
-```scala
-akka-persistence-jdbc {
-  inMemory = true
-}
-```
-
-To disable the in-memory option:
-
-```scala
-akka-persistence-jdbc {
-  inMemory = false
-}
 ```
 
 ## How to get the ReadJournal using Scala

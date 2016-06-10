@@ -46,7 +46,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     with CurrentEventsByTagQuery
     with EventsByTagQuery {
 
-  implicit val ec: ExecutionContext = system.dispatchers.lookup("jdbc-plugin-blocking-dispatcher")
+  implicit val ec: ExecutionContext = system.dispatcher
   implicit val mat: Materializer = ActorMaterializer()
   val readJournalConfig = new ReadJournalConfig(config)
   val db = SlickDatabase.forConfig(config, readJournalConfig.slickConfiguration)
@@ -70,7 +70,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     SerializationFacade(system, readJournalConfig.pluginConfig.tagSeparator)
 
   override def currentPersistenceIds(): Source[String, NotUsed] =
-    readJournalDao.allPersistenceIdsSource
+    readJournalDao.allPersistenceIdsSource(Long.MaxValue)
 
   override def allPersistenceIds(): Source[String, NotUsed] =
     Source.actorPublisher[String](Props(new AllPersistenceIdsPublisher(readJournalDao, readJournalConfig.refreshInterval, readJournalConfig.maxBufferSize))).mapMaterializedValue(_ ⇒ NotUsed)
@@ -85,7 +85,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     Source.actorPublisher[EventEnvelope](Props(new EventsByPersistenceIdPublisher(persistenceId, fromSequenceNr, toSequenceNr, readJournalDao, serializationFacade, readJournalConfig.refreshInterval, readJournalConfig.maxBufferSize))).mapMaterializedValue(_ ⇒ NotUsed)
 
   override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    readJournalDao.eventsByTag(tag, offset)
+    readJournalDao.eventsByTag(tag, offset, Long.MaxValue)
       .via(serializationFacade.deserializeRepr)
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
       .zipWith(Source(Stream.from(Math.max(1, offset.toInt)))) {

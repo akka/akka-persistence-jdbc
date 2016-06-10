@@ -29,9 +29,9 @@ class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg:
       if query inSetBind persistenceIds
     } yield query
 
-  private def _allPersistenceIdsDistinct: Query[Rep[String], String, Seq] =
-    JournalTable.map(_.persistenceId).distinct
-  val allPersistenceIdsDistinct = Compiled(_allPersistenceIdsDistinct)
+  private def _allPersistenceIdsDistinct(max: ConstColumn[Long]): Query[Rep[String], String, Seq] =
+    JournalTable.map(_.persistenceId).distinct.take(max)
+  val allPersistenceIdsDistinct = Compiled(_allPersistenceIdsDistinct _)
 
   private def _messagesQuery(persistenceId: Rep[String], fromSequenceNr: Rep[Long], toSequenceNr: Rep[Long], max: ConstColumn[Long]): Query[Journal, JournalRow, Seq] =
     JournalTable
@@ -42,7 +42,7 @@ class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg:
       .take(max)
   val messagesQuery = Compiled(_messagesQuery _)
 
-  private def _eventsByTag(tag: Rep[String], offset: ConstColumn[Long]): Query[Journal, JournalRow, Seq] =
-    JournalTable.filter(_.tags like tag).sortBy(_.created.asc).drop(offset)
+  private def _eventsByTag(tag: Rep[String], offset: ConstColumn[Long], max: ConstColumn[Long]): Query[Journal, JournalRow, Seq] =
+    JournalTable.filter(_.tags like tag).sortBy(_.created.asc).drop(offset).take(max)
   val eventsByTag = Compiled(_eventsByTag _)
 }

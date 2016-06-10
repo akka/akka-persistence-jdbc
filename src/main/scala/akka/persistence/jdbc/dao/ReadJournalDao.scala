@@ -24,13 +24,13 @@ trait ReadJournalDao {
   /**
    * Returns distinct stream of persistenceIds
    */
-  def allPersistenceIdsSource: Source[String, NotUsed]
+  def allPersistenceIdsSource(max: Long): Source[String, NotUsed]
 
   /**
    * Returns a Source of bytes for certain tag from an offset. The result is sorted by
    * created time asc thus the offset is relative to the creation time
    */
-  def eventsByTag(tag: String, offset: Long): Source[SerializationResult, NotUsed]
+  def eventsByTag(tag: String, offset: Long, max: Long): Source[SerializationResult, NotUsed]
 
   /**
    * Returns a Source of bytes for a certain persistenceId

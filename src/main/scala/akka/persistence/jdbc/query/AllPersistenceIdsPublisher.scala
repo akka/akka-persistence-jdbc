@@ -51,7 +51,7 @@ class AllPersistenceIdsPublisher(readJournalDao: ReadJournalDao, refreshInterval
    */
   def polling(knownIds: Set[String]): Receive = LoggingReceive {
     case GetAllPersistenceIds ⇒
-      readJournalDao.allPersistenceIdsSource.runFold(List.empty[String])(_ :+ _).map { ids ⇒
+      readJournalDao.allPersistenceIdsSource(Math.max(0, maxBufferSize - buf.size)).runFold(List.empty[String])(_ :+ _).map { ids ⇒
         val xs = ids.toSet.diff(knownIds).toVector
         buf = buf ++ xs
         log.debug(s"ids in journal: $ids, known ids: $knownIds, new known ids: ${knownIds ++ xs}, buff: $buf")

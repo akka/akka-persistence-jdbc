@@ -31,11 +31,11 @@ class ByteArrayReadJournalDao(db: Database, val profile: JdbcProfile, readJourna
   import profile.api._
   val queries = new ReadJournalQueries(profile, readJournalConfig.journalTableConfiguration)
 
-  override def allPersistenceIdsSource: Source[String, NotUsed] =
-    Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct.result))
+  override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
+    Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct(max).result))
 
-  override def eventsByTag(tag: String, offset: Long): Source[SerializationResult, NotUsed] =
-    Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", Math.max(1, offset) - 1).result))
+  override def eventsByTag(tag: String, offset: Long, max: Long): Source[SerializationResult, NotUsed] =
+    Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", Math.max(1, offset) - 1, max).result))
       .map(row ⇒ Serialized(row.persistenceId, row.sequenceNumber, row.message, row.tags, row.created))
 
   override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[SerializationResult, NotUsed] =

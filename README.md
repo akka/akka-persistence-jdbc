@@ -1,4 +1,4 @@
-# akka-persistence-jdbc 2.3.0
+# akka-persistence-jdbc 2.3.1
 Akka-persistence-jdbc is a plugin for akka-persistence that asynchronously writes journal and snapshot entries entries to a configured JDBC store. It supports writing journal messages and snapshots to two tables: the `journal` table and the `snapshot` table.
 
 Service | Status | Description
@@ -8,7 +8,7 @@ Bintray | [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-pers
 Gitter | [![Join the chat at https://gitter.im/dnvriend/akka-persistence-jdbc](https://badges.gitter.im/dnvriend/akka-persistence-jdbc.svg)](https://gitter.im/dnvriend/akka-persistence-jdbc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) | Gitter
                                                    
 ## New release
-Version 2.3.0 is a 'killing feature creep' and async query release and breaks backwards compatibility with v2.2x and older, 
+This new release is a 'killing feature creep' and async query release and breaks backwards compatibility with v2.2x and older, 
 please read the _What's new_ section at the bottom of the page. **Please review the changes in configuration!!** 
 
 - It uses [Typesafe/Lightbend Slick][slick] as the database backend,
@@ -31,7 +31,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.3.0"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.3.1"
 ```
 
 ## Configuration
@@ -377,7 +377,11 @@ Alternatively you can opt to use [Postgresql][postgres], which is the most advan
 available, with some great features, and it works great together with akka-persistence-jdbc.
 
 # What's new?
-## 2.3.0 (2016-06-??)
+## 2.3.1 (2016-06-10)
+  - Async queries should take a max number of elements from the result set according to the 
+  `jdbc-read-journal.max-buffer-size` configuration. This should result in better memory usage and better IO performance.
+  
+## 2.3.0 (2016-06-10)
   - This is a feature, configuration and (maybe) API breaking release when you rely on the DAO's, my apologies.
   - Killed some [feature-creep], this will result in a better design of the plugin. 
     - Removed support for the Varchar (base64/text based serialization),

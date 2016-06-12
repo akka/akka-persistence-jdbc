@@ -60,9 +60,8 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
   val db: Database = SlickDatabase.forConfig(config, snapshotConfig.slickConfiguration)
 
   val snapshotDao: SnapshotDao = {
-    val driver = snapshotConfig.slickConfiguration.slickDriver
     val fqcn = snapshotConfig.pluginConfig.dao
-    val profile: JdbcProfile = SlickDriver.forDriverName(driver)
+    val profile: JdbcProfile = SlickDriver.forDriverName(config)
     val args = immutable.Seq(
       (classOf[Database], db),
       (classOf[JdbcProfile], profile),

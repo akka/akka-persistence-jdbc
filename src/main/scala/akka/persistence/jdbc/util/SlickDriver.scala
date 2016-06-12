@@ -20,32 +20,13 @@ import javax.naming.InitialContext
 
 import akka.persistence.jdbc.config.SlickConfiguration
 import com.typesafe.config.Config
-import slick.driver.JdbcDriver
+import slick.backend.DatabaseConfig
+import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
 object SlickDriver {
-  def forDriverName: PartialFunction[String, JdbcDriver] = {
-    case "slick.driver.PostgresDriver" ⇒
-      slick.driver.PostgresDriver
-    case "slick.driver.H2Driver" ⇒
-      slick.driver.H2Driver
-    case "slick.driver.DerbyDriver" ⇒
-      slick.driver.DerbyDriver
-    case "slick.driver.HsqldbDriver" ⇒
-      slick.driver.HsqldbDriver
-    case "slick.driver.MySQLDriver" ⇒
-      slick.driver.MySQLDriver
-    case "slick.driver.SQLiteDriver" ⇒
-      slick.driver.SQLiteDriver
-    case "com.typesafe.slick.driver.oracle.OracleDriver" ⇒
-      com.typesafe.slick.driver.oracle.OracleDriver
-    case "com.typesafe.slick.driver.db2.DB2Driver" ⇒
-      com.typesafe.slick.driver.db2.DB2Driver
-    case "com.typesafe.slick.driver.ms.SQLServerDriver" ⇒
-      com.typesafe.slick.driver.ms.SQLServerDriver
-    case _ ⇒
-      slick.driver.PostgresDriver
-  }
+  def forDriverName(config: Config): JdbcProfile =
+    DatabaseConfig.forConfig[JdbcProfile]("slick", config).driver
 }
 
 object SlickDatabase {

@@ -23,7 +23,7 @@ import scala.concurrent.duration.{ FiniteDuration, _ }
 
 class SlickConfiguration(config: Config) {
   private val cfg = config.asConfig("slick")
-  val slickDriver: String = cfg.as[String]("driver", "slick.driver.PostgresDriver")
+  val slickDriver: String = cfg.as[String]("driver", "slick.driver.PostgresDriver$")
   val jndiName: Option[String] = cfg.as[String]("jndiName").trim
   val jndiDbName: Option[String] = cfg.as[String]("jndiDbName")
   override def toString: String = s"SlickConfiguration($slickDriver,$jndiName,$jndiDbName)"

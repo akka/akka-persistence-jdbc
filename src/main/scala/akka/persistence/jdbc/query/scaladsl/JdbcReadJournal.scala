@@ -53,9 +53,8 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   sys.addShutdownHook(db.close())
 
   val readJournalDao: ReadJournalDao = {
-    val driver = readJournalConfig.slickConfiguration.slickDriver
     val fqcn = readJournalConfig.pluginConfig.dao
-    val profile: JdbcProfile = SlickDriver.forDriverName(driver)
+    val profile: JdbcProfile = SlickDriver.forDriverName(config)
     val args = immutable.Seq(
       (classOf[Database], db),
       (classOf[JdbcProfile], profile),

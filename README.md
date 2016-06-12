@@ -44,9 +44,9 @@ Configure `akka-persistence`:
 
 Configure `slick`:
 - The following slick drivers are supported:
-  - `slick.driver.PostgresDriver`
-  - `slick.driver.MySQLDriver`
-  - `com.typesafe.slick.driver.oracle.OracleDriver`
+  - `slick.driver.PostgresDriver$`
+  - `slick.driver.MySQLDriver$`
+  - `com.typesafe.slick.driver.oracle.OracleDriver$`
 
 ## DataSource lookup by JNDI name
 The plugin uses `slick` as the database access library. Slick [supports jndi][slick-jndi]
@@ -377,6 +377,13 @@ Alternatively you can opt to use [Postgresql][postgres], which is the most advan
 available, with some great features, and it works great together with akka-persistence-jdbc.
 
 # What's new?
+## 2.3.2 (2016-06-12)
+  - This release has a configuration how the the slick database driver get's resolved. The following driver names must be used:
+    - `slick.driver.PostgresDriver$`
+    - `slick.driver.MySQLDriver$`
+    - `com.typesafe.slick.driver.oracle.OracleDriver$`
+  - The journal, snapshot and readjournal plugins now all use defaults as stated in the reference.conf, it is not necessary to define properties when using a plugin-id that has not been defined in reference.conf          
+
 ## 2.3.1 (2016-06-10)
   - Async queries should take a max number of elements from the result set according to the 
   `jdbc-read-journal.max-buffer-size` configuration. This should result in better memory usage and better IO performance.

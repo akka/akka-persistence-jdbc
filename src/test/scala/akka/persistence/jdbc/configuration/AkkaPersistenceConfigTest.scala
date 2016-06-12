@@ -57,7 +57,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |  dao = "akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao"
       |
       |  slick {
-      |    driver = "slick.driver.PostgresDriver"
+      |    driver = "slick.driver.PostgresDriver$"
       |    db {
       |      host = "boot2docker"
       |      host = ${?POSTGRES_HOST}
@@ -68,7 +68,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |      url = "jdbc:postgresql://"${akka-persistence-jdbc.slick.db.host}":"${akka-persistence-jdbc.slick.db.port}"/"${akka-persistence-jdbc.slick.db.name}
       |      user = "docker"
       |      password = "docker"
-      |      driver = "org.postgresql.Driver"
+      |      driver = "org.postgresql.Driver$"
       |
       |      // hikariCP settings; see: https://github.com/brettwooldridge/HikariCP
       |
@@ -117,7 +117,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |  dao = "akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao"
       |
       |  slick {
-      |    driver = "slick.driver.MySQLDriver"
+      |    driver = "slick.driver.MySQLDriver$"
       |    db {
       |      host = "boot2docker"
       |      host = ${?POSTGRES_HOST}
@@ -187,7 +187,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |  tagSeparator = ","
       |
       |  slick {
-      |    driver = "com.typesafe.slick.driver.oracle.OracleDriver"
+      |    driver = "com.typesafe.slick.driver.oracle.OracleDriver$"
       |    db {
       |      host = "boot2docker"
       |      host = ${?POSTGRES_HOST}
@@ -229,7 +229,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
 
   "empty config" should "parse JournalConfig" in {
     val cfg = new JournalConfig(ConfigFactory.empty)
-    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.PostgresDriver"
+    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.PostgresDriver$"
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 
@@ -255,7 +255,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
 
   it should "parse SnapshotConfig" in {
     val cfg = new SnapshotConfig(ConfigFactory.empty)
-    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.PostgresDriver"
+    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.PostgresDriver$"
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 
@@ -273,7 +273,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
 
   it should "parse ReadJournalConfig" in {
     val cfg = new ReadJournalConfig(ConfigFactory.empty)
-    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.PostgresDriver"
+    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.PostgresDriver$"
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 
@@ -295,7 +295,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
 
   "full config" should "parse JournalConfig" in {
     val cfg = new JournalConfig(config.getConfig("jdbc-journal"))
-    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.PostgresDriver"
+    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.PostgresDriver$"
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 
@@ -321,7 +321,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
 
   it should "parse SnapshotConfig" in {
     val cfg = new SnapshotConfig(config.getConfig("jdbc-snapshot-store"))
-    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.MySQLDriver"
+    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.MySQLDriver$"
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 
@@ -339,7 +339,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
 
   it should "parse ReadJournalConfig" in {
     val cfg = new ReadJournalConfig(config.getConfig("jdbc-read-journal"))
-    cfg.slickConfiguration.slickDriver shouldBe "com.typesafe.slick.driver.oracle.OracleDriver"
+    cfg.slickConfiguration.slickDriver shouldBe "com.typesafe.slick.driver.oracle.OracleDriver$"
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 

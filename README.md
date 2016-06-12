@@ -1,4 +1,4 @@
-# akka-persistence-jdbc 2.3.1
+# akka-persistence-jdbc 2.3.2
 Akka-persistence-jdbc is a plugin for akka-persistence that asynchronously writes journal and snapshot entries entries to a configured JDBC store. It supports writing journal messages and snapshots to two tables: the `journal` table and the `snapshot` table.
 
 Service | Status | Description
@@ -31,7 +31,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.3.1"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.3.2"
 ```
 
 ## Configuration
@@ -57,7 +57,7 @@ To enable the JNDI lookup, you must add the following to your `application.conf`
 ```bash
 akka-persistence-jdbc {
   slick {
-    driver = "slick.driver.PostgresDriver"
+    driver = "slick.driver.PostgresDriver$"
     jndiName = "java:jboss/datasources/PostgresDS"   
   }
 }

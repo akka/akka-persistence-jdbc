@@ -59,9 +59,7 @@ class EventsByTagPublisher(tag: String, offset: Int, readJournalDao: ReadJournal
         .runFold(List.empty[EventEnvelope])(_ :+ _)
         .map { xs ⇒
           buf = buf ++ xs
-          log.debug(s"[before] offset: $offset, buff: $buf")
           deliverBuf()
-          log.debug(s"[after] offset: ${offset + xs.size}, buff: $buf")
           context.become(active(offset + xs.size))
         }.recover {
           case t: Throwable ⇒
@@ -78,11 +76,16 @@ class EventsByTagPublisher(tag: String, offset: Int, readJournalDao: ReadJournal
       context.become(polling(offset))
       self ! GetEventsByTag
 
-    case DetermineSchedulePoll ⇒ determineSchedulePoll()
+    case DetermineSchedulePoll if buf.size - totalDemand <= 0 ⇒
+      determineSchedulePoll()
 
-    case _: Request            ⇒ deliverBuf()
+    case DetermineSchedulePoll if buf.size - totalDemand > 0 ⇒
+      determineSchedulePoll()
 
-    case Cancel                ⇒ context.stop(self)
+    case Request(req) ⇒
+      deliverBuf()
+
+    case Cancel ⇒ context.stop(self)
   }
 
   override def postStop(): Unit = {

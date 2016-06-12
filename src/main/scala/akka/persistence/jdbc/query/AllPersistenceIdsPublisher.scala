@@ -54,7 +54,6 @@ class AllPersistenceIdsPublisher(readJournalDao: ReadJournalDao, refreshInterval
       readJournalDao.allPersistenceIdsSource(Math.max(0, maxBufferSize - buf.size)).runFold(List.empty[String])(_ :+ _).map { ids ⇒
         val xs = ids.toSet.diff(knownIds).toVector
         buf = buf ++ xs
-        log.debug(s"ids in journal: $ids, known ids: $knownIds, new known ids: ${knownIds ++ xs}, buff: $buf")
         deliverBuf()
         context.become(active(knownIds ++ xs))
       }.recover {
@@ -72,11 +71,15 @@ class AllPersistenceIdsPublisher(readJournalDao: ReadJournalDao, refreshInterval
       context.become(polling(knownIds))
       self ! GetAllPersistenceIds
 
-    case DetermineSchedulePoll ⇒ determineSchedulePoll()
+    case DetermineSchedulePoll if buf.size - totalDemand <= 0 ⇒
+      determineSchedulePoll()
 
-    case _: Request            ⇒ deliverBuf()
+    case DetermineSchedulePoll if buf.size - totalDemand > 0 ⇒
+      deliverBuf()
 
-    case Cancel                ⇒ context.stop(self)
+    case Request(req) ⇒ deliverBuf()
+
+    case Cancel       ⇒ context.stop(self)
   }
 
   override def postStop(): Unit = {

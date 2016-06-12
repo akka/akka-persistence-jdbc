@@ -44,61 +44,67 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
       }
 
       withEventsByPersistenceId()("my-1", 0, 0) { tp ⇒
-        tp.request(Int.MaxValue)
+        tp.request(1)
         tp.expectNoMsg(100.millis)
         tp.cancel()
       }
 
       withEventsByPersistenceId()("my-1", 0, 1) { tp ⇒
-        tp.request(Int.MaxValue)
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(1, "my-1", 1, 1))
         tp.cancel()
       }
 
       withEventsByPersistenceId()("my-1", 1, 1) { tp ⇒
-        tp.request(Int.MaxValue)
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(1, "my-1", 1, 1))
         tp.cancel()
       }
 
       withEventsByPersistenceId()("my-1", 1, 2) { tp ⇒
-        tp.request(Int.MaxValue)
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(1, "my-1", 1, 1))
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-1", 2, 2))
         tp.cancel()
       }
 
       withEventsByPersistenceId()("my-1", 2, 2) { tp ⇒
-        tp.request(Int.MaxValue)
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-1", 2, 2))
         tp.cancel()
       }
 
       withEventsByPersistenceId()("my-1", 2, 3) { tp ⇒
-        tp.request(Int.MaxValue)
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-1", 2, 2))
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(3, "my-1", 3, 3))
         tp.cancel()
       }
 
       withEventsByPersistenceId()("my-1", 3, 3) { tp ⇒
-        tp.request(Int.MaxValue)
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(3, "my-1", 3, 3))
         tp.cancel()
       }
 
       withEventsByPersistenceId()("my-1", 0, 3) { tp ⇒
-        tp.request(Int.MaxValue)
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(1, "my-1", 1, 1))
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-1", 2, 2))
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(3, "my-1", 3, 3))
         tp.cancel()
       }
 
       withEventsByPersistenceId()("my-1", 1, 3) { tp ⇒
-        tp.request(Int.MaxValue)
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(1, "my-1", 1, 1))
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-1", 2, 2))
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(3, "my-1", 3, 3))
         tp.cancel()
       }
@@ -118,9 +124,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         actor1 ! 2
         tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-1", 2, 2))
         tp.expectNoMsg(100.millis)
-
         tp.cancel()
-        tp.expectNoMsg(100.millis)
       }
     }
   }
@@ -165,9 +169,11 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
       }
 
       withEventsByPersistenceId()("my-2", 0, Long.MaxValue) { tp ⇒
-        tp.request(10)
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(1, "my-2", 1, 1))
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-2", 2, 2))
+        tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(3, "my-2", 3, 3))
         tp.expectNoMsg(100.millis)
 
@@ -179,6 +185,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
           countJournal.futureValue shouldBe 6
         }
 
+        tp.request(3)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(4, "my-2", 4, 5))
         tp.expectNext(ExpectNextTimeout, EventEnvelope(5, "my-2", 5, 6))
         tp.expectNext(ExpectNextTimeout, EventEnvelope(6, "my-2", 6, 7))

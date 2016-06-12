@@ -59,9 +59,7 @@ class EventsByPersistenceIdPublisher(persistenceId: String, fromSequenceNr: Long
         .map { xs ⇒
           buf = buf ++ xs
           val newFromSeqNr = xs.lastOption.map(_.sequenceNr + 1).getOrElse(fromSeqNr)
-          log.debug(s"[before] fromSeqNr: $fromSeqNr, buff: $buf")
           deliverBuf()
-          log.debug(s"[after] fromSeqNr: $newFromSeqNr, buff: $buf")
           context.become(active(newFromSeqNr))
         }
         .recover {
@@ -79,11 +77,16 @@ class EventsByPersistenceIdPublisher(persistenceId: String, fromSequenceNr: Long
       context.become(polling(fromSeqNr))
       self ! GetMessages
 
-    case DetermineSchedulePoll ⇒ determineSchedulePoll()
+    case DetermineSchedulePoll if buf.size - totalDemand <= 0 ⇒
+      determineSchedulePoll()
 
-    case _: Request            ⇒ deliverBuf()
+    case DetermineSchedulePoll if buf.size - totalDemand > 0 ⇒
+      deliverBuf()
 
-    case Cancel                ⇒ context.stop(self)
+    case Request(req) ⇒
+      deliverBuf()
+
+    case Cancel ⇒ context.stop(self)
   }
 
   override def postStop(): Unit = {

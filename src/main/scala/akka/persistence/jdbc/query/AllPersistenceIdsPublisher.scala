@@ -71,15 +71,13 @@ class AllPersistenceIdsPublisher(readJournalDao: ReadJournalDao, refreshInterval
       context.become(polling(knownIds))
       self ! GetAllPersistenceIds
 
-    case DetermineSchedulePoll if buf.size - totalDemand <= 0 ⇒
-      determineSchedulePoll()
+    case DetermineSchedulePoll if buf.size - totalDemand <= 0 ⇒ determineSchedulePoll()
 
-    case DetermineSchedulePoll if buf.size - totalDemand > 0 ⇒
-      deliverBuf()
+    case DetermineSchedulePoll                                ⇒ deliverBuf()
 
-    case Request(req) ⇒ deliverBuf()
+    case Request(req)                                         ⇒ deliverBuf()
 
-    case Cancel       ⇒ context.stop(self)
+    case Cancel                                               ⇒ context.stop(self)
   }
 
   override def postStop(): Unit = {

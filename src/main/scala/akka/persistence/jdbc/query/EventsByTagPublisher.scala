@@ -76,16 +76,13 @@ class EventsByTagPublisher(tag: String, offset: Int, readJournalDao: ReadJournal
       context.become(polling(offset))
       self ! GetEventsByTag
 
-    case DetermineSchedulePoll if buf.size - totalDemand <= 0 ⇒
-      determineSchedulePoll()
+    case DetermineSchedulePoll if buf.size - totalDemand <= 0 ⇒ determineSchedulePoll()
 
-    case DetermineSchedulePoll if buf.size - totalDemand > 0 ⇒
-      determineSchedulePoll()
+    case DetermineSchedulePoll                                ⇒ deliverBuf()
 
-    case Request(req) ⇒
-      deliverBuf()
+    case Request(req)                                         ⇒ deliverBuf()
 
-    case Cancel ⇒ context.stop(self)
+    case Cancel                                               ⇒ context.stop(self)
   }
 
   override def postStop(): Unit = {

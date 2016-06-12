@@ -77,16 +77,13 @@ class EventsByPersistenceIdPublisher(persistenceId: String, fromSequenceNr: Long
       context.become(polling(fromSeqNr))
       self ! GetMessages
 
-    case DetermineSchedulePoll if buf.size - totalDemand <= 0 ⇒
-      determineSchedulePoll()
+    case DetermineSchedulePoll if buf.size - totalDemand <= 0 ⇒ determineSchedulePoll()
 
-    case DetermineSchedulePoll if buf.size - totalDemand > 0 ⇒
-      deliverBuf()
+    case DetermineSchedulePoll                                ⇒ deliverBuf()
 
-    case Request(req) ⇒
-      deliverBuf()
+    case Request(req)                                         ⇒ deliverBuf()
 
-    case Cancel ⇒ context.stop(self)
+    case Cancel                                               ⇒ context.stop(self)
   }
 
   override def postStop(): Unit = {

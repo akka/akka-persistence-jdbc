@@ -36,15 +36,15 @@ abstract class AllPersistenceIdsTest(config: String) extends QueryTestSpec(confi
         tp.expectNoMsg(100.millis)
 
         actor1 ! 1
-        tp.expectNext("my-1")
+        tp.expectNext(ExpectNextTimeout, "my-1")
         tp.expectNoMsg(100.millis)
 
         actor2 ! 1
-        tp.expectNext("my-2")
+        tp.expectNext(ExpectNextTimeout, "my-2")
         tp.expectNoMsg(100.millis)
 
         actor3 ! 1
-        tp.expectNext("my-3")
+        tp.expectNext(ExpectNextTimeout, "my-3")
         tp.expectNoMsg(100.millis)
 
         actor1 ! 1

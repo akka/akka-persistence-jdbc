@@ -31,8 +31,16 @@ class ByteArrayReadJournalDao(db: Database, val profile: JdbcProfile, readJourna
   import profile.api._
   val queries = new ReadJournalQueries(profile, readJournalConfig.journalTableConfiguration)
 
-  override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
-    Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct(max).result))
+  override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] = {
+    val action = profile match {
+      case com.typesafe.slick.driver.oracle.OracleDriver ⇒
+        queries.allPersistenceIdsDistinct(max).result.overrideStatements(List(
+          s"""select distinct "${readJournalConfig.journalTableConfiguration.columnNames.persistenceId}" from "${readJournalConfig.journalTableConfiguration.schemaName.getOrElse("")}"."${readJournalConfig.journalTableConfiguration.tableName}" where rownum <= ?"""
+        ))
+      case _ ⇒ queries.allPersistenceIdsDistinct(max).result
+    }
+    Source.fromPublisher(db.stream(action))
+  }
 
   override def eventsByTag(tag: String, offset: Long, max: Long): Source[SerializationResult, NotUsed] =
     Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", Math.max(1, offset) - 1, max).result))

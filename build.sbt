@@ -18,7 +18,7 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.3.1"
+version := "2.3.2-SNAPSHOT"
 
 isSnapshot := true
 

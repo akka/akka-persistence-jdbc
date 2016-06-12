@@ -19,6 +19,7 @@ package akka.persistence.jdbc.configuration
 import akka.persistence.jdbc.config._
 import com.typesafe.config.{ Config, ConfigFactory }
 import org.scalatest.{ FlatSpec, Matchers }
+import scala.concurrent.duration._
 
 class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
   val config: Config = ConfigFactory.parseString(
@@ -116,7 +117,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |  dao = "akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao"
       |
       |  slick {
-      |    driver = "slick.driver.PostgresDriver"
+      |    driver = "slick.driver.MySQLDriver"
       |    db {
       |      host = "boot2docker"
       |      host = ${?POSTGRES_HOST}
@@ -159,15 +160,15 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |  class = "akka.persistence.jdbc.query.JdbcReadJournalProvider"
       |
       |  # New events are retrieved (polled) with this interval.
-      |  refresh-interval = "1s"
+      |  refresh-interval = "300ms"
       |
       |  # How many events to fetch in one query (replay) and keep buffered until they
       |  # are delivered downstreams.
-      |  max-buffer-size = "500"
+      |  max-buffer-size = "10"
       |
       |  serialization = on // alter only when using a custom dao
       |
-      |  dao = "akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao"
+      |  dao = "akka.persistence.jdbc.dao.bytea.ByteArrayReadJournalDao"
       |
       |  tables {
       |    journal {
@@ -186,7 +187,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |  tagSeparator = ","
       |
       |  slick {
-      |    driver = "slick.driver.PostgresDriver"
+      |    driver = "com.typesafe.slick.driver.oracle.OracleDriver"
       |    db {
       |      host = "boot2docker"
       |      host = ${?POSTGRES_HOST}
@@ -226,24 +227,135 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     """.stripMargin
   )
 
-  it should "parse JournalConfig" in {
+  "empty config" should "parse JournalConfig" in {
+    val cfg = new JournalConfig(ConfigFactory.empty)
+    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.PostgresDriver"
+    cfg.slickConfiguration.jndiDbName shouldBe None
+    cfg.slickConfiguration.jndiDbName shouldBe None
+
+    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao"
+    cfg.pluginConfig.serialization shouldBe true
+    cfg.pluginConfig.tagSeparator shouldBe ","
+
+    cfg.journalTableConfiguration.tableName shouldBe "journal"
+    cfg.journalTableConfiguration.schemaName shouldBe None
+
+    cfg.journalTableConfiguration.columnNames.created shouldBe "created"
+    cfg.journalTableConfiguration.columnNames.message shouldBe "message"
+    cfg.journalTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
+    cfg.journalTableConfiguration.columnNames.sequenceNumber shouldBe "sequence_number"
+    cfg.journalTableConfiguration.columnNames.tags shouldBe "tags"
+
+    cfg.deletedToTableConfiguration.tableName shouldBe "deleted_to"
+    cfg.deletedToTableConfiguration.schemaName shouldBe None
+
+    cfg.deletedToTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
+    cfg.deletedToTableConfiguration.columnNames.deletedTo shouldBe "deleted_to"
+  }
+
+  it should "parse SnapshotConfig" in {
+    val cfg = new SnapshotConfig(ConfigFactory.empty)
+    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.PostgresDriver"
+    cfg.slickConfiguration.jndiDbName shouldBe None
+    cfg.slickConfiguration.jndiDbName shouldBe None
+
+    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao"
+    cfg.pluginConfig.serialization shouldBe true
+
+    cfg.snapshotTableConfiguration.tableName shouldBe "snapshot"
+    cfg.snapshotTableConfiguration.schemaName shouldBe None
+
+    cfg.snapshotTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
+    cfg.snapshotTableConfiguration.columnNames.created shouldBe "created"
+    cfg.snapshotTableConfiguration.columnNames.sequenceNumber shouldBe "sequence_number"
+    cfg.snapshotTableConfiguration.columnNames.snapshot shouldBe "snapshot"
+  }
+
+  it should "parse ReadJournalConfig" in {
+    val cfg = new ReadJournalConfig(ConfigFactory.empty)
+    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.PostgresDriver"
+    cfg.slickConfiguration.jndiDbName shouldBe None
+    cfg.slickConfiguration.jndiDbName shouldBe None
+
+    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.ByteArrayReadJournalDao"
+    cfg.pluginConfig.serialization shouldBe true
+    cfg.pluginConfig.tagSeparator shouldBe ","
+    cfg.refreshInterval shouldBe 1.second
+    cfg.maxBufferSize shouldBe 500
+
+    cfg.journalTableConfiguration.tableName shouldBe "journal"
+    cfg.journalTableConfiguration.schemaName shouldBe None
+
+    cfg.journalTableConfiguration.columnNames.created shouldBe "created"
+    cfg.journalTableConfiguration.columnNames.message shouldBe "message"
+    cfg.journalTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
+    cfg.journalTableConfiguration.columnNames.sequenceNumber shouldBe "sequence_number"
+    cfg.journalTableConfiguration.columnNames.tags shouldBe "tags"
+  }
+
+  "full config" should "parse JournalConfig" in {
     val cfg = new JournalConfig(config.getConfig("jdbc-journal"))
     cfg.slickConfiguration.slickDriver shouldBe "slick.driver.PostgresDriver"
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
+
+    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao"
+    cfg.pluginConfig.serialization shouldBe true
+    cfg.pluginConfig.tagSeparator shouldBe ","
+
+    cfg.journalTableConfiguration.tableName shouldBe "journal"
+    cfg.journalTableConfiguration.schemaName shouldBe None
+
+    cfg.journalTableConfiguration.columnNames.created shouldBe "created"
+    cfg.journalTableConfiguration.columnNames.message shouldBe "message"
+    cfg.journalTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
+    cfg.journalTableConfiguration.columnNames.sequenceNumber shouldBe "sequence_number"
+    cfg.journalTableConfiguration.columnNames.tags shouldBe "tags"
+
+    cfg.deletedToTableConfiguration.tableName shouldBe "deleted_to"
+    cfg.deletedToTableConfiguration.schemaName shouldBe None
+
+    cfg.deletedToTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
+    cfg.deletedToTableConfiguration.columnNames.deletedTo shouldBe "deleted_to"
   }
 
   it should "parse SnapshotConfig" in {
     val cfg = new SnapshotConfig(config.getConfig("jdbc-snapshot-store"))
-    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.PostgresDriver"
+    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.MySQLDriver"
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
+
+    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao"
+    cfg.pluginConfig.serialization shouldBe true
+
+    cfg.snapshotTableConfiguration.tableName shouldBe "snapshot"
+    cfg.snapshotTableConfiguration.schemaName shouldBe None
+
+    cfg.snapshotTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
+    cfg.snapshotTableConfiguration.columnNames.created shouldBe "created"
+    cfg.snapshotTableConfiguration.columnNames.sequenceNumber shouldBe "sequence_number"
+    cfg.snapshotTableConfiguration.columnNames.snapshot shouldBe "snapshot"
   }
 
   it should "parse ReadJournalConfig" in {
     val cfg = new ReadJournalConfig(config.getConfig("jdbc-read-journal"))
-    cfg.slickConfiguration.slickDriver shouldBe "slick.driver.PostgresDriver"
+    cfg.slickConfiguration.slickDriver shouldBe "com.typesafe.slick.driver.oracle.OracleDriver"
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
+
+    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.ByteArrayReadJournalDao"
+    cfg.pluginConfig.serialization shouldBe true
+    cfg.pluginConfig.tagSeparator shouldBe ","
+    cfg.refreshInterval shouldBe 300.millis
+    cfg.maxBufferSize shouldBe 10
+
+    cfg.journalTableConfiguration.tableName shouldBe "journal"
+    cfg.journalTableConfiguration.schemaName shouldBe None
+
+    cfg.journalTableConfiguration.columnNames.created shouldBe "created"
+    cfg.journalTableConfiguration.columnNames.message shouldBe "message"
+    cfg.journalTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
+    cfg.journalTableConfiguration.columnNames.sequenceNumber shouldBe "sequence_number"
+    cfg.journalTableConfiguration.columnNames.tags shouldBe "tags"
   }
 }

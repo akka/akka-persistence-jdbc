@@ -19,7 +19,7 @@ package akka.persistence.jdbc.util
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-import com.typesafe.config.Config
+import com.typesafe.config.{ Config, ConfigFactory }
 
 import scala.concurrent.duration.{ Duration, FiniteDuration }
 import scala.util.{ Failure, Try }
@@ -29,13 +29,21 @@ object ConfigOps {
     def as[A](key: String): Try[A] =
       Try(config.getAnyRef(key)).map(_.asInstanceOf[A])
 
-    def as[A](key: String, default: A): A = {
-      Try(config.getAnyRef(key)).map(_.asInstanceOf[A]).recoverWith {
-        case t: Throwable ⇒
-          println(t.getMessage)
-          Failure(t)
-      }.getOrElse(default)
-    }
+    def as[A](key: String, default: A): A =
+      Try(config.getAnyRef(key)).map(_.asInstanceOf[A])
+        .getOrElse(default)
+
+    def asConfig(key: String, default: Config = ConfigFactory.empty) =
+      Try(config.getConfig(key))
+        .getOrElse(default)
+
+    def asBoolean(key: String, default: Boolean) =
+      Try(config.getBoolean(key))
+        .getOrElse(default)
+
+    def asFiniteDuration(key: String, default: FiniteDuration) =
+      Try(FiniteDuration(config.getDuration(key).toMillis, TimeUnit.MILLISECONDS))
+        .getOrElse(default)
 
     def asDuration(key: String): Duration =
       config.getString(key).toLowerCase(Locale.ROOT) match {

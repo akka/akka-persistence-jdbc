@@ -378,7 +378,7 @@ available, with some great features, and it works great together with akka-persi
 
 # What's new?
 ## 2.3.2 (2016-06-12)
-  - This release has a configuration how the the slick database driver get's resolved. The following driver names must be used:
+  - This release has a configuration how the the slick database driver gets resolved. The following driver names must be used:
     - `slick.driver.PostgresDriver$`
     - `slick.driver.MySQLDriver$`
     - `com.typesafe.slick.driver.oracle.OracleDriver$`

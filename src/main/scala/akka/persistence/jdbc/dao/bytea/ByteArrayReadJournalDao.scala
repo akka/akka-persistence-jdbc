@@ -19,10 +19,12 @@ package akka.persistence.jdbc.dao.bytea
 import akka.NotUsed
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.dao.ReadJournalDao
+import akka.persistence.jdbc.dao.bytea.ReadJournalTables.JournalRow
 import akka.persistence.jdbc.serialization.{ SerializationResult, Serialized }
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import slick.driver.JdbcProfile
+import slick.jdbc.GetResult
 import slick.jdbc.JdbcBackend._
 
 import scala.concurrent.ExecutionContext
@@ -31,20 +33,55 @@ class ByteArrayReadJournalDao(db: Database, val profile: JdbcProfile, readJourna
   import profile.api._
   val queries = new ReadJournalQueries(profile, readJournalConfig.journalTableConfiguration)
 
-  override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] = {
-    val action = profile match {
-      case com.typesafe.slick.driver.oracle.OracleDriver ⇒
-        queries.allPersistenceIdsDistinct(max).result.overrideStatements(List(
-          s"""select distinct "${readJournalConfig.journalTableConfiguration.columnNames.persistenceId}" from "${readJournalConfig.journalTableConfiguration.schemaName.getOrElse("")}"."${readJournalConfig.journalTableConfiguration.tableName}" where rownum <= ?"""
-        ))
-      case _ ⇒ queries.allPersistenceIdsDistinct(max).result
-    }
-    Source.fromPublisher(db.stream(action))
+  private def oracleAllPersistenceIds(max: Long): Source[String, NotUsed] = {
+    import readJournalConfig.journalTableConfiguration._
+    import columnNames._
+    Source.fromPublisher(
+      db.stream(sql"""select distinct "#$persistenceId" from "#${schemaName.getOrElse("")}"."#$tableName" where rownum <= $max""".as[String])
+    )
   }
 
-  override def eventsByTag(tag: String, offset: Long, max: Long): Source[SerializationResult, NotUsed] =
+  private def defaultAllPersistenceIds(max: Long): Source[String, NotUsed] =
+    Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct(max).result))
+
+  override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] = profile match {
+    case com.typesafe.slick.driver.oracle.OracleDriver ⇒ oracleAllPersistenceIds(max)
+    case _                                             ⇒ defaultAllPersistenceIds(max)
+  }
+
+  implicit val getJournalRow = GetResult(r ⇒ JournalRow(r.<<, r.<<, r.nextBytes(), r.<<, r.<<))
+
+  private def oracleEventsByTag(tag: String, offset: Long, max: Long): Source[SerializationResult, NotUsed] = {
+    import readJournalConfig.journalTableConfiguration._
+    import columnNames._
+    val theOffset = Math.max(1, offset) - 1
+    val theTag = s"%$tag%"
+    Source.fromPublisher(
+      db.stream(
+        sql"""SELECT "#$persistenceId", "#$sequenceNumber", "#$message", "#$created", "#$tags" FROM (
+              SELECT
+                a.*,
+                rownum rnum
+              FROM
+                (SELECT *
+                 FROM "#${schemaName.getOrElse("")}"."#$tableName"
+                 WHERE "#$tags" LIKE $theTag
+                 ORDER BY "#$created") a
+              where rownum <= $max
+            )
+            where rnum > $theOffset""".as[JournalRow]
+      )
+    ).map(row ⇒ Serialized(row.persistenceId, row.sequenceNumber, row.message, row.tags, row.created))
+  }
+
+  private def defaultEventsByTag(tag: String, offset: Long, max: Long): Source[SerializationResult, NotUsed] =
     Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", Math.max(1, offset) - 1, max).result))
       .map(row ⇒ Serialized(row.persistenceId, row.sequenceNumber, row.message, row.tags, row.created))
+
+  override def eventsByTag(tag: String, offset: Long, max: Long): Source[SerializationResult, NotUsed] = profile match {
+    case com.typesafe.slick.driver.oracle.OracleDriver ⇒ oracleEventsByTag(tag, offset, max)
+    case _                                             ⇒ defaultEventsByTag(tag, offset, max)
+  }
 
   override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[SerializationResult, NotUsed] =
     Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))

@@ -1,4 +1,4 @@
-# akka-persistence-jdbc 2.3.2
+# akka-persistence-jdbc 2.3.3
 Akka-persistence-jdbc is a plugin for akka-persistence that asynchronously writes journal and snapshot entries entries to a configured JDBC store. It supports writing journal messages and snapshots to two tables: the `journal` table and the `snapshot` table.
 
 Service | Status | Description
@@ -31,7 +31,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.3.2"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.3.3"
 ```
 
 ## Configuration
@@ -377,6 +377,9 @@ Alternatively you can opt to use [Postgresql][postgres], which is the most advan
 available, with some great features, and it works great together with akka-persistence-jdbc.
 
 # What's new?
+## 2.3.3 (2016-06-13)
+  - Fix for the async query `eventsByTag` that failed when using an Oracle database.
+  
 ## 2.3.2 (2016-06-12)
   - This release has a configuration how the the slick database driver gets resolved. The following driver names must be used:
     - `slick.driver.PostgresDriver$`

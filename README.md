@@ -55,7 +55,7 @@ for looking up [DataSource][ds]s.
 To enable the JNDI lookup, you must add the following to your `application.conf`:
 
 ```bash
-akka-persistence-jdbc {
+jdbc-journal {
   slick {
     driver = "slick.driver.PostgresDriver$"
     jndiName = "java:jboss/datasources/PostgresDS"   

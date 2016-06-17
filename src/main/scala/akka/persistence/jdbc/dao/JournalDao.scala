@@ -18,6 +18,7 @@ package akka.persistence.jdbc.dao
 
 import akka.NotUsed
 import akka.persistence.jdbc.serialization.SerializationResult
+import akka.persistence.AtomicWrite
 import akka.stream.scaladsl._
 
 import scala.concurrent.Future
@@ -43,5 +44,5 @@ trait JournalDao {
   /**
    * Writes serialized messages
    */
-  def writeFlow: Flow[Try[Iterable[SerializationResult]], Try[Iterable[SerializationResult]], NotUsed]
+  def writeFlow: Flow[AtomicWrite, Try[Unit], NotUsed]
 }

@@ -16,21 +16,22 @@
 
 package akka.persistence.jdbc.journal
 
-import akka.actor.{ ActorSystem, ExtendedActorSystem }
+import akka.actor.{ActorSystem, ExtendedActorSystem}
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.dao.JournalDao
 import akka.persistence.jdbc.serialization.SerializationFacade
-import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
+import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
 import akka.persistence.journal.AsyncWriteJournal
-import akka.persistence.{ AtomicWrite, PersistentRepr }
+import akka.persistence.{AtomicWrite, PersistentRepr}
+import akka.serialization.{Serialization, SerializationExtension}
 import akka.stream.scaladsl.Source
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.stream.{ActorMaterializer, Materializer}
 import com.typesafe.config.Config
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
@@ -48,6 +49,7 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
       (classOf[Database], db),
       (classOf[JdbcProfile], profile),
       (classOf[JournalConfig], journalConfig),
+      (classOf[Serialization], SerializationExtension(system)),
       (classOf[ExecutionContext], ec),
       (classOf[Materializer], mat)
     )
@@ -59,9 +61,7 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
 
   override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] =
     Source(messages)
-      .via(serializationFacade.serialize(journalConfig.pluginConfig.serialization))
       .via(journalDao.writeFlow)
-      .map(_.map(_ ⇒ ()))
       .runFold(List.empty[Try[Unit]])(_ :+ _)
 
   override def asyncDeleteMessagesTo(persistenceId: String, toSequenceNr: Long): Future[Unit] =

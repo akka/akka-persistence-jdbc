@@ -17,36 +17,45 @@
 package akka.persistence.jdbc.dao.bytea
 
 import akka.NotUsed
+import akka.persistence.AtomicWrite
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.dao.JournalDao
-import akka.persistence.jdbc.serialization.{ SerializationResult, Serialized }
+import akka.persistence.jdbc.dao.bytea.JournalTables.JournalRow
+import akka.persistence.jdbc.serialization.{SerializationResult, Serialized}
+import akka.serialization.Serialization
 import akka.stream.Materializer
-import akka.stream.scaladsl.{ Flow, Source }
+import akka.stream.scaladsl.{Flow, Source}
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success, Try }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 /**
  * The DefaultJournalDao contains all the knowledge to persist and load serialized journal entries
  */
-class ByteArrayJournalDao(db: Database, val profile: JdbcProfile, journalConfig: JournalConfig)(implicit ec: ExecutionContext, mat: Materializer) extends JournalDao {
+class ByteArrayJournalDao(db: Database, val profile: JdbcProfile, journalConfig: JournalConfig, serialization: Serialization)(implicit ec: ExecutionContext, mat: Materializer) extends JournalDao {
   import profile.api._
 
   val queries = new JournalQueries(profile, journalConfig.journalTableConfiguration, journalConfig.deletedToTableConfiguration)
 
-  private def writeMessages: Flow[Try[Iterable[SerializationResult]], Try[Iterable[SerializationResult]], NotUsed] = Flow[Try[Iterable[SerializationResult]]].mapAsync(1) {
-    case element @ Success(xs) ⇒ writeList(xs).map(_ ⇒ element)
-    case element @ Failure(t)  ⇒ Future.successful(element)
-  }
+  val serializer = new ByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator)
 
-  private def writeList(xs: Iterable[SerializationResult]): Future[Unit] = for {
-    _ ← db.run(queries.writeList(xs))
+  private def futureExtractor: Flow[Try[Future[Unit]], Try[Unit], NotUsed] =
+    Flow[Try[Future[Unit]]].mapAsync(1) {
+      case Success(future) => future.map(Success(_))
+      case Failure(t) => Future.successful(Failure(t))
+    }
+
+  private def writeJournalRows(xs: Iterable[JournalRow]): Future[Unit] = for {
+    _ ← db.run(queries.writeJournalRows(xs))
   } yield ()
 
-  override def writeFlow: Flow[Try[Iterable[SerializationResult]], Try[Iterable[SerializationResult]], NotUsed] =
-    Flow[Try[Iterable[SerializationResult]]].via(writeMessages)
+  override def writeFlow: Flow[AtomicWrite, Try[Unit], NotUsed] =
+    Flow[AtomicWrite]
+    .via(serializer.serializeAtomicWrite)
+    .map(_.map(writeJournalRows))
+    .via(futureExtractor)
 
   override def delete(persistenceId: String, maxSequenceNr: Long): Future[Unit] = {
     val actions = (for {

@@ -9,7 +9,7 @@ import akka.stream.scaladsl.Flow
 import scala.util.Try
 
 
-trait Serializer[T] {
+trait JournalSerializer[T] {
 
   def serialize(persistentRepr: PersistentRepr): Try[T] = persistentRepr.payload match {
     case Tagged(payload, tags) ⇒
@@ -23,7 +23,7 @@ trait Serializer[T] {
 
 }
 
-trait FlowSerializer[T] extends Serializer[T] {
+trait FlowJournalSerializer[T] extends JournalSerializer[T] {
 
   /**
    * An akka.persistence.AtomicWrite contains a Sequence of events (with metadata, the PersistentRepr)

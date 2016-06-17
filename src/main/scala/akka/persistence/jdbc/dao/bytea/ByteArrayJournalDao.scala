@@ -53,7 +53,7 @@ class ByteArrayJournalDao(db: Database, val profile: JdbcProfile, journalConfig:
 
   override def writeFlow: Flow[AtomicWrite, Try[Unit], NotUsed] =
     Flow[AtomicWrite]
-    .via(serializer.serializeAtomicWrite)
+    .via(serializer.serializeFlow)
     .map(_.map(writeJournalRows))
     .via(futureExtractor)
 

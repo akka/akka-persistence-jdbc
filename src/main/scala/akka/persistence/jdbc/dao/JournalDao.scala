@@ -17,8 +17,7 @@
 package akka.persistence.jdbc.dao
 
 import akka.NotUsed
-import akka.persistence.jdbc.serialization.SerializationResult
-import akka.persistence.AtomicWrite
+import akka.persistence.{AtomicWrite, PersistentRepr}
 import akka.stream.scaladsl._
 
 import scala.concurrent.Future
@@ -37,9 +36,9 @@ trait JournalDao {
   def highestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long]
 
   /**
-   * Returns a Source of bytes for a certain persistenceId
+   * Returns a Source of PersistentRepr for a certain persistenceId
    */
-  def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[SerializationResult, NotUsed]
+  def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed]
 
   /**
    * Writes serialized messages

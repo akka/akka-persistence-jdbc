@@ -56,9 +56,6 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
     system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[JournalDao](fqcn, args).get
   }
 
-  val serializationFacade: SerializationFacade =
-    SerializationFacade(system, journalConfig.pluginConfig.tagSeparator)
-
   override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] =
     Source(messages)
       .via(journalDao.writeFlow)
@@ -72,7 +69,6 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
 
   override def asyncReplayMessages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(recoveryCallback: (PersistentRepr) ⇒ Unit): Future[Unit] =
     journalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, max)
-      .via(serializationFacade.deserializeRepr)
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
       .runForeach(recoveryCallback)
       .map(_ ⇒ ())

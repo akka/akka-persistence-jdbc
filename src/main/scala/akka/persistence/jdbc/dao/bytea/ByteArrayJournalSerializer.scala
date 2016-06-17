@@ -12,8 +12,8 @@ object ByteArrayJournalSerializer {
   def encodeTags(tags: Set[String], separator: String): Option[String] =
     if (tags.isEmpty) None else Option(tags.mkString(separator))
 
-  def decodeTags(tags: String, separator: String): Set[String] =
-    tags.split(separator).toSet
+  def decodeTags(tags: Option[String], separator: String): Set[String] =
+    tags.map(_.split(separator).toSet).getOrElse(Set.empty[String])
 }
 
 class ByteArrayJournalSerializer(serialization: Serialization,
@@ -27,5 +27,10 @@ class ByteArrayJournalSerializer(serialization: Serialization,
                     _,
                     Platform.currentTime,
                     ByteArrayJournalSerializer.encodeTags(tags, separator)))
+  }
+
+  override def deserialize(journalRow: JournalRow): Try[(PersistentRepr, Set[String])] = {
+    serialization.deserialize(journalRow.message, classOf[PersistentRepr])
+      .map((_, ByteArrayJournalSerializer.decodeTags(journalRow.tags, separator)))
   }
 }

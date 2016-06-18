@@ -2,7 +2,7 @@ package akka.persistence.jdbc.dao.bytea.journal
 
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
-import akka.persistence.jdbc.serialization.FlowJournalSerializer
+import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 
 import scala.compat.Platform
@@ -17,7 +17,7 @@ object ByteArrayJournalSerializer {
 }
 
 class ByteArrayJournalSerializer(serialization: Serialization,
-                                 separator: String) extends FlowJournalSerializer[JournalRow] {
+                                 separator: String) extends FlowPersistentReprSerializer[JournalRow] {
 
   override def serialize(persistentRepr: PersistentRepr, tags: Set[String]): Try[JournalRow] = {
     serialization

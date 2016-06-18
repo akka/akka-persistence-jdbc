@@ -19,7 +19,6 @@ package akka.persistence.jdbc.snapshot
 import akka.actor.{ActorSystem, ExtendedActorSystem}
 import akka.persistence.jdbc.config.SnapshotConfig
 import akka.persistence.jdbc.dao.SnapshotDao
-import akka.persistence.jdbc.serialization.AkkaSerializationProxy
 import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
 import akka.persistence.snapshot.SnapshotStore
 import akka.persistence.{SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria}
@@ -62,8 +61,6 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
     )
     system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[SnapshotDao](fqcn, args).get
   }
-
-  val serializationProxy = new AkkaSerializationProxy(SerializationExtension(system))
 
   override def loadAsync(persistenceId: String,
                          criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] = {

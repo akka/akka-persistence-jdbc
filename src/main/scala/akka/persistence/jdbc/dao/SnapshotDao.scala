@@ -17,7 +17,6 @@
 package akka.persistence.jdbc.dao
 
 import akka.persistence.SnapshotMetadata
-import akka.persistence.jdbc.snapshot.JdbcSnapshotStore.SerializationResult
 
 import scala.concurrent.Future
 
@@ -30,13 +29,13 @@ trait SnapshotDao {
 
   def deleteUpToMaxSequenceNrAndMaxTimestamp(persistenceId: String, maxSequenceNr: Long, maxTimestamp: Long): Future[Unit]
 
-  def snapshotForMaxSequenceNr(persistenceId: String): Future[Option[SerializationResult]]
+  def snapshotForMaxSequenceNr(persistenceId: String): Future[Option[(SnapshotMetadata, Any)]]
 
-  def snapshotForMaxTimestamp(persistenceId: String, timestamp: Long): Future[Option[SerializationResult]]
+  def snapshotForMaxTimestamp(persistenceId: String, timestamp: Long): Future[Option[(SnapshotMetadata, Any)]]
 
-  def snapshotForMaxSequenceNr(persistenceId: String, sequenceNr: Long): Future[Option[SerializationResult]]
+  def snapshotForMaxSequenceNr(persistenceId: String, sequenceNr: Long): Future[Option[(SnapshotMetadata, Any)]]
 
-  def snapshotForMaxSequenceNrAndMaxTimestamp(persistenceId: String, sequenceNr: Long, timestamp: Long): Future[Option[SerializationResult]]
+  def snapshotForMaxSequenceNrAndMaxTimestamp(persistenceId: String, sequenceNr: Long, timestamp: Long): Future[Option[(SnapshotMetadata, Any)]]
 
   def delete(persistenceId: String, sequenceNr: Long): Future[Unit]
 

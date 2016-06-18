@@ -17,7 +17,16 @@ class ByteArraySnapshotSerializer(serialization: Serialization) extends Snapshot
     .map(SnapshotRow(metadata.persistenceId, metadata.sequenceNr, metadata.timestamp, _))
   }
 
-  def deserialize(snapshotRow: SnapshotRow): Try[(SnapshotMetadata, Any)] = ???
+  def deserialize(snapshotRow: SnapshotRow): Try[(SnapshotMetadata, Any)] = {
+    serialization
+    .deserialize(snapshotRow.snapshot, classOf[Snapshot])
+    .map(snapshot => {
+      val snapshotMetadata = SnapshotMetadata(snapshotRow.persistenceId,
+                                              snapshotRow.sequenceNumber,
+                                              snapshotRow.created)
+      (snapshotMetadata, snapshot.data)
+    })
+  }
 
 
 }

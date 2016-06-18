@@ -19,9 +19,8 @@ package akka.persistence.jdbc.snapshot
 import akka.actor.{ActorSystem, ExtendedActorSystem}
 import akka.persistence.jdbc.config.SnapshotConfig
 import akka.persistence.jdbc.dao.SnapshotDao
-import akka.persistence.jdbc.serialization.{AkkaSerializationProxy, SerializationProxy}
+import akka.persistence.jdbc.serialization.AkkaSerializationProxy
 import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
-import akka.persistence.serialization.Snapshot
 import akka.persistence.snapshot.SnapshotStore
 import akka.persistence.{SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria}
 import akka.serialization.{Serialization, SerializationExtension}
@@ -32,26 +31,17 @@ import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Success, Try}
 
 object JdbcSnapshotStore {
-  sealed trait SerializationResult {
-    def metadata: SnapshotMetadata
+
+  def toSelectedSnapshot(tupled: (SnapshotMetadata, Any)): SelectedSnapshot = tupled match {
+    case (meta: SnapshotMetadata, snapshot: Any) => SelectedSnapshot(meta, snapshot)
   }
-
-  final case class Serialized(metadata: SnapshotMetadata, bytes: Array[Byte]) extends SerializationResult
-
-  final case class NotSerialized(metadata: SnapshotMetadata, snapshot: Any) extends SerializationResult
-
-  def mapToSelectedSnapshot(serializationResult: SerializationResult, serializationProxy: SerializationProxy): Try[SelectedSnapshot] =
-    serializationResult match {
-      case Serialized(meta, bytes)       ⇒ serializationProxy.deserialize(bytes, classOf[Snapshot]).map(snapshot ⇒ SelectedSnapshot(meta, snapshot.data))
-      case NotSerialized(meta, snapshot) ⇒ Success(SelectedSnapshot(meta, snapshot))
-    }
 }
 
 class JdbcSnapshotStore(config: Config) extends SnapshotStore {
   import JdbcSnapshotStore._
+
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val system: ActorSystem = context.system
   implicit val mat: Materializer = ActorMaterializer()
@@ -75,7 +65,8 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
 
   val serializationProxy = new AkkaSerializationProxy(SerializationExtension(system))
 
-  override def loadAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] = {
+  override def loadAsync(persistenceId: String,
+                         criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] = {
     val result = criteria match {
       case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue, _, _) ⇒
         snapshotDao.snapshotForMaxSequenceNr(persistenceId)
@@ -88,13 +79,7 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
       case _ ⇒ Future.successful(None)
     }
 
-    for {
-      snapshotDataOption ← result
-      selectedSnapshot = for {
-        snapshotData: SerializationResult ← snapshotDataOption
-        selectedSnapshot: SelectedSnapshot ← mapToSelectedSnapshot(snapshotData, serializationProxy).toOption
-      } yield selectedSnapshot
-    } yield selectedSnapshot
+    result.map(_.map(toSelectedSnapshot))
   }
 
   override def saveAsync(metadata: SnapshotMetadata, snapshot: Any): Future[Unit] =

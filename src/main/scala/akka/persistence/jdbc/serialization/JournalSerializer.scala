@@ -40,4 +40,8 @@ trait FlowJournalSerializer[T] extends JournalSerializer[T] {
   def deserializeFlow: Flow[T, Try[(PersistentRepr, Set[String])], NotUsed] = {
     Flow[T].map(deserialize)
   }
+
+  def deserializeFlowWithoutTags: Flow[T, Try[PersistentRepr], NotUsed] = {
+    deserializeFlow.map(_.map(_._1))
+  }
 }

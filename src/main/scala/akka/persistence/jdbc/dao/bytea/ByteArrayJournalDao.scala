@@ -76,7 +76,5 @@ class ByteArrayJournalDao(db: Database, val profile: JdbcProfile, journalConfig:
 
   override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
     Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
-    .via(serializer.deserializeFlow)
-      //TODO: Should we provide with Tagged instances back to the Application Layer?
-    .map(_.map(_._1))
+    .via(serializer.deserializeFlowWithoutTags)
 }

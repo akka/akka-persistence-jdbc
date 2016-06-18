@@ -17,19 +17,16 @@
 package akka.persistence.jdbc.query
 
 import akka.actor.ActorLogging
-import akka.event.LoggingAdapter
 import akka.persistence.jdbc.dao.ReadJournalDao
-import akka.persistence.jdbc.serialization.SerializationFacade
 import akka.persistence.query.EventEnvelope
 import akka.persistence.query.journal.leveldb.DeliveryBuffer
 import akka.stream.Materializer
 import akka.stream.actor.ActorPublisher
-import akka.stream.actor.ActorPublisherMessage.{ Cancel, Request }
+import akka.stream.actor.ActorPublisherMessage.{Cancel, Request}
 import akka.stream.scaladsl.Source
 
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.duration._
+import scala.concurrent.duration.{FiniteDuration, _}
+import scala.concurrent.{ExecutionContext, Future}
 
 object EventsByTagPublisher {
   sealed trait Command
@@ -37,7 +34,7 @@ object EventsByTagPublisher {
   case object BecomePolling extends Command
   case object DetermineSchedulePoll extends Command
 }
-class EventsByTagPublisher(tag: String, offset: Int, readJournalDao: ReadJournalDao, serializationFacade: SerializationFacade, refreshInterval: FiniteDuration, maxBufferSize: Int)(implicit ec: ExecutionContext, mat: Materializer) extends ActorPublisher[EventEnvelope] with DeliveryBuffer[EventEnvelope] with ActorLogging {
+class EventsByTagPublisher(tag: String, offset: Int, readJournalDao: ReadJournalDao, refreshInterval: FiniteDuration, maxBufferSize: Int)(implicit ec: ExecutionContext, mat: Materializer) extends ActorPublisher[EventEnvelope] with DeliveryBuffer[EventEnvelope] with ActorLogging {
   import EventsByTagPublisher._
   def determineSchedulePoll(): Unit = {
     if (buf.size < maxBufferSize && totalDemand > 0)
@@ -51,7 +48,6 @@ class EventsByTagPublisher(tag: String, offset: Int, readJournalDao: ReadJournal
   def polling(offset: Int): Receive = {
     case GetEventsByTag ⇒
       readJournalDao.eventsByTag(tag, offset, Math.max(0, maxBufferSize - buf.size))
-        .via(serializationFacade.deserializeRepr)
         .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
         .zipWith(Source(Stream.from(offset))) {
           case (repr, i) ⇒ EventEnvelope(i, repr.persistenceId, repr.sequenceNr, repr.payload)

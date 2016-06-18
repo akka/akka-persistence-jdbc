@@ -17,18 +17,15 @@
 package akka.persistence.jdbc.query
 
 import akka.actor.ActorLogging
-import akka.event.LoggingAdapter
 import akka.persistence.jdbc.dao.ReadJournalDao
-import akka.persistence.jdbc.serialization.SerializationFacade
 import akka.persistence.query.EventEnvelope
 import akka.persistence.query.journal.leveldb.DeliveryBuffer
 import akka.stream.Materializer
 import akka.stream.actor.ActorPublisher
-import akka.stream.actor.ActorPublisherMessage.{ Cancel, Request }
+import akka.stream.actor.ActorPublisherMessage.{Cancel, Request}
 
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.duration._
+import scala.concurrent.duration.{FiniteDuration, _}
+import scala.concurrent.{ExecutionContext, Future}
 
 object EventsByPersistenceIdPublisher {
   sealed trait Command
@@ -37,7 +34,7 @@ object EventsByPersistenceIdPublisher {
   case object DetermineSchedulePoll extends Command
 }
 
-class EventsByPersistenceIdPublisher(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, readJournalDao: ReadJournalDao, serializationFacade: SerializationFacade, refreshInterval: FiniteDuration, maxBufferSize: Int)(implicit ec: ExecutionContext, mat: Materializer) extends ActorPublisher[EventEnvelope] with DeliveryBuffer[EventEnvelope] with ActorLogging {
+class EventsByPersistenceIdPublisher(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, readJournalDao: ReadJournalDao, refreshInterval: FiniteDuration, maxBufferSize: Int)(implicit ec: ExecutionContext, mat: Materializer) extends ActorPublisher[EventEnvelope] with DeliveryBuffer[EventEnvelope] with ActorLogging {
   import EventsByPersistenceIdPublisher._
   def determineSchedulePoll(): Unit = {
     if (buf.size < maxBufferSize && totalDemand > 0)
@@ -52,7 +49,6 @@ class EventsByPersistenceIdPublisher(persistenceId: String, fromSequenceNr: Long
     case GetMessages ⇒
       readJournalDao.messages(persistenceId, fromSeqNr, toSequenceNr, Math.max(0, maxBufferSize - buf.size))
         .take(maxBufferSize - buf.size)
-        .via(serializationFacade.deserializeRepr)
         .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
         .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
         .runFold(List.empty[EventEnvelope])(_ :+ _)

@@ -17,22 +17,22 @@
 package akka.persistence.jdbc.query.scaladsl
 
 import akka.NotUsed
-import akka.actor.{ ExtendedActorSystem, Props }
+import akka.actor.{ExtendedActorSystem, Props}
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.dao.ReadJournalDao
-import akka.persistence.jdbc.query.{ AllPersistenceIdsPublisher, EventsByPersistenceIdPublisher, EventsByTagPublisher }
-import akka.persistence.jdbc.serialization.SerializationFacade
-import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
+import akka.persistence.jdbc.query.{AllPersistenceIdsPublisher, EventsByPersistenceIdPublisher, EventsByTagPublisher}
+import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
 import akka.persistence.query.EventEnvelope
 import akka.persistence.query.scaladsl._
+import akka.serialization.{Serialization, SerializationExtension}
 import akka.stream.scaladsl.Source
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.stream.{ActorMaterializer, Materializer}
 import com.typesafe.config.Config
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 object JdbcReadJournal {
   final val Identifier = "jdbc-read-journal"
@@ -59,14 +59,12 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
       (classOf[Database], db),
       (classOf[JdbcProfile], profile),
       (classOf[ReadJournalConfig], readJournalConfig),
+      (classOf[Serialization], SerializationExtension(system)),
       (classOf[ExecutionContext], ec),
       (classOf[Materializer], mat)
     )
     system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[ReadJournalDao](fqcn, args).get
   }
-
-  val serializationFacade: SerializationFacade =
-    SerializationFacade(system, readJournalConfig.pluginConfig.tagSeparator)
 
   override def currentPersistenceIds(): Source[String, NotUsed] =
     readJournalDao.allPersistenceIdsSource(Long.MaxValue)
@@ -76,16 +74,14 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
 
   override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     readJournalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, Long.MaxValue)
-      .via(serializationFacade.deserializeRepr)
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
       .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
 
   override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
-    Source.actorPublisher[EventEnvelope](Props(new EventsByPersistenceIdPublisher(persistenceId, fromSequenceNr, toSequenceNr, readJournalDao, serializationFacade, readJournalConfig.refreshInterval, readJournalConfig.maxBufferSize))).mapMaterializedValue(_ ⇒ NotUsed)
+    Source.actorPublisher[EventEnvelope](Props(new EventsByPersistenceIdPublisher(persistenceId, fromSequenceNr, toSequenceNr, readJournalDao, readJournalConfig.refreshInterval, readJournalConfig.maxBufferSize))).mapMaterializedValue(_ ⇒ NotUsed)
 
   override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     readJournalDao.eventsByTag(tag, offset, Long.MaxValue)
-      .via(serializationFacade.deserializeRepr)
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
       .zipWith(Source(Stream.from(Math.max(1, offset.toInt)))) {
         // Needs a better way
@@ -93,5 +89,5 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
       }
 
   override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    Source.actorPublisher[EventEnvelope](Props(new EventsByTagPublisher(tag, offset.toInt, readJournalDao, serializationFacade, readJournalConfig.refreshInterval, readJournalConfig.maxBufferSize))).mapMaterializedValue(_ ⇒ NotUsed)
+    Source.actorPublisher[EventEnvelope](Props(new EventsByTagPublisher(tag, offset.toInt, readJournalDao, readJournalConfig.refreshInterval, readJournalConfig.maxBufferSize))).mapMaterializedValue(_ ⇒ NotUsed)
 }

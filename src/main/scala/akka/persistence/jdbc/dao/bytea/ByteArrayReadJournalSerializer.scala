@@ -26,11 +26,11 @@ class ByteArrayReadJournalSerializer(serialization: Serialization,
                     persistentRepr.sequenceNr,
                     _,
                     Platform.currentTime,
-                    ByteArrayJournalSerializer.encodeTags(tags, separator)))
+                    ByteArrayReadJournalSerializer.encodeTags(tags, separator)))
   }
 
   override def deserialize(journalRow: JournalRow): Try[(PersistentRepr, Set[String])] = {
     serialization.deserialize(journalRow.message, classOf[PersistentRepr])
-    .map((_, ByteArrayJournalSerializer.decodeTags(journalRow.tags, separator)))
+    .map((_, ByteArrayReadJournalSerializer.decodeTags(journalRow.tags, separator)))
   }
 }

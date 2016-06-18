@@ -19,15 +19,15 @@ package akka.persistence.jdbc.util
 import java.sql.Statement
 
 import akka.actor.ActorSystem
-import akka.persistence.jdbc.util.Schema.{ Oracle, SchemaType }
+import akka.persistence.jdbc.util.Schema.{Oracle, SchemaType}
 import slick.jdbc.JdbcBackend
 
 object Schema {
 
   sealed trait SchemaType { def schema: String }
-  final case class Postgres(val schema: String = "schema/postgres/postgres-schema.sql") extends SchemaType
-  final case class MySQL(val schema: String = "schema/mysql/mysql-schema.sql") extends SchemaType
-  final case class Oracle(val schema: String = "schema/oracle/oracle-schema.sql") extends SchemaType
+  final case class Postgres(schema: String = "schema/postgres/postgres-schema.sql") extends SchemaType
+  final case class MySQL(schema: String = "schema/mysql/mysql-schema.sql") extends SchemaType
+  final case class Oracle(schema: String = "schema/oracle/oracle-schema.sql") extends SchemaType
 }
 
 trait DropCreate extends ClasspathResources {
@@ -42,18 +42,17 @@ trait DropCreate extends ClasspathResources {
     """DROP TABLE "snapshot" CASCADE CONSTRAINT"""
   )
 
-  def dropOracle: Unit = withStatement { stmt ⇒
+  def dropOracle(): Unit = withStatement { stmt ⇒
     listOfOracleDropQueries.foreach { ddl ⇒
       try stmt.executeUpdate(ddl) catch {
         case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" ⇒ // suppress known error message in the test
-        case t: Throwable                                                             ⇒ t.printStackTrace()
       }
     }
   }
 
   def dropCreate(schemaType: SchemaType): Unit = schemaType match {
     case Oracle(schema) ⇒
-      dropOracle
+      dropOracle()
       create(schema)
     case s: SchemaType ⇒ create(s.schema)
   }
@@ -67,7 +66,6 @@ trait DropCreate extends ClasspathResources {
   } withStatement { stmt ⇒
     try stmt.executeUpdate(ddl) catch {
       case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" ⇒ // suppress known error message in the test
-      case t: Throwable                                                             ⇒ t.printStackTrace()
     }
   }
 

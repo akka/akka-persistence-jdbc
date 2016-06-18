@@ -19,11 +19,11 @@ package akka.persistence.jdbc.journal
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDatabase }
+import akka.persistence.jdbc.util.{ClasspathResources, DropCreate, SlickDatabase}
 import akka.persistence.journal.JournalPerfSpec
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
 import scala.concurrent.duration._
 
@@ -57,7 +57,11 @@ abstract class JdbcJournalPerfSpec(config: Config) extends JournalPerfSpec(confi
 }
 
 class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-application.conf")) {
-  dropCreate(Postgres())
+
+  override def beforeAll(): Unit = {
+    dropCreate(Postgres())
+    super.beforeAll()
+  }
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 30.seconds)
 
@@ -69,7 +73,11 @@ class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("po
 }
 
 class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-application.conf")) {
-  dropCreate(MySQL())
+
+  override def beforeAll(): Unit = {
+    dropCreate(MySQL())
+    super.beforeAll()
+  }
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 60.seconds)
 
@@ -81,7 +89,11 @@ class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql
 }
 
 class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-application.conf")) {
-  dropCreate(Oracle())
+
+  override def beforeAll(): Unit = {
+    dropCreate(Oracle())
+    super.beforeAll()
+  }
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
 

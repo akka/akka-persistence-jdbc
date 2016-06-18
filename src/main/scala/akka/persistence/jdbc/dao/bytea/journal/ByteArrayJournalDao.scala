@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea
+package akka.persistence.jdbc.dao.bytea.journal
 
 import akka.NotUsed
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.dao.JournalDao
-import akka.persistence.jdbc.dao.bytea.JournalTables.JournalRow
+import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
 import akka.persistence.{AtomicWrite, PersistentRepr}
 import akka.serialization.Serialization
 import akka.stream.Materializer

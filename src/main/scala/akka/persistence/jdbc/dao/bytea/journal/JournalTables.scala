@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea
+package akka.persistence.jdbc.dao.bytea.journal
 
-import akka.persistence.jdbc.dao.bytea.JournalTables._
-import akka.persistence.jdbc.config.{ DeletedToTableConfiguration, JournalTableConfiguration }
+import akka.persistence.jdbc.config.{DeletedToTableConfiguration, JournalTableConfiguration}
+import akka.persistence.jdbc.dao.bytea.journal.JournalTables._
 
 object JournalTables {
   case class JournalRow(persistenceId: String, sequenceNumber: Long, message: Array[Byte], created: Long, tags: Option[String] = None)

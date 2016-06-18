@@ -17,8 +17,9 @@
 package akka.persistence.jdbc.configuration
 
 import akka.persistence.jdbc.config._
-import com.typesafe.config.{ Config, ConfigFactory }
-import org.scalatest.{ FlatSpec, Matchers }
+import com.typesafe.config.{Config, ConfigFactory}
+import org.scalatest.{FlatSpec, Matchers}
+
 import scala.concurrent.duration._
 
 class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
@@ -54,7 +55,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |
       |  serialization = on // alter only when using a custom dao
       |
-      |  dao = "akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao"
+      |  dao = "akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao"
       |
       |  slick {
       |    driver = "slick.driver.PostgresDriver$"
@@ -114,7 +115,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |
       |  serialization = on // alter only when using a custom dao
       |
-      |  dao = "akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao"
+      |  dao = "akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao"
       |
       |  slick {
       |    driver = "slick.driver.MySQLDriver$"
@@ -168,7 +169,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |
       |  serialization = on // alter only when using a custom dao
       |
-      |  dao = "akka.persistence.jdbc.dao.bytea.ByteArrayReadJournalDao"
+      |  dao = "akka.persistence.jdbc.dao.bytea.readjournal.ByteArrayReadJournalDao"
       |
       |  tables {
       |    journal {
@@ -233,7 +234,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 
-    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao"
+    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao"
     cfg.pluginConfig.serialization shouldBe true
     cfg.pluginConfig.tagSeparator shouldBe ","
 
@@ -259,7 +260,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 
-    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao"
+    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao"
     cfg.pluginConfig.serialization shouldBe true
 
     cfg.snapshotTableConfiguration.tableName shouldBe "snapshot"
@@ -277,7 +278,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 
-    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.ByteArrayReadJournalDao"
+    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.readjournal.ByteArrayReadJournalDao"
     cfg.pluginConfig.serialization shouldBe true
     cfg.pluginConfig.tagSeparator shouldBe ","
     cfg.refreshInterval shouldBe 1.second
@@ -299,7 +300,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 
-    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao"
+    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao"
     cfg.pluginConfig.serialization shouldBe true
     cfg.pluginConfig.tagSeparator shouldBe ","
 
@@ -325,7 +326,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 
-    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao"
+    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao"
     cfg.pluginConfig.serialization shouldBe true
 
     cfg.snapshotTableConfiguration.tableName shouldBe "snapshot"
@@ -343,7 +344,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 
-    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.ByteArrayReadJournalDao"
+    cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.readjournal.ByteArrayReadJournalDao"
     cfg.pluginConfig.serialization shouldBe true
     cfg.pluginConfig.tagSeparator shouldBe ","
     cfg.refreshInterval shouldBe 300.millis

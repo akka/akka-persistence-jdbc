@@ -19,7 +19,7 @@ package akka.persistence.jdbc.config
 import akka.persistence.jdbc.util.ConfigOps._
 import com.typesafe.config.Config
 
-import scala.concurrent.duration.{ FiniteDuration, _ }
+import scala.concurrent.duration.{FiniteDuration, _}
 
 class SlickConfiguration(config: Config) {
   private val cfg = config.asConfig("slick")
@@ -82,20 +82,20 @@ class SnapshotTableConfiguration(config: Config) {
 class JournalPluginConfig(config: Config) {
   val tagSeparator: String = config.as[String]("tagSeparator", ",")
   val serialization: Boolean = config.asBoolean("serialization", true)
-  val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao")
+  val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao")
   override def toString: String = s"JournalPluginConfig($tagSeparator,$serialization,$dao)"
 }
 
 class ReadJournalPluginConfig(config: Config) {
   val tagSeparator: String = config.as[String]("tagSeparator", ",")
   val serialization: Boolean = config.asBoolean("serialization", true)
-  val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.ByteArrayReadJournalDao")
+  val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.readjournal.ByteArrayReadJournalDao")
   override def toString: String = s"ReadJournalPluginConfig($tagSeparator,$serialization,$dao)"
 }
 
 class SnapshotPluginConfig(config: Config) {
   val serialization: Boolean = config.asBoolean("serialization", true)
-  val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao")
+  val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao")
   override def toString: String = s"SnapshotPluginConfig($serialization,$dao)"
 }
 

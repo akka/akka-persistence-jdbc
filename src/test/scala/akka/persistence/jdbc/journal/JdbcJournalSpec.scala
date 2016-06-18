@@ -80,3 +80,10 @@ class OracleJournalSpec extends JdbcJournalSpec(ConfigFactory.load("oracle-appli
     super.beforeAll()
   }
 }
+
+class H2JournalSpec extends JdbcJournalSpec(ConfigFactory.load("h2-application.conf")) {
+  override def beforeAll(): Unit = {
+    dropCreate(H2())
+    super.beforeAll()
+  }
+}

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea
+package akka.persistence.jdbc.dao.bytea.snapshot
 
-import SnapshotTables.SnapshotRow
 import akka.persistence.jdbc.config.SnapshotTableConfiguration
+import akka.persistence.jdbc.dao.bytea.snapshot.SnapshotTables.SnapshotRow
 import slick.driver.JdbcProfile
 
 class SnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: SnapshotTableConfiguration) extends SnapshotTables {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea
+package akka.persistence.jdbc.dao.bytea.readjournal
 
 import akka.persistence.jdbc.config.JournalTableConfiguration
 

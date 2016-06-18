@@ -1,7 +1,7 @@
-package akka.persistence.jdbc.dao.bytea
+package akka.persistence.jdbc.dao.bytea.readjournal
 
 import akka.persistence.PersistentRepr
-import akka.persistence.jdbc.dao.bytea.ReadJournalTables.JournalRow
+import akka.persistence.jdbc.dao.bytea.readjournal.ReadJournalTables.JournalRow
 import akka.persistence.jdbc.serialization.FlowReadJournalSerializer
 import akka.serialization.Serialization
 

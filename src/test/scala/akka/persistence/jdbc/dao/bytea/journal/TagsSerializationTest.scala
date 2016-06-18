@@ -14,37 +14,48 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.serialization
+package akka.persistence.jdbc.dao.bytea.journal
 
 import akka.persistence.jdbc.TestSpec
 
-class EncodeTagsTest extends TestSpec {
+class TagsSerializationTest extends TestSpec {
+
+  import ByteArrayJournalSerializer._
 
   "Encode" should "no tags" in {
-    SerializationFacade.encodeTags(Set.empty[String], ",") shouldBe None
+    encodeTags(Set.empty[String], ",") shouldBe None
   }
 
   it should "one tag" in {
-    SerializationFacade.encodeTags(Set("foo"), ",").value shouldBe "foo"
+    encodeTags(Set("foo"), ",").value shouldBe "foo"
   }
 
   it should "two tags" in {
-    SerializationFacade.encodeTags(Set("foo", "bar"), ",").value shouldBe "foo,bar"
+    encodeTags(Set("foo", "bar"), ",").value shouldBe "foo,bar"
   }
 
   it should "three tags" in {
-    SerializationFacade.encodeTags(Set("foo", "bar", "baz"), ",").value shouldBe "foo,bar,baz"
+    encodeTags(Set("foo", "bar", "baz"), ",").value shouldBe "foo,bar,baz"
   }
 
-  "decode" should "one tag with separator" in {
-    SerializationFacade.decodeTags("foo", ",") shouldBe List("foo")
+  "decode" should "no tags" in {
+    decodeTags(None, ",") shouldBe Set()
+  }
+
+  it should "one tag with separator" in {
+    decodeTags(Some("foo"), ",") shouldBe Set("foo")
   }
 
   it should "two tags with separator" in {
-    SerializationFacade.decodeTags("foo,bar", ",") shouldBe List("foo", "bar")
+    decodeTags(Some("foo,bar"), ",") shouldBe Set("foo", "bar")
   }
 
   it should "three tags with separator" in {
-    SerializationFacade.decodeTags("foo,bar,baz", ",") shouldBe List("foo", "bar", "baz")
+    decodeTags(Some("foo,bar,baz"), ",") shouldBe Set("foo", "bar", "baz")
+  }
+
+  "TagsSerialization" should "be bijective" in{
+    val tags: Set[String] = Set("foo", "bar", "baz")
+    decodeTags(encodeTags(tags, ","), ",") shouldBe tags
   }
 }

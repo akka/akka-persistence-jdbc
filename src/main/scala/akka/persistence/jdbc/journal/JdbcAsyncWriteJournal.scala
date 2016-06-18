@@ -19,7 +19,6 @@ package akka.persistence.jdbc.journal
 import akka.actor.{ActorSystem, ExtendedActorSystem}
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.dao.JournalDao
-import akka.persistence.jdbc.serialization.SerializationFacade
 import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
 import akka.persistence.journal.AsyncWriteJournal
 import akka.persistence.{AtomicWrite, PersistentRepr}

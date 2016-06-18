@@ -18,24 +18,24 @@ package akka.persistence.jdbc
 
 import java.util.UUID
 
-import akka.actor.{ ActorRef, ActorSystem, PoisonPill }
-import akka.event.{ Logging, LoggingAdapter }
+import akka.actor.{ActorRef, PoisonPill}
+import akka.event.{Logging, LoggingAdapter}
 import akka.persistence.jdbc.config.JournalConfig
-import akka.persistence.jdbc.util.{ DropCreate, SlickDatabase }
+import akka.persistence.jdbc.util.{DropCreate, SlickDatabase}
 import akka.serialization.SerializationExtension
-import akka.stream.{ ActorMaterializer, Materializer }
 import akka.testkit.TestProbe
 import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.BeforeAndAfterAll
 
 import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContextExecutor, Future }
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.Try
 
-abstract class TestSpec(config: String = "postgres-application.conf") extends SimpleSpec with DropCreate with BeforeAndAfterAll {
-  implicit val system: ActorSystem = ActorSystem("test", ConfigFactory.load(config))
-  implicit val mat: Materializer = ActorMaterializer()
+abstract class TestSpec(override val config: Config) extends SimpleSpec with MaterializerSpec with DropCreate with BeforeAndAfterAll {
+
+  def this(config: String = "postgres-application.conf") = this(ConfigFactory.load(config))
+
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   val log: LoggingAdapter = Logging(system, this.getClass)
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 60.seconds)

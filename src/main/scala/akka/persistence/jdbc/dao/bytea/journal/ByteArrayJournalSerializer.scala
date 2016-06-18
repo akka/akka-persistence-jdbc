@@ -18,6 +18,7 @@ object ByteArrayJournalSerializer {
 
 class ByteArrayJournalSerializer(serialization: Serialization,
                                  separator: String) extends FlowPersistentReprSerializer[JournalRow] {
+  import ByteArrayJournalSerializer._
 
   override def serialize(persistentRepr: PersistentRepr, tags: Set[String]): Try[JournalRow] = {
     serialization
@@ -26,11 +27,11 @@ class ByteArrayJournalSerializer(serialization: Serialization,
                     persistentRepr.sequenceNr,
                     _,
                     Platform.currentTime,
-                    ByteArrayJournalSerializer.encodeTags(tags, separator)))
+                    encodeTags(tags, separator)))
   }
 
   override def deserialize(journalRow: JournalRow): Try[(PersistentRepr, Set[String])] = {
     serialization.deserialize(journalRow.message, classOf[PersistentRepr])
-      .map((_, ByteArrayJournalSerializer.decodeTags(journalRow.tags, separator)))
+      .map((_, decodeTags(journalRow.tags, separator)))
   }
 }

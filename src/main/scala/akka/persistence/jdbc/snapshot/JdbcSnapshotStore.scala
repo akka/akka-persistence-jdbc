@@ -16,23 +16,23 @@
 
 package akka.persistence.jdbc.snapshot
 
-import akka.actor.{ ActorSystem, ExtendedActorSystem }
+import akka.actor.{ActorSystem, ExtendedActorSystem}
 import akka.persistence.jdbc.config.SnapshotConfig
 import akka.persistence.jdbc.dao.SnapshotDao
-import akka.persistence.jdbc.serialization.{ AkkaSerializationProxy, SerializationProxy }
-import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
+import akka.persistence.jdbc.serialization.{AkkaSerializationProxy, SerializationProxy}
+import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
 import akka.persistence.serialization.Snapshot
 import akka.persistence.snapshot.SnapshotStore
-import akka.persistence.{ SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria }
-import akka.serialization.SerializationExtension
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.persistence.{SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria}
+import akka.serialization.{Serialization, SerializationExtension}
+import akka.stream.{ActorMaterializer, Materializer}
 import com.typesafe.config.Config
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Success, Try }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Success, Try}
 
 object JdbcSnapshotStore {
   sealed trait SerializationResult {
@@ -66,6 +66,7 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
       (classOf[Database], db),
       (classOf[JdbcProfile], profile),
       (classOf[SnapshotConfig], snapshotConfig),
+      (classOf[Serialization], SerializationExtension(system)),
       (classOf[ExecutionContext], ec),
       (classOf[Materializer], mat)
     )
@@ -96,11 +97,8 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
     } yield selectedSnapshot
   }
 
-  override def saveAsync(metadata: SnapshotMetadata, snapshot: Any): Future[Unit] = for {
-    serializationResult ← if (snapshotConfig.pluginConfig.serialization) Future.fromTry(serializationProxy.serialize(Snapshot(snapshot))).map(arr ⇒ Serialized(metadata, arr))
-    else Future.successful(NotSerialized(metadata, snapshot))
-    _ ← snapshotDao.save(metadata.persistenceId, metadata.sequenceNr, metadata.timestamp, serializationResult)
-  } yield ()
+  override def saveAsync(metadata: SnapshotMetadata, snapshot: Any): Future[Unit] =
+    snapshotDao.save(metadata, snapshot)
 
   override def deleteAsync(metadata: SnapshotMetadata): Future[Unit] = for {
     _ ← snapshotDao.delete(metadata.persistenceId, metadata.sequenceNr)

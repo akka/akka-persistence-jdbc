@@ -16,6 +16,7 @@
 
 package akka.persistence.jdbc.dao
 
+import akka.persistence.SnapshotMetadata
 import akka.persistence.jdbc.snapshot.JdbcSnapshotStore.SerializationResult
 
 import scala.concurrent.Future
@@ -39,5 +40,5 @@ trait SnapshotDao {
 
   def delete(persistenceId: String, sequenceNr: Long): Future[Unit]
 
-  def save(persistenceId: String, sequenceNr: Long, timestamp: Long, serializationResult: SerializationResult): Future[Unit]
+  def save(snapshotMetadata: SnapshotMetadata, snapshot: Any): Future[Unit]
 }

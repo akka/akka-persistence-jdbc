@@ -36,7 +36,7 @@ trait ReadJournalTables {
     val persistenceId: Rep[String] = column[String](journalTableCfg.columnNames.persistenceId, O.Length(255, varying = true))
     val sequenceNumber: Rep[Long] = column[Long](journalTableCfg.columnNames.sequenceNumber)
     val created: Rep[Long] = column[Long](journalTableCfg.columnNames.created)
-    val tags: Rep[Option[String]] = column[String](journalTableCfg.columnNames.tags, O.Length(255, varying = true))
+    val tags: Rep[Option[String]] = column[String](journalTableCfg.columnNames.tags, O.Length(255, varying = true)).?
     val message: Rep[Array[Byte]] = column[Array[Byte]](journalTableCfg.columnNames.message)
     val pk = primaryKey("journal_pk", (persistenceId, sequenceNumber))
   }

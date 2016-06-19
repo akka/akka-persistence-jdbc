@@ -33,7 +33,7 @@ object ByteArrayReadJournalSerializer {
 }
 
 class ByteArrayReadJournalSerializer(
-  serialization: Serialization,
+    serialization: Serialization,
     separator: String
 ) extends FlowPersistentReprSerializer[JournalRow] {
 

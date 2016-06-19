@@ -16,8 +16,6 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.jdbc.util.Schema.{ MySQL, Oracle, Postgres }
-
 import scala.concurrent.duration._
 
 abstract class AllPersistenceIdsTest(config: String) extends QueryTestSpec(config) {
@@ -62,23 +60,13 @@ abstract class AllPersistenceIdsTest(config: String) extends QueryTestSpec(confi
     }
 }
 
-class PostgresScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("postgres-application.conf") with ScalaJdbcReadJournalOperations {
-  dropCreate(Postgres())
-}
+class PostgresScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("postgres-application.conf") with ScalaJdbcReadJournalOperations with PostgresCleaner
 
-class MySQLScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("mysql-application.conf") with ScalaJdbcReadJournalOperations {
-  dropCreate(MySQL())
-}
+class MySQLScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("mysql-application.conf") with ScalaJdbcReadJournalOperations with MysqlCleaner
 
-class OracleScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("oracle-application.conf") with ScalaJdbcReadJournalOperations {
-  dropCreate(Oracle())
+class OracleScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
 
-  protected override def beforeEach(): Unit =
-    clearOracle()
-
-  override protected def afterAll(): Unit =
-    clearOracle()
-}
+class H2ScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner
 
 //class PostgresJavaAllPersistenceIdsTest extends AllPersistenceIdsTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
 //  dropCreate(Postgres())

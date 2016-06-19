@@ -19,13 +19,13 @@ package akka.persistence.jdbc.serialization
 import akka.actor.{ ActorRef, Props }
 import akka.event.LoggingReceive
 import akka.persistence.jdbc.TestSpec
-import akka.persistence.jdbc.util.Schema.{ MySQL, Oracle, Postgres }
+import akka.persistence.jdbc.util.Schema.{ H2, MySQL, Oracle, Postgres, SchemaType }
 import akka.persistence.{ PersistentActor, RecoveryCompleted }
 import akka.testkit.TestProbe
 
 import scala.concurrent.duration._
 
-abstract class StoreOnlySerializableMessagesTest(config: String) extends TestSpec(config) {
+abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: SchemaType) extends TestSpec(config) {
 
   case class PersistFailure(cause: Throwable, event: Any, seqNr: Long)
   case class PersistRejected(cause: Throwable, event: Any, seqNr: Long)
@@ -52,6 +52,11 @@ abstract class StoreOnlySerializableMessagesTest(config: String) extends TestSpe
     val persistRejectedProbe = TestProbe()
     val persistentActor = system.actorOf(Props(new TestActor(s"my-$id", recoverProbe.ref, persistFailureProbe.ref, persistRejectedProbe.ref)))
     try f(persistentActor, recoverProbe, persistFailureProbe, persistRejectedProbe) finally cleanup(persistentActor)
+  }
+
+  override def beforeAll() : Unit = {
+    dropCreate(schemaType)
+    super.beforeAll()
   }
 
   it should "persist a single serializable message" in {
@@ -117,14 +122,10 @@ abstract class StoreOnlySerializableMessagesTest(config: String) extends TestSpe
   }
 }
 
-class PostgresStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("postgres-application.conf") {
-  dropCreate(Postgres())
-}
+class PostgresStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("postgres-application.conf", Postgres())
 
-class MySQLStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("mysql-application.conf") {
-  dropCreate(MySQL())
-}
+class MySQLStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("mysql-application.conf", MySQL())
 
-class OracleStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("oracle-application.conf") {
-  dropCreate(Oracle())
-}
+class OracleStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("oracle-application.conf", Oracle())
+
+class H2StoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("h2-application.conf", H2())

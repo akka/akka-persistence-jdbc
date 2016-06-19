@@ -62,15 +62,12 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
       if query inSetBind persistenceIds
     } yield query
 
-  private def _unlimitedMessagesQuery(persistenceId: Rep[String], fromSequenceNr: Rep[Long], toSequenceNr: Rep[Long]): Query[Journal, JournalRow, Seq] =
+  private def _messagesQuery(persistenceId: Rep[String], fromSequenceNr: Rep[Long], toSequenceNr: Rep[Long], max: ConstColumn[Long]): Query[Journal, JournalRow, Seq] =
     JournalTable
     .filter(_.persistenceId === persistenceId)
     .filter(_.sequenceNumber >= fromSequenceNr)
     .filter(_.sequenceNumber <= toSequenceNr)
     .sortBy(_.sequenceNumber.asc)
-  val unlimitedMessagesQuery = Compiled(_unlimitedMessagesQuery _)
-
-  private def _messagesQuery(persistenceId: Rep[String], fromSequenceNr: Rep[Long], toSequenceNr: Rep[Long], max: ConstColumn[Long]): Query[Journal, JournalRow, Seq] =
-    _unlimitedMessagesQuery(persistenceId, fromSequenceNr, toSequenceNr).take(max)
+    .take(max)
   val messagesQuery = Compiled(_messagesQuery _)
 }

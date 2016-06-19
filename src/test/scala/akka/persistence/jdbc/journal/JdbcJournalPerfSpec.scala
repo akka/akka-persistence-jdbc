@@ -19,11 +19,11 @@ package akka.persistence.jdbc.journal
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDatabase }
+import akka.persistence.jdbc.util.{ClasspathResources, DropCreate, SlickDatabase}
 import akka.persistence.journal.JournalPerfSpec
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
 import scala.concurrent.duration._
 
@@ -92,6 +92,22 @@ class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("orac
 
   override def beforeAll(): Unit = {
     dropCreate(Oracle())
+    super.beforeAll()
+  }
+
+  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
+
+  override def awaitDurationMillis: Long = 180.seconds.toMillis
+
+  override def measurementIterations: Int = 1
+
+  override def eventsCount: Int = 1000 // oracle is very slow on my macbook / docker / virtualbox
+}
+
+class H2JournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("h2-application.conf")) {
+
+  override def beforeAll(): Unit = {
+    dropCreate(H2())
     super.beforeAll()
   }
 

@@ -1,4 +1,4 @@
-# akka-persistence-jdbc 2.3.3
+# akka-persistence-jdbc 2.4.0
 Akka-persistence-jdbc is a plugin for akka-persistence that asynchronously writes journal and snapshot entries entries to a configured JDBC store. It supports writing journal messages and snapshots to two tables: the `journal` table and the `snapshot` table.
 
 Service | Status | Description
@@ -31,7 +31,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.3.3"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.4.0"
 ```
 
 ## Configuration
@@ -323,15 +323,15 @@ By means of configuration in `application.conf` a DAO can be configured, below t
 
 ```bash
 jdbc-journal {
-  dao = "akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao"
+  dao = "akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao"
 }
 
 jdbc-snapshot-store {
-  dao = "akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao"
+  dao = "akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao"
 }
 
 jdbc-read-journal {
-  dao = "akka.persistence.jdbc.dao.bytea.ByteArrayReadJournalDao"
+  dao = "akka.persistence.jdbc.dao.bytea.readjournal.ByteArrayReadJournalDao"
 }
 ```
 
@@ -339,24 +339,24 @@ Storing messages as byte arrays in blobs is not the only way to store informatio
 For example, implementing a Journal Log table that stores all persistenceId, sequenceNumber and event type discriminator field, and storing the event data in another table with full typing
 
 You only have to implement two interfaces `akka.persistence.jdbc.dao.JournalDao` and/or `akka.persistence.jdbc.dao.SnapshotDao`. As these APIs are only now exposed for public use, the interfaces may change when the API needs to 
-change for whatever reason eg. to make it more stable.
+change for whatever reason.
 
 For example, take a look at the following two custom DAOs:
  
 ```scala
-class MyCustomJournalDao(db: Database, val profile: JdbcProfile, journalConfig: JournalConfig)(implicit ec: ExecutionContext, mat: Materializer) extends JournalDao {
+class MyCustomJournalDao(db: Database, val profile: JdbcProfile, journalConfig: JournalConfig, serialization: Serialization)(implicit ec: ExecutionContext, mat: Materializer) extends JournalDao {
     // snip 
 }
 
-class MyCustomSnapshotDao(db: JdbcBackend#Database, val profile: JdbcProfile, snapshotConfig: SnapshotConfig)(implicit ec: ExecutionContext, val mat: Materializer) extends SnapshotDao {
+class MyCustomSnapshotDao(db: JdbcBackend#Database, val profile: JdbcProfile, snapshotConfig: SnapshotConfig, serialization: Serialization)(implicit ec: ExecutionContext, val mat: Materializer) extends SnapshotDao {
     // snip
 }
 ```
 
-As you can see, the custom DAOs get a _Slick database_, a _Slick profile_, the journal or snapshot _configuration_, an _ExecutionContext_ and _Materializer_ injected after constructed. 
+As you can see, the custom DAOs get a _Slick database_, a _Slick profile_, the journal or snapshot _configuration_, an _akka.serialization.Serialization_, an _ExecutionContext_ and _Materializer_ injected after constructed. 
 You should register the Fully Qualified Class Name in `application.conf` so that the custom DAOs will be used.
 
-For more information please review the two default implementations `akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao` and `akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao` or the demo custom DAO example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc) site.
+For more information please review the two default implementations `akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao` and `akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao` or the demo custom DAO example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc) site.
 
 # Explicitly shutting down the database connections
 The plugin automatically shuts down the HikariCP connection pool only when the ActorSystem is explicitly terminated.
@@ -377,6 +377,14 @@ Alternatively you can opt to use [Postgresql][postgres], which is the most advan
 available, with some great features, and it works great together with akka-persistence-jdbc.
 
 # What's new?
+## 2.4.0 (2016-06-19)
+  - Merged PR #55 [Filipe Cristóvão][fcristovao], Redesign of the serializer/deserializer to make it possible to override it to implement your own serialization strategy, thanks!  
+  - This is potentially a breaking change for users that implement there own DAO or extend and override some of the features of the default one:
+    1. The DAO package has been change from `akka.persistence.jdbc.dao.bytea` to `akka.persistence.jdbc.dao.bytea.journal`
+    2. The DAOs constructor has changed from (db: Database, profile: JdbcProfile, cfg: JournalConfig) to (db: Database, profile: JdbcProfile, cfg: JournalConfig, serialization: Serialization), so it gets the akka.serialization.Serialization injected.
+  - Removed the `jdbc-journal.serialization`, `jdbc-snapshot-store.serialization` and `jdbc-read-journal.serialization` setting as the DAOs have to implement their own serialization strategy.
+  - The following interfaces `akka.persistence.jdbc.dao.JournalDao`, `akka.persistence.jdbc.dao.ReadJournalDao` and `akka.persistence.jdbc.dao.SnapshotDao` have been changed as the DAOs have to implement their own strategy, they'll have to work with `AtomicWrite`, `PersistentRepr` and `Any` as types.   
+  
 ## 2.3.3 (2016-06-13)
   - Fix for the async query `eventsByTag` that failed when using an Oracle database.
   
@@ -670,6 +678,7 @@ This source code is made available under the [Apache 2.0 License][apache]. The [
 
 Have fun!
 
+[fcristovao]: https://github.com/fcristovao
 [ellawala]: https://github.com/charithe
 [turner]: https://github.com/wwwiiilll
 [kouznetsov]: https://github.com/prettynatty

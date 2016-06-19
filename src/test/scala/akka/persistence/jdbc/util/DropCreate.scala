@@ -19,7 +19,7 @@ package akka.persistence.jdbc.util
 import java.sql.Statement
 
 import akka.actor.ActorSystem
-import akka.persistence.jdbc.util.Schema.{Oracle, SchemaType}
+import akka.persistence.jdbc.util.Schema.{ Oracle, SchemaType }
 import slick.jdbc.JdbcBackend
 
 object Schema {

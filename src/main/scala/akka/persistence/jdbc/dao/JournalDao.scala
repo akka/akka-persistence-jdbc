@@ -17,7 +17,7 @@
 package akka.persistence.jdbc.dao
 
 import akka.NotUsed
-import akka.persistence.{AtomicWrite, PersistentRepr}
+import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.stream.scaladsl._
 
 import scala.concurrent.Future

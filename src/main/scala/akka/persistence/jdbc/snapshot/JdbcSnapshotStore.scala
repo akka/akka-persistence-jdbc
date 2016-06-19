@@ -16,25 +16,25 @@
 
 package akka.persistence.jdbc.snapshot
 
-import akka.actor.{ActorSystem, ExtendedActorSystem}
+import akka.actor.{ ActorSystem, ExtendedActorSystem }
 import akka.persistence.jdbc.config.SnapshotConfig
 import akka.persistence.jdbc.dao.SnapshotDao
-import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
+import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
 import akka.persistence.snapshot.SnapshotStore
-import akka.persistence.{SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria}
-import akka.serialization.{Serialization, SerializationExtension}
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.persistence.{ SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria }
+import akka.serialization.{ Serialization, SerializationExtension }
+import akka.stream.{ ActorMaterializer, Materializer }
 import com.typesafe.config.Config
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 object JdbcSnapshotStore {
 
   def toSelectedSnapshot(tupled: (SnapshotMetadata, Any)): SelectedSnapshot = tupled match {
-    case (meta: SnapshotMetadata, snapshot: Any) => SelectedSnapshot(meta, snapshot)
+    case (meta: SnapshotMetadata, snapshot: Any) ⇒ SelectedSnapshot(meta, snapshot)
   }
 }
 
@@ -62,8 +62,10 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
     system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[SnapshotDao](fqcn, args).get
   }
 
-  override def loadAsync(persistenceId: String,
-                         criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] = {
+  override def loadAsync(
+    persistenceId: String,
+    criteria: SnapshotSelectionCriteria
+  ): Future[Option[SelectedSnapshot]] = {
     val result = criteria match {
       case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue, _, _) ⇒
         snapshotDao.snapshotForMaxSequenceNr(persistenceId)

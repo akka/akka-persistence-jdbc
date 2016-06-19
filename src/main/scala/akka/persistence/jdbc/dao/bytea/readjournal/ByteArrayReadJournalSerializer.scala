@@ -1,3 +1,19 @@
+/*
+ * Copyright 2016 Dennis Vriend
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package akka.persistence.jdbc.dao.bytea.readjournal
 
 import akka.persistence.PersistentRepr
@@ -16,23 +32,27 @@ object ByteArrayReadJournalSerializer {
     tags.map(_.split(separator).toSet).getOrElse(Set.empty[String])
 }
 
-class ByteArrayReadJournalSerializer(serialization: Serialization,
-                                     separator: String) extends FlowPersistentReprSerializer[JournalRow] {
+class ByteArrayReadJournalSerializer(
+  serialization: Serialization,
+    separator: String
+) extends FlowPersistentReprSerializer[JournalRow] {
 
   import ByteArrayReadJournalSerializer._
 
   override def serialize(persistentRepr: PersistentRepr, tags: Set[String]): Try[JournalRow] = {
     serialization
-    .serialize(persistentRepr)
-    .map(JournalRow(persistentRepr.persistenceId,
-                    persistentRepr.sequenceNr,
-                    _,
-                    Platform.currentTime,
-                    encodeTags(tags, separator)))
+      .serialize(persistentRepr)
+      .map(JournalRow(
+        persistentRepr.persistenceId,
+        persistentRepr.sequenceNr,
+        _,
+        Platform.currentTime,
+        encodeTags(tags, separator)
+      ))
   }
 
   override def deserialize(journalRow: JournalRow): Try[(PersistentRepr, Set[String])] = {
     serialization.deserialize(journalRow.message, classOf[PersistentRepr])
-    .map((_, decodeTags(journalRow.tags, separator)))
+      .map((_, decodeTags(journalRow.tags, separator)))
   }
 }

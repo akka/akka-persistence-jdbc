@@ -20,15 +20,15 @@ import akka.NotUsed
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.dao.JournalDao
 import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
-import akka.persistence.{AtomicWrite, PersistentRepr}
+import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.serialization.Serialization
 import akka.stream.Materializer
-import akka.stream.scaladsl.{Flow, Source}
+import akka.stream.scaladsl.{ Flow, Source }
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success, Try }
 
 /**
  * The DefaultJournalDao contains all the knowledge to persist and load serialized journal entries
@@ -42,8 +42,8 @@ class ByteArrayJournalDao(db: Database, val profile: JdbcProfile, journalConfig:
 
   private def futureExtractor: Flow[Try[Future[Unit]], Try[Unit], NotUsed] =
     Flow[Try[Future[Unit]]].mapAsync(1) {
-      case Success(future) => future.map(Success(_))
-      case Failure(t) => Future.successful(Failure(t))
+      case Success(future) ⇒ future.map(Success(_))
+      case Failure(t)      ⇒ Future.successful(Failure(t))
     }
 
   private def writeJournalRows(xs: Iterable[JournalRow]): Future[Unit] = for {
@@ -52,9 +52,9 @@ class ByteArrayJournalDao(db: Database, val profile: JdbcProfile, journalConfig:
 
   override def writeFlow: Flow[AtomicWrite, Try[Unit], NotUsed] =
     Flow[AtomicWrite]
-    .via(serializer.serializeFlow)
-    .map(_.map(writeJournalRows))
-    .via(futureExtractor)
+      .via(serializer.serializeFlow)
+      .map(_.map(writeJournalRows))
+      .via(futureExtractor)
 
   override def delete(persistenceId: String, maxSequenceNr: Long): Future[Unit] = {
     val actions = (for {
@@ -76,5 +76,5 @@ class ByteArrayJournalDao(db: Database, val profile: JdbcProfile, journalConfig:
 
   override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
     Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
-    .via(serializer.deserializeFlowWithoutTags)
+      .via(serializer.deserializeFlowWithoutTags)
 }

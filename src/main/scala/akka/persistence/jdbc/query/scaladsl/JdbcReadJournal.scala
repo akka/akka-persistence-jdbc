@@ -17,22 +17,22 @@
 package akka.persistence.jdbc.query.scaladsl
 
 import akka.NotUsed
-import akka.actor.{ExtendedActorSystem, Props}
+import akka.actor.{ ExtendedActorSystem, Props }
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.dao.ReadJournalDao
-import akka.persistence.jdbc.query.{AllPersistenceIdsPublisher, EventsByPersistenceIdPublisher, EventsByTagPublisher}
-import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
+import akka.persistence.jdbc.query.{ AllPersistenceIdsPublisher, EventsByPersistenceIdPublisher, EventsByTagPublisher }
+import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
 import akka.persistence.query.EventEnvelope
 import akka.persistence.query.scaladsl._
-import akka.serialization.{Serialization, SerializationExtension}
+import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.scaladsl.Source
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.{ ActorMaterializer, Materializer }
 import com.typesafe.config.Config
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 object JdbcReadJournal {
   final val Identifier = "jdbc-read-journal"

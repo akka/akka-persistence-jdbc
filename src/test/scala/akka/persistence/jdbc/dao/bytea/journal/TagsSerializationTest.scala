@@ -54,7 +54,7 @@ class TagsSerializationTest extends TestSpec {
     decodeTags(Some("foo,bar,baz"), ",") shouldBe Set("foo", "bar", "baz")
   }
 
-  "TagsSerialization" should "be bijective" in{
+  "TagsSerialization" should "be bijective" in {
     val tags: Set[String] = Set("foo", "bar", "baz")
     decodeTags(encodeTags(tags, ","), ",") shouldBe tags
   }

@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc.generator
 
-import akka.persistence.{AtomicWrite, PersistentRepr}
+import akka.persistence.{ AtomicWrite, PersistentRepr }
 import org.scalacheck.Gen
 
 object AkkaPersistenceGen {

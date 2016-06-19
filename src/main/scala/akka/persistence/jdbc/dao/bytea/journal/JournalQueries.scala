@@ -16,8 +16,8 @@
 
 package akka.persistence.jdbc.dao.bytea.journal
 
-import akka.persistence.jdbc.config.{DeletedToTableConfiguration, JournalTableConfiguration}
-import akka.persistence.jdbc.dao.bytea.journal.JournalTables.{JournalDeletedToRow, JournalRow}
+import akka.persistence.jdbc.config.{ DeletedToTableConfiguration, JournalTableConfiguration }
+import akka.persistence.jdbc.dao.bytea.journal.JournalTables.{ JournalDeletedToRow, JournalRow }
 import slick.driver.JdbcProfile
 
 class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration, override val deletedToTableCfg: DeletedToTableConfiguration) extends JournalTables {

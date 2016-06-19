@@ -25,7 +25,7 @@ import akka.stream.Materializer
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 class ByteArraySnapshotDao(db: JdbcBackend#Database, profile: JdbcProfile, snapshotConfig: SnapshotConfig, serialization: Serialization)(implicit ec: ExecutionContext, val mat: Materializer) extends SnapshotDao {
   import profile.api._

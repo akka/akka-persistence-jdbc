@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc.dao.bytea.journal
 
-import akka.persistence.jdbc.config.{DeletedToTableConfiguration, JournalTableConfiguration}
+import akka.persistence.jdbc.config.{ DeletedToTableConfiguration, JournalTableConfiguration }
 import akka.persistence.jdbc.dao.bytea.journal.JournalTables._
 
 object JournalTables {

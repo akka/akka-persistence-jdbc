@@ -17,8 +17,8 @@
 package akka.persistence.jdbc.configuration
 
 import akka.persistence.jdbc.config._
-import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest.{FlatSpec, Matchers}
+import com.typesafe.config.{ Config, ConfigFactory }
+import org.scalatest.{ FlatSpec, Matchers }
 
 import scala.concurrent.duration._
 

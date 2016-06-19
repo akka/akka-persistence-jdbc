@@ -50,7 +50,7 @@ class ByteArrayReadJournalDao(db: Database, val profile: JdbcProfile, readJourna
 
   override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] = profile match {
     case com.typesafe.slick.driver.oracle.OracleDriver ⇒ oracleAllPersistenceIds(max)
-    case _                                             ⇒ defaultAllPersistenceIds(max)
+    case _                                             ⇒ defaultAllPersistenceIds(correctMaxForDBDriver(max))
   }
 
   implicit val getJournalRow = GetResult(r ⇒ JournalRow(r.<<, r.<<, r.nextBytes(), r.<<, r.<<))
@@ -79,7 +79,7 @@ class ByteArrayReadJournalDao(db: Database, val profile: JdbcProfile, readJourna
   }
 
   private def defaultEventsByTag(tag: String, offset: Long, max: Long): Source[JournalRow, NotUsed] =
-    Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", Math.max(1, offset) - 1, max).result))
+    Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", Math.max(1, offset) - 1, correctMaxForDBDriver(max)).result))
 
   override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[PersistentRepr], NotUsed] = {
     val source: Source[JournalRow, NotUsed] = profile match {
@@ -90,6 +90,14 @@ class ByteArrayReadJournalDao(db: Database, val profile: JdbcProfile, readJourna
   }
 
   override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
-    Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
+    Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr,
+                                                         correctMaxForDBDriver(max)).result))
       .via(serializer.deserializeFlowWithoutTags)
+
+  private def correctMaxForDBDriver(max: Long): Long = {
+    profile match {
+      case slick.driver.H2Driver ⇒ Math.min(max, Int.MaxValue) // H2 only accepts a LIMIT clause as an Integer
+      case _                     ⇒ max
+    }
+  }
 }

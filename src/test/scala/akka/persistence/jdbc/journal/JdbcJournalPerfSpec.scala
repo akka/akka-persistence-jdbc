@@ -57,7 +57,11 @@ abstract class JdbcJournalPerfSpec(config: Config) extends JournalPerfSpec(confi
 }
 
 class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-application.conf")) {
-  dropCreate(Postgres())
+
+  override def beforeAll(): Unit = {
+    dropCreate(Postgres())
+    super.beforeAll()
+  }
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 30.seconds)
 
@@ -69,7 +73,11 @@ class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("po
 }
 
 class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-application.conf")) {
-  dropCreate(MySQL())
+
+  override def beforeAll(): Unit = {
+    dropCreate(MySQL())
+    super.beforeAll()
+  }
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 60.seconds)
 
@@ -81,7 +89,11 @@ class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql
 }
 
 class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-application.conf")) {
-  dropCreate(Oracle())
+
+  override def beforeAll(): Unit = {
+    dropCreate(Oracle())
+    super.beforeAll()
+  }
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
 

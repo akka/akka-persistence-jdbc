@@ -14,29 +14,14 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.generator
+package akka.persistence.jdbc.serialization
 
-import akka.persistence.{ AtomicWrite, PersistentRepr }
-import org.scalacheck.Gen
+import akka.persistence.SnapshotMetadata
 
-object AkkaPersistenceGen {
-  val genPersistentRepr = for {
-    payload ← Gen.alphaStr
-  } yield PersistentRepr(payload)
+import scala.util.Try
 
-  val genAtomicWrite = for {
-    repr ← genPersistentRepr
-  } yield AtomicWrite(repr)
+trait SnapshotSerializer[T] {
+  def serialize(metadata: SnapshotMetadata, snapshot: Any): Try[T]
 
-  val genBytes = for {
-    str ← Gen.alphaStr
-  } yield str.getBytes
-
-  val genByteBuff = for {
-    bytes ← genBytes
-  } yield bytes
-
-  val genSeqNum = Gen.choose(0, Int.MaxValue)
-
-  val genCreated = Gen.choose(10000, 99999)
+  def deserialize(t: T): Try[(SnapshotMetadata, Any)]
 }

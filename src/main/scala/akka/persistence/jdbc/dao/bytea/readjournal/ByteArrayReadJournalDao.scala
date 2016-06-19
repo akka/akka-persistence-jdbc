@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea
+package akka.persistence.jdbc.dao.bytea.readjournal
 
 import akka.NotUsed
+import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.dao.ReadJournalDao
-import akka.persistence.jdbc.dao.bytea.ReadJournalTables.JournalRow
-import akka.persistence.jdbc.serialization.{ SerializationResult, Serialized }
+import akka.persistence.jdbc.dao.bytea.readjournal.ReadJournalTables.JournalRow
+import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import slick.driver.JdbcProfile
@@ -28,10 +29,13 @@ import slick.jdbc.GetResult
 import slick.jdbc.JdbcBackend._
 
 import scala.concurrent.ExecutionContext
+import scala.util.Try
 
-class ByteArrayReadJournalDao(db: Database, val profile: JdbcProfile, readJournalConfig: ReadJournalConfig)(implicit ec: ExecutionContext, mat: Materializer) extends ReadJournalDao {
+class ByteArrayReadJournalDao(db: Database, val profile: JdbcProfile, readJournalConfig: ReadJournalConfig, serialization: Serialization)(implicit ec: ExecutionContext, mat: Materializer) extends ReadJournalDao {
   import profile.api._
   val queries = new ReadJournalQueries(profile, readJournalConfig.journalTableConfiguration)
+
+  val serializer = new ByteArrayReadJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator)
 
   private def oracleAllPersistenceIds(max: Long): Source[String, NotUsed] = {
     import readJournalConfig.journalTableConfiguration._
@@ -51,7 +55,7 @@ class ByteArrayReadJournalDao(db: Database, val profile: JdbcProfile, readJourna
 
   implicit val getJournalRow = GetResult(r ⇒ JournalRow(r.<<, r.<<, r.nextBytes(), r.<<, r.<<))
 
-  private def oracleEventsByTag(tag: String, offset: Long, max: Long): Source[SerializationResult, NotUsed] = {
+  private def oracleEventsByTag(tag: String, offset: Long, max: Long): Source[JournalRow, NotUsed] = {
     import readJournalConfig.journalTableConfiguration._
     import columnNames._
     val theOffset = Math.max(1, offset) - 1
@@ -71,19 +75,21 @@ class ByteArrayReadJournalDao(db: Database, val profile: JdbcProfile, readJourna
             )
             where rnum > $theOffset""".as[JournalRow]
       )
-    ).map(row ⇒ Serialized(row.persistenceId, row.sequenceNumber, row.message, row.tags, row.created))
+    )
   }
 
-  private def defaultEventsByTag(tag: String, offset: Long, max: Long): Source[SerializationResult, NotUsed] =
+  private def defaultEventsByTag(tag: String, offset: Long, max: Long): Source[JournalRow, NotUsed] =
     Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", Math.max(1, offset) - 1, max).result))
-      .map(row ⇒ Serialized(row.persistenceId, row.sequenceNumber, row.message, row.tags, row.created))
 
-  override def eventsByTag(tag: String, offset: Long, max: Long): Source[SerializationResult, NotUsed] = profile match {
-    case com.typesafe.slick.driver.oracle.OracleDriver ⇒ oracleEventsByTag(tag, offset, max)
-    case _                                             ⇒ defaultEventsByTag(tag, offset, max)
+  override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[PersistentRepr], NotUsed] = {
+    val source: Source[JournalRow, NotUsed] = profile match {
+      case com.typesafe.slick.driver.oracle.OracleDriver ⇒ oracleEventsByTag(tag, offset, max)
+      case _                                             ⇒ defaultEventsByTag(tag, offset, max)
+    }
+    source.via(serializer.deserializeFlowWithoutTags)
   }
 
-  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[SerializationResult, NotUsed] =
+  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
     Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
-      .map(row ⇒ Serialized(row.persistenceId, row.sequenceNumber, row.message, row.tags, row.created))
+      .via(serializer.deserializeFlowWithoutTags)
 }

@@ -19,10 +19,10 @@ package akka.persistence.jdbc.journal
 import akka.actor.{ ActorSystem, ExtendedActorSystem }
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.dao.JournalDao
-import akka.persistence.jdbc.serialization.SerializationFacade
 import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
 import akka.persistence.journal.AsyncWriteJournal
 import akka.persistence.{ AtomicWrite, PersistentRepr }
+import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.scaladsl.Source
 import akka.stream.{ ActorMaterializer, Materializer }
 import com.typesafe.config.Config
@@ -48,20 +48,16 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
       (classOf[Database], db),
       (classOf[JdbcProfile], profile),
       (classOf[JournalConfig], journalConfig),
+      (classOf[Serialization], SerializationExtension(system)),
       (classOf[ExecutionContext], ec),
       (classOf[Materializer], mat)
     )
     system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[JournalDao](fqcn, args).get
   }
 
-  val serializationFacade: SerializationFacade =
-    SerializationFacade(system, journalConfig.pluginConfig.tagSeparator)
-
   override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] =
     Source(messages)
-      .via(serializationFacade.serialize(journalConfig.pluginConfig.serialization))
       .via(journalDao.writeFlow)
-      .map(_.map(_ ⇒ ()))
       .runFold(List.empty[Try[Unit]])(_ :+ _)
 
   override def asyncDeleteMessagesTo(persistenceId: String, toSequenceNr: Long): Future[Unit] =
@@ -72,7 +68,6 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
 
   override def asyncReplayMessages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(recoveryCallback: (PersistentRepr) ⇒ Unit): Future[Unit] =
     journalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, max)
-      .via(serializationFacade.deserializeRepr)
       .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
       .runForeach(recoveryCallback)
       .map(_ ⇒ ())

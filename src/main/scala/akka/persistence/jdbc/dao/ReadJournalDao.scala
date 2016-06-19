@@ -17,8 +17,10 @@
 package akka.persistence.jdbc.dao
 
 import akka.NotUsed
-import akka.persistence.jdbc.serialization.SerializationResult
+import akka.persistence.PersistentRepr
 import akka.stream.scaladsl.Source
+
+import scala.util.Try
 
 trait ReadJournalDao {
   /**
@@ -30,10 +32,10 @@ trait ReadJournalDao {
    * Returns a Source of bytes for certain tag from an offset. The result is sorted by
    * created time asc thus the offset is relative to the creation time
    */
-  def eventsByTag(tag: String, offset: Long, max: Long): Source[SerializationResult, NotUsed]
+  def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[PersistentRepr], NotUsed]
 
   /**
    * Returns a Source of bytes for a certain persistenceId
    */
-  def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[SerializationResult, NotUsed]
+  def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed]
 }

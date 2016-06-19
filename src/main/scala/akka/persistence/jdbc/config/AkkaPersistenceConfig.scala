@@ -81,22 +81,19 @@ class SnapshotTableConfiguration(config: Config) {
 
 class JournalPluginConfig(config: Config) {
   val tagSeparator: String = config.as[String]("tagSeparator", ",")
-  val serialization: Boolean = config.asBoolean("serialization", true)
-  val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao")
-  override def toString: String = s"JournalPluginConfig($tagSeparator,$serialization,$dao)"
+  val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao")
+  override def toString: String = s"JournalPluginConfig($tagSeparator,$dao)"
 }
 
 class ReadJournalPluginConfig(config: Config) {
   val tagSeparator: String = config.as[String]("tagSeparator", ",")
-  val serialization: Boolean = config.asBoolean("serialization", true)
-  val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.ByteArrayReadJournalDao")
-  override def toString: String = s"ReadJournalPluginConfig($tagSeparator,$serialization,$dao)"
+  val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.readjournal.ByteArrayReadJournalDao")
+  override def toString: String = s"ReadJournalPluginConfig($tagSeparator,$dao)"
 }
 
 class SnapshotPluginConfig(config: Config) {
-  val serialization: Boolean = config.asBoolean("serialization", true)
-  val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao")
-  override def toString: String = s"SnapshotPluginConfig($serialization,$dao)"
+  val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao")
+  override def toString: String = s"SnapshotPluginConfig($dao)"
 }
 
 // aggregations

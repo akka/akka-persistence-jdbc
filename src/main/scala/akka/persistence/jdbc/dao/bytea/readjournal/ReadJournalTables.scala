@@ -14,25 +14,21 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea
+package akka.persistence.jdbc.dao.bytea.readjournal
 
-import akka.persistence.jdbc.dao.bytea.JournalTables._
-import akka.persistence.jdbc.config.{ DeletedToTableConfiguration, JournalTableConfiguration }
+import akka.persistence.jdbc.config.JournalTableConfiguration
 
-object JournalTables {
+object ReadJournalTables {
   case class JournalRow(persistenceId: String, sequenceNumber: Long, message: Array[Byte], created: Long, tags: Option[String] = None)
-
-  case class JournalDeletedToRow(persistenceId: String, deletedTo: Long)
 }
 
-trait JournalTables {
+trait ReadJournalTables {
+  import ReadJournalTables._
   val profile: slick.driver.JdbcProfile
 
   import profile.api._
 
   def journalTableCfg: JournalTableConfiguration
-
-  def deletedToTableCfg: DeletedToTableConfiguration
 
   class Journal(_tableTag: Tag) extends Table[JournalRow](_tableTag, _schemaName = journalTableCfg.schemaName, _tableName = journalTableCfg.tableName) {
     def * = (persistenceId, sequenceNumber, message, created, tags) <> (JournalRow.tupled, JournalRow.unapply)
@@ -40,19 +36,10 @@ trait JournalTables {
     val persistenceId: Rep[String] = column[String](journalTableCfg.columnNames.persistenceId, O.Length(255, varying = true))
     val sequenceNumber: Rep[Long] = column[Long](journalTableCfg.columnNames.sequenceNumber)
     val created: Rep[Long] = column[Long](journalTableCfg.columnNames.created)
-    val tags: Rep[Option[String]] = column[String](journalTableCfg.columnNames.tags, O.Length(255, varying = true))
+    val tags: Rep[Option[String]] = column[String](journalTableCfg.columnNames.tags, O.Length(255, varying = true)).?
     val message: Rep[Array[Byte]] = column[Array[Byte]](journalTableCfg.columnNames.message)
     val pk = primaryKey("journal_pk", (persistenceId, sequenceNumber))
   }
 
   lazy val JournalTable = new TableQuery(tag ⇒ new Journal(tag))
-
-  class DeletedTo(_tableTag: Tag) extends Table[JournalDeletedToRow](_tableTag, _schemaName = deletedToTableCfg.schemaName, _tableName = deletedToTableCfg.tableName) {
-    def * = (persistenceId, deletedTo) <> (JournalDeletedToRow.tupled, JournalDeletedToRow.unapply)
-
-    val persistenceId: Rep[String] = column[String](deletedToTableCfg.columnNames.persistenceId, O.Length(255, varying = true))
-    val deletedTo: Rep[Long] = column[Long](deletedToTableCfg.columnNames.deletedTo)
-  }
-
-  lazy val DeletedToTable = new TableQuery(tag ⇒ new DeletedTo(tag))
 }

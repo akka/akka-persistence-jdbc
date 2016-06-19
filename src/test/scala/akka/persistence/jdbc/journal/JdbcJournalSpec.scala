@@ -57,7 +57,10 @@ abstract class JdbcJournalSpec(config: Config) extends JournalSpec(config)
  * but the Slick Tables definition must not change, else it breaks the UPSERT feature...
  */
 class PostgresJournalSpec extends JdbcJournalSpec(ConfigFactory.load("postgres-application.conf")) {
-  dropCreate(Postgres())
+  override def beforeAll(): Unit = {
+    dropCreate(Postgres())
+    super.beforeAll()
+  }
 }
 
 /**
@@ -65,9 +68,15 @@ class PostgresJournalSpec extends JdbcJournalSpec(ConfigFactory.load("postgres-a
  * for some reason when creating the DDL
  */
 class MySQLJournalSpec extends JdbcJournalSpec(ConfigFactory.load("mysql-application.conf")) {
-  dropCreate(MySQL())
+  override def beforeAll(): Unit = {
+    dropCreate(MySQL())
+    super.beforeAll()
+  }
 }
 
 class OracleJournalSpec extends JdbcJournalSpec(ConfigFactory.load("oracle-application.conf")) {
-  dropCreate(Oracle())
+  override def beforeAll(): Unit = {
+    dropCreate(Oracle())
+    super.beforeAll()
+  }
 }

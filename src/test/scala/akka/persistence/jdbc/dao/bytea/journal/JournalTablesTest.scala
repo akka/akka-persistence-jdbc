@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea
+package akka.persistence.jdbc.dao.bytea.journal
 
 import akka.persistence.jdbc.dao.TablesTestSpec
 import slick.driver.JdbcProfile

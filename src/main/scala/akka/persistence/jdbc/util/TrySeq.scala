@@ -14,29 +14,21 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.generator
+package akka.persistence.jdbc.util
 
-import akka.persistence.{ AtomicWrite, PersistentRepr }
-import org.scalacheck.Gen
+import scala.util.{ Failure, Success, Try }
 
-object AkkaPersistenceGen {
-  val genPersistentRepr = for {
-    payload ← Gen.alphaStr
-  } yield PersistentRepr(payload)
-
-  val genAtomicWrite = for {
-    repr ← genPersistentRepr
-  } yield AtomicWrite(repr)
-
-  val genBytes = for {
-    str ← Gen.alphaStr
-  } yield str.getBytes
-
-  val genByteBuff = for {
-    bytes ← genBytes
-  } yield bytes
-
-  val genSeqNum = Gen.choose(0, Int.MaxValue)
-
-  val genCreated = Gen.choose(10000, 99999)
+object TrySeq {
+  def sequence[R](seq: Seq[Try[R]]): Try[Seq[R]] = {
+    seq match {
+      case Success(h) :: tail ⇒
+        tail.foldLeft(Try(h :: Nil)) {
+          case (Success(acc), Success(elem)) ⇒ Success(elem :: acc)
+          case (e: Failure[_], _)            ⇒ e
+          case (_, Failure(e))               ⇒ Failure(e)
+        }
+      case Failure(e) :: _ ⇒ Failure(e)
+      case Nil             ⇒ Try { Nil }
+    }
+  }
 }

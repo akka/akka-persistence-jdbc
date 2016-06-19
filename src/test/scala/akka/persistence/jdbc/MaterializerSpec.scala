@@ -14,29 +14,14 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.generator
+package akka.persistence.jdbc
 
-import akka.persistence.{ AtomicWrite, PersistentRepr }
-import org.scalacheck.Gen
+import akka.actor.ActorSystem
+import akka.stream.{ ActorMaterializer, Materializer }
+import com.typesafe.config.ConfigFactory
 
-object AkkaPersistenceGen {
-  val genPersistentRepr = for {
-    payload ← Gen.alphaStr
-  } yield PersistentRepr(payload)
-
-  val genAtomicWrite = for {
-    repr ← genPersistentRepr
-  } yield AtomicWrite(repr)
-
-  val genBytes = for {
-    str ← Gen.alphaStr
-  } yield str.getBytes
-
-  val genByteBuff = for {
-    bytes ← genBytes
-  } yield bytes
-
-  val genSeqNum = Gen.choose(0, Int.MaxValue)
-
-  val genCreated = Gen.choose(10000, 99999)
+trait MaterializerSpec {
+  val config = ConfigFactory.load()
+  implicit val system: ActorSystem = ActorSystem("test", config)
+  implicit val mat: Materializer = ActorMaterializer()
 }

@@ -14,24 +14,18 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea
+package akka.persistence.jdbc.dao.bytea.journal
 
-import akka.persistence.jdbc.dao.bytea.JournalTables.{ JournalDeletedToRow, JournalRow }
 import akka.persistence.jdbc.config.{ DeletedToTableConfiguration, JournalTableConfiguration }
-import akka.persistence.jdbc.serialization.{ SerializationResult, Serialized }
+import akka.persistence.jdbc.dao.bytea.journal.JournalTables.{ JournalDeletedToRow, JournalRow }
 import slick.driver.JdbcProfile
 
 class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration, override val deletedToTableCfg: DeletedToTableConfiguration) extends JournalTables {
 
   import profile.api._
 
-  protected final val CollectSerializedPF: PartialFunction[SerializationResult, Serialized] = {
-    case e: Serialized ⇒ e
-  }
-
-  def writeList(xs: Iterable[SerializationResult]) =
-    JournalTable ++= xs.collect(CollectSerializedPF)
-      .map(serialized ⇒ JournalRow(serialized.persistenceId, serialized.sequenceNr, serialized.serialized, serialized.created, serialized.tags))
+  def writeJournalRows(xs: Iterable[JournalRow]) =
+    JournalTable ++= xs
 
   def insertDeletedTo(persistenceId: String, highestSequenceNr: Option[Long]) =
     DeletedToTable += JournalDeletedToRow(persistenceId, highestSequenceNr.getOrElse(0L))

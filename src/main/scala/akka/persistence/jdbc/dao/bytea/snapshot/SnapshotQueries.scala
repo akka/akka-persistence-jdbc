@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea
+package akka.persistence.jdbc.dao.bytea.snapshot
 
-import SnapshotTables.SnapshotRow
 import akka.persistence.jdbc.config.SnapshotTableConfiguration
+import akka.persistence.jdbc.dao.bytea.snapshot.SnapshotTables.SnapshotRow
 import slick.driver.JdbcProfile
 
 class SnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: SnapshotTableConfiguration) extends SnapshotTables {
@@ -26,8 +26,8 @@ class SnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: S
   private def maxSeqNrForPersistenceId(persistenceId: Rep[String]) =
     _selectAll(persistenceId).map(_.sequenceNumber).max
 
-  def insertOrUpdate(persistenceId: String, sequenceNr: Long, created: Long, snapshot: Array[Byte]) =
-    SnapshotTable.insertOrUpdate(SnapshotRow(persistenceId, sequenceNr, created, snapshot))
+  def insertOrUpdate(snapshotRow: SnapshotRow) =
+    SnapshotTable.insertOrUpdate(snapshotRow)
 
   private def _selectAll(persistenceId: Rep[String]) =
     SnapshotTable.filter(_.persistenceId === persistenceId).sortBy(_.sequenceNumber.desc)

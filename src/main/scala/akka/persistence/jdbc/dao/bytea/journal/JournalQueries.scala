@@ -16,8 +16,8 @@
 
 package akka.persistence.jdbc.dao.bytea.journal
 
-import akka.persistence.jdbc.config.{DeletedToTableConfiguration, JournalTableConfiguration}
-import akka.persistence.jdbc.dao.bytea.journal.JournalTables.{JournalDeletedToRow, JournalRow}
+import akka.persistence.jdbc.config.{ DeletedToTableConfiguration, JournalTableConfiguration }
+import akka.persistence.jdbc.dao.bytea.journal.JournalTables.{ JournalDeletedToRow, JournalRow }
 import slick.driver.JdbcProfile
 
 class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration, override val deletedToTableCfg: DeletedToTableConfiguration) extends JournalTables {
@@ -64,10 +64,10 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
 
   private def _messagesQuery(persistenceId: Rep[String], fromSequenceNr: Rep[Long], toSequenceNr: Rep[Long], max: ConstColumn[Long]): Query[Journal, JournalRow, Seq] =
     JournalTable
-    .filter(_.persistenceId === persistenceId)
-    .filter(_.sequenceNumber >= fromSequenceNr)
-    .filter(_.sequenceNumber <= toSequenceNr)
-    .sortBy(_.sequenceNumber.asc)
-    .take(max)
+      .filter(_.persistenceId === persistenceId)
+      .filter(_.sequenceNumber >= fromSequenceNr)
+      .filter(_.sequenceNumber <= toSequenceNr)
+      .sortBy(_.sequenceNumber.asc)
+      .take(max)
   val messagesQuery = Compiled(_messagesQuery _)
 }

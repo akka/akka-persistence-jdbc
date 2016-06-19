@@ -75,9 +75,8 @@ scalacOptions ++= Seq(
 )
 
 // enable scala code formatting //
-import com.typesafe.sbt.SbtScalariform
-
 import scalariform.formatter.preferences._
+import com.typesafe.sbt.SbtScalariform
 
 // Scalariform settings
 SbtScalariform.autoImport.scalariformPreferences := SbtScalariform.autoImport.scalariformPreferences.value

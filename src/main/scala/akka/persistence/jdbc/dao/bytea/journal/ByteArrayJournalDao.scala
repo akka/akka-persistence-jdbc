@@ -20,15 +20,15 @@ import akka.NotUsed
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.dao.JournalDao
 import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
-import akka.persistence.{AtomicWrite, PersistentRepr}
+import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.serialization.Serialization
 import akka.stream.Materializer
-import akka.stream.scaladsl.{Flow, Source}
+import akka.stream.scaladsl.{ Flow, Source }
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success, Try }
 
 /**
  * The DefaultJournalDao contains all the knowledge to persist and load serialized journal entries

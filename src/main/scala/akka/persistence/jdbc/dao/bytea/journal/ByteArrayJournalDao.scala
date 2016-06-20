@@ -38,7 +38,7 @@ trait BaseByteArrayJournalDao extends JournalDao {
 
   val db: Database
   val profile: JdbcProfile
-  val queries : JournalQueries
+  val queries: JournalQueries
   val serializer: FlowPersistentReprSerializer[JournalRow]
   implicit val ec: ExecutionContext
 

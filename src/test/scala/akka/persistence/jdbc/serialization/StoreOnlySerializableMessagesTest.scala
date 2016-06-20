@@ -54,7 +54,7 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
     try f(persistentActor, recoverProbe, persistFailureProbe, persistRejectedProbe) finally cleanup(persistentActor)
   }
 
-  override def beforeAll() : Unit = {
+  override def beforeAll(): Unit = {
     dropCreate(schemaType)
     super.beforeAll()
   }

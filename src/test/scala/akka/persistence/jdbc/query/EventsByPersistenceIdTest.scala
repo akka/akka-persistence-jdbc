@@ -16,7 +16,6 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.jdbc.util.Schema.{ MySQL, Oracle, Postgres }
 import akka.persistence.query.EventEnvelope
 
 import scala.concurrent.duration._
@@ -198,23 +197,13 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
   }
 }
 
-class PostgresScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("postgres-application.conf") with ScalaJdbcReadJournalOperations {
-  dropCreate(Postgres())
-}
+class PostgresScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("postgres-application.conf") with ScalaJdbcReadJournalOperations with PostgresCleaner
 
-class MySQLScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mysql-application.conf") with ScalaJdbcReadJournalOperations {
-  dropCreate(MySQL())
-}
+class MySQLScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mysql-application.conf") with ScalaJdbcReadJournalOperations with MysqlCleaner
 
-class OracleScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("oracle-application.conf") with ScalaJdbcReadJournalOperations {
-  dropCreate(Oracle())
+class OracleScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
 
-  protected override def beforeEach(): Unit =
-    clearOracle()
-
-  override protected def afterAll(): Unit =
-    clearOracle()
-}
+class H2ScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner
 
 //class PostgresJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
 //  dropCreate(Postgres())

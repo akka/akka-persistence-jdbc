@@ -27,7 +27,7 @@ import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 
 import scala.concurrent.duration._
 
-abstract class JdbcJournalSpec(config: Config) extends JournalSpec(config)
+abstract class JdbcJournalSpec(config: Config, schemaType: SchemaType) extends JournalSpec(config)
     with BeforeAndAfterAll
     with BeforeAndAfterEach
     with ScalaFutures
@@ -46,7 +46,12 @@ abstract class JdbcJournalSpec(config: Config) extends JournalSpec(config)
 
   val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
 
-  protected override def afterAll(): Unit = {
+  override def beforeAll(): Unit = {
+    dropCreate(schemaType)
+    super.beforeAll()
+  }
+
+  override def afterAll(): Unit = {
     db.close()
     super.afterAll()
   }
@@ -56,27 +61,14 @@ abstract class JdbcJournalSpec(config: Config) extends JournalSpec(config)
  * Use the postgres DDL script that is available on the website, for some reason slick generates incorrect DDL,
  * but the Slick Tables definition must not change, else it breaks the UPSERT feature...
  */
-class PostgresJournalSpec extends JdbcJournalSpec(ConfigFactory.load("postgres-application.conf")) {
-  override def beforeAll(): Unit = {
-    dropCreate(Postgres())
-    super.beforeAll()
-  }
-}
+class PostgresJournalSpec extends JdbcJournalSpec(ConfigFactory.load("postgres-application.conf"), Postgres())
 
 /**
  * Does not (yet) work because Slick generates double quotes to escape field names
  * for some reason when creating the DDL
  */
-class MySQLJournalSpec extends JdbcJournalSpec(ConfigFactory.load("mysql-application.conf")) {
-  override def beforeAll(): Unit = {
-    dropCreate(MySQL())
-    super.beforeAll()
-  }
-}
+class MySQLJournalSpec extends JdbcJournalSpec(ConfigFactory.load("mysql-application.conf"), MySQL())
 
-class OracleJournalSpec extends JdbcJournalSpec(ConfigFactory.load("oracle-application.conf")) {
-  override def beforeAll(): Unit = {
-    dropCreate(Oracle())
-    super.beforeAll()
-  }
-}
+class OracleJournalSpec extends JdbcJournalSpec(ConfigFactory.load("oracle-application.conf"), Oracle())
+
+class H2JournalSpec extends JdbcJournalSpec(ConfigFactory.load("h2-application.conf"), H2())

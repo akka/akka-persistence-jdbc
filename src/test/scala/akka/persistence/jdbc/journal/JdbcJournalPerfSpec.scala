@@ -27,7 +27,7 @@ import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 
 import scala.concurrent.duration._
 
-abstract class JdbcJournalPerfSpec(config: Config) extends JournalPerfSpec(config)
+abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) extends JournalPerfSpec(config)
     with BeforeAndAfterAll
     with BeforeAndAfterEach
     with ScalaFutures
@@ -50,18 +50,18 @@ abstract class JdbcJournalPerfSpec(config: Config) extends JournalPerfSpec(confi
 
   val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
 
-  protected override def afterAll(): Unit = {
+  override def beforeAll(): Unit = {
+    dropCreate(schemaType)
+    super.beforeAll()
+  }
+
+  override def afterAll(): Unit = {
     db.close()
     super.afterAll()
   }
 }
 
-class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-application.conf")) {
-
-  override def beforeAll(): Unit = {
-    dropCreate(Postgres())
-    super.beforeAll()
-  }
+class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-application.conf"), Postgres()) {
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 30.seconds)
 
@@ -72,12 +72,7 @@ class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("po
   override def eventsCount: Int = 1000 // postgres is very slow on my macbook / docker / virtualbox
 }
 
-class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-application.conf")) {
-
-  override def beforeAll(): Unit = {
-    dropCreate(MySQL())
-    super.beforeAll()
-  }
+class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-application.conf"), MySQL()) {
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 60.seconds)
 
@@ -88,12 +83,18 @@ class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql
   override def eventsCount: Int = 1000 // mysql is very slow on my macbook / docker / virtualbox
 }
 
-class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-application.conf")) {
+class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-application.conf"), Oracle()) {
 
-  override def beforeAll(): Unit = {
-    dropCreate(Oracle())
-    super.beforeAll()
-  }
+  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
+
+  override def awaitDurationMillis: Long = 180.seconds.toMillis
+
+  override def measurementIterations: Int = 1
+
+  override def eventsCount: Int = 1000 // oracle is very slow on my macbook / docker / virtualbox
+}
+
+class H2JournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("h2-application.conf"), H2()) {
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
 

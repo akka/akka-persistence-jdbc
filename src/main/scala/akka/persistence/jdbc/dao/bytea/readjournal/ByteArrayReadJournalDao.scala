@@ -21,6 +21,7 @@ import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.dao.ReadJournalDao
 import akka.persistence.jdbc.dao.bytea.readjournal.ReadJournalTables.JournalRow
+import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
@@ -31,65 +32,110 @@ import slick.jdbc.JdbcBackend._
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
-class ByteArrayReadJournalDao(db: Database, val profile: JdbcProfile, readJournalConfig: ReadJournalConfig, serialization: Serialization)(implicit ec: ExecutionContext, mat: Materializer) extends ReadJournalDao {
+trait BaseByteArrayReadJournalDao extends ReadJournalDao {
+  val db: Database
+  val profile: JdbcProfile
+  val queries: ReadJournalQueries
+  val serializer: FlowPersistentReprSerializer[JournalRow]
+
   import profile.api._
-  val queries = new ReadJournalQueries(profile, readJournalConfig.journalTableConfiguration)
 
-  val serializer = new ByteArrayReadJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator)
-
-  private def oracleAllPersistenceIds(max: Long): Source[String, NotUsed] = {
-    import readJournalConfig.journalTableConfiguration._
-    import columnNames._
-    Source.fromPublisher(
-      db.stream(sql"""select distinct "#$persistenceId" from "#${schemaName.getOrElse("")}"."#$tableName" where rownum <= $max""".as[String])
-    )
-  }
-
-  private def defaultAllPersistenceIds(max: Long): Source[String, NotUsed] =
+  override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct(max).result))
 
-  override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] = profile match {
-    case com.typesafe.slick.driver.oracle.OracleDriver ⇒ oracleAllPersistenceIds(max)
-    case _                                             ⇒ defaultAllPersistenceIds(max)
+  override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
+    Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", Math.max(1, offset) - 1, max).result))
+      .via(serializer.deserializeFlowWithoutTags)
+
+  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
+    Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr,max).result))
+      .via(serializer.deserializeFlowWithoutTags)
+
+}
+
+trait OracleReadJournalDao extends ReadJournalDao {
+  val db: Database
+  val profile: JdbcProfile
+  val readJournalConfig: ReadJournalConfig
+  val queries: ReadJournalQueries
+  val serializer: FlowPersistentReprSerializer[JournalRow]
+
+  import profile.api._
+
+  private lazy val isOracleDriver = profile match {
+    case com.typesafe.slick.driver.oracle.OracleDriver ⇒ true
+    case _                                             ⇒ false
+  }
+
+  abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] = {
+    if (isOracleDriver) {
+      import readJournalConfig.journalTableConfiguration._
+      import columnNames._
+      Source.fromPublisher(
+        db.stream(sql"""select distinct "#$persistenceId" from "#${schemaName.getOrElse("")}"."#$tableName" where rownum <= $max""".as[String])
+      )
+    } else {
+      super.allPersistenceIdsSource(max)
+    }
   }
 
   implicit val getJournalRow = GetResult(r ⇒ JournalRow(r.<<, r.<<, r.nextBytes(), r.<<, r.<<))
 
-  private def oracleEventsByTag(tag: String, offset: Long, max: Long): Source[JournalRow, NotUsed] = {
-    import readJournalConfig.journalTableConfiguration._
-    import columnNames._
-    val theOffset = Math.max(1, offset) - 1
-    val theTag = s"%$tag%"
-    Source.fromPublisher(
-      db.stream(
-        sql"""SELECT "#$persistenceId", "#$sequenceNumber", "#$message", "#$created", "#$tags" FROM (
-              SELECT
-                a.*,
-                rownum rnum
-              FROM
-                (SELECT *
-                 FROM "#${schemaName.getOrElse("")}"."#$tableName"
-                 WHERE "#$tags" LIKE $theTag
-                 ORDER BY "#$created") a
-              where rownum <= $max
-            )
-            where rnum > $theOffset""".as[JournalRow]
-      )
-    )
-  }
-
-  private def defaultEventsByTag(tag: String, offset: Long, max: Long): Source[JournalRow, NotUsed] =
-    Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", Math.max(1, offset) - 1, max).result))
-
-  override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[PersistentRepr], NotUsed] = {
-    val source: Source[JournalRow, NotUsed] = profile match {
-      case com.typesafe.slick.driver.oracle.OracleDriver ⇒ oracleEventsByTag(tag, offset, max)
-      case _                                             ⇒ defaultEventsByTag(tag, offset, max)
+  abstract override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[PersistentRepr], NotUsed] = {
+    if (isOracleDriver) {
+      import readJournalConfig.journalTableConfiguration._
+      import columnNames._
+      val theOffset = Math.max(1, offset) - 1
+      val theTag = s"%$tag%"
+      Source.fromPublisher(
+        db.stream(
+          sql"""SELECT "#$persistenceId", "#$sequenceNumber", "#$message", "#$created", "#$tags" FROM (
+                SELECT
+                  a.*,
+                  rownum rnum
+                FROM
+                  (SELECT *
+                   FROM "#${schemaName.getOrElse("")}"."#$tableName"
+                   WHERE "#$tags" LIKE $theTag
+                   ORDER BY "#$created") a
+                where rownum <= $max
+              )
+              where rnum > $theOffset""".as[JournalRow]
+        )
+      ).via(serializer.deserializeFlowWithoutTags)
+    } else {
+      super.eventsByTag(tag, offset, max)
     }
-    source.via(serializer.deserializeFlowWithoutTags)
+  }
+}
+
+trait H2ReadJournalDao extends ReadJournalDao {
+  val profile: JdbcProfile
+
+  private lazy val isH2Driver = profile match {
+    case slick.driver.H2Driver ⇒ true
+    case _                     ⇒ false
   }
 
-  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
-    Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
-      .via(serializer.deserializeFlowWithoutTags)
+  abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
+    super.allPersistenceIdsSource(correctMaxForH2Driver(max))
+
+  abstract override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
+    super.eventsByTag(tag, offset, correctMaxForH2Driver(max))
+
+  abstract override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
+    super.messages(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max))
+
+  private def correctMaxForH2Driver(max: Long): Long = {
+    if (isH2Driver) {
+      Math.min(max, Int.MaxValue) // H2 only accepts a LIMIT clause as an Integer
+    } else {
+      max
+    }
+  }
+}
+
+class ByteArrayReadJournalDao(val db: Database, val profile: JdbcProfile, val readJournalConfig: ReadJournalConfig, serialization: Serialization) (implicit ec: ExecutionContext, mat: Materializer) extends BaseByteArrayReadJournalDao with OracleReadJournalDao with H2ReadJournalDao{
+  val queries = new ReadJournalQueries(profile, readJournalConfig.journalTableConfiguration)
+  val serializer = new ByteArrayReadJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator)
 }

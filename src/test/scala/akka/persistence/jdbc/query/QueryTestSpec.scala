@@ -188,11 +188,70 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJ
 
   def withTags(payload: Any, tags: String*) = Tagged(payload, Set(tags: _*))
 
+  override protected def afterAll(): Unit = {
+    db.close()
+    system.terminate().toTry should be a 'success
+  }
+}
+
+trait PostgresCleaner extends QueryTestSpec {
+  import akka.persistence.jdbc.util.Schema.Postgres
+
   val actionsClearPostgres = (for {
     _ ← sqlu"""TRUNCATE journal"""
     _ ← sqlu"""TRUNCATE deleted_to"""
     _ ← sqlu"""TRUNCATE snapshot"""
   } yield ()).transactionally
+
+  def clearPostgres(): Unit =
+    withDatabase(_.run(actionsClearPostgres).toTry) should be a 'success
+
+  override def beforeAll() = {
+    dropCreate(Postgres())
+    super.beforeAll()
+  }
+
+  override def beforeEach(): Unit = {
+    clearPostgres()
+    super.beforeEach()
+  }
+
+  override def afterAll(): Unit = {
+    clearPostgres()
+    super.afterAll()
+  }
+}
+
+trait MysqlCleaner extends QueryTestSpec {
+  import akka.persistence.jdbc.util.Schema.MySQL
+
+  val actionsClearMySQL = (for {
+    _ ← sqlu"""TRUNCATE journal"""
+    _ ← sqlu"""TRUNCATE deleted_to"""
+    _ ← sqlu"""TRUNCATE snapshot"""
+  } yield ()).transactionally
+
+  def clearMySQL(): Unit =
+    withDatabase(_.run(actionsClearMySQL).toTry) should be a 'success
+
+  override def beforeAll() = {
+    dropCreate(MySQL())
+    super.beforeAll()
+  }
+
+  override def beforeEach(): Unit = {
+    clearMySQL()
+    super.beforeEach()
+  }
+
+  override def afterAll(): Unit = {
+    clearMySQL()
+    super.afterAll()
+  }
+}
+
+trait OracleCleaner extends QueryTestSpec {
+  import akka.persistence.jdbc.util.Schema.Oracle
 
   val actionsClearOracle = (for {
     _ ← sqlu"""DELETE FROM "SYSTEM"."journal""""
@@ -200,18 +259,49 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJ
     _ ← sqlu"""DELETE FROM "SYSTEM"."snapshot""""
   } yield ()).transactionally
 
-  def clearPostgres(): Unit =
-    withDatabase(_.run(actionsClearPostgres).toTry) should be a 'success
-
   def clearOracle(): Unit =
     withDatabase(_.run(actionsClearOracle).toTry) should be a 'success
 
-  protected override def beforeEach(): Unit =
-    clearPostgres()
+  override def beforeAll() = {
+    dropCreate(Oracle())
+    super.beforeAll()
+  }
 
-  override protected def afterAll(): Unit = {
-    clearPostgres()
-    db.close()
-    system.terminate().toTry should be a 'success
+  override def afterAll(): Unit = {
+    clearOracle()
+    super.afterAll()
+  }
+
+  override def beforeEach(): Unit = {
+    clearOracle()
+    super.beforeEach()
+  }
+}
+
+trait H2Cleaner extends QueryTestSpec {
+  import akka.persistence.jdbc.util.Schema.H2
+
+  val actionsClearH2 = (for {
+    _ ← sqlu"""TRUNCATE TABLE journal"""
+    _ ← sqlu"""TRUNCATE TABLE deleted_to"""
+    _ ← sqlu"""TRUNCATE TABLE snapshot"""
+  } yield ()).transactionally
+
+  def clearH2(): Unit =
+    withDatabase(_.run(actionsClearH2).toTry) should be a 'success
+
+  override def beforeAll() = {
+    dropCreate(H2())
+    super.beforeAll()
+  }
+
+  override def afterAll(): Unit = {
+    clearH2()
+    super.afterAll()
+  }
+
+  override def beforeEach(): Unit = {
+    clearH2()
+    super.beforeEach()
   }
 }

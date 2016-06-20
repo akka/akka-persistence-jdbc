@@ -20,6 +20,7 @@ import akka.NotUsed
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.dao.JournalDao
 import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
+import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.serialization.Serialization
 import akka.stream.Materializer
@@ -33,12 +34,15 @@ import scala.util.{ Failure, Success, Try }
 /**
  * The DefaultJournalDao contains all the knowledge to persist and load serialized journal entries
  */
-class ByteArrayJournalDao(db: Database, val profile: JdbcProfile, journalConfig: JournalConfig, serialization: Serialization)(implicit ec: ExecutionContext, mat: Materializer) extends JournalDao {
+trait BaseByteArrayJournalDao extends JournalDao {
+
+  val db: Database
+  val profile: JdbcProfile
+  val queries : JournalQueries
+  val serializer: FlowPersistentReprSerializer[JournalRow]
+  implicit val ec: ExecutionContext
+
   import profile.api._
-
-  val queries = new JournalQueries(profile, journalConfig.journalTableConfiguration, journalConfig.deletedToTableConfiguration)
-
-  val serializer = new ByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator)
 
   private def futureExtractor: Flow[Try[Future[Unit]], Try[Unit], NotUsed] =
     Flow[Try[Future[Unit]]].mapAsync(1) {
@@ -74,7 +78,35 @@ class ByteArrayJournalDao(db: Database, val profile: JdbcProfile, journalConfig:
     db.run(actions)
   }
 
-  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
+  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] = {
     Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
       .via(serializer.deserializeFlowWithoutTags)
+  }
 }
+
+trait H2JournalDao extends JournalDao {
+  val profile: JdbcProfile
+
+  private lazy val isH2Driver = profile match {
+    case slick.driver.H2Driver ⇒ true
+    case _                     ⇒ false
+  }
+
+  abstract override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] = {
+    super.messages(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max))
+  }
+
+  private def correctMaxForH2Driver(max: Long): Long = {
+    if (isH2Driver) {
+      Math.min(max, Int.MaxValue) // H2 only accepts a LIMIT clause as an Integer
+    } else {
+      max
+    }
+  }
+}
+
+class ByteArrayJournalDao(val db: Database, val profile: JdbcProfile, journalConfig: JournalConfig, serialization: Serialization)(implicit val ec: ExecutionContext, val mat: Materializer) extends BaseByteArrayJournalDao with H2JournalDao {
+  val queries = new JournalQueries(profile, journalConfig.journalTableConfiguration, journalConfig.deletedToTableConfiguration)
+  val serializer = new ByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator)
+}
+

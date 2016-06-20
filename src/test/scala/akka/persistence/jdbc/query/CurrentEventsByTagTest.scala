@@ -16,7 +16,6 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.jdbc.util.Schema.{ MySQL, Oracle, Postgres }
 import akka.persistence.query.EventEnvelope
 
 abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config) {
@@ -145,23 +144,13 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
     }
 }
 
-class PostgresScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with ScalaJdbcReadJournalOperations {
-  dropCreate(Postgres())
-}
+class PostgresScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with ScalaJdbcReadJournalOperations with PostgresCleaner
 
-class MySQLScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") with ScalaJdbcReadJournalOperations {
-  dropCreate(MySQL())
-}
+class MySQLScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") with ScalaJdbcReadJournalOperations with MysqlCleaner
 
-class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") with ScalaJdbcReadJournalOperations {
-  dropCreate(Oracle())
+class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
 
-  protected override def beforeEach(): Unit =
-    clearOracle()
-
-  override protected def afterAll(): Unit =
-    clearOracle()
-}
+class H2ScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner
 
 //class PostgresJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
 //  dropCreate(Postgres())

@@ -1,4 +1,4 @@
-# akka-persistence-jdbc 2.4.1
+# akka-persistence-jdbc 2.5.0
 Akka-persistence-jdbc is a plugin for akka-persistence that asynchronously writes journal and snapshot entries entries to a configured JDBC store. It supports writing journal messages and snapshots to two tables: the `journal` table and the `snapshot` table.
 
 Service | Status | Description
@@ -31,7 +31,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.4.1"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.5.0"
 ```
 
 ## Configuration
@@ -65,100 +65,22 @@ jdbc-journal {
 ```
    
 ## Postgres configuration
-Base your akka-persistence-jdbc `application.conf` on [this config file][postgres-application.conf]  
+Base your akka-persistence-jdbc `application.conf` on [this config file][postgres-application.conf]
 
 ## Postgres schema
-```sql
-DROP TABLE IF EXISTS public.journal;
-
-CREATE TABLE IF NOT EXISTS public.journal (
-  persistence_id VARCHAR(255) NOT NULL,
-  sequence_number BIGINT NOT NULL,
-  created BIGINT NOT NULL,
-  tags VARCHAR(255) DEFAULT NULL,
-  message BYTEA NOT NULL,
-  PRIMARY KEY(persistence_id, sequence_number)
-);
-
-DROP TABLE IF EXISTS public.deleted_to;
-
-CREATE TABLE IF NOT EXISTS public.deleted_to (
-  persistence_id VARCHAR(255) NOT NULL,
-  deleted_to BIGINT NOT NULL
-);
-
-DROP TABLE IF EXISTS public.snapshot;
-
-CREATE TABLE IF NOT EXISTS public.snapshot (
-  persistence_id VARCHAR(255) NOT NULL,
-  sequence_number BIGINT NOT NULL,
-  created BIGINT NOT NULL,
-  snapshot BYTEA NOT NULL,
-  PRIMARY KEY(persistence_id, sequence_number)
-);
-```
+The schema is available [here][postgres-schema]
 
 ## MySQL configuration
 Base your akka-persistence-jdbc `application.conf` on [this config file][mysql-application.conf]  
 
 ## MySQL schema
-```sql
-DROP TABLE IF EXISTS journal;
-
-CREATE TABLE IF NOT EXISTS journal (
-  persistence_id VARCHAR(255) NOT NULL,
-  sequence_number BIGINT NOT NULL,
-  created BIGINT NOT NULL,
-  tags VARCHAR(255) DEFAULT NULL,
-  message BLOB NOT NULL,
-  PRIMARY KEY(persistence_id, sequence_number)
-);
-
-DROP TABLE IF EXISTS deleted_to;
-
-CREATE TABLE IF NOT EXISTS deleted_to (
-  persistence_id VARCHAR(255) NOT NULL,
-  deleted_to BIGINT NOT NULL
-);
-
-DROP TABLE IF EXISTS snapshot;
-
-CREATE TABLE IF NOT EXISTS snapshot (
-  persistence_id VARCHAR(255) NOT NULL,
-  sequence_number BIGINT NOT NULL,
-  created BIGINT NOT NULL,
-  snapshot BLOB NOT NULL,
-  PRIMARY KEY (persistence_id, sequence_number)
-);
-```
+The schema is available [here][mysql-schema]
 
 ## Oracle configuration
 Base your akka-persistence-jdbc `application.conf` on [this config file][oracle-application.conf]  
 
 ## Oracle schema
-```sql
-CREATE TABLE "journal" (
-  "persistence_id" VARCHAR(255) NOT NULL,
-  "sequence_number" NUMERIC NOT NULL,
-  "created" NUMERIC NOT NULL,
-  "tags" VARCHAR(255) DEFAULT NULL,
-  "message" BLOB NOT NULL,
-  PRIMARY KEY("persistence_id", "sequence_number")
-);
-
-CREATE TABLE "deleted_to" (
-  "persistence_id" VARCHAR(255) NOT NULL,
-  "deleted_to" NUMERIC NOT NULL
-);
-
-CREATE TABLE "snapshot" (
-  "persistence_id" VARCHAR(255) NOT NULL,
-  "sequence_number" NUMERIC NOT NULL,
-  "created" NUMERIC NOT NULL,
-  "snapshot" BLOB NOT NULL,
-  PRIMARY KEY ("persistence_id", "sequence_number")
-);
-```
+The schema is available [here][oracle-schema]
 
 ## How to get the ReadJournal using Scala
 The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery` extension:
@@ -378,6 +300,12 @@ Alternatively you can opt to use [Postgresql][postgres], which is the most advan
 available, with some great features, and it works great together with akka-persistence-jdbc.
 
 ## What's new?
+- 2.5.0 (2016-06-29)
+  - Changed the database schema to include two new columns, an `ordering` and a `deleted` column. Both fields are needed
+    to support the akka-persistence-query API. The `ordering` column is needed to register the total ordering of events
+    an is used for the offset for both `*byTag` queries. The deleted column is not yet used.
+  - Known issue: will not work on Oracle (yet).
+
 - 2.4.1 (2016-06-20)
   - Merged PR #57 [Filipe Cristóvão][fcristovao], Added support for the H2 database, thanks!  
 
@@ -716,3 +644,7 @@ Have fun!
 [postgres-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/postgres-application.conf
 [mysql-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/mysql-application.conf
 [oracle-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/oracle-application.conf
+
+[postgres-schema]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/schema/postgres/postgres-schema.sql
+[mysql-schema]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/schema/mysql/mysql-schema.sql
+[oracle-schema]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/schema/oracle/oracle-schema.sql

@@ -23,7 +23,7 @@ import akka.persistence.query.journal.leveldb.DeliveryBuffer
 import akka.stream.Materializer
 import akka.stream.actor.ActorPublisher
 import akka.stream.actor.ActorPublisherMessage.{ Cancel, Request }
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.Sink
 
 import scala.concurrent.duration.{ FiniteDuration, _ }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -48,11 +48,11 @@ class EventsByTagPublisher(tag: String, offset: Int, readJournalDao: ReadJournal
   def polling(offset: Int): Receive = {
     case GetEventsByTag ⇒
       readJournalDao.eventsByTag(tag, offset, Math.max(0, maxBufferSize - buf.size))
-        .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
-        .zipWith(Source(Stream.from(offset))) {
-          case (repr, i) ⇒ EventEnvelope(i, repr.persistenceId, repr.sequenceNr, repr.payload)
+        .mapAsync(1)(Future.fromTry)
+        .map {
+          case (repr, _, row) ⇒ EventEnvelope(row.ordering, repr.persistenceId, repr.sequenceNr, repr.payload)
         }
-        .runFold(List.empty[EventEnvelope])(_ :+ _)
+        .runWith(Sink.seq)
         .map { xs ⇒
           buf = buf ++ xs
           deliverBuf()

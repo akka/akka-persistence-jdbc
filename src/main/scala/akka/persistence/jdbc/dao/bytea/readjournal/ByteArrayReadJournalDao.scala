@@ -43,14 +43,13 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao {
   override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct(max).result))
 
-  override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
+  override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] =
     Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", Math.max(1, offset) - 1, max).result))
-      .via(serializer.deserializeFlowWithoutTags)
+      .via(serializer.deserializeFlow)
 
   override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
     Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
       .via(serializer.deserializeFlowWithoutTags)
-
 }
 
 trait OracleReadJournalDao extends ReadJournalDao {
@@ -79,9 +78,9 @@ trait OracleReadJournalDao extends ReadJournalDao {
     }
   }
 
-  implicit val getJournalRow = GetResult(r ⇒ JournalRow(r.<<, r.<<, r.nextBytes(), r.<<, r.<<))
+  implicit val getJournalRow = GetResult(r ⇒ JournalRow(r.<<, r.<<, r.<<, r.nextBytes(), r.<<, r.<<))
 
-  abstract override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[PersistentRepr], NotUsed] = {
+  abstract override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] = {
     if (isOracleDriver) {
       import readJournalConfig.journalTableConfiguration._
       import columnNames._
@@ -89,7 +88,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
       val theTag = s"%$tag%"
       Source.fromPublisher(
         db.stream(
-          sql"""SELECT "#$persistenceId", "#$sequenceNumber", "#$message", "#$created", "#$tags" FROM (
+          sql"""SELECT "#$ordering", "#$persistenceId", "#$sequenceNumber", "#$message", "#$created", "#$tags" FROM (
                 SELECT
                   a.*,
                   rownum rnum
@@ -97,12 +96,12 @@ trait OracleReadJournalDao extends ReadJournalDao {
                   (SELECT *
                    FROM "#${schemaName.getOrElse("")}"."#$tableName"
                    WHERE "#$tags" LIKE $theTag
-                   ORDER BY "#$created") a
+                   ORDER BY "#$ordering") a
                 where rownum <= $max
               )
               where rnum > $theOffset""".as[JournalRow]
         )
-      ).via(serializer.deserializeFlowWithoutTags)
+      ).via(serializer.deserializeFlow)
     } else {
       super.eventsByTag(tag, offset, max)
     }
@@ -120,7 +119,7 @@ trait H2ReadJournalDao extends ReadJournalDao {
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
     super.allPersistenceIdsSource(correctMaxForH2Driver(max))
 
-  abstract override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
+  abstract override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] =
     super.eventsByTag(tag, offset, correctMaxForH2Driver(max))
 
   abstract override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =

@@ -23,10 +23,10 @@ import akka.persistence.query.journal.leveldb.DeliveryBuffer
 import akka.stream.Materializer
 import akka.stream.actor.ActorPublisher
 import akka.stream.actor.ActorPublisherMessage.{ Cancel, Request }
+import akka.stream.scaladsl.Sink
 
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{ FiniteDuration, _ }
 
 object AllPersistenceIdsPublisher {
   sealed trait Command
@@ -51,7 +51,7 @@ class AllPersistenceIdsPublisher(readJournalDao: ReadJournalDao, refreshInterval
    */
   def polling(knownIds: Set[String]): Receive = LoggingReceive {
     case GetAllPersistenceIds ⇒
-      readJournalDao.allPersistenceIdsSource(Math.max(0, maxBufferSize - buf.size)).runFold(List.empty[String])(_ :+ _).map { ids ⇒
+      readJournalDao.allPersistenceIdsSource(Math.max(0, maxBufferSize - buf.size)).runWith(Sink.seq).map { ids ⇒
         val xs = ids.toSet.diff(knownIds).toVector
         buf = buf ++ xs
         deliverBuf()

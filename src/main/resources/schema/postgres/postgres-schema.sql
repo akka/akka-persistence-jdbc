@@ -1,6 +1,8 @@
 DROP TABLE IF EXISTS public.journal;
 
 CREATE TABLE IF NOT EXISTS public.journal (
+  ordering BIGSERIAL,
+  deleted BOOLEAN DEFAULT FALSE,
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
   created BIGINT NOT NULL,

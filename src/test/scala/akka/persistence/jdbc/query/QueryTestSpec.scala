@@ -25,13 +25,14 @@ import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 import akka.persistence.journal.Tagged
 import akka.persistence.query.{ EventEnvelope, PersistenceQuery }
 import akka.stream.Materializer
+import akka.stream.scaladsl.Sink
 import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.javadsl.{ TestSink ⇒ JavaSink }
 import akka.stream.testkit.scaladsl.TestSink
 import slick.driver.PostgresDriver.api._
 
-import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration.{ FiniteDuration, _ }
+import scala.concurrent.{ ExecutionContext, Future }
 
 trait ReadJournalOperations {
   def withCurrentPersistenceIds(within: FiniteDuration = 60.second)(f: TestSubscriber.Probe[String] ⇒ Unit): Unit
@@ -86,9 +87,8 @@ trait ScalaJdbcReadJournalOperations extends ReadJournalOperations {
     readJournal.currentPersistenceIds()
       .filter(pid ⇒ (1 to 3).map(id ⇒ s"my-$id").contains(pid))
       .mapAsync(1) { pid ⇒
-        readJournal.currentEventsByPersistenceId(pid, 0, Long.MaxValue).map(_ ⇒ 1L).runFold(List.empty[Long])(_ :+ _).map(_.sum)
-      }.runFold(List.empty[Long])(_ :+ _)
-      .map(_.sum)
+        readJournal.currentEventsByPersistenceId(pid, 0, Long.MaxValue).map(_ ⇒ 1L).runWith(Sink.seq).map(_.sum)
+      }.runWith(Sink.seq).map(_.sum)
 }
 
 trait JavaDslJdbcReadJournalOperations extends ReadJournalOperations {
@@ -161,11 +161,13 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJ
       case event: Int ⇒
         persist(event) { (event: Int) ⇒
           updateState(event)
+          sender() ! akka.actor.Status.Success(event)
         }
 
       case event @ Tagged(payload: Int, tags) ⇒
         persist(event) { (event: Tagged) ⇒
           updateState(payload)
+          sender() ! akka.actor.Status.Success((payload, tags))
         }
     }
 
@@ -182,8 +184,9 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJ
     system.actorOf(Props(new TestActor(persistenceId)))
   }
 
-  def withTestActors(seq: Int = 0)(f: (ActorRef, ActorRef, ActorRef) ⇒ Unit): Unit = {
-    f(setupEmpty(1 + seq), setupEmpty(2 + seq), setupEmpty(3 + seq))
+  def withTestActors(seq: Int = 1)(f: (ActorRef, ActorRef, ActorRef) ⇒ Unit): Unit = {
+    val refs = (seq until seq + 3).map(setupEmpty).toList
+    try f(refs.head, refs.drop(1).head, refs.drop(2).head) finally cleanup(refs: _*)
   }
 
   def withTags(payload: Any, tags: String*) = Tagged(payload, Set(tags: _*))
@@ -212,7 +215,7 @@ trait PostgresCleaner extends QueryTestSpec {
   }
 
   override def beforeEach(): Unit = {
-    clearPostgres()
+    dropCreate(Postgres())
     super.beforeEach()
   }
 
@@ -301,7 +304,7 @@ trait H2Cleaner extends QueryTestSpec {
   }
 
   override def beforeEach(): Unit = {
-    clearH2()
+    dropCreate(H2())
     super.beforeEach()
   }
 }

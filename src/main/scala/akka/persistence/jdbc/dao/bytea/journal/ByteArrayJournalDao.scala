@@ -50,7 +50,7 @@ trait BaseByteArrayJournalDao extends JournalDao {
       case Failure(t)      ⇒ Future.successful(Failure(t))
     }
 
-  private def writeJournalRows(xs: Iterable[JournalRow]): Future[Unit] = for {
+  private def writeJournalRows(xs: Seq[JournalRow]): Future[Unit] = for {
     _ ← db.run(queries.writeJournalRows(xs))
   } yield ()
 

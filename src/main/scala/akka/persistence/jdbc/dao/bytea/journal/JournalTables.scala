@@ -20,7 +20,7 @@ import akka.persistence.jdbc.config.{ DeletedToTableConfiguration, JournalTableC
 import akka.persistence.jdbc.dao.bytea.journal.JournalTables._
 
 object JournalTables {
-  case class JournalRow(persistenceId: String, sequenceNumber: Long, message: Array[Byte], created: Long, tags: Option[String] = None)
+  case class JournalRow(ordering: Long, persistenceId: String, sequenceNumber: Long, message: Array[Byte], created: Long, tags: Option[String] = None)
 
   case class JournalDeletedToRow(persistenceId: String, deletedTo: Long)
 }
@@ -35,8 +35,9 @@ trait JournalTables {
   def deletedToTableCfg: DeletedToTableConfiguration
 
   class Journal(_tableTag: Tag) extends Table[JournalRow](_tableTag, _schemaName = journalTableCfg.schemaName, _tableName = journalTableCfg.tableName) {
-    def * = (persistenceId, sequenceNumber, message, created, tags) <> (JournalRow.tupled, JournalRow.unapply)
+    def * = (ordering, persistenceId, sequenceNumber, message, created, tags) <> (JournalRow.tupled, JournalRow.unapply)
 
+    val ordering: Rep[Long] = column[Long](journalTableCfg.columnNames.ordering, O.AutoInc)
     val persistenceId: Rep[String] = column[String](journalTableCfg.columnNames.persistenceId, O.Length(255, varying = true))
     val sequenceNumber: Rep[Long] = column[Long](journalTableCfg.columnNames.sequenceNumber)
     val created: Rep[Long] = column[Long](journalTableCfg.columnNames.created)

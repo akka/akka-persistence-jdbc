@@ -43,6 +43,6 @@ class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg:
   val messagesQuery = Compiled(_messagesQuery _)
 
   private def _eventsByTag(tag: Rep[String], offset: ConstColumn[Long], max: ConstColumn[Long]): Query[Journal, JournalRow, Seq] =
-    JournalTable.filter(_.tags like tag).sortBy(_.created.asc).drop(offset).take(max)
+    JournalTable.filter(_.tags like tag).sortBy(_.ordering.asc).drop(offset).take(max)
   val eventsByTag = Compiled(_eventsByTag _)
 }

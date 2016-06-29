@@ -24,8 +24,8 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
 
   import profile.api._
 
-  def writeJournalRows(xs: Iterable[JournalRow]) =
-    JournalTable ++= xs
+  def writeJournalRows(xs: Seq[JournalRow]) =
+    JournalTable ++= xs.sortBy(_.sequenceNumber)
 
   def insertDeletedTo(persistenceId: String, highestSequenceNr: Option[Long]) =
     DeletedToTable += JournalDeletedToRow(persistenceId, highestSequenceNr.getOrElse(0L))

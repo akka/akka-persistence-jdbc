@@ -82,10 +82,9 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
 
   override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     readJournalDao.eventsByTag(tag, offset, Long.MaxValue)
-      .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
-      .zipWith(Source(Stream.from(Math.max(1, offset.toInt)))) {
-        // Needs a better way
-        case (repr, i) ⇒ EventEnvelope(i, repr.persistenceId, repr.sequenceNr, repr.payload)
+      .mapAsync(1)(Future.fromTry)
+      .map {
+        case (repr, _, row) ⇒ EventEnvelope(row.ordering, repr.persistenceId, repr.sequenceNr, repr.payload)
       }
 
   override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =

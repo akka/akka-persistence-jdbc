@@ -34,7 +34,7 @@ trait PersistentReprSerializer[T] {
 
   def serialize(persistentRepr: PersistentRepr, tags: Set[String]): Try[T]
 
-  def deserialize(t: T): Try[(PersistentRepr, Set[String])]
+  def deserialize(t: T): Try[(PersistentRepr, Set[String], T)]
 
 }
 
@@ -52,7 +52,7 @@ trait FlowPersistentReprSerializer[T] extends PersistentReprSerializer[T] {
       .map(TrySeq.sequence[T])
   }
 
-  def deserializeFlow: Flow[T, Try[(PersistentRepr, Set[String])], NotUsed] = {
+  def deserializeFlow: Flow[T, Try[(PersistentRepr, Set[String], T)], NotUsed] = {
     Flow[T].map(deserialize)
   }
 

@@ -33,6 +33,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |      tableName = "journal"
       |      schemaName = ""
       |      columnNames {
+      |        ordering = "ordering"
       |        persistenceId = "persistence_id"
       |        sequenceNumber = "sequence_number"
       |        created = "created"
@@ -170,6 +171,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |      tableName = "journal"
       |      schemaName = ""
       |      columnNames {
+      |        ordering = "ordering"
       |        persistenceId = "persistence_id"
       |        sequenceNumber = "sequence_number"
       |        created = "created"
@@ -234,6 +236,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.journalTableConfiguration.tableName shouldBe "journal"
     cfg.journalTableConfiguration.schemaName shouldBe None
 
+    cfg.journalTableConfiguration.columnNames.ordering shouldBe "ordering"
     cfg.journalTableConfiguration.columnNames.created shouldBe "created"
     cfg.journalTableConfiguration.columnNames.message shouldBe "message"
     cfg.journalTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
@@ -278,6 +281,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.journalTableConfiguration.tableName shouldBe "journal"
     cfg.journalTableConfiguration.schemaName shouldBe None
 
+    cfg.journalTableConfiguration.columnNames.ordering shouldBe "ordering"
     cfg.journalTableConfiguration.columnNames.created shouldBe "created"
     cfg.journalTableConfiguration.columnNames.message shouldBe "message"
     cfg.journalTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
@@ -297,6 +301,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.journalTableConfiguration.tableName shouldBe "journal"
     cfg.journalTableConfiguration.schemaName shouldBe None
 
+    cfg.journalTableConfiguration.columnNames.ordering shouldBe "ordering"
     cfg.journalTableConfiguration.columnNames.created shouldBe "created"
     cfg.journalTableConfiguration.columnNames.message shouldBe "message"
     cfg.journalTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
@@ -341,6 +346,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.journalTableConfiguration.tableName shouldBe "journal"
     cfg.journalTableConfiguration.schemaName shouldBe None
 
+    cfg.journalTableConfiguration.columnNames.ordering shouldBe "ordering"
     cfg.journalTableConfiguration.columnNames.created shouldBe "created"
     cfg.journalTableConfiguration.columnNames.message shouldBe "message"
     cfg.journalTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"

@@ -23,6 +23,7 @@ import akka.persistence.query.journal.leveldb.DeliveryBuffer
 import akka.stream.Materializer
 import akka.stream.actor.ActorPublisher
 import akka.stream.actor.ActorPublisherMessage.{ Cancel, Request }
+import akka.stream.scaladsl.Sink
 
 import scala.concurrent.duration.{ FiniteDuration, _ }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -51,7 +52,7 @@ class EventsByPersistenceIdPublisher(persistenceId: String, fromSequenceNr: Long
         .take(maxBufferSize - buf.size)
         .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
         .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
-        .runFold(List.empty[EventEnvelope])(_ :+ _)
+        .runWith(Sink.seq)
         .map { xs ⇒
           buf = buf ++ xs
           val newFromSeqNr = xs.lastOption.map(_.sequenceNr + 1).getOrElse(fromSeqNr)

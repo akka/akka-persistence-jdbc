@@ -64,10 +64,10 @@ jdbc-journal {
 }
 ```
    
-# Postgres configuration   
+## Postgres configuration
 Base your akka-persistence-jdbc `application.conf` on [this config file][postgres-application.conf]  
 
-# Postgres schema
+## Postgres schema
 ```sql
 DROP TABLE IF EXISTS public.journal;
 
@@ -315,7 +315,7 @@ The returned event stream contains only events that correspond to the given tag,
 The same stream elements (in same order) are returned for multiple executions of the same query. Deleted events are not deleted
 from the tagged event stream.
 
-# Custom DAO Implementation
+## Custom DAO Implementation
 As of `2.2.11` the plugin supports loading a custom DAO for the journal and snapshot. You should implement a custom Data Access Object (DAO) if you wish to alter the default persistency strategy in 
 any way, but wish to reuse all the logic that the plugin already has in place, eg. the Akka Persistence Query API. For example, the default persistency strategy that the plugin 
 supports serializes journal and snapshot messages using a serializer of your choice and stores them as byte arrays in the database.
@@ -359,7 +359,7 @@ You should register the Fully Qualified Class Name in `application.conf` so that
 
 For more information please review the two default implementations `akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao` and `akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao` or the demo custom DAO example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc) site.
 
-# Explicitly shutting down the database connections
+## Explicitly shutting down the database connections
 The plugin automatically shuts down the HikariCP connection pool only when the ActorSystem is explicitly terminated.
 It is advisable to register a shutdown hook to be run when the VM exits that terminates the ActorSystem: 
 
@@ -377,11 +377,11 @@ your database vendor.
 Alternatively you can opt to use [Postgresql][postgres], which is the most advanced open source database 
 available, with some great features, and it works great together with akka-persistence-jdbc.
 
-# What's new?
-## 2.4.1 (2016-06-20)
+## What's new?
+- 2.4.1 (2016-06-20)
   - Merged PR #57 [Filipe Cristóvão][fcristovao], Added support for the H2 database, thanks!  
 
-## 2.4.0 (2016-06-19)
+- 2.4.0 (2016-06-19)
   - Merged PR #55 [Filipe Cristóvão][fcristovao], Redesign of the serializer/deserializer to make it possible to override it to implement your own serialization strategy, thanks!  
   - This is potentially a breaking change for users that implement there own DAO or extend and override some of the features of the default one:
     1. The DAO package has been change from `akka.persistence.jdbc.dao.bytea` to `akka.persistence.jdbc.dao.bytea.journal`
@@ -389,21 +389,21 @@ available, with some great features, and it works great together with akka-persi
   - Removed the `jdbc-journal.serialization`, `jdbc-snapshot-store.serialization` and `jdbc-read-journal.serialization` setting as the DAOs have to implement their own serialization strategy.
   - The following interfaces `akka.persistence.jdbc.dao.JournalDao`, `akka.persistence.jdbc.dao.ReadJournalDao` and `akka.persistence.jdbc.dao.SnapshotDao` have been changed as the DAOs have to implement their own strategy, they'll have to work with `AtomicWrite`, `PersistentRepr` and `Any` as types.   
   
-## 2.3.3 (2016-06-13)
+- 2.3.3 (2016-06-13)
   - Fix for the async query `eventsByTag` that failed when using an Oracle database.
   
-## 2.3.2 (2016-06-12)
+- 2.3.2 (2016-06-12)
   - This release has a configuration how the the slick database driver gets resolved. The following driver names must be used:
     - `slick.driver.PostgresDriver$`
     - `slick.driver.MySQLDriver$`
     - `com.typesafe.slick.driver.oracle.OracleDriver$`
   - The journal, snapshot and readjournal plugins now all use defaults as stated in the reference.conf, it is not necessary to define properties when using a plugin-id that has not been defined in reference.conf          
 
-## 2.3.1 (2016-06-10)
+- 2.3.1 (2016-06-10)
   - Async queries should take a max number of elements from the result set according to the 
   `jdbc-read-journal.max-buffer-size` configuration. This should result in better memory usage and better IO performance.
   
-## 2.3.0 (2016-06-10)
+- 2.3.0 (2016-06-10)
   - This is a feature, configuration and (maybe) API breaking release when you rely on the DAO's, my apologies.
   - Killed some [feature-creep], this will result in a better design of the plugin. 
     - Removed support for the Varchar (base64/text based serialization),
@@ -412,272 +412,273 @@ available, with some great features, and it works great together with akka-persi
   - Implemented async queries, fixes issue #53 All async queries do not work as expected
   - Implemented akka persistence plugin scoping strategy, fixes issue #42 Make it possible to have multiple instances of the plugin (configured differently)
 
-## 2.2.25 (2016-06-08)
+- 2.2.25 (2016-06-08)
   - Merged PR #54 [Charith Ellawala][ellawala] Honour the schemaName setting for the snapshot table, thanks!
   - Compiling for Java 8 as Akka 2.4.x dropped support for Java 6 and 7 and only works on Java 8 and above  
   
-## 2.2.24 (2016-06-05)
+- 2.2.24 (2016-06-05)
   - Akka 2.4.6 -> 2.4.7
 
-## 2.2.23 (2016-05-25)
+- 2.2.23 (2016-05-25)
   - Akka 2.4.5 -> 2.4.6
   
-## 2.2.22 (2016-05-18)
+- 2.2.22 (2016-05-18)
   - Merged PR #52 [Gopal Shah][shah] for issue [#44 - Unable to differentiate between persistence failures and serialization issues](https://github.com/dnvriend/akka-persistence-jdbc/issues/51), thanks!
   - Akka 2.4.4 -> 2.4.5
 
-## 2.2.21 (2016-04-30)
+- 2.2.21 (2016-04-30)
   - Disabled the default dependency on HikariCP-Java6 v2.3.7, 
   - Added dependency on HikariCP v2.4.6 for better performance and bug fixes
 
-## 2.2.20 (2016-04-29)
+- 2.2.20 (2016-04-29)
   - Merged PR #50 [Andrey Kouznetsov][kouznetsov] for issue [#44 - Leaking connections](https://github.com/dnvriend/akka-persistence-jdbc/issues/44), thanks! 
 
-## 2.2.19 (2016-04-26)
+- 2.2.19 (2016-04-26)
   - Merged PR #46 [Andrey Kouznetsov][kouznetsov] Significant performance boost by using compiled queries, thanks!
   - Merged PR #47 [Andrey Kouznetsov][kouznetsov] Ability to get Database instance from JNDI, thanks!
   - **_Disable the async queries as they are implemented very sketchy, please use the synchronous query API with client side polling._**  
 
-## 2.2.18 (2016-04-19)
+- 2.2.18 (2016-04-19)
   - Text based serialization formats
 
-## 2.2.17 (2016-04-14)
+- 2.2.17 (2016-04-14)
   - Fix for [Issue #41 - Provide a way to shut-down connections explicitly](https://github.com/dnvriend/akka-persistence-jdbc/issues/41), the database connections will be automatically shut down when the ActorSystem shuts down when calling `system.terminate()` in which `system` is the ActorSystem instance.
   - Akka 2.4.3 -> 2.4.4
 
-## 2.2.16 (2016-04-01)
+- 2.2.16 (2016-04-01)
   - Akka 2.4.2 -> 2.4.3
 
-## 2.2.15 (2016-03-18)
+- 2.2.15 (2016-03-18)
   - Merged PR #37 [William Turner][turner] Make offset sequential on eventsByTag queries, thanks!
   
-## 2.2.14 (2016-03-17)
+- 2.2.14 (2016-03-17)
   - Determine events where appropriate by using an offset using the query api was not tested and thus the implementation was incorrect. This has been corrected and the documentation altered where appropriate.
 
-## 2.2.13 (2016-03-17)
+- 2.2.13 (2016-03-17)
   - Release to enable Bintray to sync with JCenter, so no big changes here  
   
-## 2.2.12 (2016-03-17)
+- 2.2.12 (2016-03-17)
   - Added the appropriate Maven POM resources to be publishing to Bintray's JCenter
   - Refactored the akka-persistence-query interfaces, integrated it back again in one jar, for jcenter deployment simplicity
 
-## 2.2.11 (2016-03-09)
+- 2.2.11 (2016-03-09)
   - Journal and SnapshotDAO implementation are configurable, when you need to implement your own persistency strategy,
   - Enable/Disable Serialization, the default journal and snapshot DAO rely on serialization, only disable when you known what you are doing, 
   - Scala 2.11.7 -> 2.11.8
 
-## 2.2.10 (2016-03-04)
+- 2.2.10 (2016-03-04)
   - Fix for parsing the schema name configuration for the `deleted_to` and `snapshot` table configuration.  
 
-## 2.2.9 (2016-03-03)
+- 2.2.9 (2016-03-03)
   - Fix for propagating serialization errors to akka-persistence so that any error regarding the persistence of messages will be handled by the callback handler of the Persistent Actor; `onPersistFailure`.  
 
-## 2.2.8 (2016-02-18)
+- 2.2.8 (2016-02-18)
   - Added InMemory option for journal and snapshot storage, for testing
 
-## 2.2.7 (2016-02-17)
+- 2.2.7 (2016-02-17)
   - Akka 2.4.2-RC3 -> 2.4.2
 
-## 2.2.6 (2016-02-13)
+- 2.2.6 (2016-02-13)
   - akka-persistence-jdbc-query 1.0.0 -> 1.0.1
 
-## 2.2.5 (2016-02-13)
+- 2.2.5 (2016-02-13)
   - Akka 2.4.2-RC2 -> 2.4.2-RC3
 
-## 2.2.4 (2016-02-08)
+- 2.2.4 (2016-02-08)
   - Compatibility with Akka 2.4.2-RC2
   - Refactored the akka-persistence-query extension interfaces to its own jar: `"com.github.dnvriend" %% "akka-persistence-jdbc-query" % "1.0.0"`
   
-## 2.2.3 (2016-01-29)
+- 2.2.3 (2016-01-29)
   - Refactored the akka-persistence-query package structure. It wasn't optimized for use with javadsl. Now the name of the ReadJournal is `JdbcReadJournal` for both Java and Scala, only the package name has been changed to reflect which language it is for. 
   - __Scala:__ akka.persistence.jdbc.query.journal.`scaladsl`.JdbcReadJournal
   - __Java:__ akka.persistence.jdbc.query.journal.`javadsl`.JdbcReadJournal
 
-## 2.2.2 (2016-01-28)
+- 2.2.2 (2016-01-28)
   - Support for looking up DataSources using JNDI
 
-## 2.2.1 (2016-01-28)
+- 2.2.1 (2016-01-28)
   - Support for the akka persistence query JavaDSL
 
-## 2.2.0 (2016-01-26)
+- 2.2.0 (2016-01-26)
   - Compatibility with Akka 2.4.2-RC1
 
-## 2.1.2 (2016-01-25)
+- 2.1.2 (2016-01-25)
   - Support for the `currentEventsByPersistenceIdAndTag` and `eventsByPersistenceIdAndTag` queries
 
-## 2.2.1 (2016-01-24)
+- 2.2.1 (2016-01-24)
   - Support for the `eventsByTag` live query
   - Tags are now separated by a character, and not by a tagPrefix
   - Please note the configuration change. 
 
-## 2.1.0 (2016-01-24) 
+- 2.1.0 (2016-01-24) 
  - Support for the `currentEventsByTag` query, the tagged events will be sorted by event sequence number.
  - Table column names are configurable.
  - Schema change for the journal table, added two columns, `tags` and `created`, please update your schema.
 
-## 2.0.4 (2016-01-22)
+- 2.0.4 (2016-01-22)
  - Using the typesafe config for the Slick database configuration,
  - Uses HikariCP as the connection pool,
  - Table names and schema names are configurable,
  - Akka Stream 2.0.1 -> 2.0.1
  - Tested with Oracle XE 
 
-## 2.0.3 (2016-01-18)
+- 2.0.3 (2016-01-18)
  - Optimization for the `eventsByPersistenceId` and `allPersistenceIds` queries. 
 
-## 2.0.2 (2016-01-17)
+- 2.0.2 (2016-01-17)
  - Support for the `eventsByPersistenceId` live query
 
-## 2.0.1 (2016-01-17)
+- 2.0.1 (2016-01-17)
  - Support for the `allPersistenceIds` live query
 
-## 2.0.0 (2016-01-16)
+- 2.0.0 (2016-01-16)
  - A complete rewrite using [slick][slick] as the database backend, breaking backwards compatibility in a big way.
 
-## 1.2.2 (2015-10-14) - Akka v2.4.x
+- 1.2.2 (2015-10-14) - Akka v2.4.x
  - Merged PR #28 [Andrey Kouznetsov][kouznetsov] Removing Unused ExecutionContext, thanks!
  
-## 1.2.1 (2015-10-12) 
+- 1.2.1 (2015-10-12) 
  - Merged PR #27 [Andrey Kouznetsov][kouznetsov] don't fail on asyncWrite with empty messages, thanks! 
-## 1.2.0 (2015-10-02)
+
+- 1.2.0 (2015-10-02)
  - Compatibility with Akka 2.4.0
  - Akka 2.4.0-RC3 -> 2.4.0
  - scalikejdbc 2.2.7 -> 2.2.8
  - No obvious optimalizations are applied, and no schema refactorings are needed (for now)
  - Fully backwards compatible with akka-persistence-jdbc v1.1.8's schema and configuration 
 
-## 1.2.0-RC3 (2015-09-17) 
+- 1.2.0-RC3 (2015-09-17) 
  - Compatibility with Akka 2.4.0-RC3
  - No obvious optimalizations are applied, and no schema refactorings are needed (for now)
  - Please note; schema, serialization (strategy) and code refactoring will be iteratively applied on newer release of the 2.4.0-xx branch, but for each step, a migration guide and SQL scripts will be made available.
  - Use the following library dependency: "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.0-RC3"
  - Fully backwards compatible with akka-persistence-jdbc v1.1.8's schema and configuration 
 
-## 1.2.0-RC2 (2015-09-07) 
+- 1.2.0-RC2 (2015-09-07) 
  - Compatibility with Akka 2.4.0-RC2
  - No obvious optimalizations are applied, and no schema refactorings are needed (for now)
  - Please note; schema, serialization (strategy) and code refactoring will be iteratively applied on newer release of the 2.4.0-xx branch, but for each step, a migration guide and SQL scripts will be made available.
  - Use the following library dependency: "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.0-RC2"
  - Fully backwards compatible with akka-persistence-jdbc v1.1.8's schema and configuration 
 
-## 1.1.9 (2015-10-12) - Akka v2.3.x
+- 1.1.9 (2015-10-12) - Akka v2.3.x
  - scala 2.10.5 -> 2.10.6
  - akka 2.3.13 -> 2.3.14
  - scalikejdbc 2.2.7 -> 2.2.8
  
-## 1.1.8 (2015-09-04)
+- 1.1.8 (2015-09-04)
  - Compatibility with Akka 2.3.13
  - Akka 2.3.12 -> 2.3.13
 
-## 1.1.7 (2015-07-13)
+- 1.1.7 (2015-07-13)
  - Scala 2.11.6 -> 2.11.7
  - Akka 2.3.11 -> 2.3.12
  - ScalaTest 2.1.4 -> 2.2.4
 
-## 1.1.6 (2015-06-22)
+- 1.1.6 (2015-06-22)
  - ScalikeJdbc 2.2.6 -> 2.2.7
  - Issue #22 `persistenceId` missing in `JournalTypeConverter.unmarshal(value: String)` signature; added a second parameter `persistenceId: String`, note this breaks the serialization API.
 
-## 1.1.5 (2015-05-12)
+- 1.1.5 (2015-05-12)
  - Akka 2.3.10 -> 2.3.11
  - MySQL snapshot statement now uses `INSERT INTO .. ON DUPLICATE UPDATE` for `upserts`
  - Merged Issue #21 [mwkohout][mwkohout] Use a ParameterBinder to pass snapshot into the merge statement and get rid of the stored procedure, thanks!
 
-## 1.1.4 (2015-05-06)
- - ScalikeJDBC 2.2.5 -> 2.2.6
- - Akka 2.3.9 -> 2.3.10
- - Switched back to a Java 7 binary, to support Java 7 and higher based projects, we need a strategy though when [Scala 2.12](http://www.scala-lang.org/news/2.12-roadmap) will be released. 
- - Merged Issue #20 [mwkohout][mwkohout] Use apache commons codec Base64 vs the java8-only java.util.Base64 for Java 7 based projects, thanks!
+- 1.1.4 (2015-05-06)
+  - ScalikeJDBC 2.2.5 -> 2.2.6
+  - Akka 2.3.9 -> 2.3.10
+  - Switched back to a Java 7 binary, to support Java 7 and higher based projects, we need a strategy though when [Scala 2.12](http://www.scala-lang.org/news/2.12-roadmap) will be released.
+  - Merged Issue #20 [mwkohout][mwkohout] Use apache commons codec Base64 vs the java8-only java.util.Base64 for Java 7 based projects, thanks!
 
-## 1.1.3 (2015-04-15)
- - ScalikeJDBC 2.2.4 -> 2.2.5
- - Fixed: 'OutOfMemory error when recovering with a large number of snapshots #17'
+- 1.1.3 (2015-04-15)
+  - ScalikeJDBC 2.2.4 -> 2.2.5
+  - Fixed: 'OutOfMemory error when recovering with a large number of snapshots #17'
 
-## 1.1.2 (2015-03-21)
- - Initial support for a pluggable serialization architecture. Out of the box the plugin uses the
+- 1.1.2 (2015-03-21)
+  - Initial support for a pluggable serialization architecture. Out of the box the plugin uses the
    `Base64JournalConverter` and `Base64SnapshotConverter` as serializers. For more information
    see the [akka-persistence-jdbc-play](https://github.com/dnvriend/akka-persistence-jdbc-play) example
    project that uses its own JSON serialization format to write journal entries to the data store.
 
-## 1.1.1 (2015-03-17)
- - ScalikeJDBC 2.2.2 -> 2.2.4
- - Java 8 binary, so it needs Java 8, you still use Java 6 or 7, upgrade! :P
- - Using the much faster Java8 java.util.Base64 encoder/decoder
- - Bulk insert for journal entries (non-oracle only, sorry)
- - Initial support for JNDI, needs testing though
- - Merged [Paul Roman][roman] Fix typo in journal log message #14, thanks!
- - Merged [Pavel Boldyrev][boldyrev] Fix MS SQL Server support #15 (can not test it though, needs Vagrant), thanks!
+- 1.1.1 (2015-03-17)
+  - ScalikeJDBC 2.2.2 -> 2.2.4
+  - Java 8 binary, so it needs Java 8, you still use Java 6 or 7, upgrade! :P
+  - Using the much faster Java8 java.util.Base64 encoder/decoder
+  - Bulk insert for journal entries (non-oracle only, sorry)
+  - Initial support for JNDI, needs testing though
+  - Merged [Paul Roman][roman] Fix typo in journal log message #14, thanks!
+  - Merged [Pavel Boldyrev][boldyrev] Fix MS SQL Server support #15 (can not test it though, needs Vagrant), thanks!
 
-## 1.1.0
- - Merged [Pavel Boldyrev](https://github.com/bpg) Fix Oracle SQL `MERGE` statement usage #13 which fixes issue #9 (java.sql.SQLRecoverableException: No more data to read from socket #9), thanks!
- - Change to the Oracle schema, it needs a stored procedure definition.
+- 1.1.0
+  - Merged [Pavel Boldyrev](https://github.com/bpg) Fix Oracle SQL `MERGE` statement usage #13 which fixes issue #9 (java.sql.SQLRecoverableException: No more data to read from socket #9), thanks!
+  - Change to the Oracle schema, it needs a stored procedure definition.
 
-## 1.0.9 (2015-01-20)
- - ScalikeJDBC 2.1.2 -> 2.2.2
- - Merged [miguel-vila][vila] Adds ´validationQuery´ configuration parameter #10, thanks!
- - Removed Informix support: I just don't have a working Informix docker image (maybe someone can create one and publish it?)
+- 1.0.9 (2015-01-20)
+  - ScalikeJDBC 2.1.2 -> 2.2.2
+  - Merged [miguel-vila][vila] Adds ´validationQuery´ configuration parameter #10, thanks!
+  - Removed Informix support: I just don't have a working Informix docker image (maybe someone can create one and publish it?)
 
-## 1.0.8
- - ScalikeJDBC 2.1.1 -> 2.1.2
- - Moved to bintray
+- 1.0.8
+  - ScalikeJDBC 2.1.1 -> 2.1.2
+  - Moved to bintray
 
-## 1.0.7 (2014-09-16)
- - Merged [mwkohout][mwkohout] fix using Oracle's MERGE on issue #3, thanks! 
+- 1.0.7 (2014-09-16)
+  - Merged [mwkohout][mwkohout] fix using Oracle's MERGE on issue #3, thanks!
 
-## 1.0.6 
- - Fixed - Issue3: Handling save attempts with duplicate snapshot ids and persistence ids
- - Fixed - Issue5: Connection pool is being redefined when using journal and snapshot store
+- 1.0.6 
+  - Fixed - Issue3: Handling save attempts with duplicate snapshot ids and persistence ids
+  - Fixed - Issue5: Connection pool is being redefined when using journal and snapshot store
 
-## 1.0.5 (2014-08-26)
- - Akka 2.3.5 -> 2.3.6
- - ScalikeJDBC 2.1.0 -> 2.1.1
+- 1.0.5 (2014-08-26)
+  - Akka 2.3.5 -> 2.3.6
+  - ScalikeJDBC 2.1.0 -> 2.1.1
 
-## 1.0.4 
- - Added schema name configuration for the journal and snapshot
- - Added table name configuration for the journal and snapshot
- - ScalikeJDBC 2.0.5 -> 2.1.0 
- - Akka 2.3.4 -> 2.3.5 
+- 1.0.4 
+  - Added schema name configuration for the journal and snapshot
+  - Added table name configuration for the journal and snapshot
+  - ScalikeJDBC 2.0.5 -> 2.1.0
+  - Akka 2.3.4 -> 2.3.5
 
-## 1.0.3 (2014-07-23)
- - IBM Informix 12.10 supported 
+- 1.0.3 (2014-07-23)
+  - IBM Informix 12.10 supported
 
-## 1.0.2 
- - Oracle XE 11g supported
+- 1.0.2 
+  - Oracle XE 11g supported
 
-## 1.0.1
- - scalikejdbc 2.0.4 -> 2.0.5
- - akka-persistence-testkit 0.3.3 -> 0.3.4
+- 1.0.1
+  - scalikejdbc 2.0.4 -> 2.0.5
+  - akka-persistence-testkit 0.3.3 -> 0.3.4
 
-## 1.0.0 (2014-07-03)
- - Release to Maven Central
+- 1.0.0 (2014-07-03)
+  - Release to Maven Central
 
-## 0.0.6
+- 0.0.6
  - Tested against MySQL/5.6.19 MySQL Community Server (GPL) 
  - Tested against H2/1.4.179
 
-## 0.0.5
+- 0.0.5
  - Added the snapshot store
 
-## 0.0.4
+- 0.0.4
  -  Refactored the JdbcSyncWriteJournal so it supports the following databases:
 
-## 0.0.3 (2014-07-01)
+- 0.0.3 (2014-07-01)
  - Using [Martin Krasser's][krasser] [akka-persistence-testkit][ap-testkit]
   to test the akka-persistence-jdbc plugin. 
  - Update to Akka 2.3.4
 
-## 0.0.2 (2014-06-30)
+- 0.0.2 (2014-06-30)
  - Using [ScalikeJDBC][scalikejdbc] as the JDBC access library instead of my home-brew one. 
 
-## 0.0.1 (2014-05-23)
+- 0.0.1 (2014-05-23)
  - Initial commit
 
-# Code of Conduct
-**Contributors all agree to follow the [W3C Code of Ethics and Professional Conduct][w3c-cond].**
+## Code of Conduct
+Contributors all agree to follow the [W3C Code of Ethics and Professional Conduct][w3c-cond].
 
 If you want to take action, feel free to contact Dennis Vriend <dnvriend@gmail.com>. You can also contact W3C Staff as explained in [W3C Procedures][w3c-proc].
 
-# License
+## License
 This source code is made available under the [Apache 2.0 License][apache]. The [quick summary of what this license means is available here](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0))
 
 Have fun!

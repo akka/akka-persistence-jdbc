@@ -1,12 +1,14 @@
 DROP TABLE IF EXISTS PUBLIC.journal;
 
 CREATE TABLE IF NOT EXISTS PUBLIC.journal (
+  ordering BIGINT AUTO_INCREMENT,
+  deleted BOOLEAN DEFAULT FALSE,
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
   created BIGINT NOT NULL,
   tags VARCHAR(255) DEFAULT NULL,
   message BYTEA NOT NULL,
-  PRIMARY KEY(persistence_id, sequence_number)
+  PRIMARY KEY(ordering, persistence_id, sequence_number)
 );
 
 DROP TABLE IF EXISTS PUBLIC.deleted_to;

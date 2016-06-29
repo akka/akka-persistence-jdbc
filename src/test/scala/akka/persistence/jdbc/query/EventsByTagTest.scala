@@ -18,6 +18,7 @@ package akka.persistence.jdbc.query
 
 import akka.persistence.query.EventEnvelope
 import scala.concurrent.duration._
+import akka.pattern.ask
 
 abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
 
@@ -149,15 +150,15 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.expectNoMsg(100.millis)
 
         actor1 ! withTags(3, "one")
-        tp.expectNextPF { case EventEnvelope(4, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(7, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
 
         actor2 ! withTags(3, "one")
-        tp.expectNextPF { case EventEnvelope(5, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(8, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
 
         actor3 ! withTags(3, "one")
-        tp.expectNextPF { case EventEnvelope(6, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(9, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
 
         tp.cancel()
@@ -168,19 +169,19 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
 
   it should "persist and find tagged events when stored with multiple tags" in {
     withTestActors() { (actor1, actor2, actor3) ⇒
-      actor1 ! withTags(1, "one", "1", "prime")
-      actor1 ! withTags(2, "two", "2", "prime")
-      actor1 ! withTags(3, "three", "3", "prime")
-      actor1 ! withTags(4, "four", "4")
-      actor1 ! withTags(5, "five", "5", "prime")
-      actor2 ! withTags(3, "three", "3", "prime")
-      actor3 ! withTags(3, "three", "3", "prime")
+      (actor1 ? withTags(1, "one", "1", "prime")).futureValue
+      (actor1 ? withTags(2, "two", "2", "prime")).futureValue
+      (actor1 ? withTags(3, "three", "3", "prime")).futureValue
+      (actor1 ? withTags(4, "four", "4")).futureValue
+      (actor1 ? withTags(5, "five", "5", "prime")).futureValue
+      (actor2 ? withTags(3, "three", "3", "prime")).futureValue
+      (actor3 ? withTags(3, "three", "3", "prime")).futureValue
 
-      actor1 ! 6
-      actor1 ! 7
-      actor1 ! 8
-      actor1 ! 9
-      actor1 ! 10
+      (actor1 ? 6).futureValue
+      (actor1 ? 7).futureValue
+      (actor1 ? 8).futureValue
+      (actor1 ? 9).futureValue
+      (actor1 ? 10).futureValue
 
       eventually {
         countJournal.futureValue shouldBe 12
@@ -191,27 +192,27 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
         tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
         tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(4, _, _, _) ⇒ }
         tp.expectNextPF { case EventEnvelope(5, _, _, _) ⇒ }
         tp.expectNextPF { case EventEnvelope(6, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(7, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
         tp.cancel()
       }
 
       withEventsByTag(10.seconds)("three", 0) { tp ⇒
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
         tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(6, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(7, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
         tp.cancel()
       }
 
       withEventsByTag(10.seconds)("3", 0) { tp ⇒
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
         tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(6, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(7, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
         tp.cancel()
       }
@@ -219,6 +220,20 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
       withEventsByTag(10.seconds)("one", 0) { tp ⇒
         tp.request(Int.MaxValue)
         tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
+        tp.expectNoMsg(100.millis)
+        tp.cancel()
+      }
+
+      withEventsByTag(10.seconds)("four", 0) { tp ⇒
+        tp.request(Int.MaxValue)
+        tp.expectNextPF { case EventEnvelope(4, _, _, _) ⇒ }
+        tp.expectNoMsg(100.millis)
+        tp.cancel()
+      }
+
+      withEventsByTag(10.seconds)("five", 0) { tp ⇒
+        tp.request(Int.MaxValue)
+        tp.expectNextPF { case EventEnvelope(5, _, _, _) ⇒ }
         tp.expectNoMsg(100.millis)
         tp.cancel()
       }

@@ -31,6 +31,7 @@ class SlickConfiguration(config: Config) {
 
 class JournalTableColumnNames(config: Config) {
   private val cfg = config.asConfig("tables.journal.columnNames")
+  val ordering: String = cfg.as[String]("ordering", "ordering")
   val persistenceId: String = cfg.as[String]("persistenceId", "persistence_id")
   val sequenceNumber: String = cfg.as[String]("sequenceNumber", "sequence_number")
   val created: String = cfg.as[String]("created", "created")

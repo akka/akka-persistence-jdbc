@@ -36,6 +36,9 @@ object EventsByTagPublisher {
 }
 class EventsByTagPublisher(tag: String, offset: Int, readJournalDao: ReadJournalDao, refreshInterval: FiniteDuration, maxBufferSize: Int)(implicit ec: ExecutionContext, mat: Materializer) extends ActorPublisher[EventEnvelope] with DeliveryBuffer[EventEnvelope] with ActorLogging {
   import EventsByTagPublisher._
+
+  log.debug("[EventsByTagPublisher]: New query: tag: {}, offset: {}", tag, offset)
+
   def determineSchedulePoll(): Unit = {
     if (buf.size < maxBufferSize && totalDemand > 0)
       context.system.scheduler.scheduleOnce(0.seconds, self, BecomePolling)
@@ -43,10 +46,11 @@ class EventsByTagPublisher(tag: String, offset: Int, readJournalDao: ReadJournal
 
   val checkPoller = context.system.scheduler.schedule(0.seconds, refreshInterval, self, DetermineSchedulePoll)
 
-  def receive = active(Math.max(1, offset))
+  def receive = active(offset)
 
-  def polling(offset: Int): Receive = {
+  def polling(offset: Long): Receive = {
     case GetEventsByTag ⇒
+      log.debug("[EventsByTagPublisher]: GetEventByTag, from offset: {}", offset)
       readJournalDao.eventsByTag(tag, offset, Math.max(0, maxBufferSize - buf.size))
         .mapAsync(1)(Future.fromTry)
         .map {
@@ -54,20 +58,25 @@ class EventsByTagPublisher(tag: String, offset: Int, readJournalDao: ReadJournal
         }
         .runWith(Sink.seq)
         .map { xs ⇒
+          log.debug("[EventsByTagPublisher]: Storing in buffer: {}", xs)
           buf = buf ++ xs
+          log.debug("[EventsByTagPublisher]: Total buffer: {} and deliver", buf)
+          val latestOrdering = if (buf.nonEmpty) buf.map(_.offset).max + 1 else offset
           deliverBuf()
-          context.become(active(offset + xs.size))
+          log.debug("[EventsByTagPublisher]: After deliver call: {}, storing offset (plus 1): {}", buf, latestOrdering)
+          context.become(active(latestOrdering))
         }.recover {
           case t: Throwable ⇒
-            log.error(t, "Error while polling eventsByTag")
             onError(t)
             context.stop(self)
         }
 
-    case Cancel ⇒ context.stop(self)
+    case Cancel ⇒
+      log.debug("Upstream cancelled the stream, stopping self: {}", self.path)
+      context.stop(self)
   }
 
-  def active(offset: Int): Receive = {
+  def active(offset: Long): Receive = {
     case BecomePolling ⇒
       context.become(polling(offset))
       self ! GetEventsByTag
@@ -78,7 +87,9 @@ class EventsByTagPublisher(tag: String, offset: Int, readJournalDao: ReadJournal
 
     case Request(req)                                          ⇒ deliverBuf()
 
-    case Cancel                                                ⇒ context.stop(self)
+    case Cancel ⇒
+      log.debug("Upstream cancelled the stream, stopping self: {}", self.path)
+      context.stop(self)
   }
 
   override def postStop(): Unit = {

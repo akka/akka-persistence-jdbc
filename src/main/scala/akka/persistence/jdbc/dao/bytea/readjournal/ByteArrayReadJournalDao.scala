@@ -44,7 +44,7 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao {
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct(max).result))
 
   override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] =
-    Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", Math.max(1, offset) - 1, max).result))
+    Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", offset, max).result))
       .via(serializer.deserializeFlow)
 
   override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =

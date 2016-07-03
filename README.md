@@ -1,4 +1,4 @@
-# akka-persistence-jdbc 2.5.1
+# akka-persistence-jdbc 2.5.2
 Akka-persistence-jdbc is a plugin for akka-persistence that asynchronously writes journal and snapshot entries entries to a configured JDBC store. It supports writing journal messages and snapshots to two tables: the `journal` table and the `snapshot` table.
 
 Service | Status | Description
@@ -31,7 +31,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.5.1"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.5.2"
 ```
 
 ## Configuration
@@ -300,8 +300,11 @@ Alternatively you can opt to use [Postgresql][postgres], which is the most advan
 available, with some great features, and it works great together with akka-persistence-jdbc.
 
 ## What's new?
-- 2.5.1 (2016-07-03)
+- 2.5.2 (2016-07-03)
   - The `eventsByTag` query should now be fixed.
+
+- 2.5.1 (2016-07-03)
+  - There is no 2.5.1; error while releasing
 
 - 2.5.0 (2016-06-29)
   - Changed the database schema to include two new columns, an `ordering` and a `deleted` column. Both fields are needed

@@ -71,7 +71,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
       import readJournalConfig.journalTableConfiguration._
       import columnNames._
       Source.fromPublisher(
-        db.stream(sql"""select distinct "#$persistenceId" from "#${schemaName.getOrElse("")}"."#$tableName" where rownum <= $max""".as[String])
+        db.stream(sql"""select distinct "#$persistenceId" from "#$fullTableName" where rownum <= $max""".as[String])
       )
     } else {
       super.allPersistenceIdsSource(max)
@@ -94,7 +94,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
                   rownum rnum
                 FROM
                   (SELECT *
-                   FROM "#${schemaName.getOrElse("")}"."#$tableName"
+                   FROM "#$fullTableName"
                    WHERE "#$tags" LIKE $theTag
                    ORDER BY "#$ordering") a
                 where rownum <= $max

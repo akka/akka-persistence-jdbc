@@ -17,10 +17,10 @@ mysql:
   ports:
     - "3306:3306" # credentials (root:root)
 
-oracle:
-  image: alexeiled/docker-oracle-xe-11g
-  container_name: oracle
-  environment:
-    - "TZ=Europe/Amsterdam"
-  ports:
-    - "1521:1521" # credentials (system:oracle)
+#oracle:
+#  image: alexeiled/docker-oracle-xe-11g
+#  container_name: oracle
+#  environment:
+#    - "TZ=Europe/Amsterdam"
+#  ports:
+#    - "1521:1521" # credentials (system:oracle)

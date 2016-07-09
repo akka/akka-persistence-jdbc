@@ -18,7 +18,7 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.5.2"
+version := "2.5.3-SNAPSHOT"
 
 isSnapshot := true
 
@@ -27,9 +27,9 @@ resolvers += Resolver.typesafeRepo("releases")
 scalaVersion := "2.11.8"
 
 libraryDependencies ++= {
-  val akkaVersion = "2.4.7"
+  val akkaVersion = "2.4.8"
   val slickVersion = "3.1.1"
-  val hikariCPVersion = "2.4.6"
+  val hikariCPVersion = "2.4.7"
   Seq(
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-persistence" % akkaVersion,

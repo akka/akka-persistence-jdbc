@@ -35,6 +35,6 @@ docker rm -f $(docker ps -aq)
 docker-compose -f scripts/docker-compose.yml up -d
 wait 3306 MySQL
 wait 5432 Postgres
-wait 1521 Oracle
-sbt clean test
+#wait 1521 Oracle
+sbt clean "testOnly *MySQL* *Postgres* *H2*"
 docker rm -f $(docker ps -aq)

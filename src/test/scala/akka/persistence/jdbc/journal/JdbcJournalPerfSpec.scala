@@ -19,11 +19,11 @@ package akka.persistence.jdbc.journal
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDatabase }
+import akka.persistence.jdbc.util.{ClasspathResources, DropCreate, SlickDatabase}
 import akka.persistence.journal.JournalPerfSpec
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Ignore}
 
 import scala.concurrent.duration._
 
@@ -72,6 +72,7 @@ class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("po
   override def eventsCount: Int = 1000 // postgres is very slow on my macbook / docker / virtualbox
 }
 
+@Ignore
 class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-application.conf"), MySQL()) {
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 60.seconds)

@@ -1,25 +1,13 @@
-# akka-persistence-jdbc 2.5.2
-Akka-persistence-jdbc is a plugin for akka-persistence that asynchronously writes journal and snapshot entries entries to a configured JDBC store. It supports writing journal messages and snapshots to two tables: the `journal` table and the `snapshot` table.
+# akka-persistence-jdbc #
 
-Service | Status | Description
-------- | ------ | -----------
-License | [![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt) | Apache 2.0
-Bintray | [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-persistence-jdbc/images/download.svg)](https://bintray.com/dnvriend/maven/akka-persistence-jdbc/_latestVersion) | Latest Version on Bintray
-Gitter | [![Join the chat at https://gitter.im/dnvriend/akka-persistence-jdbc](https://badges.gitter.im/dnvriend/akka-persistence-jdbc.svg)](https://gitter.im/dnvriend/akka-persistence-jdbc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) | Gitter
-                                                   
-## New release
-This new release is a 'killing feature creep' and async query release and breaks backwards compatibility with v2.2x and older, 
-please read the _What's new_ section at the bottom of the page. **Please review the changes in configuration!!** 
+[![Join the chat at https://gitter.im/dnvriend/akka-persistence-jdbc](https://badges.gitter.im/dnvriend/akka-persistence-jdbc.svg)](https://gitter.im/dnvriend/akka-persistence-jdbc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
+[![Download](https://api.bintray.com/packages/dnvriend/maven/akka-persistence-jdbc/images/download.svg)](https://bintray.com/dnvriend/maven/akka-persistence-jdbc/_latestVersion)
+[![Build Status](https://travis-ci.org/dnvriend/akka-persistence-jdbc.svg?branch=master)](https://travis-ci.org/dnvriend/akka-persistence-jdbc)
 
-- It uses [Typesafe/Lightbend Slick][slick] as the database backend,
-  - Using the typesafe config for the Slick database configuration,
-  - Uses HikariCP for the connection pool,
-  - It has been tested against Postgres, MySQL and Oracle only,
-  - It writes the journal and snapshot entries as byte arrays,
-- It relies on [Akka Serialization][ser],
-  - For serializing, please split the domain model from the storage model, and use a binary format for the storage model that support schema versioning like [Google's protocol buffers](https://developers.google.com/protocol-buffers/docs/overview), as it is used by Akka Persistence, and is available as a dependent library. For an example on how to use Akka Serialization with protocol buffers, you can examine the [akka-serialization-test](https://github.com/dnvriend/akka-serialization-test) study project,
-- It supports the `Persistence Query` interface for both Java and Scala thus providing a universal asynchronous stream based query interface,
-- Table, column and schema names are configurable, but note, if you change those, you'll need to change the DDL scripts.
+Akka-persistence-jdbc writes journal and snapshot entries entries to a configured JDBC store. It implements the full
+akka-persistence-query API and is therefor very useful for implementing DDD-style application models using
+Akka and Scala for creating reactive applications.
 
 ## Installation
 Add the following to your `build.sbt`:
@@ -33,6 +21,14 @@ resolvers += Resolver.jcenterRepo
 
 libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.5.2"
 ```
+
+## Contribution policy ##
+
+Contributions via GitHub pull requests are gladly accepted from their original author. Along with any pull requests, please state that the contribution is your original work and that you license the work to the project under the project's open source license. Whether or not you state this explicitly, by submitting any copyrighted material via pull request, email, or other means you agree to license the material under the project's open source license and warrant that you have the legal authority to do so.
+
+## License ##
+
+This code is open source software licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
 
 ## Configuration
 The new plugin relies on Slick to do create the SQL dialect for the database in use, therefor the following must be

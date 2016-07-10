@@ -1,0 +1,14 @@
+language: scala
+sudo: false
+scala:
+  - "2.11.8"
+jdk:
+  - oraclejdk8
+branches:
+  only:
+    - master
+before_script:
+  - psql -c 'create database docker;' -U postgres
+addons:
+  postgresql: "9.3"
+script: "./build.sh"

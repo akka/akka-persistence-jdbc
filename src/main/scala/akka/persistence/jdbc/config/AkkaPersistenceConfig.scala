@@ -44,6 +44,7 @@ class JournalTableConfiguration(config: Config) {
   private val cfg = config.asConfig("tables.journal")
   val tableName: String = cfg.as[String]("tableName", "journal")
   val schemaName: Option[String] = cfg.as[String]("schemaName").trim
+  val fullTableName = schemaName.map(_ + ".").getOrElse("") + tableName
   val columnNames: JournalTableColumnNames = new JournalTableColumnNames(config)
   override def toString: String = s"JournalTableConfiguration($tableName,$schemaName,$columnNames)"
 }
@@ -59,6 +60,7 @@ class DeletedToTableConfiguration(config: Config) {
   private val cfg = config.asConfig("tables.deletedTo")
   val tableName: String = cfg.as[String]("tableName", "deleted_to")
   val schemaName: Option[String] = cfg.as[String]("schemaName").trim
+  val fullTableName = schemaName.map(_ + ".").getOrElse("") + tableName
   val columnNames: DeletedToTableColumnNames = new DeletedToTableColumnNames(config)
   override def toString: String = s"DeletedToTableConfiguration($tableName,$schemaName,$columnNames)"
 }
@@ -76,6 +78,7 @@ class SnapshotTableConfiguration(config: Config) {
   private val cfg = config.asConfig("tables.snapshot")
   val tableName: String = cfg.as[String]("tableName", "snapshot")
   val schemaName: Option[String] = cfg.as[String]("schemaName").trim
+  val fullTableName = schemaName.map(_ + ".").getOrElse("") + tableName
   val columnNames: SnapshotTableColumnNames = new SnapshotTableColumnNames(config)
   override def toString: String = s"SnapshotTableConfiguration($tableName,$schemaName,$columnNames)"
 }

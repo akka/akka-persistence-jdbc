@@ -20,7 +20,7 @@ import akka.NotUsed
 import akka.actor.{ ExtendedActorSystem, Props }
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.dao.ReadJournalDao
-import akka.persistence.jdbc.query.{ AllPersistenceIdsPublisher, EventsByPersistenceIdPublisher, EventsByTagPublisher }
+import akka.persistence.jdbc.query.{ EventsByPersistenceIdPublisher, EventsByTagPublisher }
 import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
 import akka.persistence.query.EventEnvelope
 import akka.persistence.query.scaladsl._
@@ -32,6 +32,8 @@ import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable
+import scala.collection.immutable.Iterable
+import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 
 object JdbcReadJournal {
@@ -70,7 +72,17 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     readJournalDao.allPersistenceIdsSource(Long.MaxValue)
 
   override def allPersistenceIds(): Source[String, NotUsed] =
-    Source.actorPublisher[String](Props(new AllPersistenceIdsPublisher(readJournalDao, readJournalConfig.refreshInterval, readJournalConfig.maxBufferSize))).mapMaterializedValue(_ ⇒ NotUsed)
+    Source.tick(0.seconds, readJournalConfig.refreshInterval, "")
+      .flatMapConcat(_ ⇒ currentPersistenceIds())
+      .statefulMapConcat[String] { () ⇒
+        var knownIds = Set.empty[String]
+        def next(id: String): Iterable[String] = {
+          val xs = Set(id).diff(knownIds)
+          knownIds += id
+          xs
+        }
+        (id) ⇒ next(id)
+      }.mapMaterializedValue(_ ⇒ NotUsed)
 
   override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     readJournalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, Long.MaxValue)

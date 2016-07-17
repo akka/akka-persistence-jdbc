@@ -30,6 +30,7 @@ import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
 object JdbcSnapshotStore {
 
@@ -59,7 +60,10 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
       (classOf[ExecutionContext], ec),
       (classOf[Materializer], mat)
     )
-    system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[SnapshotDao](fqcn, args).get
+    system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[SnapshotDao](fqcn, args) match {
+      case Success(dao)   => dao
+      case Failure(cause) => throw cause
+    }
   }
 
   override def loadAsync(

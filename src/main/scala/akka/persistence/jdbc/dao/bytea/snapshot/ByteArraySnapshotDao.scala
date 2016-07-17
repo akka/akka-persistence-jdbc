@@ -26,6 +26,7 @@ import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend
 
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
 class ByteArraySnapshotDao(db: JdbcBackend#Database, profile: JdbcProfile, snapshotConfig: SnapshotConfig, serialization: Serialization)(implicit ec: ExecutionContext, val mat: Materializer) extends SnapshotDao {
   import profile.api._
@@ -35,7 +36,10 @@ class ByteArraySnapshotDao(db: JdbcBackend#Database, profile: JdbcProfile, snaps
   val serializer = new ByteArraySnapshotSerializer(serialization)
 
   def toSnapshotData(row: SnapshotRow): (SnapshotMetadata, Any) =
-    serializer.deserialize(row).get
+    serializer.deserialize(row) match {
+      case Success(deserialized) => deserialized
+      case Failure(cause)        => throw cause
+    }
 
   override def snapshotForMaxSequenceNr(persistenceId: String): Future[Option[(SnapshotMetadata, Any)]] = for {
     rows <- db.run(queries.selectByPersistenceIdAndMaxSeqNr(persistenceId).result)

@@ -34,6 +34,7 @@ import scala.collection.immutable
 import scala.collection.immutable.{ Iterable, Seq }
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
 object JdbcReadJournal {
   final val Identifier = "jdbc-read-journal"
@@ -64,7 +65,10 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
       (classOf[ExecutionContext], ec),
       (classOf[Materializer], mat)
     )
-    system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[ReadJournalDao](fqcn, args).get
+    system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[ReadJournalDao](fqcn, args) match {
+      case Success(dao)   => dao
+      case Failure(cause) => throw cause
+    }
   }
 
   private val delaySource =

@@ -31,7 +31,7 @@ import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
 class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   implicit val ec: ExecutionContext = context.dispatcher
@@ -52,7 +52,10 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
       (classOf[ExecutionContext], ec),
       (classOf[Materializer], mat)
     )
-    system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[JournalDao](fqcn, args).get
+    system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[JournalDao](fqcn, args) match {
+      case Success(dao)   => dao
+      case Failure(cause) => throw cause
+    }
   }
 
   override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] =

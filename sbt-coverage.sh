@@ -15,6 +15,7 @@
 #
 #!/bin/bash
 export VM_HOST="${VM_HOST:-boot2docker}"
+export CODACY_PROJECT_TOKEN=$JDBC_CODACY_TOKEN
 
 # Wait for a certain service to become available
 # Usage: wait 3306 Mysql
@@ -31,6 +32,7 @@ while true; do
 done;
 }
 
+echo "project token: $CODACY_PROJECT_TOKEN"
 docker rm -f $(docker ps -aq)
 docker-compose -f scripts/docker-compose.yml up -d
 wait 3306 MySQL

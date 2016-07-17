@@ -18,7 +18,7 @@ package akka.persistence.jdbc.dao
 
 import akka.NotUsed
 import akka.persistence.PersistentRepr
-import akka.persistence.jdbc.dao.bytea.readjournal.ReadJournalTables.JournalRow
+import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
 import akka.stream.scaladsl.Source
 
 import scala.util.Try

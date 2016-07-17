@@ -20,7 +20,8 @@ import akka.NotUsed
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.dao.ReadJournalDao
-import akka.persistence.jdbc.dao.bytea.readjournal.ReadJournalTables.JournalRow
+import akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalSerializer
+import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 import akka.stream.Materializer
@@ -78,7 +79,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
     }
   }
 
-  implicit val getJournalRow = GetResult(r => JournalRow(r.<<, r.<<, r.<<, r.nextBytes(), r.<<, r.<<))
+  implicit val getJournalRow = GetResult(r => JournalRow(r.<<, r.<<, r.<<, r.<<, r.nextBytes(), r.<<))
 
   abstract override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] = {
     if (isOracleDriver) {
@@ -88,7 +89,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
       val theTag = s"%$tag%"
       Source.fromPublisher(
         db.stream(
-          sql"""SELECT "#$ordering", "#$persistenceId", "#$sequenceNumber", "#$message", "#$created", "#$tags" FROM (
+          sql"""SELECT "#$ordering", "#$persistenceId", "#$sequenceNumber", "#$message", "#$tags" FROM (
                 SELECT
                   a.*,
                   rownum rnum
@@ -136,5 +137,5 @@ trait H2ReadJournalDao extends ReadJournalDao {
 
 class ByteArrayReadJournalDao(val db: Database, val profile: JdbcProfile, val readJournalConfig: ReadJournalConfig, serialization: Serialization)(implicit ec: ExecutionContext, mat: Materializer) extends BaseByteArrayReadJournalDao with OracleReadJournalDao with H2ReadJournalDao {
   val queries = new ReadJournalQueries(profile, readJournalConfig.journalTableConfiguration)
-  val serializer = new ByteArrayReadJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator)
+  val serializer = new ByteArrayJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator)
 }

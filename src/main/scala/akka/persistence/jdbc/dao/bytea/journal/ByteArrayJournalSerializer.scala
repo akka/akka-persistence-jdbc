@@ -40,10 +40,10 @@ class ByteArrayJournalSerializer(serialization: Serialization, separator: String
       .serialize(persistentRepr)
       .map(JournalRow(
         Long.MinValue,
+        persistentRepr.deleted,
         persistentRepr.persistenceId,
         persistentRepr.sequenceNr,
         _,
-        Platform.currentTime,
         encodeTags(tags, separator)
       ))
   }

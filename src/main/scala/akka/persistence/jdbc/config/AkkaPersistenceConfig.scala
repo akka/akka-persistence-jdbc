@@ -32,6 +32,7 @@ class SlickConfiguration(config: Config) {
 class JournalTableColumnNames(config: Config) {
   private val cfg = config.asConfig("tables.journal.columnNames")
   val ordering: String = cfg.as[String]("ordering", "ordering")
+  val deleted: String = cfg.as[String]("deleted", "deleted")
   val persistenceId: String = cfg.as[String]("persistenceId", "persistence_id")
   val sequenceNumber: String = cfg.as[String]("sequenceNumber", "sequence_number")
   val created: String = cfg.as[String]("created", "created")
@@ -46,21 +47,6 @@ class JournalTableConfiguration(config: Config) {
   val schemaName: Option[String] = cfg.as[String]("schemaName").trim
   val columnNames: JournalTableColumnNames = new JournalTableColumnNames(config)
   override def toString: String = s"JournalTableConfiguration($tableName,$schemaName,$columnNames)"
-}
-
-class DeletedToTableColumnNames(config: Config) {
-  private val cfg = config.asConfig("tables.deletedTo.columnNames")
-  val persistenceId: String = cfg.as[String]("persistenceId", "persistence_id")
-  val deletedTo: String = cfg.as[String]("deletedTo", "deleted_to")
-  override def toString: String = s"DeletedToTableColumnNames($persistenceId,$deletedTo)"
-}
-
-class DeletedToTableConfiguration(config: Config) {
-  private val cfg = config.asConfig("tables.deletedTo")
-  val tableName: String = cfg.as[String]("tableName", "deleted_to")
-  val schemaName: Option[String] = cfg.as[String]("schemaName").trim
-  val columnNames: DeletedToTableColumnNames = new DeletedToTableColumnNames(config)
-  override def toString: String = s"DeletedToTableConfiguration($tableName,$schemaName,$columnNames)"
 }
 
 class SnapshotTableColumnNames(config: Config) {
@@ -102,9 +88,8 @@ class SnapshotPluginConfig(config: Config) {
 class JournalConfig(config: Config) {
   val slickConfiguration = new SlickConfiguration(config)
   val journalTableConfiguration = new JournalTableConfiguration(config)
-  val deletedToTableConfiguration = new DeletedToTableConfiguration(config)
   val pluginConfig = new JournalPluginConfig(config)
-  override def toString: String = s"JournalConfig($slickConfiguration,$journalTableConfiguration,$deletedToTableConfiguration,$pluginConfig)"
+  override def toString: String = s"JournalConfig($slickConfiguration,$journalTableConfiguration,$pluginConfig)"
 }
 
 class SnapshotConfig(config: Config) {

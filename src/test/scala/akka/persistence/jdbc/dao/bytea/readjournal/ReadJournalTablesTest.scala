@@ -17,13 +17,14 @@
 package akka.persistence.jdbc.dao.bytea.readjournal
 
 import akka.persistence.jdbc.dao.TablesTestSpec
+import akka.persistence.jdbc.dao.bytea.journal.JournalTables
 import slick.driver.JdbcProfile
 
 class ReadJournalTablesTest extends TablesTestSpec {
 
   val readJournalTableConfiguration = readJournalConfig.journalTableConfiguration
 
-  object TestByteAReadJournalTables extends ReadJournalTables {
+  object TestByteAReadJournalTables extends JournalTables {
     override val profile: JdbcProfile = slick.driver.PostgresDriver
     override val journalTableCfg = readJournalTableConfiguration
   }
@@ -40,7 +41,6 @@ class ReadJournalTablesTest extends TablesTestSpec {
     val colName = toColumnName(readJournalTableConfiguration.tableName)(_)
     TestByteAReadJournalTables.JournalTable.baseTableRow.persistenceId.toString shouldBe colName(readJournalTableConfiguration.columnNames.persistenceId)
     TestByteAReadJournalTables.JournalTable.baseTableRow.sequenceNumber.toString shouldBe colName(readJournalTableConfiguration.columnNames.sequenceNumber)
-    TestByteAReadJournalTables.JournalTable.baseTableRow.created.toString shouldBe colName(readJournalTableConfiguration.columnNames.created)
     //    TestByteAJournalTables.JournalTable.baseTableRow.tags.toString() shouldBe colName(journalTableConfiguration.columnNames.tags)
   }
 }

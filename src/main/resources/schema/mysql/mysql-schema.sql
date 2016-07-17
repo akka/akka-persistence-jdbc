@@ -2,20 +2,12 @@ DROP TABLE IF EXISTS journal;
 
 CREATE TABLE IF NOT EXISTS journal (
   ordering BIGINT AUTO_INCREMENT,
-  deleted BOOLEAN DEFAULT FALSE,
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
-  created BIGINT NOT NULL,
+  deleted BOOLEAN DEFAULT FALSE,
   tags VARCHAR(255) DEFAULT NULL,
   message BLOB NOT NULL,
   PRIMARY KEY(ordering, persistence_id, sequence_number)
-);
-
-DROP TABLE IF EXISTS deleted_to;
-
-CREATE TABLE IF NOT EXISTS deleted_to (
-  persistence_id VARCHAR(255) NOT NULL,
-  deleted_to BIGINT NOT NULL
 );
 
 DROP TABLE IF EXISTS snapshot;

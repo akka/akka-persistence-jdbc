@@ -36,18 +36,9 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |        ordering = "ordering"
       |        persistenceId = "persistence_id"
       |        sequenceNumber = "sequence_number"
-      |        created = "created"
+      |        deleted = "deleted"
       |        tags = "tags"
       |        message = "message"
-      |      }
-      |    }
-      |
-      |    deletedTo {
-      |      tableName = "deleted_to"
-      |      schemaName = ""
-      |      columnNames = {
-      |        persistenceId = "persistence_id"
-      |        deletedTo = "deleted_to"
       |      }
       |    }
       |  }
@@ -242,12 +233,6 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.journalTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
     cfg.journalTableConfiguration.columnNames.sequenceNumber shouldBe "sequence_number"
     cfg.journalTableConfiguration.columnNames.tags shouldBe "tags"
-
-    cfg.deletedToTableConfiguration.tableName shouldBe "deleted_to"
-    cfg.deletedToTableConfiguration.schemaName shouldBe None
-
-    cfg.deletedToTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
-    cfg.deletedToTableConfiguration.columnNames.deletedTo shouldBe "deleted_to"
   }
 
   it should "parse SnapshotConfig" in {
@@ -307,12 +292,6 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.journalTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
     cfg.journalTableConfiguration.columnNames.sequenceNumber shouldBe "sequence_number"
     cfg.journalTableConfiguration.columnNames.tags shouldBe "tags"
-
-    cfg.deletedToTableConfiguration.tableName shouldBe "deleted_to"
-    cfg.deletedToTableConfiguration.schemaName shouldBe None
-
-    cfg.deletedToTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
-    cfg.deletedToTableConfiguration.columnNames.deletedTo shouldBe "deleted_to"
   }
 
   it should "parse SnapshotConfig" in {

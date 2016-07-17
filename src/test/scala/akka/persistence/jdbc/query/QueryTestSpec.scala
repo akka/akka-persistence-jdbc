@@ -202,7 +202,6 @@ trait PostgresCleaner extends QueryTestSpec {
 
   val actionsClearPostgres = (for {
     _ <- sqlu"""TRUNCATE journal"""
-    _ <- sqlu"""TRUNCATE deleted_to"""
     _ <- sqlu"""TRUNCATE snapshot"""
   } yield ()).transactionally
 
@@ -230,7 +229,6 @@ trait MysqlCleaner extends QueryTestSpec {
 
   val actionsClearMySQL = (for {
     _ <- sqlu"""TRUNCATE journal"""
-    _ <- sqlu"""TRUNCATE deleted_to"""
     _ <- sqlu"""TRUNCATE snapshot"""
   } yield ()).transactionally
 
@@ -258,7 +256,6 @@ trait OracleCleaner extends QueryTestSpec {
 
   val actionsClearOracle = (for {
     _ <- sqlu"""DELETE FROM "SYSTEM"."journal""""
-    _ <- sqlu"""DELETE FROM "SYSTEM"."deleted_to""""
     _ <- sqlu"""DELETE FROM "SYSTEM"."snapshot""""
   } yield ()).transactionally
 
@@ -286,7 +283,6 @@ trait H2Cleaner extends QueryTestSpec {
 
   val actionsClearH2 = (for {
     _ <- sqlu"""TRUNCATE TABLE journal"""
-    _ <- sqlu"""TRUNCATE TABLE deleted_to"""
     _ <- sqlu"""TRUNCATE TABLE snapshot"""
   } yield ()).transactionally
 

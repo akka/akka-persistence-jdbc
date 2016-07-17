@@ -17,10 +17,11 @@
 package akka.persistence.jdbc.dao.bytea.readjournal
 
 import akka.persistence.jdbc.config.JournalTableConfiguration
+import akka.persistence.jdbc.dao.bytea.journal.JournalTables
+import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
 import slick.driver.JdbcProfile
 
-class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration) extends ReadJournalTables {
-  import ReadJournalTables._
+class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration) extends JournalTables {
   import profile.api._
 
   def journalRowByPersistenceIds(persistenceIds: Iterable[String]): Query[Rep[String], String, Seq] =

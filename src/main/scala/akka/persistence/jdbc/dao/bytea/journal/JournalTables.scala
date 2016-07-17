@@ -16,13 +16,11 @@
 
 package akka.persistence.jdbc.dao.bytea.journal
 
-import akka.persistence.jdbc.config.{ DeletedToTableConfiguration, JournalTableConfiguration }
+import akka.persistence.jdbc.config.JournalTableConfiguration
 import akka.persistence.jdbc.dao.bytea.journal.JournalTables._
 
 object JournalTables {
-  case class JournalRow(ordering: Long, persistenceId: String, sequenceNumber: Long, message: Array[Byte], created: Long, tags: Option[String] = None)
-
-  case class JournalDeletedToRow(persistenceId: String, deletedTo: Long)
+  case class JournalRow(ordering: Long, deleted: Boolean, persistenceId: String, sequenceNumber: Long, message: Array[Byte], tags: Option[String] = None)
 }
 
 trait JournalTables {
@@ -32,28 +30,17 @@ trait JournalTables {
 
   def journalTableCfg: JournalTableConfiguration
 
-  def deletedToTableCfg: DeletedToTableConfiguration
-
   class Journal(_tableTag: Tag) extends Table[JournalRow](_tableTag, _schemaName = journalTableCfg.schemaName, _tableName = journalTableCfg.tableName) {
-    def * = (ordering, persistenceId, sequenceNumber, message, created, tags) <> (JournalRow.tupled, JournalRow.unapply)
+    def * = (ordering, deleted, persistenceId, sequenceNumber, message, tags) <> (JournalRow.tupled, JournalRow.unapply)
 
     val ordering: Rep[Long] = column[Long](journalTableCfg.columnNames.ordering, O.AutoInc)
     val persistenceId: Rep[String] = column[String](journalTableCfg.columnNames.persistenceId, O.Length(255, varying = true))
     val sequenceNumber: Rep[Long] = column[Long](journalTableCfg.columnNames.sequenceNumber)
-    val created: Rep[Long] = column[Long](journalTableCfg.columnNames.created)
+    val deleted: Rep[Boolean] = column[Boolean](journalTableCfg.columnNames.deleted, O.Default(false))
     val tags: Rep[Option[String]] = column[String](journalTableCfg.columnNames.tags, O.Length(255, varying = true)).?
     val message: Rep[Array[Byte]] = column[Array[Byte]](journalTableCfg.columnNames.message)
-    val pk = primaryKey("journal_pk", (persistenceId, sequenceNumber))
+    val pk = primaryKey("journal_pk", (ordering, persistenceId, sequenceNumber))
   }
 
   lazy val JournalTable = new TableQuery(tag => new Journal(tag))
-
-  class DeletedTo(_tableTag: Tag) extends Table[JournalDeletedToRow](_tableTag, _schemaName = deletedToTableCfg.schemaName, _tableName = deletedToTableCfg.tableName) {
-    def * = (persistenceId, deletedTo) <> (JournalDeletedToRow.tupled, JournalDeletedToRow.unapply)
-
-    val persistenceId: Rep[String] = column[String](deletedToTableCfg.columnNames.persistenceId, O.Length(255, varying = true))
-    val deletedTo: Rep[Long] = column[Long](deletedToTableCfg.columnNames.deletedTo)
-  }
-
-  lazy val DeletedToTable = new TableQuery(tag => new DeletedTo(tag))
 }

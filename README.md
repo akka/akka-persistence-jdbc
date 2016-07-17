@@ -297,6 +297,9 @@ Alternatively you can opt to use [Postgresql][postgres], which is the most advan
 available, with some great features, and it works great together with akka-persistence-jdbc.
 
 ## What's new?
+- 2.6.0 (2016-07-17)
+  - Removing the deleted_to table to become compatible with the `akka-persistence-query` spec that states that all messages should be replayed, even deleted ones.
+
 - 2.5.2 (2016-07-03)
   - The `eventsByTag` query should now be fixed.
 

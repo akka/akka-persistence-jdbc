@@ -39,7 +39,6 @@ trait DropCreate extends ClasspathResources {
 
   val listOfOracleDropQueries = List(
     """DROP TABLE "journal" CASCADE CONSTRAINT""",
-    """DROP TABLE "deleted_to" CASCADE CONSTRAINT""",
     """DROP TABLE "snapshot" CASCADE CONSTRAINT""",
     """DROP TRIGGER "ordering_seq_trigger"""",
     """DROP SEQUENCE "ordering_seq""""

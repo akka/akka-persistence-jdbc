@@ -60,28 +60,15 @@ trait BaseByteArrayJournalDao extends JournalDao {
       .map(_.map(writeJournalRows))
       .via(futureExtractor)
 
-  override def delete(persistenceId: String, maxSequenceNr: Long): Future[Unit] = {
-    val actions = (for {
-      highestSequenceNr <- queries.highestSequenceNrForPersistenceId(persistenceId).result
-      _ <- queries.selectByPersistenceIdAndMaxSequenceNumber(persistenceId, maxSequenceNr).delete
-      _ <- queries.insertDeletedTo(persistenceId, highestSequenceNr)
-    } yield ()).transactionally
-    db.run(actions)
-  }
+  override def delete(persistenceId: String, maxSequenceNr: Long): Future[Unit] =
+    db.run(queries.markJournalMessagesAsDeleted(persistenceId, maxSequenceNr)).map(_ => ())
 
-  override def highestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] = {
-    val actions = for {
-      seqNumFoundInJournalTable <- queries.highestSequenceNumberFromJournalForPersistenceIdFromSequenceNr(persistenceId, fromSequenceNr).result
-      highestSeqNumberFoundInDeletedToTable <- queries.selectHighestSequenceNrFromDeletedTo(persistenceId).result
-      highestSequenceNumber = seqNumFoundInJournalTable.getOrElse(highestSeqNumberFoundInDeletedToTable.getOrElse(0L))
-    } yield highestSequenceNumber
-    db.run(actions)
-  }
+  override def highestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] =
+    db.run(queries.highestSequenceNrForPersistenceId(persistenceId).result).map(_.getOrElse(0L))
 
-  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] = {
+  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
     Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
       .via(serializer.deserializeFlowWithoutTags)
-  }
 }
 
 trait H2JournalDao extends JournalDao {
@@ -106,7 +93,7 @@ trait H2JournalDao extends JournalDao {
 }
 
 class ByteArrayJournalDao(val db: Database, val profile: JdbcProfile, journalConfig: JournalConfig, serialization: Serialization)(implicit val ec: ExecutionContext, val mat: Materializer) extends BaseByteArrayJournalDao with H2JournalDao {
-  val queries = new JournalQueries(profile, journalConfig.journalTableConfiguration, journalConfig.deletedToTableConfiguration)
+  val queries = new JournalQueries(profile, journalConfig.journalTableConfiguration)
   val serializer = new ByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator)
 }
 

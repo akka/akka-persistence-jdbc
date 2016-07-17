@@ -22,12 +22,10 @@ import slick.driver.JdbcProfile
 class JournalTablesTest extends TablesTestSpec {
 
   val journalTableConfiguration = journalConfig.journalTableConfiguration
-  val deletedToTableConfiguration = journalConfig.deletedToTableConfiguration
 
   object TestByteAJournalTables extends JournalTables {
     override val profile: JdbcProfile = slick.driver.PostgresDriver
     override val journalTableCfg = journalTableConfiguration
-    override val deletedToTableCfg = deletedToTableConfiguration
   }
 
   "JournalTable" should "be configured with a schema name" in {
@@ -41,22 +39,8 @@ class JournalTablesTest extends TablesTestSpec {
   it should "be configured with column names" in {
     val colName = toColumnName(journalTableConfiguration.tableName)(_)
     TestByteAJournalTables.JournalTable.baseTableRow.persistenceId.toString shouldBe colName(journalTableConfiguration.columnNames.persistenceId)
+    TestByteAJournalTables.JournalTable.baseTableRow.deleted.toString shouldBe colName(journalTableConfiguration.columnNames.deleted)
     TestByteAJournalTables.JournalTable.baseTableRow.sequenceNumber.toString shouldBe colName(journalTableConfiguration.columnNames.sequenceNumber)
-    TestByteAJournalTables.JournalTable.baseTableRow.created.toString shouldBe colName(journalTableConfiguration.columnNames.created)
     //    TestByteAJournalTables.JournalTable.baseTableRow.tags.toString() shouldBe colName(journalTableConfiguration.columnNames.tags)
-  }
-
-  "DeletedToTable" should "be configured with a schema name" in {
-    TestByteAJournalTables.DeletedToTable.baseTableRow.schemaName shouldBe deletedToTableConfiguration.schemaName
-  }
-
-  it should "be configured with a table name" in {
-    TestByteAJournalTables.DeletedToTable.baseTableRow.tableName shouldBe deletedToTableConfiguration.tableName
-  }
-
-  it should "be configured with column names" in {
-    val colName = toColumnName(deletedToTableConfiguration.tableName)(_)
-    TestByteAJournalTables.DeletedToTable.baseTableRow.persistenceId.toString shouldBe colName(deletedToTableConfiguration.columnNames.persistenceId)
-    TestByteAJournalTables.DeletedToTable.baseTableRow.deletedTo.toString shouldBe colName(deletedToTableConfiguration.columnNames.deletedTo)
   }
 }

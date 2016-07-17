@@ -2,20 +2,12 @@ DROP TABLE IF EXISTS public.journal;
 
 CREATE TABLE IF NOT EXISTS public.journal (
   ordering BIGSERIAL,
-  deleted BOOLEAN DEFAULT FALSE,
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
-  created BIGINT NOT NULL,
+  deleted BOOLEAN DEFAULT FALSE,
   tags VARCHAR(255) DEFAULT NULL,
   message BYTEA NOT NULL,
-  PRIMARY KEY(persistence_id, sequence_number)
-);
-
-DROP TABLE IF EXISTS public.deleted_to;
-
-CREATE TABLE IF NOT EXISTS public.deleted_to (
-  persistence_id VARCHAR(255) NOT NULL,
-  deleted_to BIGINT NOT NULL
+  PRIMARY KEY(ordering, persistence_id, sequence_number)
 );
 
 DROP TABLE IF EXISTS public.snapshot;

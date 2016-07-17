@@ -1,4 +1,4 @@
-# akka-persistence-jdbc #
+# akka-persistence-jdbc
 
 [![Join the chat at https://gitter.im/dnvriend/akka-persistence-jdbc](https://badges.gitter.im/dnvriend/akka-persistence-jdbc.svg)](https://gitter.im/dnvriend/akka-persistence-jdbc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/dnvriend/akka-persistence-jdbc.svg?branch=master)](https://travis-ci.org/dnvriend/akka-persistence-jdbc)
@@ -20,14 +20,14 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.5.2"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.0"
 ```
 
-## Contribution policy ##
+## Contribution policy
 
 Contributions via GitHub pull requests are gladly accepted from their original author. Along with any pull requests, please state that the contribution is your original work and that you license the work to the project under the project's open source license. Whether or not you state this explicitly, by submitting any copyrighted material via pull request, email, or other means you agree to license the material under the project's open source license and warrant that you have the legal authority to do so.
 
-## License ##
+## License
 
 This code is open source software licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
 
@@ -44,7 +44,6 @@ Configure `slick`:
   - `slick.driver.PostgresDriver$`
   - `slick.driver.MySQLDriver$`
   - `slick.driver.H2Driver$`
-  - `com.typesafe.slick.driver.oracle.OracleDriver$`
 
 ## DataSource lookup by JNDI name
 The plugin uses `slick` as the database access library. Slick [supports jndi][slick-jndi]
@@ -73,11 +72,11 @@ Base your akka-persistence-jdbc `application.conf` on [this config file][mysql-a
 ## MySQL schema
 The schema is available [here][mysql-schema]
 
-## Oracle configuration
-Base your akka-persistence-jdbc `application.conf` on [this config file][oracle-application.conf]  
+## H2 configuration
+Base your akka-persistence-jdbc `application.conf` on [this config file][h2-application.conf]
 
-## Oracle schema
-The schema is available [here][oracle-schema]
+## H2 schema
+The schema is available [here][h2-schema]
 
 ## How to get the ReadJournal using Scala
 The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery` extension:
@@ -235,7 +234,7 @@ The same stream elements (in same order) are returned for multiple executions of
 from the tagged event stream.
 
 ## Custom DAO Implementation
-As of `2.2.11` the plugin supports loading a custom DAO for the journal and snapshot. You should implement a custom Data Access Object (DAO) if you wish to alter the default persistency strategy in 
+The plugin supports loading a custom DAO for the journal and snapshot. You should implement a custom Data Access Object (DAO) if you wish to alter the default persistency strategy in
 any way, but wish to reuse all the logic that the plugin already has in place, eg. the Akka Persistence Query API. For example, the default persistency strategy that the plugin 
 supports serializes journal and snapshot messages using a serializer of your choice and stores them as byte arrays in the database.
 
@@ -286,21 +285,14 @@ It is advisable to register a shutdown hook to be run when the VM exits that ter
 sys.addShutdownHook(system.terminate())
 ```
 
-## Slick Extensions Licensing Changing to Open Source
-The [Typesafe/Lightbend Slick Extensions][slick-ex] have become [open source as 
-of 1 february 2016 as can read from the slick new website][slick-ex-lic],
-this means that you can use akka-persistence-jdbc with no commercial license from Typesafe/Lightbend when used with `Oracle`, `IBM DB2` or 
-`Microsoft SQL Server`. Thanks [Lightbend][lightbend]! Of course you will need a commercial license from
-your database vendor. 
-
-Alternatively you can opt to use [Postgresql][postgres], which is the most advanced open source database 
-available, with some great features, and it works great together with akka-persistence-jdbc.
-
 ## What's new?
 - 2.6.0 (2016-07-17)
-  - Removing the deleted_to table to become compatible with the `akka-persistence-query` spec that states that all messages should be replayed, even deleted ones,
-  - No need for Query Publishers with the new akka-streams API,
-  - Codacy code cleanup.
+  - Removed the `deleted_to` and `created` columns of the `journal` table to become compatible with
+   `akka-persistence-query` spec that states that all messages should be replayed, even deleted ones
+  - New schema's are available for [postgres][postgres-schema], [mysql][mysql-schema] and [h2][h2-schema]
+  - No need for Query Publishers with the new akka-streams API
+  - Codacy code cleanup
+  - There is still no support for Oracle since the addition of the ordering SERIAL column which Oracle does not support. Help to add Oracle support is appreciated.
 
 - 2.5.2 (2016-07-03)
   - The `eventsByTag` query should now be fixed.
@@ -651,8 +643,10 @@ Have fun!
 [inmemory]: https://github.com/dnvriend/akka-persistence-inmemory
 [postgres-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/postgres-application.conf
 [mysql-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/mysql-application.conf
+[h2-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/h2-application.conf
 [oracle-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/oracle-application.conf
 
 [postgres-schema]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/schema/postgres/postgres-schema.sql
 [mysql-schema]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/schema/mysql/mysql-schema.sql
+[h2-schema]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/schema/h2/h2-schema.sql
 [oracle-schema]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/schema/oracle/oracle-schema.sql

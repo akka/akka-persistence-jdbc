@@ -35,7 +35,7 @@ class ByteArraySnapshotSerializer(serialization: Serialization) extends Snapshot
   def deserialize(snapshotRow: SnapshotRow): Try[(SnapshotMetadata, Any)] = {
     serialization
       .deserialize(snapshotRow.snapshot, classOf[Snapshot])
-      .map(snapshot ⇒ {
+      .map(snapshot => {
         val snapshotMetadata = SnapshotMetadata(
           snapshotRow.persistenceId,
           snapshotRow.sequenceNumber,

@@ -17,22 +17,21 @@
 package akka.persistence.jdbc.query.scaladsl
 
 import akka.NotUsed
-import akka.actor.{ ExtendedActorSystem, Props }
+import akka.actor.ExtendedActorSystem
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.dao.ReadJournalDao
-import akka.persistence.jdbc.query.{ EventsByPersistenceIdPublisher, EventsByTagPublisher }
 import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
 import akka.persistence.query.EventEnvelope
 import akka.persistence.query.scaladsl._
 import akka.serialization.{ Serialization, SerializationExtension }
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{ Sink, Source }
 import akka.stream.{ ActorMaterializer, Materializer }
 import com.typesafe.config.Config
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable
-import scala.collection.immutable.Iterable
+import scala.collection.immutable.{ Iterable, Seq }
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -68,37 +67,58 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[ReadJournalDao](fqcn, args).get
   }
 
+  private val delaySource =
+    Source.tick(readJournalConfig.refreshInterval, 0.seconds, 0).take(1)
+
   override def currentPersistenceIds(): Source[String, NotUsed] =
     readJournalDao.allPersistenceIdsSource(Long.MaxValue)
 
   override def allPersistenceIds(): Source[String, NotUsed] =
-    Source.tick(0.seconds, readJournalConfig.refreshInterval, "")
-      .flatMapConcat(_ ⇒ currentPersistenceIds())
-      .statefulMapConcat[String] { () ⇒
+    Source.repeat(0).flatMapConcat(_ => delaySource.flatMapConcat(_ => currentPersistenceIds()))
+      .statefulMapConcat[String] { () =>
         var knownIds = Set.empty[String]
         def next(id: String): Iterable[String] = {
           val xs = Set(id).diff(knownIds)
           knownIds += id
           xs
         }
-        (id) ⇒ next(id)
-      }.mapMaterializedValue(_ ⇒ NotUsed)
+        (id) => next(id)
+      }
 
   override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     readJournalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, Long.MaxValue)
-      .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
-      .map(repr ⇒ EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
+      .mapAsync(1)(deserializedRepr => Future.fromTry(deserializedRepr))
+      .map(repr => EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
 
   override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
-    Source.actorPublisher[EventEnvelope](Props(new EventsByPersistenceIdPublisher(persistenceId, fromSequenceNr, toSequenceNr, readJournalDao, readJournalConfig.refreshInterval, readJournalConfig.maxBufferSize))).mapMaterializedValue(_ ⇒ NotUsed)
+    Source.unfoldAsync[Long, Seq[EventEnvelope]](Math.max(1, fromSequenceNr)) { (from: Long) =>
+      def nextFromSeqNr(xs: Seq[EventEnvelope]): Long = {
+        if (xs.isEmpty) from else xs.map(_.sequenceNr).max + 1
+      }
+      delaySource.flatMapConcat(_ =>
+        currentEventsByPersistenceId(persistenceId, from, toSequenceNr)
+          .take(readJournalConfig.maxBufferSize)).runWith(Sink.seq).map { xs =>
+        val newFromSeqNr = nextFromSeqNr(xs)
+        Some((newFromSeqNr, xs))
+      }
+    }.mapConcat(identity)
 
   override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     readJournalDao.eventsByTag(tag, offset, Long.MaxValue)
       .mapAsync(1)(Future.fromTry)
       .map {
-        case (repr, _, row) ⇒ EventEnvelope(row.ordering, repr.persistenceId, repr.sequenceNr, repr.payload)
+        case (repr, _, row) => EventEnvelope(row.ordering, repr.persistenceId, repr.sequenceNr, repr.payload)
       }
 
   override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    Source.actorPublisher[EventEnvelope](Props(new EventsByTagPublisher(tag, offset.toInt, readJournalDao, readJournalConfig.refreshInterval, readJournalConfig.maxBufferSize))).mapMaterializedValue(_ ⇒ NotUsed)
+    Source.unfoldAsync[Long, Seq[EventEnvelope]](offset) { (from: Long) =>
+      def nextFromOffset(xs: Seq[EventEnvelope]): Long = {
+        if (xs.isEmpty) from else xs.map(_.offset).max + 1
+      }
+      delaySource.flatMapConcat(_ => currentEventsByTag(tag, from)
+        .take(readJournalConfig.maxBufferSize)).runWith(Sink.seq).map { xs =>
+        val newFromSeqNr = nextFromOffset(xs)
+        Some((newFromSeqNr, xs))
+      }
+    }.mapConcat(identity)
 }

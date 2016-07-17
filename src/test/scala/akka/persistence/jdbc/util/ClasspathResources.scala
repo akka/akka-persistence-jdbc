@@ -24,14 +24,14 @@ import akka.stream.scaladsl.{ Source, StreamConverters }
 import akka.util.ByteString
 
 import scala.concurrent.Future
-import scala.io.{ Source ⇒ ScalaIOSource }
+import scala.io.{ Source => ScalaIOSource }
 import scala.util.Try
 import scala.xml.pull.{ XMLEvent, XMLEventReader }
 
 object ClasspathResources extends ClasspathResources
 
 trait ClasspathResources {
-  def withInputStream[T](fileName: String)(f: InputStream ⇒ T): T = {
+  def withInputStream[T](fileName: String)(f: InputStream => T): T = {
     val is = fromClasspathAsStream(fileName)
     try {
       f(is)
@@ -40,19 +40,19 @@ trait ClasspathResources {
     }
   }
 
-  def withXMLEventReader[T](fileName: String)(f: XMLEventReader ⇒ T): T =
-    withInputStream(fileName) { is ⇒
+  def withXMLEventReader[T](fileName: String)(f: XMLEventReader => T): T =
+    withInputStream(fileName) { is =>
       f(new XMLEventReader(ScalaIOSource.fromInputStream(is)))
     }
 
-  def withXMLEventSource[T](fileName: String)(f: Source[XMLEvent, NotUsed] ⇒ T): T =
-    withXMLEventReader(fileName) { reader ⇒
-      f(Source.fromIterator(() ⇒ reader))
+  def withXMLEventSource[T](fileName: String)(f: Source[XMLEvent, NotUsed] => T): T =
+    withXMLEventReader(fileName) { reader =>
+      f(Source.fromIterator(() => reader))
     }
 
-  def withByteStringSource[T](fileName: String)(f: Source[ByteString, Future[IOResult]] ⇒ T): T =
-    withInputStream(fileName) { inputStream ⇒
-      f(StreamConverters.fromInputStream(() ⇒ inputStream))
+  def withByteStringSource[T](fileName: String)(f: Source[ByteString, Future[IOResult]] => T): T =
+    withInputStream(fileName) { inputStream =>
+      f(StreamConverters.fromInputStream(() => inputStream))
     }
 
   def streamToString(is: InputStream): String =

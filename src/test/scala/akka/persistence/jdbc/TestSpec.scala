@@ -61,7 +61,7 @@ abstract class TestSpec(override val config: Config) extends SimpleSpec with Mat
    */
   def cleanup(actors: ActorRef*): Unit = {
     val tp = probe
-    actors.foreach { (actor: ActorRef) ⇒
+    actors.foreach { (actor: ActorRef) =>
       tp watch actor
       actor ! PoisonPill
       tp.expectTerminated(actor)

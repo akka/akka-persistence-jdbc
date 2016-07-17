@@ -47,8 +47,8 @@ object ConfigOps {
 
     def asDuration(key: String): Duration =
       config.getString(key).toLowerCase(Locale.ROOT) match {
-        case "off" ⇒ Duration.Undefined
-        case _     ⇒ config.getMillisDuration(key) requiring (_ > Duration.Zero, key + " >0s, or off")
+        case "off" => Duration.Undefined
+        case _     => config.getMillisDuration(key) requiring (_ > Duration.Zero, key + " >0s, or off")
       }
 
     def getMillisDuration(key: String): FiniteDuration = getDuration(key, TimeUnit.MILLISECONDS)
@@ -61,7 +61,7 @@ object ConfigOps {
 
     def ?:[A](key: String, default: A) = as(key, default)
 
-    def withkey[A](key: String)(f: Config ⇒ A): A = f(config.getConfig(key))
+    def withkey[A](key: String)(f: Config => A): A = f(config.getConfig(key))
   }
 
   implicit def TryToOption[A](t: Try[A]): Option[A] = t.toOption
@@ -78,12 +78,12 @@ object ConfigOps {
   }
 
   final implicit class Requiring[A](val value: A) extends AnyVal {
-    @inline def requiring(cond: Boolean, msg: ⇒ Any): A = {
+    @inline def requiring(cond: Boolean, msg: => Any): A = {
       require(cond, msg)
       value
     }
 
-    @inline def requiring(cond: A ⇒ Boolean, msg: ⇒ Any): A = {
+    @inline def requiring(cond: A => Boolean, msg: => Any): A = {
       require(cond(value), msg)
       value
     }

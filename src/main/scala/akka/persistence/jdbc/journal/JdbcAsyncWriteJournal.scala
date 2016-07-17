@@ -66,11 +66,11 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   override def asyncReadHighestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] =
     journalDao.highestSequenceNr(persistenceId, fromSequenceNr)
 
-  override def asyncReplayMessages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(recoveryCallback: (PersistentRepr) ⇒ Unit): Future[Unit] =
+  override def asyncReplayMessages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(recoveryCallback: (PersistentRepr) => Unit): Future[Unit] =
     journalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, max)
-      .mapAsync(1)(deserializedRepr ⇒ Future.fromTry(deserializedRepr))
+      .mapAsync(1)(deserializedRepr => Future.fromTry(deserializedRepr))
       .runForeach(recoveryCallback)
-      .map(_ ⇒ ())
+      .map(_ => ())
 
   override def postStop(): Unit = {
     db.close()

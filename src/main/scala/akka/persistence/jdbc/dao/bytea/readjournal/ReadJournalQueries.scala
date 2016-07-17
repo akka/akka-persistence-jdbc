@@ -25,7 +25,7 @@ class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg:
 
   def journalRowByPersistenceIds(persistenceIds: Iterable[String]): Query[Rep[String], String, Seq] =
     for {
-      query ← JournalTable.map(_.persistenceId)
+      query <- JournalTable.map(_.persistenceId)
       if query inSetBind persistenceIds
     } yield query
 

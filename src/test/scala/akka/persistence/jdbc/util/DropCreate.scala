@@ -45,44 +45,44 @@ trait DropCreate extends ClasspathResources {
     """DROP SEQUENCE "ordering_seq""""
   )
 
-  def dropOracle(): Unit = withStatement { stmt ⇒
-    listOfOracleDropQueries.foreach { ddl ⇒
+  def dropOracle(): Unit = withStatement { stmt =>
+    listOfOracleDropQueries.foreach { ddl =>
       try stmt.executeUpdate(ddl) catch {
-        case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" ⇒ // suppress known error message in the test
-        case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-04080" ⇒ // suppress known error message in the test
+        case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" => // suppress known error message in the test
+        case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-04080" => // suppress known error message in the test
       }
     }
   }
 
   def dropCreate(schemaType: SchemaType): Unit = schemaType match {
-    case Oracle(schema) ⇒
+    case Oracle(schema) =>
       dropOracle()
       create(schema)
-    case s: SchemaType ⇒ create(s.schema)
+    case s: SchemaType => create(s.schema)
   }
 
   def create(schema: String): Unit = for {
-    schema ← Option(fromClasspathAsString(schema))
-    ddl ← for {
-      trimmedLine ← schema.split(";") map (_.trim)
+    schema <- Option(fromClasspathAsString(schema))
+    ddl <- for {
+      trimmedLine <- schema.split(";") map (_.trim)
       if trimmedLine.nonEmpty
     } yield trimmedLine
-  } withStatement { stmt ⇒
+  } withStatement { stmt =>
     try stmt.executeUpdate(ddl) catch {
-      case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" ⇒ // suppress known error message in the test
+      case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" => // suppress known error message in the test
     }
   }
 
-  def withDatabase[A](f: JdbcBackend#Database ⇒ A): A =
+  def withDatabase[A](f: JdbcBackend#Database => A): A =
     f(db)
 
-  def withSession[A](f: JdbcBackend#Session ⇒ A): A = {
-    withDatabase { db ⇒
+  def withSession[A](f: JdbcBackend#Session => A): A = {
+    withDatabase { db =>
       val session = db.createSession()
       try f(session) finally session.close()
     }
   }
 
-  def withStatement[A](f: Statement ⇒ A): A =
-    withSession(session ⇒ session.withStatement()(f))
+  def withStatement[A](f: Statement => A): A =
+    withSession(session => session.withStatement()(f))
 }

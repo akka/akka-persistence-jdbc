@@ -21,19 +21,19 @@ import org.scalacheck.Gen
 
 object AkkaPersistenceGen {
   val genPersistentRepr = for {
-    payload ← Gen.alphaStr
+    payload <- Gen.alphaStr
   } yield PersistentRepr(payload)
 
   val genAtomicWrite = for {
-    repr ← genPersistentRepr
+    repr <- genPersistentRepr
   } yield AtomicWrite(repr)
 
   val genBytes = for {
-    str ← Gen.alphaStr
+    str <- Gen.alphaStr
   } yield str.getBytes
 
   val genByteBuff = for {
-    bytes ← genBytes
+    bytes <- genBytes
   } yield bytes
 
   val genSeqNum = Gen.choose(0, Int.MaxValue)

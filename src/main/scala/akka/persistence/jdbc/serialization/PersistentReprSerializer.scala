@@ -27,9 +27,9 @@ import scala.util.Try
 trait PersistentReprSerializer[T] {
 
   def serialize(persistentRepr: PersistentRepr): Try[T] = persistentRepr.payload match {
-    case Tagged(payload, tags) ⇒
+    case Tagged(payload, tags) =>
       serialize(persistentRepr.withPayload(payload), tags)
-    case _ ⇒ serialize(persistentRepr, Set.empty[String])
+    case _ => serialize(persistentRepr, Set.empty[String])
   }
 
   def serialize(persistentRepr: PersistentRepr, tags: Set[String]): Try[T]

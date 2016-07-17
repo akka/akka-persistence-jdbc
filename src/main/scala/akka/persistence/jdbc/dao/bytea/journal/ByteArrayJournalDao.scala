@@ -46,12 +46,12 @@ trait BaseByteArrayJournalDao extends JournalDao {
 
   private def futureExtractor: Flow[Try[Future[Unit]], Try[Unit], NotUsed] =
     Flow[Try[Future[Unit]]].mapAsync(1) {
-      case Success(future) ⇒ future.map(Success(_))
-      case Failure(t)      ⇒ Future.successful(Failure(t))
+      case Success(future) => future.map(Success(_))
+      case Failure(t)      => Future.successful(Failure(t))
     }
 
   private def writeJournalRows(xs: Seq[JournalRow]): Future[Unit] = for {
-    _ ← db.run(queries.writeJournalRows(xs))
+    _ <- db.run(queries.writeJournalRows(xs))
   } yield ()
 
   override def writeFlow: Flow[AtomicWrite, Try[Unit], NotUsed] =
@@ -62,17 +62,17 @@ trait BaseByteArrayJournalDao extends JournalDao {
 
   override def delete(persistenceId: String, maxSequenceNr: Long): Future[Unit] = {
     val actions = (for {
-      highestSequenceNr ← queries.highestSequenceNrForPersistenceId(persistenceId).result
-      _ ← queries.selectByPersistenceIdAndMaxSequenceNumber(persistenceId, maxSequenceNr).delete
-      _ ← queries.insertDeletedTo(persistenceId, highestSequenceNr)
+      highestSequenceNr <- queries.highestSequenceNrForPersistenceId(persistenceId).result
+      _ <- queries.selectByPersistenceIdAndMaxSequenceNumber(persistenceId, maxSequenceNr).delete
+      _ <- queries.insertDeletedTo(persistenceId, highestSequenceNr)
     } yield ()).transactionally
     db.run(actions)
   }
 
   override def highestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] = {
     val actions = for {
-      seqNumFoundInJournalTable ← queries.highestSequenceNumberFromJournalForPersistenceIdFromSequenceNr(persistenceId, fromSequenceNr).result
-      highestSeqNumberFoundInDeletedToTable ← queries.selectHighestSequenceNrFromDeletedTo(persistenceId).result
+      seqNumFoundInJournalTable <- queries.highestSequenceNumberFromJournalForPersistenceIdFromSequenceNr(persistenceId, fromSequenceNr).result
+      highestSeqNumberFoundInDeletedToTable <- queries.selectHighestSequenceNrFromDeletedTo(persistenceId).result
       highestSequenceNumber = seqNumFoundInJournalTable.getOrElse(highestSeqNumberFoundInDeletedToTable.getOrElse(0L))
     } yield highestSequenceNumber
     db.run(actions)
@@ -88,8 +88,8 @@ trait H2JournalDao extends JournalDao {
   val profile: JdbcProfile
 
   private lazy val isH2Driver = profile match {
-    case slick.driver.H2Driver ⇒ true
-    case _                     ⇒ false
+    case slick.driver.H2Driver => true
+    case _                     => false
   }
 
   abstract override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] = {

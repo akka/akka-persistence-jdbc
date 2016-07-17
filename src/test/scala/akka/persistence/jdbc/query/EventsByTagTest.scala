@@ -25,7 +25,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
   final val NoMsgTime: FiniteDuration = 100.millis
 
   it should "not find events for unknown tags" in {
-    withTestActors() { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) =>
       actor1 ! withTags(1, "one")
       actor2 ! withTags(2, "two")
       actor3 ! withTags(3, "three")
@@ -34,7 +34,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         countJournal.futureValue shouldBe 3
       }
 
-      withEventsByTag()("unknown", 0) { tp ⇒
+      withEventsByTag()("unknown", 0) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNoMsg(NoMsgTime)
         tp.cancel()
@@ -43,12 +43,12 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
   }
 
   it should "find all events by tag" in {
-    withTestActors() { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) =>
       (actor1 ? withTags(1, "number")).futureValue
       (actor2 ? withTags(2, "number")).futureValue
       (actor3 ? withTags(3, "number")).futureValue
 
-      withEventsByTag()("number", Long.MinValue) { tp ⇒
+      withEventsByTag()("number", Long.MinValue) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
         tp.expectNext(EventEnvelope(2, "my-2", 1, 2))
@@ -56,7 +56,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.cancel()
       }
 
-      withEventsByTag()("number", 0) { tp ⇒
+      withEventsByTag()("number", 0) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
         tp.expectNext(EventEnvelope(2, "my-2", 1, 2))
@@ -64,7 +64,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.cancel()
       }
 
-      withEventsByTag()("number", 1) { tp ⇒
+      withEventsByTag()("number", 1) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
         tp.expectNext(EventEnvelope(2, "my-2", 1, 2))
@@ -72,27 +72,27 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.cancel()
       }
 
-      withEventsByTag()("number", 2) { tp ⇒
+      withEventsByTag()("number", 2) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(2, "my-2", 1, 2))
         tp.expectNext(EventEnvelope(3, "my-3", 1, 3))
         tp.cancel()
       }
 
-      withEventsByTag()("number", 3) { tp ⇒
+      withEventsByTag()("number", 3) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(3, "my-3", 1, 3))
         tp.cancel()
       }
 
-      withEventsByTag()("number", 4) { tp ⇒
+      withEventsByTag()("number", 4) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNoMsg(NoMsgTime)
         tp.cancel()
         tp.expectNoMsg(NoMsgTime)
       }
 
-      withEventsByTag(within = 5.seconds)("number", 0) { tp ⇒
+      withEventsByTag(within = 5.seconds)("number", 0) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
         tp.expectNext(EventEnvelope(2, "my-2", 1, 2))
@@ -114,7 +114,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
   }
 
   it should "find events by tag from an offset" in {
-    withTestActors() { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) =>
       (actor1 ? withTags(1, "number")).futureValue
       (actor2 ? withTags(2, "number")).futureValue
       (actor3 ? withTags(3, "number")).futureValue
@@ -123,7 +123,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         countJournal.futureValue shouldBe 3
       }
 
-      withEventsByTag()("number", 2) { tp ⇒
+      withEventsByTag()("number", 2) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(2, "my-2", 1, 2))
         tp.expectNext(EventEnvelope(3, "my-3", 1, 3))
@@ -138,8 +138,8 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
   }
 
   it should "persist and find tagged event for one tag" in {
-    withTestActors() { (actor1, actor2, actor3) ⇒
-      withEventsByTag(10.seconds)("one", 0) { tp ⇒
+    withTestActors() { (actor1, actor2, actor3) =>
+      withEventsByTag(10.seconds)("one", 0) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNoMsg(NoMsgTime)
 
@@ -182,7 +182,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
   }
 
   it should "persist and find tagged events when stored with multiple tags" in {
-    withTestActors() { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) =>
       (actor1 ? withTags(1, "one", "1", "prime")).futureValue
       (actor1 ? withTags(2, "two", "2", "prime")).futureValue
       (actor1 ? withTags(3, "three", "3", "prime")).futureValue
@@ -201,7 +201,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         countJournal.futureValue shouldBe 12
       }
 
-      withEventsByTag(10.seconds)("prime", 0) { tp ⇒
+      withEventsByTag(10.seconds)("prime", 0) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
         tp.expectNext(EventEnvelope(2, "my-1", 2, 2))
@@ -213,7 +213,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.cancel()
       }
 
-      withEventsByTag(10.seconds)("three", 0) { tp ⇒
+      withEventsByTag(10.seconds)("three", 0) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(3, "my-1", 3, 3))
         tp.expectNext(EventEnvelope(6, "my-2", 1, 3))
@@ -222,7 +222,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.cancel()
       }
 
-      withEventsByTag(10.seconds)("3", 0) { tp ⇒
+      withEventsByTag(10.seconds)("3", 0) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(3, "my-1", 3, 3))
         tp.expectNext(EventEnvelope(6, "my-2", 1, 3))
@@ -231,21 +231,21 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.cancel()
       }
 
-      withEventsByTag(10.seconds)("one", 0) { tp ⇒
+      withEventsByTag(10.seconds)("one", 0) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
         tp.expectNoMsg(NoMsgTime)
         tp.cancel()
       }
 
-      withEventsByTag(10.seconds)("four", 0) { tp ⇒
+      withEventsByTag(10.seconds)("four", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(4, "my-1", 4, 4) ⇒ }
+        tp.expectNextPF { case EventEnvelope(4, "my-1", 4, 4) => }
         tp.expectNoMsg(NoMsgTime)
         tp.cancel()
       }
 
-      withEventsByTag(10.seconds)("five", 0) { tp ⇒
+      withEventsByTag(10.seconds)("five", 0) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(5, "my-1", 5, 5))
         tp.expectNoMsg(NoMsgTime)

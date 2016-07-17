@@ -22,7 +22,7 @@ import akka.pattern.ask
 abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config) {
 
   it should "not find an event by tag for unknown tag" in {
-    withTestActors() { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) =>
       (actor1 ? withTags(1, "one")).futureValue
       (actor2 ? withTags(2, "two")).futureValue
       (actor3 ? withTags(3, "three")).futureValue
@@ -31,7 +31,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         countJournal.futureValue shouldBe 3
       }
 
-      withCurrentEventsByTag()("unknown", 0) { tp ⇒
+      withCurrentEventsByTag()("unknown", 0) { tp =>
         tp.request(Int.MaxValue)
         tp.expectComplete()
       }
@@ -39,7 +39,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
   }
 
   it should "find all events by tag" in {
-    withTestActors() { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) =>
       (actor1 ? withTags(1, "number")).futureValue
       (actor2 ? withTags(2, "number")).futureValue
       (actor3 ? withTags(3, "number")).futureValue
@@ -48,36 +48,36 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         countJournal.futureValue shouldBe 3
       }
 
-      withCurrentEventsByTag()("number", 0) { tp ⇒
+      withCurrentEventsByTag()("number", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(1, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("number", 1) { tp ⇒
+      withCurrentEventsByTag()("number", 1) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(1, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("number", 2) { tp ⇒
+      withCurrentEventsByTag()("number", 2) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("number", 3) { tp ⇒
+      withCurrentEventsByTag()("number", 3) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("number", 4) { tp ⇒
+      withCurrentEventsByTag()("number", 4) { tp =>
         tp.request(Int.MaxValue)
         tp.expectComplete()
       }
@@ -85,7 +85,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
   }
 
   it should "persist and find a tagged event with multiple tags" in
-    withTestActors() { (actor1, actor2, actor3) ⇒
+    withTestActors() { (actor1, actor2, actor3) =>
       withClue("Persisting multiple tagged events") {
         (actor1 ? withTags(1, "one", "1", "prime")).futureValue
         (actor1 ? withTags(2, "two", "2", "prime")).futureValue
@@ -104,52 +104,52 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         }
       }
 
-      withCurrentEventsByTag()("one", 0) { tp ⇒
+      withCurrentEventsByTag()("one", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(1, _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("prime", 0) { tp ⇒
+      withCurrentEventsByTag()("prime", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(5, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(6, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(7, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(1, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(5, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(6, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(7, _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("3", 0) { tp ⇒
+      withCurrentEventsByTag()("3", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(6, _, _, _) ⇒ }
-        tp.expectNextPF { case EventEnvelope(7, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(6, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(7, _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("4", 0) { tp ⇒
+      withCurrentEventsByTag()("4", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(4, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(4, _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("four", 0) { tp ⇒
+      withCurrentEventsByTag()("four", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(4, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(4, _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("5", 0) { tp ⇒
+      withCurrentEventsByTag()("5", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(5, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(5, _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("five", 0) { tp ⇒
+      withCurrentEventsByTag()("five", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(5, _, _, _) ⇒ }
+        tp.expectNextPF { case EventEnvelope(5, _, _, _) => }
         tp.expectComplete()
       }
     }

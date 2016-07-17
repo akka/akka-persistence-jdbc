@@ -40,5 +40,5 @@ trait SnapshotTables {
     val pk = primaryKey("snapshot_pk", (persistenceId, sequenceNumber))
   }
 
-  lazy val SnapshotTable = new TableQuery(tag ⇒ new Snapshot(tag))
+  lazy val SnapshotTable = new TableQuery(tag => new Snapshot(tag))
 }

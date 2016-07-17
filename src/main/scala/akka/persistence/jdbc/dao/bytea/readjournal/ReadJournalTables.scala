@@ -42,5 +42,5 @@ trait ReadJournalTables {
     val pk = primaryKey("journal_pk", (persistenceId, sequenceNumber))
   }
 
-  lazy val JournalTable = new TableQuery(tag ⇒ new Journal(tag))
+  lazy val JournalTable = new TableQuery(tag => new Journal(tag))
 }

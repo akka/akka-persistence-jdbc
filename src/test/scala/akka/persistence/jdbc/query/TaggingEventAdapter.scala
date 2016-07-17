@@ -31,8 +31,8 @@ class TaggingEventAdapter extends WriteEventAdapter {
   override def manifest(event: Any): String = ""
 
   override def toJournal(event: Any): Any = event match {
-    case TagEvent(payload, tags) ⇒
+    case TagEvent(payload, tags) =>
       Tagged(payload, tags)
-    case _ ⇒ event
+    case _ => event
   }
 }

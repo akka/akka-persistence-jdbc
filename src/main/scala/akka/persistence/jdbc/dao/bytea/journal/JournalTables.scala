@@ -46,7 +46,7 @@ trait JournalTables {
     val pk = primaryKey("journal_pk", (persistenceId, sequenceNumber))
   }
 
-  lazy val JournalTable = new TableQuery(tag ⇒ new Journal(tag))
+  lazy val JournalTable = new TableQuery(tag => new Journal(tag))
 
   class DeletedTo(_tableTag: Tag) extends Table[JournalDeletedToRow](_tableTag, _schemaName = deletedToTableCfg.schemaName, _tableName = deletedToTableCfg.tableName) {
     def * = (persistenceId, deletedTo) <> (JournalDeletedToRow.tupled, JournalDeletedToRow.unapply)
@@ -55,5 +55,5 @@ trait JournalTables {
     val deletedTo: Rep[Long] = column[Long](deletedToTableCfg.columnNames.deletedTo)
   }
 
-  lazy val DeletedToTable = new TableQuery(tag ⇒ new DeletedTo(tag))
+  lazy val DeletedToTable = new TableQuery(tag => new DeletedTo(tag))
 }

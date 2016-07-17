@@ -32,11 +32,11 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
 
   class TestActor(val persistenceId: String, recoverProbe: ActorRef, persistFailureProbe: ActorRef, persistRejectedProbe: ActorRef) extends PersistentActor {
     override def receiveRecover: Receive = LoggingReceive {
-      case msg ⇒ recoverProbe ! msg
+      case msg => recoverProbe ! msg
     }
 
     override def receiveCommand: Receive = LoggingReceive {
-      case msg ⇒ persist(msg) { _ ⇒ () }
+      case msg => persist(msg) { _ => () }
     }
 
     override protected def onPersistFailure(cause: Throwable, event: Any, seqNr: Long): Unit =
@@ -46,7 +46,7 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
       persistRejectedProbe ! PersistRejected(cause, event, seqNr)
   }
 
-  def withActor(id: String = "1")(f: (ActorRef, TestProbe, TestProbe, TestProbe) ⇒ Unit): Unit = {
+  def withActor(id: String = "1")(f: (ActorRef, TestProbe, TestProbe, TestProbe) => Unit): Unit = {
     val recoverProbe = TestProbe()
     val persistFailureProbe = TestProbe()
     val persistRejectedProbe = TestProbe()
@@ -60,7 +60,7 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
   }
 
   it should "persist a single serializable message" in {
-    withActor("1") { (actor, recover, failure, rejected) ⇒
+    withActor("1") { (actor, recover, failure, rejected) =>
       recover.expectMsg(RecoveryCompleted)
       recover.expectNoMsg(100.millis)
       actor ! "foo" // strings are serializable
@@ -69,7 +69,7 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
     }
 
     // the recover cycle
-    withActor("1") { (actor, recover, failure, rejected) ⇒
+    withActor("1") { (actor, recover, failure, rejected) =>
       recover.expectMsg("foo")
       recover.expectMsg(RecoveryCompleted)
       recover.expectNoMsg(100.millis)
@@ -80,18 +80,18 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
 
   it should "not persist a single non-serializable message" in {
     class NotSerializable
-    withActor("2") { (actor, recover, failure, rejected) ⇒
+    withActor("2") { (actor, recover, failure, rejected) =>
       recover.expectMsg(RecoveryCompleted)
       recover.expectNoMsg(100.millis)
       actor ! new NotSerializable // the NotSerializable class cannot be serialized
       // the actor should be called the OnPersistRejected
       rejected.expectMsgPF() {
-        case PersistRejected(_, _, _) ⇒
+        case PersistRejected(_, _, _) =>
       }
     }
 
     // the recover cycle, no message should be recovered
-    withActor("2") { (actor, recover, failure, rejected) ⇒
+    withActor("2") { (actor, recover, failure, rejected) =>
       recover.expectMsg(RecoveryCompleted)
       recover.expectNoMsg(100.millis)
     }
@@ -99,20 +99,20 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
 
   it should "persist only serializable messages" in {
     class NotSerializable
-    withActor("3") { (actor, recover, failure, rejected) ⇒
+    withActor("3") { (actor, recover, failure, rejected) =>
       recover.expectMsg(RecoveryCompleted)
       recover.expectNoMsg(100.millis)
       actor ! "foo"
       actor ! new NotSerializable // the Test class cannot be serialized
       // the actor should be called the onPersistRejected
       rejected.expectMsgPF() {
-        case PersistRejected(_, _, _) ⇒
+        case PersistRejected(_, _, _) =>
       }
       rejected.expectNoMsg(100.millis)
     }
 
     // recover cycle
-    withActor("3") { (actor, recover, failure, rejected) ⇒
+    withActor("3") { (actor, recover, failure, rejected) =>
       recover.expectMsg("foo")
       recover.expectMsg(RecoveryCompleted)
       recover.expectNoMsg(100.millis)

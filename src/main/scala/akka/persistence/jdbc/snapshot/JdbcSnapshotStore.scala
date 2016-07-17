@@ -34,7 +34,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 object JdbcSnapshotStore {
 
   def toSelectedSnapshot(tupled: (SnapshotMetadata, Any)): SelectedSnapshot = tupled match {
-    case (meta: SnapshotMetadata, snapshot: Any) ⇒ SelectedSnapshot(meta, snapshot)
+    case (meta: SnapshotMetadata, snapshot: Any) => SelectedSnapshot(meta, snapshot)
   }
 }
 
@@ -67,15 +67,15 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
     criteria: SnapshotSelectionCriteria
   ): Future[Option[SelectedSnapshot]] = {
     val result = criteria match {
-      case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue, _, _) ⇒
+      case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue, _, _) =>
         snapshotDao.snapshotForMaxSequenceNr(persistenceId)
-      case SnapshotSelectionCriteria(Long.MaxValue, maxTimestamp, _, _) ⇒
+      case SnapshotSelectionCriteria(Long.MaxValue, maxTimestamp, _, _) =>
         snapshotDao.snapshotForMaxTimestamp(persistenceId, maxTimestamp)
-      case SnapshotSelectionCriteria(maxSequenceNr, Long.MaxValue, _, _) ⇒
+      case SnapshotSelectionCriteria(maxSequenceNr, Long.MaxValue, _, _) =>
         snapshotDao.snapshotForMaxSequenceNr(persistenceId, maxSequenceNr)
-      case SnapshotSelectionCriteria(maxSequenceNr, maxTimestamp, _, _) ⇒
+      case SnapshotSelectionCriteria(maxSequenceNr, maxTimestamp, _, _) =>
         snapshotDao.snapshotForMaxSequenceNrAndMaxTimestamp(persistenceId, maxSequenceNr, maxTimestamp)
-      case _ ⇒ Future.successful(None)
+      case _ => Future.successful(None)
     }
 
     result.map(_.map(toSelectedSnapshot))
@@ -85,19 +85,19 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
     snapshotDao.save(metadata, snapshot)
 
   override def deleteAsync(metadata: SnapshotMetadata): Future[Unit] = for {
-    _ ← snapshotDao.delete(metadata.persistenceId, metadata.sequenceNr)
+    _ <- snapshotDao.delete(metadata.persistenceId, metadata.sequenceNr)
   } yield ()
 
   override def deleteAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Unit] = criteria match {
-    case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue, _, _) ⇒
+    case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue, _, _) =>
       snapshotDao.deleteAllSnapshots(persistenceId)
-    case SnapshotSelectionCriteria(Long.MaxValue, maxTimestamp, _, _) ⇒
+    case SnapshotSelectionCriteria(Long.MaxValue, maxTimestamp, _, _) =>
       snapshotDao.deleteUpToMaxTimestamp(persistenceId, maxTimestamp)
-    case SnapshotSelectionCriteria(maxSequenceNr, Long.MaxValue, _, _) ⇒
+    case SnapshotSelectionCriteria(maxSequenceNr, Long.MaxValue, _, _) =>
       snapshotDao.deleteUpToMaxSequenceNr(persistenceId, maxSequenceNr)
-    case SnapshotSelectionCriteria(maxSequenceNr, maxTimestamp, _, _) ⇒
+    case SnapshotSelectionCriteria(maxSequenceNr, maxTimestamp, _, _) =>
       snapshotDao.deleteUpToMaxSequenceNrAndMaxTimestamp(persistenceId, maxSequenceNr, maxTimestamp)
-    case _ ⇒ Future.successful(())
+    case _ => Future.successful(())
   }
 
   override def postStop(): Unit = {

@@ -62,8 +62,8 @@ trait OracleReadJournalDao extends ReadJournalDao {
   import profile.api._
 
   private lazy val isOracleDriver = profile match {
-    case com.typesafe.slick.driver.oracle.OracleDriver ⇒ true
-    case _                                             ⇒ false
+    case com.typesafe.slick.driver.oracle.OracleDriver => true
+    case _                                             => false
   }
 
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] = {
@@ -78,7 +78,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
     }
   }
 
-  implicit val getJournalRow = GetResult(r ⇒ JournalRow(r.<<, r.<<, r.<<, r.nextBytes(), r.<<, r.<<))
+  implicit val getJournalRow = GetResult(r => JournalRow(r.<<, r.<<, r.<<, r.nextBytes(), r.<<, r.<<))
 
   abstract override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] = {
     if (isOracleDriver) {
@@ -112,8 +112,8 @@ trait H2ReadJournalDao extends ReadJournalDao {
   val profile: JdbcProfile
 
   private lazy val isH2Driver = profile match {
-    case slick.driver.H2Driver ⇒ true
-    case _                     ⇒ false
+    case slick.driver.H2Driver => true
+    case _                     => false
   }
 
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =

@@ -17,7 +17,7 @@
 package akka.persistence.jdbc.query.javadsl
 
 import akka.NotUsed
-import akka.persistence.jdbc.query.scaladsl.{ JdbcReadJournal ⇒ ScalaJdbcReadJournal }
+import akka.persistence.jdbc.query.scaladsl.{ JdbcReadJournal => ScalaJdbcReadJournal }
 import akka.persistence.query.EventEnvelope
 import akka.persistence.query.javadsl._
 import akka.stream.javadsl.Source

@@ -57,6 +57,9 @@ trait FlowPersistentReprSerializer[T] extends PersistentReprSerializer[T] {
   }
 
   def deserializeFlowWithoutTags: Flow[T, Try[PersistentRepr], NotUsed] = {
-    deserializeFlow.map(_.map(_._1))
+    def keepPersistentRepr(tup: (PersistentRepr, Set[String], T)): PersistentRepr = tup match {
+      case (repr, _, _) => repr
+    }
+    deserializeFlow.map(_.map(keepPersistentRepr))
   }
 }

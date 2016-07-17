@@ -298,7 +298,9 @@ available, with some great features, and it works great together with akka-persi
 
 ## What's new?
 - 2.6.0 (2016-07-17)
-  - Removing the deleted_to table to become compatible with the `akka-persistence-query` spec that states that all messages should be replayed, even deleted ones.
+  - Removing the deleted_to table to become compatible with the `akka-persistence-query` spec that states that all messages should be replayed, even deleted ones,
+  - No need for Query Publishers with the new akka-streams API,
+  - Codacy code cleanup.
 
 - 2.5.2 (2016-07-03)
   - The `eventsByTag` query should now be fixed.

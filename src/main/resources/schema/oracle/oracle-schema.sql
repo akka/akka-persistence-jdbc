@@ -1,8 +1,5 @@
-CREATE SEQUENCE "ordering_seq" start with 1 increment by 1 NOMAXVALUE;
-
 CREATE TABLE "journal" (
   "ordering" NUMERIC,
-  "deleted" char check ("deleted" in (0,1)),
   "persistence_id" VARCHAR(255) NOT NULL,
   "sequence_number" NUMERIC NOT NULL,
   "created" NUMERIC NOT NULL,

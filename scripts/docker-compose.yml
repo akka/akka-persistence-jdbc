@@ -18,9 +18,12 @@ mysql:
     - "3306:3306" # credentials (root:root)
 
 #oracle:
-#  image: alexeiled/docker-oracle-xe-11g
+#  image: sath89/oracle-12c
 #  container_name: oracle
 #  environment:
 #    - "TZ=Europe/Amsterdam"
+#    - "DBCA_TOTAL_MEMORY=1024"
+#    - "WEB_CONSOLE=false" # disable web console (APEX)
 #  ports:
-#    - "1521:1521" # credentials (system:oracle)
+#    - "1521:1521" # DB_CONN: credentials (system:oracle)
+#    - "8080:8080" # APEX: credentials (ADMIN:0Racle$)

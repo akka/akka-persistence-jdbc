@@ -1,7 +1,14 @@
+#see: https://hub.docker.com/r/sath89/oracle-12c/
+#see: https://oracle-base.com/articles/12c/identity-columns-in-oracle-12cr1
+#see: http://docs.oracle.com/database/121/SQLRF/statements_9003.htm#SQLRF01806
+# see: https://github.com/MaksymBilenko/docker-oracle-12c/issues/14
+# connection: jdbc:oracle:thin:@//localhost:1521/xe.oracle.docker
 oracle:
-  image: alexeiled/docker-oracle-xe-11g
+  image: sath89/oracle-12c
   container_name: oracle
   environment:
     - "TZ=Europe/Amsterdam"
+    - "DBCA_TOTAL_MEMORY=1024"
+    - "WEB_CONSOLE=false" # disable web console (APEX)
   ports:
-    - "1521:1521" # credentials (system:oracle)
+    - "1521:1521" # DB_CONN: credentials (system:oracle)

@@ -19,7 +19,7 @@ package akka.persistence.jdbc.journal
 import akka.NotUsed
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.TestSpec
-import akka.persistence.jdbc.util.Schema.{ Postgres, SchemaType }
+import akka.persistence.jdbc.util.Schema.{ H2, MySQL, Postgres, SchemaType }
 import akka.persistence.query.scaladsl.EventWriter.WriteEvent
 import akka.persistence.query.scaladsl.{ CurrentEventsByPersistenceIdQuery, CurrentEventsByTagQuery, EventWriter, ReadJournal }
 import akka.persistence.query.{ EventEnvelope, PersistenceQuery }
@@ -40,14 +40,16 @@ abstract class EventWriterTest(config: Config, schemaType: SchemaType) extends T
 
   lazy val chars = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
 
-  def result(pid: String, cycles: Int = 100, offset: Int = 0): Seq[EventEnvelope] =
-    Source.cycle(() => chars.iterator).take(chars.size * 100).zipWithIndex.map {
+  final val Cycles = 100
+
+  def result(pid: String, offset: Int = 0): Seq[EventEnvelope] =
+    Source.cycle(() => chars.iterator).take(chars.size * Cycles).zipWithIndex.map {
       case (char, index) =>
         EventEnvelope(index + offset, pid, index, char)
     }.runWith(Sink.seq).futureValue
 
   it should "write events without tags" in {
-    Source.cycle(() => chars.iterator).take(chars.size * 100).zipWithIndex.map {
+    Source.cycle(() => chars.iterator).take(chars.size * Cycles).zipWithIndex.map {
       case (pl, seqNr) =>
         WriteEvent(PersistentRepr(pl, seqNr, "foo"), Set.empty[String])
     }.via(journal.eventWriter).runWith(Sink.ignore).toTry should be a 'success
@@ -65,14 +67,14 @@ abstract class EventWriterTest(config: Config, schemaType: SchemaType) extends T
   }
 
   it should "write events with tags" in {
-    Source.cycle(() => chars.iterator).take(chars.size * 100).zipWithIndex.map {
+    Source.cycle(() => chars.iterator).take(chars.size * Cycles).zipWithIndex.map {
       case (pl, seqNr) =>
         WriteEvent(PersistentRepr(pl, seqNr, "foobar"), Set("bar"))
     }.via(journal.eventWriter).runWith(Sink.ignore).toTry should be a 'success
 
     withTestProbe(journal.currentEventsByTag("bar", 0)) { tp =>
       tp.request(Long.MaxValue)
-      tp.expectNextN(result("foobar", 100, result("foobar", 100).size))
+      tp.expectNextN(result("foobar", result("foobar", Cycles).size))
       tp.expectComplete()
     }
 
@@ -95,3 +97,6 @@ abstract class EventWriterTest(config: Config, schemaType: SchemaType) extends T
 
 class PostgresEventWriterTest extends EventWriterTest(ConfigFactory.load("postgres-application.conf"), Postgres())
 
+class MySQLEventWriterTest extends EventWriterTest(ConfigFactory.load("mysql-application.conf"), MySQL())
+
+class H2EventWriterTest extends EventWriterTest(ConfigFactory.load("h2-application.conf"), H2())

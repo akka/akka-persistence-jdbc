@@ -51,7 +51,7 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
     val persistFailureProbe = TestProbe()
     val persistRejectedProbe = TestProbe()
     val persistentActor = system.actorOf(Props(new TestActor(s"my-$id", recoverProbe.ref, persistFailureProbe.ref, persistRejectedProbe.ref)))
-    try f(persistentActor, recoverProbe, persistFailureProbe, persistRejectedProbe) finally cleanup(persistentActor)
+    try f(persistentActor, recoverProbe, persistFailureProbe, persistRejectedProbe) finally killActors(persistentActor)
   }
 
   override def beforeAll(): Unit = {

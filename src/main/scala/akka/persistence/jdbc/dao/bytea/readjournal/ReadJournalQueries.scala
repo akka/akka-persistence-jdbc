@@ -50,4 +50,6 @@ class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg:
       .filter(_.ordering >= offset)
       .take(max)
   val eventsByTag = Compiled(_eventsByTag _)
+
+  def writeJournalRows(xs: Seq[JournalRow]) = JournalTable ++= xs.sortBy(_.sequenceNumber)
 }

@@ -186,7 +186,7 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJ
 
   def withTestActors(seq: Int = 1)(f: (ActorRef, ActorRef, ActorRef) => Unit): Unit = {
     val refs = (seq until seq + 3).map(setupEmpty).toList
-    try f(refs.head, refs.drop(1).head, refs.drop(2).head) finally cleanup(refs: _*)
+    try f(refs.head, refs.drop(1).head, refs.drop(2).head) finally killActors(refs: _*)
   }
 
   def withTags(payload: Any, tags: String*) = Tagged(payload, Set(tags: _*))

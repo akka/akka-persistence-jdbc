@@ -22,9 +22,10 @@ import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.dao.ReadJournalDao
 import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
 import akka.persistence.query.EventEnvelope
+import akka.persistence.query.scaladsl.EventWriter.WriteEvent
 import akka.persistence.query.scaladsl._
 import akka.serialization.{ Serialization, SerializationExtension }
-import akka.stream.scaladsl.{ Sink, Source }
+import akka.stream.scaladsl.{ Flow, Sink, Source }
 import akka.stream.{ ActorMaterializer, Materializer }
 import com.typesafe.config.Config
 import slick.driver.JdbcProfile
@@ -46,6 +47,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     with CurrentEventsByPersistenceIdQuery
     with EventsByPersistenceIdQuery
     with CurrentEventsByTagQuery
+    with EventWriter
     with EventsByTagQuery {
 
   implicit val ec: ExecutionContext = system.dispatcher
@@ -125,4 +127,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
         Some((newFromSeqNr, xs))
       }
     }.mapConcat(identity)
+
+  override def eventWriter: Flow[WriteEvent, WriteEvent, NotUsed] =
+    Flow[WriteEvent].via(readJournalDao.writeEvents)
 }

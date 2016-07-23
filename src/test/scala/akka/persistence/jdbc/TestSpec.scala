@@ -59,7 +59,7 @@ abstract class TestSpec(override val config: Config) extends SimpleSpec with Mat
   /**
    * Sends the PoisonPill command to an actor and waits for it to die
    */
-  def cleanup(actors: ActorRef*): Unit = {
+  def killActors(actors: ActorRef*): Unit = {
     val tp = probe
     actors.foreach { (actor: ActorRef) =>
       tp watch actor

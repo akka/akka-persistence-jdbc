@@ -20,7 +20,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.0"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.1"
 ```
 
 ## Contribution policy
@@ -286,6 +286,14 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## What's new?
+## 2.6.1 (2016-07-23)
+  - Support for the __non-official__ bulk loading interface [akka.persistence.query.scaladsl.EventWriter](https://github.com/dnvriend/akka-persistence-query-writer/blob/master/src/main/scala/akka/persistence/query/scaladsl/EventWriter.scala)
+    added. I need this interface to load massive amounts of data, that will be processed by many actors, but initially I just want to create and store one or
+    more events belonging to an actor, that will handle the business rules eventually. Using actors or a shard region for that matter, just gives to much
+    actor life cycle overhead ie. too many calls to the data store. The `akka.persistence.query.scaladsl.EventWriter` interface is non-official and puts all
+    responsibility of ensuring the integrity of the journal on you. This means when some strange things are happening caused by wrong loading of the data,
+    and therefor breaking the integrity and ruleset of akka-persistence, all the responsibility on fixing it is on you, and not on the Akka team.
+
 - 2.6.0 (2016-07-17)
   - Removed the `deleted_to` and `created` columns of the `journal` table to become compatible with
    `akka-persistence-query` spec that states that all messages should be replayed, even deleted ones

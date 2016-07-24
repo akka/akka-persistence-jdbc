@@ -285,6 +285,28 @@ It is advisable to register a shutdown hook to be run when the VM exits that ter
 sys.addShutdownHook(system.terminate())
 ```
 
+# Some videos about Akka Persistence, streams and Event Sourcing
+Is Event Sourcing getting traction? I would say so:
+
+- [Konrad Malawski - Akka Streams & Reactive Streams in action (2016)](https://www.youtube.com/watch?v=x62K4ObBtw4)
+- [Björn Antonsson & Konrad Malawski - Resilient Applications with Akka Persistence (2016)](https://www.youtube.com/watch?v=qqNsGomfabc)
+- [Aleksei Irbe - Akka persistence (2016)](https://www.youtube.com/watch?v=Oc9lHVVn1YQ)
+- [Greg Young - Event Sourcing is actually just functional code (2016)](https://www.youtube.com/watch?v=kZL41SMXWdM)
+- [Greg Young — A Decade of DDD, CQRS, Event Sourcing (2016)](https://www.youtube.com/watch?v=LDW0QWie21s)
+- [Packt - Introduction to Akka Persistence (2016)](https://www.youtube.com/watch?v=QwsA8hkNGOA)
+- [Paweł Szulc - Event Sourcing & Functional Programming - a pair made in heaven (2016)](https://www.youtube.com/watch?v=1rFY2SfdDoE)
+- [Konrad Malawski - Akka and the Zen of Reactive System Design (2016)](https://www.youtube.com/watch?v=Mg5ZmoMddJI)
+- [Renato Cavalcanti - Field guide to DDD/CQRS using the Scala Type System and Akka (2015)](https://www.youtube.com/watch?v=fQkKu4tTgCE)
+- [Martin Zapletal: Data in Motion - Streaming Static Data Efficiently in Akka Persistence (2016)](https://www.youtube.com/watch?v=K4FY0XKediU)
+- [Martin Krasser - Event Sourcing and CQRS with Akka Persistence and Eventuate (2015)](https://www.youtube.com/watch?v=vFVry457XLk)
+- [Duncan DeVore - CQRS/ES with Scala and Akka Persistence (2015)](https://www.youtube.com/watch?v=uA2AsZW0I7A)
+- [Sander Mak - Event-Sourced Architectures with Akka (2015)](https://www.youtube.com/watch?v=gvsRl6xZiiE)
+- [Sidharth Khattri - Akka Persistence | Event Sourcing (2015)](https://www.youtube.com/watch?v=yAI71_smS34)
+- [Michał Płachta - Building multiplayer game using Reactive Streams](https://www.youtube.com/watch?v=iKTFalVfoSU)
+- [Patrik Nordwall - Intro to Akka persistence (2014)](https://www.youtube.com/watch?v=r5lecCBazvE)
+- [Greg Young - Event Sourcing(2014)](https://www.youtube.com/watch?v=8JKjvY4etTY)
+
+
 ## What's new?
 ## 2.6.1 (2016-07-23)
   - Support for the __non-official__ bulk loading interface [akka.persistence.query.scaladsl.EventWriter](https://github.com/dnvriend/akka-persistence-query-writer/blob/master/src/main/scala/akka/persistence/query/scaladsl/EventWriter.scala)

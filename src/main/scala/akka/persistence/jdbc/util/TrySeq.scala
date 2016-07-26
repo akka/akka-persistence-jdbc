@@ -16,19 +16,19 @@
 
 package akka.persistence.jdbc.util
 
+import akka.NotUsed
+import akka.stream.scaladsl.{ Flow, Source }
+
+import scala.collection.immutable._
 import scala.util.{ Failure, Success, Try }
 
 object TrySeq {
-  def sequence[R](seq: Seq[Try[R]]): Try[Seq[R]] = {
-    seq match {
-      case Success(h) :: tail =>
-        tail.foldLeft(Try(h :: Nil)) {
-          case (Success(acc), Success(elem)) => Success(elem :: acc)
-          case (e: Failure[_], _)            => e
-          case (_, Failure(e))               => Failure(e)
-        }
-      case Failure(e) :: _ => Failure(e)
-      case Nil             => Try { Nil }
+  def sequence[A]: Flow[Iterable[Try[A]], Try[Seq[A]], NotUsed] =
+    Flow[Iterable[Try[A]]].flatMapConcat { xs =>
+      Source(xs).fold[Try[Seq[A]]](Success(Seq.empty)) {
+        case (Success(ys), Success(y))     => Success(ys :+ y)
+        case (Success(ys), Failure(cause)) => Failure(cause)
+        case (err @ Failure(_), _)         => err
+      }
     }
-  }
 }

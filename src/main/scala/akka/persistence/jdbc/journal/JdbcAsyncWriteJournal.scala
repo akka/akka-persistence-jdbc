@@ -29,7 +29,7 @@ import com.typesafe.config.Config
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
-import scala.collection.immutable
+import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
 
@@ -44,7 +44,7 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   val journalDao: JournalDao = {
     val fqcn = journalConfig.pluginConfig.dao
     val profile: JdbcProfile = SlickDriver.forDriverName(config)
-    val args = immutable.Seq(
+    val args = Seq(
       (classOf[Database], db),
       (classOf[JdbcProfile], profile),
       (classOf[JournalConfig], journalConfig),
@@ -58,7 +58,7 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
     }
   }
 
-  override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] =
+  override def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] =
     Source(messages)
       .via(journalDao.writeFlow)
       .runFold(List.empty[Try[Unit]])(_ :+ _)

@@ -22,6 +22,7 @@ import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.serialization.SerializationExtension
 import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
+import scala.collection.immutable._
 
 import scala.concurrent.duration._
 import scala.util.Try

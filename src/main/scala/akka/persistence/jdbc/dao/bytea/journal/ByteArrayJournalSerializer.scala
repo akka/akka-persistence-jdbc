@@ -21,7 +21,7 @@ import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 
-import scala.compat.Platform
+import scala.collection.immutable._
 import scala.util.Try
 
 object ByteArrayJournalSerializer {

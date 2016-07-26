@@ -21,6 +21,7 @@ import akka.persistence.jdbc.util.TrySeq
 import akka.persistence.journal.Tagged
 import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.stream.scaladsl.Flow
+import scala.collection.immutable._
 
 import scala.util.Try
 
@@ -49,7 +50,7 @@ trait FlowPersistentReprSerializer[T] extends PersistentReprSerializer[T] {
   def serializeFlow: Flow[AtomicWrite, Try[Seq[T]], NotUsed] = {
     Flow[AtomicWrite]
       .map(_.payload.map(serialize))
-      .map(TrySeq.sequence[T])
+      .via(TrySeq.sequence)
   }
 
   def deserializeFlow: Flow[T, Try[(PersistentRepr, Set[String], T)], NotUsed] = {

@@ -28,7 +28,7 @@ import com.typesafe.config.Config
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
-import scala.collection.immutable
+import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
@@ -52,7 +52,7 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
   val snapshotDao: SnapshotDao = {
     val fqcn = snapshotConfig.pluginConfig.dao
     val profile: JdbcProfile = SlickDriver.forDriverName(config)
-    val args = immutable.Seq(
+    val args = Seq(
       (classOf[Database], db),
       (classOf[JdbcProfile], profile),
       (classOf[SnapshotConfig], snapshotConfig),

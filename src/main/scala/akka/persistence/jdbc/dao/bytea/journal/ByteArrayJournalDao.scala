@@ -28,6 +28,7 @@ import akka.stream.scaladsl.{ Flow, Source }
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
+import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
 

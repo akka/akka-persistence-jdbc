@@ -31,8 +31,7 @@ import com.typesafe.config.Config
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
-import scala.collection.immutable
-import scala.collection.immutable.{ Iterable, Seq }
+import scala.collection.immutable._
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
@@ -59,7 +58,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   val readJournalDao: ReadJournalDao = {
     val fqcn = readJournalConfig.pluginConfig.dao
     val profile: JdbcProfile = SlickDriver.forDriverName(config)
-    val args = immutable.Seq(
+    val args = Seq(
       (classOf[Database], db),
       (classOf[JdbcProfile], profile),
       (classOf[ReadJournalConfig], readJournalConfig),

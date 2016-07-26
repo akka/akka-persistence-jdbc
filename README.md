@@ -20,7 +20,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.1"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.2"
 ```
 
 ## Contribution policy
@@ -308,6 +308,9 @@ Is Event Sourcing getting traction? I would say so:
 
 
 ## What's new?
+## 2.6.2 (2016-07-26)
+  - Fix for issue #60 where an immutable.Vector was trying to be matched by the serializer in TrySeq stage.
+
 ## 2.6.1 (2016-07-23)
   - Support for the __non-official__ bulk loading interface [akka.persistence.query.scaladsl.EventWriter](https://github.com/dnvriend/akka-persistence-query-writer/blob/master/src/main/scala/akka/persistence/query/scaladsl/EventWriter.scala)
     added. I need this interface to load massive amounts of data, that will be processed by many actors, but initially I just want to create and store one or

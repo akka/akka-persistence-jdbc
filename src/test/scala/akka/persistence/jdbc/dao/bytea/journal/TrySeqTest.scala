@@ -16,15 +16,14 @@
 
 package akka.persistence.jdbc.dao.bytea.journal
 
-import akka.persistence.jdbc.{ MaterializerSpec, SimpleSpec, TestSpec }
 import akka.persistence.jdbc.util.TrySeq
+import akka.persistence.jdbc.{ MaterializerSpec, SimpleSpec }
 import akka.stream.scaladsl.Source
 import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.scaladsl.TestSink
-import org.scalatest.Matchers
 
 import scala.collection.immutable._
-import scala.util.{ Failure, Success, Try }
+import scala.util.{ Failure, Success }
 
 class TrySeqTest extends SimpleSpec with MaterializerSpec {
   implicit class SourceOps[A, M](src: Source[A, M]) {
@@ -37,6 +36,20 @@ class TrySeqTest extends SimpleSpec with MaterializerSpec {
   }
 
   def failure(text: String) = Failure(new RuntimeException(text))
+
+  it should "sequence an empty immutable.Seq" in {
+    Source.single(Seq.empty).via(TrySeq.sequence).testProbe { tp =>
+      tp.request(Long.MaxValue)
+      tp.expectNext(Success(Seq.empty))
+    }
+  }
+
+  it should "sequence an empty immutable.Vector" in {
+    Source.single(Vector.empty).via(TrySeq.sequence).testProbe { tp =>
+      tp.request(Long.MaxValue)
+      tp.expectNext(Success(Seq.empty))
+    }
+  }
 
   it should "sequence a immutable.Seq of success/success" in {
     Source.single(Seq(Success("a"), Success("b"))).via(TrySeq.sequence).testProbe { tp =>
@@ -61,6 +74,13 @@ class TrySeqTest extends SimpleSpec with MaterializerSpec {
 
   it should "sequence an immutable.Seq of failure/failure" in {
     Source.single(Seq(failure("a"), failure("b"))).via(TrySeq.sequence).testProbe { tp =>
+      tp.request(Long.MaxValue)
+      tp.assertNext { case Failure(cause) if cause.getMessage.contains("a") => }
+    }
+  }
+
+  it should "sequence an immutable.Vector of failure/failure" in {
+    Source.single(Vector(failure("a"), failure("b"))).via(TrySeq.sequence).testProbe { tp =>
       tp.request(Long.MaxValue)
       tp.assertNext { case Failure(cause) if cause.getMessage.contains("a") => }
     }

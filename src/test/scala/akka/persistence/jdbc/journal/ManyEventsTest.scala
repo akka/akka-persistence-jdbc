@@ -36,7 +36,9 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 object ManyEventsTest {
+
   final case class Person(name: String, age: Int)
+
 }
 
 abstract class ManyEventsTest(config: Config, schemaType: SchemaType) extends TestSpec(config) {
@@ -87,25 +89,22 @@ abstract class ManyEventsTest(config: Config, schemaType: SchemaType) extends Te
 
   def storeEvents(pid: String, num: Int): Future[Long] = {
     val start = Platform.currentTime
-    Source.zipWithN[Any, (String, Int)] { case Seq(a: String, b: Int) => (a, b) }(Seq(
-      Source.cycle(() => (('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')).iterator).map(_.toString),
-      Source.cycle(() => (1 to 100).iterator)
-    )).take(num)
+    Source.cycle(() => (('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')).iterator)
+      .map(_.toString)
+      .zip(Source.cycle(() => (1 to 100).iterator))
+      .take(num)
       .map(Person.tupled)
       .zipWithIndex.map { case (person, seqNr) => WriteEvent(PersistentRepr(person, seqNr, pid), Set.empty[String]) }
       .via(journal.eventWriter)
       .runWith(Sink.ignore)
-      .map { _ =>
-        val xx = Platform.currentTime - start
-        println(f"Storing $num%d events took $xx ms")
-        xx
-      }
+      .map(_ => Platform.currentTime - start)
   }
 
   def withActor(pid: String)(f: ActorRef => TestProbe => Unit): Unit = {
     val actor = system.actorOf(Props(new PersistentActor {
       val start = Platform.currentTime
       var took: Long = 0
+
       override def receiveRecover: Receive = {
         case RecoveryCompleted =>
           took = Platform.currentTime - start
@@ -113,9 +112,11 @@ abstract class ManyEventsTest(config: Config, schemaType: SchemaType) extends Te
         case _: Person =>
         case evt       => println(s"$pid => recovering: $evt")
       }
+
       override def receiveCommand: Receive = {
         case _ => sender() ! akka.actor.Status.Success(s"start: $start, took: $took, lastSeqNr: $lastSequenceNr")
       }
+
       override def persistenceId: String = pid
     }))
     try f(actor)(TestProbe()) finally killActors(actor)

@@ -25,3 +25,5 @@ addSbtPlugin("de.heikoseeberger" % "sbt-header" % "1.5.1")
 // generates Scala source from your build definitions //
 // see: https://github.com/sbt/sbt-buildinfo
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.6.1")
+
+addSbtPlugin("me.lessis" % "bintray-sbt" % "0.3.0")

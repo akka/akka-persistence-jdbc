@@ -18,7 +18,6 @@ package akka.persistence.jdbc
 
 import java.util.UUID
 
-import akka.actor.{ ActorRef, PoisonPill }
 import akka.event.{ Logging, LoggingAdapter }
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.util.{ DropCreate, SlickDatabase }
@@ -38,8 +37,8 @@ abstract class TestSpec(override val config: Config) extends SimpleSpec with Mat
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   val log: LoggingAdapter = Logging(system, this.getClass)
-  implicit val pc: PatienceConfig = PatienceConfig(timeout = 1.hour)
-  implicit val timeout = Timeout(1.hour)
+  implicit val pc: PatienceConfig = PatienceConfig(timeout = 60.seconds)
+  implicit val timeout = Timeout(30.seconds)
   val serialization = SerializationExtension(system)
 
   val cfg = system.settings.config.getConfig("jdbc-journal")

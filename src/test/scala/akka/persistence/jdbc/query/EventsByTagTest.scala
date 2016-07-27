@@ -92,7 +92,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.expectNoMsg(NoMsgTime)
       }
 
-      withEventsByTag(within = 5.seconds)("number", 0) { tp =>
+      withEventsByTag()("number", 0) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
         tp.expectNext(EventEnvelope(2, "my-2", 1, 2))

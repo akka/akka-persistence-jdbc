@@ -20,7 +20,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.2"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.3"
 ```
 
 ## Contribution policy
@@ -308,6 +308,9 @@ Is Event Sourcing getting traction? I would say so:
 
 
 ## What's new?
+## 2.6.3 (2016-07-27)
+  - Merged PR #61 [Nikolay Tatarinov][rockjam], Sql optimizations, thanks!
+
 ## 2.6.2 (2016-07-26)
   - Fix for issue #60 where an immutable.Vector was trying to be matched by the serializer in TrySeq stage.
 
@@ -654,6 +657,7 @@ Have fun!
 [mwkohout]: https://github.com/mwkohout 
 [krasser]: https://github.com/krasserm
 [shah]: https://github.com/gopalsaob
+[rockjam]: https://github.com/rockjam
 
 [scalikejdbc]: http://scalikejdbc.org/
 [slick]: http://slick.typesafe.com/

@@ -34,8 +34,8 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
     JournalTable.filter(_.persistenceId === persistenceId).filter(_.sequenceNumber <= maxSequenceNr)
       .map(_.deleted).update(true)
 
-  private def _highestSequenceNrForPersistenceId(persistenceId: Rep[String]): Rep[Option[Long]] =
-    selectAllJournalForPersistenceId(persistenceId).map(_.sequenceNumber).max
+  private def _highestSequenceNrForPersistenceId(persistenceId: Rep[String]): Query[Rep[Long], Long, Seq] =
+    selectAllJournalForPersistenceId(persistenceId).map(_.sequenceNumber).take(1)
 
   val highestSequenceNrForPersistenceId = Compiled(_highestSequenceNrForPersistenceId _)
 

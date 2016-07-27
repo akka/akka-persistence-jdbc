@@ -23,9 +23,6 @@ import slick.driver.JdbcProfile
 class SnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: SnapshotTableConfiguration) extends SnapshotTables {
   import profile.api._
 
-  private def maxSeqNrForPersistenceId(persistenceId: Rep[String]) =
-    _selectAll(persistenceId).map(_.sequenceNumber).max
-
   def insertOrUpdate(snapshotRow: SnapshotRow) =
     SnapshotTable.insertOrUpdate(snapshotRow)
 
@@ -34,7 +31,7 @@ class SnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: S
   val selectAll = Compiled(_selectAll _)
 
   private def _selectByPersistenceIdAndMaxSeqNr(persistenceId: Rep[String]) =
-    _selectAll(persistenceId).filter(_.sequenceNumber === maxSeqNrForPersistenceId(persistenceId))
+    _selectAll(persistenceId).take(1)
   val selectByPersistenceIdAndMaxSeqNr = Compiled(_selectByPersistenceIdAndMaxSeqNr _)
 
   private def _selectByPersistenceIdAndSeqNr(persistenceId: Rep[String], sequenceNr: Rep[Long]) =

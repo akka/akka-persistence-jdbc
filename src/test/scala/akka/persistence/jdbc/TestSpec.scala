@@ -38,8 +38,8 @@ abstract class TestSpec(override val config: Config) extends SimpleSpec with Mat
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   val log: LoggingAdapter = Logging(system, this.getClass)
-  implicit val pc: PatienceConfig = PatienceConfig(timeout = 60.seconds)
-  implicit val timeout = Timeout(30.seconds)
+  implicit val pc: PatienceConfig = PatienceConfig(timeout = 1.hour)
+  implicit val timeout = Timeout(1.hour)
   val serialization = SerializationExtension(system)
 
   val cfg = system.settings.config.getConfig("jdbc-journal")
@@ -55,18 +55,6 @@ abstract class TestSpec(override val config: Config) extends SimpleSpec with Mat
    * Returns a random UUID
    */
   def randomId = UUID.randomUUID.toString.take(5)
-
-  /**
-   * Sends the PoisonPill command to an actor and waits for it to die
-   */
-  def killActors(actors: ActorRef*): Unit = {
-    val tp = probe
-    actors.foreach { (actor: ActorRef) =>
-      tp watch actor
-      actor ! PoisonPill
-      tp.expectTerminated(actor)
-    }
-  }
 
   implicit class PimpedByteArray(self: Array[Byte]) {
     def getString: String = new String(self)

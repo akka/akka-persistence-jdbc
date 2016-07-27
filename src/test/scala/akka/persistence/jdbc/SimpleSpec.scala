@@ -16,19 +16,36 @@
 
 package akka.persistence.jdbc
 
+import akka.actor.{ ActorRef, ActorSystem, PoisonPill }
 import akka.persistence.jdbc.util.ClasspathResources
+import akka.testkit.TestProbe
+import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import org.scalatest.prop.PropertyChecks
-import org.scalatest._
 
 trait SimpleSpec extends FlatSpec
-  with Matchers
-  with ScalaFutures
-  with TryValues
-  with OptionValues
-  with Eventually
-  with PropertyChecks
-  with ClasspathResources
-  with BeforeAndAfterAll
-  with BeforeAndAfterEach
-  with GivenWhenThen
+    with Matchers
+    with ScalaFutures
+    with TryValues
+    with OptionValues
+    with Eventually
+    with PropertyChecks
+    with ClasspathResources
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach
+    with GivenWhenThen {
+
+  implicit def system: ActorSystem
+
+  /**
+   * Sends the PoisonPill command to an actor and waits for it to die
+   */
+  def killActors(actors: ActorRef*): Unit = {
+    val tp = TestProbe()
+    actors.foreach { (actor: ActorRef) =>
+      tp watch actor
+      actor ! PoisonPill
+      tp.expectTerminated(actor)
+    }
+  }
+}

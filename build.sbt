@@ -18,7 +18,7 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.6.2"
+version := "2.6.3-SNAPSHOT"
 
 isSnapshot := true
 
@@ -76,6 +76,8 @@ scalacOptions ++= Seq(
   "-target:jvm-1.8",
   "-Xexperimental"
 )
+
+testOptions in Test += Tests.Argument("-oD")
 
 // enable scala code formatting //
 import scalariform.formatter.preferences._

@@ -63,7 +63,7 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
 
 class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-application.conf"), Postgres()) {
 
-  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 30.seconds)
+  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
 
   override def awaitDurationMillis: Long = 180.seconds.toMillis
 
@@ -72,10 +72,9 @@ class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("po
   override def eventsCount: Int = 1000 // postgres is very slow on my macbook / docker / virtualbox
 }
 
-@Ignore
 class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-application.conf"), MySQL()) {
 
-  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 60.seconds)
+  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
 
   override def awaitDurationMillis: Long = 180.seconds.toMillis
 
@@ -84,6 +83,7 @@ class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql
   override def eventsCount: Int = 1000 // mysql is very slow on my macbook / docker / virtualbox
 }
 
+@Ignore
 class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-application.conf"), Oracle()) {
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)

@@ -11,6 +11,8 @@ CREATE TABLE "journal" (
   PRIMARY KEY("ordering", "persistence_id", "sequence_number")
 );
 
+CREATE INDEX "journal_persistence_id_sequence_number_idx" ON "journal"("persistence_id", "sequence_number");
+
 CREATE TRIGGER "ordering_seq_trigger"
 BEFORE INSERT ON "journal"
 FOR EACH ROW

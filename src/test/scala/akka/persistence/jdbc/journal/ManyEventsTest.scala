@@ -16,18 +16,18 @@
 
 package akka.persistence.jdbc.journal
 
-import akka.actor.{ActorRef, Props}
+import akka.actor.{ ActorRef, Props }
 import akka.persistence.jdbc.TestSpec
 import akka.persistence.jdbc.journal.ManyEventsTest.Person
-import akka.persistence.jdbc.util.Schema.{Postgres, SchemaType}
+import akka.persistence.jdbc.util.Schema.{ Postgres, SchemaType }
 import akka.persistence.query.PersistenceQuery
 import akka.persistence.query.scaladsl.EventWriter.WriteEvent
-import akka.persistence.query.scaladsl.{CurrentEventsByPersistenceIdQuery, CurrentEventsByTagQuery, EventWriter, ReadJournal}
-import akka.persistence.{PersistentActor, PersistentRepr, RecoveryCompleted}
+import akka.persistence.query.scaladsl.{ CurrentEventsByPersistenceIdQuery, CurrentEventsByTagQuery, EventWriter, ReadJournal }
+import akka.persistence.{ PersistentActor, PersistentRepr, RecoveryCompleted }
 import akka.stream.scaladsl.extension.Implicits._
-import akka.stream.scaladsl.{Sink, Source}
+import akka.stream.scaladsl.{ Sink, Source }
 import akka.testkit.TestProbe
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 import org.scalatest.Ignore
 
 import scala.collection.immutable._

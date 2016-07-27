@@ -75,6 +75,11 @@ trait OracleReadJournalDao extends ReadJournalDao {
   val queries: ReadJournalQueries
   val serializer: FlowPersistentReprSerializer[JournalRow]
 
+  import readJournalConfig.journalTableConfiguration._
+  import columnNames._
+
+  val theTableName = schemaName.map(_ + ".").getOrElse("") + s""""$tableName""""
+
   import profile.api._
 
   private lazy val isOracleDriver = profile match {
@@ -84,10 +89,8 @@ trait OracleReadJournalDao extends ReadJournalDao {
 
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] = {
     if (isOracleDriver) {
-      import readJournalConfig.journalTableConfiguration._
-      import columnNames._
       Source.fromPublisher(
-        db.stream(sql"""select distinct "#$persistenceId" from "#${schemaName.getOrElse("")}"."#$tableName" where rownum <= $max""".as[String])
+        db.stream(sql"""SELECT DISTINCT "#$persistenceId" FROM #$theTableName WHERE rownum <= $max""".as[String])
       )
     } else {
       super.allPersistenceIdsSource(max)
@@ -98,32 +101,27 @@ trait OracleReadJournalDao extends ReadJournalDao {
 
   abstract override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] = {
     if (isOracleDriver) {
-      import readJournalConfig.journalTableConfiguration._
-      import columnNames._
-      val theOffset = Math.max(1, offset) - 1
+      val theOffset = Math.max(0, offset)
       val theTag = s"%$tag%"
-      Source.fromPublisher(
+
+      Source.fromPublisher {
         db.stream(
-          sql"""SELECT "#$ordering", "#$persistenceId", "#$sequenceNumber", "#$message", "#$tags" FROM (
-                SELECT
-                  a.*,
-                  rownum rnum
-                FROM
-                  (SELECT *
-                   FROM "#${schemaName.getOrElse("")}"."#$tableName"
-                   WHERE "#$tags" LIKE $theTag
-                   ORDER BY "#$ordering") a
-                where rownum <= $max
-              )
-              where rnum > $theOffset""".as[JournalRow]
+          sql"""
+            SELECT "#$ordering", "#$deleted", "#$persistenceId", "#$sequenceNumber", "#$message", "#$tags"
+            FROM (
+              SELECT * FROM #$theTableName
+              WHERE "#$tags" LIKE $theTag
+              AND "#$ordering" >= $theOffset
+              ORDER BY "#$ordering"
+            )
+            WHERE rownum < $max""".as[JournalRow]
         )
-      ).via(serializer.deserializeFlow)
+      }.via(serializer.deserializeFlow)
     } else {
       super.eventsByTag(tag, offset, max)
     }
   }
 }
-
 trait H2ReadJournalDao extends ReadJournalDao {
   val profile: JdbcProfile
 

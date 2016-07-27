@@ -41,6 +41,7 @@ trait DropCreate extends ClasspathResources {
     """DROP TABLE "journal" CASCADE CONSTRAINT""",
     """DROP TABLE "snapshot" CASCADE CONSTRAINT""",
     """DROP TRIGGER "ordering_seq_trigger"""",
+    """DROP PROCEDURE "reset_sequence"""",
     """DROP SEQUENCE "ordering_seq""""
   )
 
@@ -49,6 +50,8 @@ trait DropCreate extends ClasspathResources {
       try stmt.executeUpdate(ddl) catch {
         case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" => // suppress known error message in the test
         case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-04080" => // suppress known error message in the test
+        case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-02289" => // suppress known error message in the test
+        case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-04043" => // suppress known error message in the test
       }
     }
   }
@@ -56,14 +59,14 @@ trait DropCreate extends ClasspathResources {
   def dropCreate(schemaType: SchemaType): Unit = schemaType match {
     case Oracle(schema) =>
       dropOracle()
-      create(schema)
+      create(schema, "/")
     case s: SchemaType => create(s.schema)
   }
 
-  def create(schema: String): Unit = for {
+  def create(schema: String, separator: String = ";"): Unit = for {
     schema <- Option(fromClasspathAsString(schema))
     ddl <- for {
-      trimmedLine <- schema.split(";") map (_.trim)
+      trimmedLine <- schema.split(separator) map (_.trim)
       if trimmedLine.nonEmpty
     } yield trimmedLine
   } withStatement { stmt =>

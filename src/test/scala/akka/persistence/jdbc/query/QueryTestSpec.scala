@@ -255,8 +255,9 @@ trait OracleCleaner extends QueryTestSpec {
   import akka.persistence.jdbc.util.Schema.Oracle
 
   val actionsClearOracle = (for {
-    _ <- sqlu"""DELETE FROM "SYSTEM"."journal""""
-    _ <- sqlu"""DELETE FROM "SYSTEM"."snapshot""""
+    _ <- sqlu"""DELETE FROM "journal""""
+    _ <- sqlu"""DELETE FROM "snapshot""""
+    _ <- sqlu"""BEGIN "reset_sequence"; END; """
   } yield ()).transactionally
 
   def clearOracle(): Unit =
@@ -268,7 +269,7 @@ trait OracleCleaner extends QueryTestSpec {
   }
 
   override def afterAll(): Unit = {
-    clearOracle()
+    dropOracle()
     super.afterAll()
   }
 

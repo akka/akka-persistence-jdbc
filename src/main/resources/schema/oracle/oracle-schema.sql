@@ -34,12 +34,6 @@ BEGIN
 END;
 /
 
-CREATE TABLE "deleted_to" (
-  "persistence_id" VARCHAR(255) NOT NULL,
-  "deleted_to" NUMERIC NOT NULL
-)
-/
-
 CREATE TABLE "snapshot" (
   "persistence_id" VARCHAR(255) NOT NULL,
   "sequence_number" NUMERIC NOT NULL,

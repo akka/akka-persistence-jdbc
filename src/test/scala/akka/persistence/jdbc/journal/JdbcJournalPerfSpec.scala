@@ -83,7 +83,6 @@ class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql
   override def eventsCount: Int = 1000 // mysql is very slow on my macbook / docker / virtualbox
 }
 
-@Ignore
 class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-application.conf"), Oracle()) {
 
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
@@ -103,5 +102,5 @@ class H2JournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("h2-appli
 
   override def measurementIterations: Int = 1
 
-  override def eventsCount: Int = 1000 // oracle is very slow on my macbook / docker / virtualbox
+  override def eventsCount: Int = 1000 // H2 is very slow on my macbook / docker / virtualbox
 }

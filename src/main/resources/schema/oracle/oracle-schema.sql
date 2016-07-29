@@ -12,7 +12,7 @@ CREATE TABLE "journal" (
 )
 /
 
-CREATE INDEX "journal_persistence_id_sequence_number_idx" ON "journal"("persistence_id", "sequence_number")
+CREATE INDEX "journal__persist_id_seq_idx" ON "journal"("persistence_id", "sequence_number")
 /
 
 CREATE OR REPLACE TRIGGER "ordering_seq_trigger"

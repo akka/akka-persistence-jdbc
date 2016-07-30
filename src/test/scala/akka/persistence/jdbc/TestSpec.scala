@@ -22,7 +22,6 @@ import akka.event.{ Logging, LoggingAdapter }
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.util.{ DropCreate, SlickDatabase }
 import akka.serialization.SerializationExtension
-import akka.testkit.TestProbe
 import akka.util.Timeout
 import com.typesafe.config.{ Config, ConfigFactory }
 import org.scalatest.BeforeAndAfterAll
@@ -45,25 +44,7 @@ abstract class TestSpec(override val config: Config) extends SimpleSpec with Mat
   val journalConfig = new JournalConfig(cfg)
   val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
 
-  println(" ====================================================")
-  println(" ===> url: " + config.getString("slick.db.url"))
-  println(" ===> user: " + config.getString("slick.db.user"))
-  println(" ===> password: " + config.getString("slick.db.password"))
-  println(" ====================================================")
-
-  /**
-   * TestKit-based probe which allows sending, reception and reply.
-   */
-  def probe: TestProbe = TestProbe()
-
-  /**
-   * Returns a random UUID
-   */
   def randomId = UUID.randomUUID.toString.take(5)
-
-  implicit class PimpedByteArray(self: Array[Byte]) {
-    def getString: String = new String(self)
-  }
 
   implicit class PimpedFuture[T](self: Future[T]) {
     def toTry: Try[T] = Try(self.futureValue)

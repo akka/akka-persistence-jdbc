@@ -23,3 +23,6 @@ before_script:
 addons:
   postgresql: "9.4"
 script: "./build.sh"
+
+# MySQL fails to start during build
+# https://github.com/travis-ci/travis-ci/issues/5088

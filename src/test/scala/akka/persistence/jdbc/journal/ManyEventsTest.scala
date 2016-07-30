@@ -130,11 +130,3 @@ class MySQLRecoverFromTenThousandEventsTest extends ManyEventsTest(ManyEventsTes
 class OracleRecoverFromTenThousandEventsTest extends ManyEventsTest(ManyEventsTest.TenThousand, ConfigFactory.load("oracle-application.conf"), Oracle())
 
 class H2RecoverFromTenThousandEventsTest extends ManyEventsTest(ManyEventsTest.TenThousand, ConfigFactory.load("h2-application.conf"), H2())
-
-class PostgresRecoverFromHundredThousandEventsTest extends ManyEventsTest(ManyEventsTest.HundredThousand, ConfigFactory.load("postgres-application.conf"), Postgres())
-
-class MySQLRecoverFromHundredThousandEventsTest extends ManyEventsTest(ManyEventsTest.HundredThousand, ConfigFactory.load("mysql-application.conf"), MySQL())
-
-class OracleRecoverFromHundredThousandEventsTest extends ManyEventsTest(ManyEventsTest.HundredThousand, ConfigFactory.load("oracle-application.conf"), Oracle())
-
-class H2RecoverFromHundredThousandEventsTest extends ManyEventsTest(ManyEventsTest.HundredThousand, ConfigFactory.load("h2-application.conf"), H2())

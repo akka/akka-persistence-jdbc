@@ -31,12 +31,14 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
   case class PersistRejected(cause: Throwable, event: Any, seqNr: Long)
 
   class TestActor(val persistenceId: String, recoverProbe: ActorRef, persistFailureProbe: ActorRef, persistRejectedProbe: ActorRef) extends PersistentActor {
-    override def receiveRecover: Receive = LoggingReceive {
+    override val receiveRecover: Receive = LoggingReceive {
       case msg => recoverProbe ! msg
     }
 
-    override def receiveCommand: Receive = LoggingReceive {
-      case msg => persist(msg) { _ => () }
+    override val receiveCommand: Receive = LoggingReceive {
+      case msg => persist(msg) { _ =>
+        sender ! akka.actor.Status.Success("")
+      }
     }
 
     override protected def onPersistFailure(cause: Throwable, event: Any, seqNr: Long): Unit =
@@ -46,12 +48,12 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
       persistRejectedProbe ! PersistRejected(cause, event, seqNr)
   }
 
-  def withActor(id: String = "1")(f: (ActorRef, TestProbe, TestProbe, TestProbe) => Unit): Unit = {
+  def withActor(id: String = "1")(f: ActorRef => TestProbe => TestProbe => TestProbe => Unit): Unit = {
     val recoverProbe = TestProbe()
     val persistFailureProbe = TestProbe()
     val persistRejectedProbe = TestProbe()
     val persistentActor = system.actorOf(Props(new TestActor(s"my-$id", recoverProbe.ref, persistFailureProbe.ref, persistRejectedProbe.ref)))
-    try f(persistentActor, recoverProbe, persistFailureProbe, persistRejectedProbe) finally killActors(persistentActor)
+    try f(persistentActor)(recoverProbe)(persistFailureProbe)(persistRejectedProbe) finally killActors(persistentActor)
   }
 
   override def beforeAll(): Unit = {
@@ -60,19 +62,19 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
   }
 
   it should "persist a single serializable message" in {
-    withActor("1") { (actor, recover, failure, rejected) =>
+    withActor("1") { actor => recover => failure => rejected =>
+      val tp = TestProbe()
       recover.expectMsg(RecoveryCompleted)
-      recover.expectNoMsg(100.millis)
-      actor ! "foo" // strings are serializable
+      tp.send(actor, "foo") // strings are serializable
+      tp.expectMsg(akka.actor.Status.Success(""))
       failure.expectNoMsg(100.millis)
       rejected.expectNoMsg(100.millis)
     }
 
     // the recover cycle
-    withActor("1") { (actor, recover, failure, rejected) =>
+    withActor("1") { actor => recover => failure => rejected =>
       recover.expectMsg("foo")
       recover.expectMsg(RecoveryCompleted)
-      recover.expectNoMsg(100.millis)
       failure.expectNoMsg(100.millis)
       rejected.expectNoMsg(100.millis)
     }
@@ -80,18 +82,19 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
 
   it should "not persist a single non-serializable message" in {
     class NotSerializable
-    withActor("2") { (actor, recover, failure, rejected) =>
+    withActor("2") { actor => recover => failure => rejected =>
+      val tp = TestProbe()
       recover.expectMsg(RecoveryCompleted)
-      recover.expectNoMsg(100.millis)
-      actor ! new NotSerializable // the NotSerializable class cannot be serialized
-      // the actor should be called the OnPersistRejected
+      tp.send(actor, new NotSerializable) // the NotSerializable class cannot be serialized
+      tp.expectNoMsg(300.millis) // the handler should not have been called, because persist has failed
+      // the actor should call the OnPersistRejected
       rejected.expectMsgPF() {
         case PersistRejected(_, _, _) =>
       }
     }
 
     // the recover cycle, no message should be recovered
-    withActor("2") { (actor, recover, failure, rejected) =>
+    withActor("2") { actor => recover => failure => rejected =>
       recover.expectMsg(RecoveryCompleted)
       recover.expectNoMsg(100.millis)
     }
@@ -99,12 +102,14 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
 
   it should "persist only serializable messages" in {
     class NotSerializable
-    withActor("3") { (actor, recover, failure, rejected) =>
+    withActor("3") { actor => recover => failure => rejected =>
+      val tp = TestProbe()
       recover.expectMsg(RecoveryCompleted)
-      recover.expectNoMsg(100.millis)
-      actor ! "foo"
-      actor ! new NotSerializable // the Test class cannot be serialized
-      // the actor should be called the onPersistRejected
+      tp.send(actor, "foo")
+      tp.expectMsg(akka.actor.Status.Success(""))
+      tp.send(actor, new NotSerializable) // the NotSerializable class cannot be serialized
+      tp.expectNoMsg(300.millis) // the handler should not have been called, because persist has failed
+      // the actor should call the OnPersistRejected
       rejected.expectMsgPF() {
         case PersistRejected(_, _, _) =>
       }
@@ -112,10 +117,9 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
     }
 
     // recover cycle
-    withActor("3") { (actor, recover, failure, rejected) =>
+    withActor("3") { actor => recover => failure => rejected =>
       recover.expectMsg("foo")
       recover.expectMsg(RecoveryCompleted)
-      recover.expectNoMsg(100.millis)
       failure.expectNoMsg(100.millis)
       rejected.expectNoMsg(100.millis)
     }

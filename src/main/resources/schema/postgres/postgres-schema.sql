@@ -7,10 +7,8 @@ CREATE TABLE IF NOT EXISTS public.journal (
   deleted BOOLEAN DEFAULT FALSE,
   tags VARCHAR(255) DEFAULT NULL,
   message BYTEA NOT NULL,
-  PRIMARY KEY(ordering, persistence_id, sequence_number)
+  PRIMARY KEY(persistence_id, sequence_number)
 );
-
-CREATE INDEX journal_persistence_id_sequence_number_idx ON public.journal(persistence_id, sequence_number);
 
 DROP TABLE IF EXISTS public.snapshot;
 

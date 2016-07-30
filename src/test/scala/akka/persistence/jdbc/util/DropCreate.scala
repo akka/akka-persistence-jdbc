@@ -41,7 +41,6 @@ trait DropCreate extends ClasspathResources {
     """DROP TABLE "journal" CASCADE CONSTRAINT""",
     """DROP TABLE "snapshot" CASCADE CONSTRAINT""",
     """DROP TABLE "deleted_to" CASCADE CONSTRAINT""",
-    """DROP INDEX "journal__persist_id_seq_idx"""",
     """DROP TRIGGER "ordering_seq_trigger"""",
     """DROP PROCEDURE "reset_sequence"""",
     """DROP SEQUENCE "ordering_seq""""

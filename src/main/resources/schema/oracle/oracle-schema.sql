@@ -8,11 +8,8 @@ CREATE TABLE "journal" (
   "sequence_number" NUMERIC NOT NULL,
   "tags" VARCHAR(255) DEFAULT NULL,
   "message" BLOB NOT NULL,
-  PRIMARY KEY("ordering", "persistence_id", "sequence_number")
+  PRIMARY KEY("persistence_id", "sequence_number")
 )
-/
-
-CREATE INDEX "journal__persist_id_seq_idx" ON "journal"("persistence_id", "sequence_number")
 /
 
 CREATE OR REPLACE TRIGGER "ordering_seq_trigger"

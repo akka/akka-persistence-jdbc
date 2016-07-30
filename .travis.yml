@@ -1,5 +1,12 @@
 language: scala
-sudo: false
+sudo: true
+services:
+  - docker
+before_install:
+  - docker pull wnameless/oracle-xe-11g
+  - docker run --name oracle -d -p 127.0.0.1:1521:1521 -e ORACLE_ALLOW_REMOTE=true wnameless/oracle-xe-11g
+  - docker ps -a
+  - docker inspect oracle
 scala:
   - "2.11.8"
 jdk:

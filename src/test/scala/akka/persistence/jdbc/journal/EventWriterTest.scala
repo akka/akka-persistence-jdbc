@@ -19,7 +19,7 @@ package akka.persistence.jdbc.journal
 import akka.NotUsed
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.TestSpec
-import akka.persistence.jdbc.util.Schema.{ H2, MySQL, Postgres, SchemaType }
+import akka.persistence.jdbc.util.Schema._
 import akka.persistence.query.scaladsl.EventWriter.WriteEvent
 import akka.persistence.query.scaladsl.{ CurrentEventsByPersistenceIdQuery, CurrentEventsByTagQuery, EventWriter, ReadJournal }
 import akka.persistence.query.{ EventEnvelope, PersistenceQuery }
@@ -98,5 +98,7 @@ abstract class EventWriterTest(config: Config, schemaType: SchemaType) extends T
 class PostgresEventWriterTest extends EventWriterTest(ConfigFactory.load("postgres-application.conf"), Postgres())
 
 class MySQLEventWriterTest extends EventWriterTest(ConfigFactory.load("mysql-application.conf"), MySQL())
+
+class OracleEventWriterTest extends EventWriterTest(ConfigFactory.load("oracle-application.conf"), Oracle())
 
 class H2EventWriterTest extends EventWriterTest(ConfigFactory.load("h2-application.conf"), H2())

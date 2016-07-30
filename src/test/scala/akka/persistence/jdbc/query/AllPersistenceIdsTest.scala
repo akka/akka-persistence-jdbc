@@ -64,6 +64,6 @@ class PostgresScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("postgres
 
 class MySQLScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("mysql-application.conf") with ScalaJdbcReadJournalOperations with MysqlCleaner
 
-//class OracleScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
-//
+class OracleScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
+
 class H2ScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner

@@ -263,21 +263,3 @@ class MySQLScalaEventByTagTest extends EventsByTagTest("mysql-application.conf")
 class OracleScalaEventByTagTest extends EventsByTagTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
 
 class H2ScalaEventsByTagTest extends EventsByTagTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner
-
-//class PostgresJavaEventsByTagTest extends EventsByTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
-//  dropCreate(Postgres())
-//}
-//
-//class MySQLJavaEventByTagTest extends EventsByTagTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
-//  dropCreate(MySQL())
-//}
-//
-//class OracleJavaEventByTagTest extends EventsByTagTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
-//  dropCreate(Oracle())
-//
-//  protected override def beforeEach(): Unit =
-//    clearOracle()
-//
-//  override protected def afterAll(): Unit =
-//    clearOracle()
-//}

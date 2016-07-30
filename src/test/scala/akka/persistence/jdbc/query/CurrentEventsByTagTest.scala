@@ -162,21 +162,3 @@ class MySQLScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-app
 class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
 
 class H2ScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner
-
-//class PostgresJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
-//  dropCreate(Postgres())
-//}
-//
-//class MySQLJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
-//  dropCreate(MySQL())
-//}
-//
-//class OracleJavaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
-//  dropCreate(Oracle())
-//
-//  protected override def beforeEach(): Unit =
-//    clearOracle()
-//
-//  override protected def afterAll(): Unit =
-//    clearOracle()
-//}

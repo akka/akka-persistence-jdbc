@@ -47,21 +47,3 @@ class MySQLScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("mys
 class OracleScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
 
 class H2ScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner
-
-//class PostgresJavaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
-//  dropCreate(Postgres())
-//}
-//
-//class MySQLJavaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
-//  dropCreate(MySQL())
-//}
-//
-//class OracleJavaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
-//  dropCreate(Oracle())
-//
-//  protected override def beforeEach(): Unit =
-//    clearOracle()
-//
-//  override protected def afterAll(): Unit =
-//    clearOracle()
-//}

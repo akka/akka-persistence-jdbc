@@ -204,21 +204,3 @@ class MySQLScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mys
 class OracleScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
 
 class H2ScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner
-
-//class PostgresJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("postgres-application.conf") with JavaDslJdbcReadJournalOperations {
-//  dropCreate(Postgres())
-//}
-//
-//class MySQLJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mysql-application.conf") with JavaDslJdbcReadJournalOperations {
-//  dropCreate(MySQL())
-//}
-//
-//class OracleJavaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("oracle-application.conf") with JavaDslJdbcReadJournalOperations {
-//  dropCreate(Oracle())
-//
-//  protected override def beforeEach(): Unit =
-//    clearOracle()
-//
-//  override protected def afterAll(): Unit =
-//    clearOracle()
-//}

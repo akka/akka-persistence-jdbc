@@ -31,6 +31,7 @@ while true; do
 done;
 }
 
-docker rm -f $(docker ps -aq)
+docker-compose -f scripts/oracle.yml kill
+docker-compose -f scripts/oracle.yml rm -f
 docker-compose -f scripts/oracle.yml up -d
 wait 1521 Oracle

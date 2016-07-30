@@ -16,19 +16,20 @@
 
 package akka.persistence.jdbc.journal
 
+import akka.NotUsed
 import akka.actor.{ ActorRef, Props }
 import akka.persistence.jdbc.TestSpec
-import akka.persistence.jdbc.journal.ManyEventsTest.Person
-import akka.persistence.jdbc.util.Schema.{ Postgres, SchemaType }
+import akka.persistence.jdbc.journal.ManyEventsTest.{ Person, Took }
+import akka.persistence.jdbc.util.Schema._
 import akka.persistence.query.PersistenceQuery
 import akka.persistence.query.scaladsl.EventWriter.WriteEvent
 import akka.persistence.query.scaladsl.{ CurrentEventsByPersistenceIdQuery, CurrentEventsByTagQuery, EventWriter, ReadJournal }
 import akka.persistence.{ PersistentActor, PersistentRepr, RecoveryCompleted }
+import akka.stream.FlowShape
 import akka.stream.scaladsl.extension.Implicits._
-import akka.stream.scaladsl.{ Sink, Source }
+import akka.stream.scaladsl.{ Broadcast, Flow, GraphDSL, Sink, Source }
 import akka.testkit.TestProbe
 import com.typesafe.config.{ Config, ConfigFactory }
-import org.scalatest.Ignore
 
 import scala.collection.immutable._
 import scala.compat.Platform
@@ -36,54 +37,27 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 object ManyEventsTest {
-
   final case class Person(name: String, age: Int)
-
-}
-
-abstract class ManyEventsTest(config: Config, schemaType: SchemaType) extends TestSpec(config) {
-  lazy val journal = PersistenceQuery(system).readJournalFor("jdbc-read-journal")
-    .asInstanceOf[ReadJournal with EventWriter with CurrentEventsByPersistenceIdQuery with CurrentEventsByTagQuery]
+  final case class Took(start: Long, recoveryTime: Long, lastSeqNr: Long)
 
   final val TenThousand = 10000
   final val HundredThousand = 100000
-  final val OneMillion = 1000000
-  final val FiveMillion = 5000000
-  final val ReceiveTimeout = 1.hour
+}
 
-  it should s"load $TenThousand events" in {
+abstract class ManyEventsTest(numOfEvents: Int, config: Config, schemaType: SchemaType) extends TestSpec(config) {
+  lazy val journal = PersistenceQuery(system).readJournalFor("jdbc-read-journal")
+    .asInstanceOf[ReadJournal with EventWriter with CurrentEventsByPersistenceIdQuery with CurrentEventsByTagQuery]
+
+  final val ReceiveTimeout = 5.minutes
+
+  it should s"load $numOfEvents events" in {
     val pid = "pid1"
-    storeEvents(pid, TenThousand).toTry should be a 'success
+    storeEvents(pid, numOfEvents).toTry should be a 'success
     withActor(pid) { ref => tp =>
       tp.send(ref, 0)
-      println(tp.receiveOne(ReceiveTimeout))
-    }
-  }
-
-  it should s"load $HundredThousand events" in {
-    val pid = "pid2"
-    storeEvents(pid, HundredThousand).toTry should be a 'success
-    withActor(pid) { ref => tp =>
-      tp.send(ref, 0)
-      println(tp.receiveOne(ReceiveTimeout))
-    }
-  }
-
-  it should s"load $OneMillion events" in {
-    val pid = "pid3"
-    storeEvents(pid, OneMillion).toTry should be a 'success
-    withActor(pid) { ref => tp =>
-      tp.send(ref, 0)
-      println(tp.receiveOne(ReceiveTimeout))
-    }
-  }
-
-  it should s"load $FiveMillion events" in {
-    val pid = "pid4"
-    storeEvents(pid, FiveMillion).toTry should be a 'success
-    withActor(pid) { ref => tp =>
-      tp.send(ref, 0)
-      println(tp.receiveOne(ReceiveTimeout))
+      val took = tp.receiveOne(ReceiveTimeout).asInstanceOf[Took]
+      val duration = took.recoveryTime - took.start
+      log.info("{}, duration: {} ms", took, duration)
     }
   }
 
@@ -93,6 +67,7 @@ abstract class ManyEventsTest(config: Config, schemaType: SchemaType) extends Te
       .map(_.toString)
       .zip(Source.cycle(() => (1 to 100).iterator))
       .take(num)
+      .via(broadcastAndLog())
       .map(Person.tupled)
       .zipWithIndex.map { case (person, seqNr) => WriteEvent(PersistentRepr(person, seqNr, pid), Set.empty[String]) }
       .via(journal.eventWriter)
@@ -102,25 +77,40 @@ abstract class ManyEventsTest(config: Config, schemaType: SchemaType) extends Te
 
   def withActor(pid: String)(f: ActorRef => TestProbe => Unit): Unit = {
     val actor = system.actorOf(Props(new PersistentActor {
-      val start = Platform.currentTime
-      var took: Long = 0
+      override val persistenceId: String = pid
+      val start: Long = Platform.currentTime
+      var recoveryTime: Long = 0
 
-      override def receiveRecover: Receive = {
+      override val receiveRecover: Receive = {
         case RecoveryCompleted =>
-          took = Platform.currentTime - start
-          println(s"$pid => completed, took: $took")
-        case _: Person =>
-        case evt       => println(s"$pid => recovering: $evt")
+          recoveryTime = Platform.currentTime
       }
 
-      override def receiveCommand: Receive = {
-        case _ => sender() ! akka.actor.Status.Success(s"start: $start, took: $took, lastSeqNr: $lastSequenceNr")
+      override val receiveCommand: Receive = {
+        case _ => sender() ! Took(start, recoveryTime, lastSequenceNr)
       }
-
-      override def persistenceId: String = pid
     }))
     try f(actor)(TestProbe()) finally killActors(actor)
   }
+
+  def broadcastAndLog[A](each: Long = 1000): Flow[A, A, NotUsed] = Flow.fromGraph[A, A, NotUsed](GraphDSL.create() { implicit b =>
+    import GraphDSL.Implicits._
+    val logFlow = Flow[A].statefulMapConcat { () =>
+      var last = Platform.currentTime
+      var num = 0L
+      (x: A) =>
+        num += 1
+        if (num % each == 0) {
+          val duration = Platform.currentTime - last
+          log.info("[{} ms / {}]: {}", duration, each, num)
+          last = Platform.currentTime
+        }
+        Iterable(x)
+    }
+    val bcast = b.add(Broadcast[A](2, false))
+    bcast ~> logFlow ~> Sink.ignore
+    FlowShape.of(bcast.in, bcast.out(1))
+  })
 
   override def beforeAll(): Unit = {
     dropCreate(schemaType)
@@ -133,5 +123,18 @@ abstract class ManyEventsTest(config: Config, schemaType: SchemaType) extends Te
   }
 }
 
-@Ignore
-class PostgresManyEventsTest extends ManyEventsTest(ConfigFactory.load("postgres-application.conf"), Postgres())
+class PostgresRecoverFromTenThousandEventsTest extends ManyEventsTest(ManyEventsTest.TenThousand, ConfigFactory.load("postgres-application.conf"), Postgres())
+
+class MySQLRecoverFromTenThousandEventsTest extends ManyEventsTest(ManyEventsTest.TenThousand, ConfigFactory.load("mysql-application.conf"), MySQL())
+
+class OracleRecoverFromTenThousandEventsTest extends ManyEventsTest(ManyEventsTest.TenThousand, ConfigFactory.load("oracle-application.conf"), Oracle())
+
+class H2RecoverFromTenThousandEventsTest extends ManyEventsTest(ManyEventsTest.TenThousand, ConfigFactory.load("h2-application.conf"), H2())
+
+class PostgresRecoverFromHundredThousandEventsTest extends ManyEventsTest(ManyEventsTest.HundredThousand, ConfigFactory.load("postgres-application.conf"), Postgres())
+
+class MySQLRecoverFromHundredThousandEventsTest extends ManyEventsTest(ManyEventsTest.HundredThousand, ConfigFactory.load("mysql-application.conf"), MySQL())
+
+class OracleRecoverFromHundredThousandEventsTest extends ManyEventsTest(ManyEventsTest.HundredThousand, ConfigFactory.load("oracle-application.conf"), Oracle())
+
+class H2RecoverFromHundredThousandEventsTest extends ManyEventsTest(ManyEventsTest.HundredThousand, ConfigFactory.load("h2-application.conf"), H2())

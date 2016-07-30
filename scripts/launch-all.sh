@@ -31,8 +31,8 @@ while true; do
 done;
 }
 
-docker-compose kill
-docker-compose rm
+docker-compose -f scripts/docker-compose.yml kill
+docker-compose -f scripts/docker-compose.yml rm -f
 docker-compose -f scripts/docker-compose.yml up -d
 wait 3306 MySQL
 wait 5432 Postgres

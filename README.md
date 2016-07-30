@@ -44,6 +44,7 @@ Configure `slick`:
   - `slick.driver.PostgresDriver$`
   - `slick.driver.MySQLDriver$`
   - `slick.driver.H2Driver$`
+  - `com.typesafe.slick.driver.oracle.OracleDriver$`
 
 ## DataSource lookup by JNDI name
 The plugin uses `slick` as the database access library. Slick [supports jndi][slick-jndi]
@@ -77,6 +78,12 @@ Base your akka-persistence-jdbc `application.conf` on [this config file][h2-appl
 
 ## H2 schema
 The schema is available [here][h2-schema]
+
+## Oracle configuration
+Base your akka-persistence-jdbc `application.conf` on [this config file][oracle-application.conf]
+
+## Oracle schema
+The schema is available [here][oracle-schema]
 
 ## How to get the ReadJournal using Scala
 The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery` extension:

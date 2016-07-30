@@ -1,29 +1,38 @@
-CREATE SEQUENCE "ordering_seq" start with 1 increment by 1 NOMAXVALUE;
+CREATE SEQUENCE "ordering_seq" START WITH 1 INCREMENT BY 1 NOMAXVALUE
+/
 
 CREATE TABLE "journal" (
   "ordering" NUMERIC,
   "deleted" char check ("deleted" in (0,1)),
   "persistence_id" VARCHAR(255) NOT NULL,
   "sequence_number" NUMERIC NOT NULL,
-  "created" NUMERIC NOT NULL,
   "tags" VARCHAR(255) DEFAULT NULL,
   "message" BLOB NOT NULL,
   PRIMARY KEY("ordering", "persistence_id", "sequence_number")
-);
+)
+/
 
-CREATE INDEX "journal_persistence_id_sequence_number_idx" ON "journal"("persistence_id", "sequence_number");
+CREATE INDEX "journal__persist_id_seq_idx" ON "journal"("persistence_id", "sequence_number")
+/
 
-CREATE TRIGGER "ordering_seq_trigger"
+CREATE OR REPLACE TRIGGER "ordering_seq_trigger"
 BEFORE INSERT ON "journal"
 FOR EACH ROW
 BEGIN
-  select ordering_seq.nextval into :new.ordering from dual;
+  SELECT "ordering_seq".NEXTVAL INTO :NEW."ordering" FROM DUAL;
 END;
+/
 
-CREATE TABLE "deleted_to" (
-  "persistence_id" VARCHAR(255) NOT NULL,
-  "deleted_to" NUMERIC NOT NULL
-);
+CREATE OR REPLACE PROCEDURE "reset_sequence"
+IS
+  l_value NUMBER;
+BEGIN
+  EXECUTE IMMEDIATE 'SELECT "ordering_seq".nextval FROM dual' INTO l_value;
+  EXECUTE IMMEDIATE 'ALTER SEQUENCE "ordering_seq" INCREMENT BY -' || l_value || ' MINVALUE 0';
+  EXECUTE IMMEDIATE 'SELECT "ordering_seq".nextval FROM dual' INTO l_value;
+  EXECUTE IMMEDIATE 'ALTER SEQUENCE "ordering_seq" INCREMENT BY 1 MINVALUE 0';
+END;
+/
 
 CREATE TABLE "snapshot" (
   "persistence_id" VARCHAR(255) NOT NULL,
@@ -31,4 +40,5 @@ CREATE TABLE "snapshot" (
   "created" NUMERIC NOT NULL,
   "snapshot" BLOB NOT NULL,
   PRIMARY KEY ("persistence_id", "sequence_number")
-);
+)
+/

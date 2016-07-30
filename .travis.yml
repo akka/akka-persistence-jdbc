@@ -15,14 +15,8 @@ scala:
   - 2.11.8
 jdk:
   - oraclejdk8
-#branches:
-#  only:
-#    - master
 before_script:
   - psql -c 'create database docker;' -U postgres
 addons:
   postgresql: "9.4"
 script: "./build.sh"
-
-# MySQL fails to start during build
-# https://github.com/travis-ci/travis-ci/issues/5088

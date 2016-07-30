@@ -12,7 +12,7 @@
 
     <!--<logger name="akka.persistence.jdbc" level="debug"/>-->
     <!--<logger name="slick.backend.DatabaseComponent.action" level="debug"/>-->
-    <logger name="com.zaxxer.hikari.pool.HikariPool" level="debug"/>
+    <!--<logger name="com.zaxxer.hikari.pool.HikariPool" level="debug"/>-->
     <root level="error">
         <appender-ref ref="console"/>
     </root>

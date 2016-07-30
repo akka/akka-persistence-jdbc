@@ -45,6 +45,12 @@ abstract class TestSpec(override val config: Config) extends SimpleSpec with Mat
   val journalConfig = new JournalConfig(cfg)
   val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
 
+  println(" ====================================================")
+  println(" ===> url: " + config.getString("slick.db.url"))
+  println(" ===> user: " + config.getString("slick.db.user"))
+  println(" ===> password: " + config.getString("slick.db.password"))
+  println(" ====================================================")
+
   /**
    * TestKit-based probe which allows sending, reception and reply.
    */

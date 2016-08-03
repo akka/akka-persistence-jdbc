@@ -20,7 +20,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.4"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.5-RC1"
 ```
 
 ## Contribution policy
@@ -315,6 +315,9 @@ Is Event Sourcing getting traction? I would say so:
 
 
 ## What's new?
+## 2.6.5-RC1 (2016-08-03)
+  - Akka 2.4.8 -> 2.4.9-RC1
+
 ## 2.6.4 (2016-07-30)
   - Merged PR #62 [jtysper][jtysper], Fix Oracle support, thanks!
 

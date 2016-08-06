@@ -315,6 +315,9 @@ Is Event Sourcing getting traction? I would say so:
 
 
 ## What's new?
+## 2.6.5-RC2 (2016-08-06)
+  - Akka 2.4.9-RC1 -> 2.4.9-RC2
+
 ## 2.6.5-RC1 (2016-08-03)
   - Akka 2.4.8 -> 2.4.9-RC1
 

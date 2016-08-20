@@ -100,11 +100,15 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
       def nextFromSeqNr(xs: Seq[EventEnvelope]): Long = {
         if (xs.isEmpty) from else xs.map(_.sequenceNr).max + 1
       }
-      delaySource.flatMapConcat(_ =>
-        currentEventsByPersistenceId(persistenceId, from, toSequenceNr)
-          .take(readJournalConfig.maxBufferSize)).runWith(Sink.seq).map { xs =>
-        val newFromSeqNr = nextFromSeqNr(xs)
-        Some((newFromSeqNr, xs))
+      from match {
+        case x if x > toSequenceNr => Future.successful(None)
+        case _ =>
+          delaySource.flatMapConcat(_ =>
+            currentEventsByPersistenceId(persistenceId, from, toSequenceNr)
+              .take(readJournalConfig.maxBufferSize)).runWith(Sink.seq).map { xs =>
+            val newFromSeqNr = nextFromSeqNr(xs)
+            Some((newFromSeqNr, xs))
+          }
       }
     }.mapConcat(identity)
 

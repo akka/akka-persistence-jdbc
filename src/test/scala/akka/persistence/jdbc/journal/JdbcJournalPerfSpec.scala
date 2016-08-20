@@ -38,11 +38,13 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
 
   implicit val ec = system.dispatcher
 
-  implicit def pc: PatienceConfig = PatienceConfig(timeout = 60.seconds)
+  implicit def pc: PatienceConfig = PatienceConfig(timeout = 10.minutes)
 
-  override def awaitDurationMillis: Long = 60.seconds.toMillis
+  override def eventsCount: Int = 1000
 
-  override def measurementIterations: Int = 10
+  override def awaitDurationMillis: Long = 10.minutes.toMillis
+
+  override def measurementIterations: Int = 1
 
   val cfg = system.settings.config.getConfig("jdbc-journal")
 
@@ -63,44 +65,33 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
 
 class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-application.conf"), Postgres()) {
 
-  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
+  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 10.minutes)
 
-  override def awaitDurationMillis: Long = 180.seconds.toMillis
+  override def eventsCount: Int = 100
+
+  override def awaitDurationMillis: Long = 10.minutes.toMillis
 
   override def measurementIterations: Int = 1
-
-  override def eventsCount: Int = 1000 // postgres is very slow on my macbook / docker / virtualbox
 }
 
 class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-application.conf"), MySQL()) {
+  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 10.minutes)
 
-  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
+  override def eventsCount: Int = 100
 
-  override def awaitDurationMillis: Long = 180.seconds.toMillis
+  override def awaitDurationMillis: Long = 10.minutes.toMillis
 
   override def measurementIterations: Int = 1
-
-  override def eventsCount: Int = 1000 // mysql is very slow on my macbook / docker / virtualbox
 }
 
 class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-application.conf"), Oracle()) {
+  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 10.minutes)
 
-  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
+  override def eventsCount: Int = 100
 
-  override def awaitDurationMillis: Long = 180.seconds.toMillis
-
-  override def measurementIterations: Int = 1
-
-  override def eventsCount: Int = 1000 // oracle is very slow on my macbook / docker / virtualbox
-}
-
-class H2JournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("h2-application.conf"), H2()) {
-
-  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 180.seconds)
-
-  override def awaitDurationMillis: Long = 180.seconds.toMillis
+  override def awaitDurationMillis: Long = 10.minutes.toMillis
 
   override def measurementIterations: Int = 1
-
-  override def eventsCount: Int = 1000 // H2 is very slow on my macbook / docker / virtualbox
 }
+
+class H2JournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("h2-application.conf"), H2())

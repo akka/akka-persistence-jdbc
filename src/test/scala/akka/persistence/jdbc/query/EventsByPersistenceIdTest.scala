@@ -44,19 +44,23 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
       withEventsByPersistenceId()("my-1", 0, 0) { tp =>
         tp.request(1)
-        tp.expectNoMsg(100.millis)
+        tp.expectComplete()
         tp.cancel()
       }
 
       withEventsByPersistenceId()("my-1", 0, 1) { tp =>
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(1, "my-1", 1, 1))
+        tp.request(1)
+        tp.expectComplete()
         tp.cancel()
       }
 
       withEventsByPersistenceId()("my-1", 1, 1) { tp =>
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(1, "my-1", 1, 1))
+        tp.request(1)
+        tp.expectComplete()
         tp.cancel()
       }
 
@@ -65,12 +69,16 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         tp.expectNext(ExpectNextTimeout, EventEnvelope(1, "my-1", 1, 1))
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-1", 2, 2))
+        tp.request(1)
+        tp.expectComplete()
         tp.cancel()
       }
 
       withEventsByPersistenceId()("my-1", 2, 2) { tp =>
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-1", 2, 2))
+        tp.request(1)
+        tp.expectComplete()
         tp.cancel()
       }
 
@@ -79,12 +87,16 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-1", 2, 2))
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(3, "my-1", 3, 3))
+        tp.request(1)
+        tp.expectComplete()
         tp.cancel()
       }
 
       withEventsByPersistenceId()("my-1", 3, 3) { tp =>
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(3, "my-1", 3, 3))
+        tp.request(1)
+        tp.expectComplete()
         tp.cancel()
       }
 
@@ -95,6 +107,8 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-1", 2, 2))
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(3, "my-1", 3, 3))
+        tp.request(1)
+        tp.expectComplete()
         tp.cancel()
       }
 
@@ -105,6 +119,8 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-1", 2, 2))
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(3, "my-1", 3, 3))
+        tp.request(1)
+        tp.expectComplete()
         tp.cancel()
       }
     }

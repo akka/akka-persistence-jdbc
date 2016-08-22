@@ -18,7 +18,7 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.6.5"
+version := "2.6.6"
 
 resolvers += Resolver.typesafeRepo("releases")
 
@@ -34,13 +34,13 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
     "com.typesafe.akka" %% "akka-persistence-query-experimental" % akkaVersion,
-    "com.github.dnvriend" %% "akka-persistence-query-writer" % "0.0.1",
+    "com.github.dnvriend" %% "akka-persistence-query-writer" % "0.0.2",
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.slick" %% "slick" % slickVersion,
     "com.typesafe.slick" %% "slick-extensions" % "3.1.0",
     "com.typesafe.slick" %% "slick-hikaricp" % slickVersion exclude("com.zaxxer", "HikariCP-java6"),
     "com.zaxxer" % "HikariCP" % hikariCPVersion,
-    "com.github.dnvriend" %% "akka-stream-extensions" % "0.0.1" % Test,
+    "com.github.dnvriend" %% "akka-stream-extensions" % "0.0.2" % Test,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion % Test,
     "ch.qos.logback" % "logback-classic" % "1.1.7" % Test,
     "com.typesafe.akka" %% "akka-persistence-tck" % akkaVersion % Test,
@@ -95,9 +95,4 @@ headers := Map(
   "conf" -> Apache2_0("2016", "Dennis Vriend", "#")
 )
 
-// build info configuration //
-buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, buildInfoBuildNumber)
-
-buildInfoPackage := "akka.persistence.jdbc"
-
-enablePlugins(AutomateHeaderPlugin, BuildInfoPlugin)
+enablePlugins(AutomateHeaderPlugin)

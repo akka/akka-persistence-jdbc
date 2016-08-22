@@ -6,9 +6,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/a5d8576c2a56479ab1c40d87c78bba58)](https://www.codacy.com/app/dnvriend/akka-persistence-jdbc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dnvriend/akka-persistence-jdbc&amp;utm_campaign=Badge_Grade)
 [![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
 
-Akka-persistence-jdbc writes journal and snapshot entries entries to a configured JDBC store. It implements the full
-akka-persistence-query API and is therefor very useful for implementing DDD-style application models using
-Akka and Scala for creating reactive applications.
+Akka-persistence-jdbc writes journal and snapshot entries entries to a configured JDBC store. It implements the full akka-persistence-query API and is therefor very useful for implementing DDD-style application models using Akka and Scala for creating reactive applications.
 
 ## Installation
 Add the following to your `build.sbt`:
@@ -20,7 +18,7 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-rel
 // akka-persistence-jdbc is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.5"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.6"
 ```
 
 ## Contribution policy
@@ -32,8 +30,7 @@ Contributions via GitHub pull requests are gladly accepted from their original a
 This code is open source software licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
 
 ## Configuration
-The new plugin relies on Slick to do create the SQL dialect for the database in use, therefor the following must be
-configured in `application.conf`
+The new plugin relies on Slick to do create the SQL dialect for the database in use, therefor the following must be configured in `application.conf`
 
 Configure `akka-persistence`:
 - instruct akka persistence to use the `jdbc-journal` plugin,
@@ -47,8 +44,7 @@ Configure `slick`:
   - `com.typesafe.slick.driver.oracle.OracleDriver$`
 
 ## DataSource lookup by JNDI name
-The plugin uses `slick` as the database access library. Slick [supports jndi][slick-jndi]
-for looking up [DataSource][ds]s. 
+The plugin uses `slick` as the database access library. Slick [supports jndi][slick-jndi] for looking up [DataSource][ds]s.
 
 To enable the JNDI lookup, you must add the following to your `application.conf`:
 
@@ -184,12 +180,9 @@ val willCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.currentE
 ```
 
 ## Tagging events
-To tag events you'll need to create an [Event Adapter][event-adapter] 
-that will wrap the event in a [akka.persistence.journal.Tagged](http://doc.akka.io/api/akka/2.4.1/#akka.persistence.journal.Tagged) 
-class with the given tags. The `Tagged` class will instruct `akka-persistence-jdbc` to tag the event with the given set of tags.
-The persistence plugin will __not__ store the `Tagged` class in the journal. It will strip the `tags` and `payload` from the `Tagged` class,
-and use the class only as an instruction to tag the event with the given tags and store the `payload` in the 
-`message` field of the journal table. 
+To tag events you'll need to create an [Event Adapter][event-adapter] that will wrap the event in a [akka.persistence.journal.Tagged](http://doc.akka.io/api/akka/2.4.1/#akka.persistence.journal.Tagged) class with the given tags. The `Tagged` class will instruct `akka-persistence-jdbc` to tag the event with the given set of tags.
+
+The persistence plugin will __not__ store the `Tagged` class in the journal. It will strip the `tags` and `payload` from the `Tagged` class, and use the class only as an instruction to tag the event with the given tags and store the `payload` in the  `message` field of the journal table.
 
 ```scala
 import akka.persistence.journal.{ Tagged, WriteEventAdapter }
@@ -212,8 +205,7 @@ class TaggingEventAdapter extends WriteEventAdapter {
 }
 ```
 
-The `EventAdapter` must be registered by adding the following to the root of `application.conf` Please see the 
-[demo-akka-persistence-jdbc](https://github.com/dnvriend/demo-akka-persistence-jdbc) project for more information.
+The `EventAdapter` must be registered by adding the following to the root of `application.conf` Please see the  [demo-akka-persistence-jdbc](https://github.com/dnvriend/demo-akka-persistence-jdbc) project for more information.
 
 ```bash
 jdbc-journal {
@@ -228,17 +220,11 @@ jdbc-journal {
 }
 ```
 
-You can retrieve a subset of all events by specifying offset, or use 0L to retrieve all events with a given tag. 
-The offset corresponds to an ordered sequence number for the specific tag. Note that the corresponding offset of each 
-event is provided in the EventEnvelope, which makes it possible to resume the stream at a later point from a given offset.
+You can retrieve a subset of all events by specifying offset, or use 0L to retrieve all events with a given tag. The offset corresponds to an ordered sequence number for the specific tag. Note that the corresponding offset of each  event is provided in the EventEnvelope, which makes it possible to resume the stream at a later point from a given offset.
 
-In addition to the offset the EventEnvelope also provides persistenceId and sequenceNr for each event. The sequenceNr is 
-the sequence number for the persistent actor with the persistenceId that persisted the event. The persistenceId + sequenceNr 
-is an unique identifier for the event.
+In addition to the offset the EventEnvelope also provides persistenceId and sequenceNr for each event. The sequenceNr is  the sequence number for the persistent actor with the persistenceId that persisted the event. The persistenceId + sequenceNr  is an unique identifier for the event.
 
-The returned event stream contains only events that correspond to the given tag, and is ordered by the creation time of the events,
-The same stream elements (in same order) are returned for multiple executions of the same query. Deleted events are not deleted
-from the tagged event stream.
+The returned event stream contains only events that correspond to the given tag, and is ordered by the creation time of the events. The same stream elements (in same order) are returned for multiple executions of the same query. Deleted events are not deleted from the tagged event stream.
 
 ## Custom DAO Implementation
 The plugin supports loading a custom DAO for the journal and snapshot. You should implement a custom Data Access Object (DAO) if you wish to alter the default persistency strategy in
@@ -315,6 +301,9 @@ Is Event Sourcing getting traction? I would say so:
 
 
 ## What's new?
+## 2.6.6 (2016-08-22)
+  - Merged PR #66 [monktastic][monktastic], eventsByPersistenceId should terminate when toSequenceNr is reached, thanks!
+
 ## 2.6.5 (2016-08-20)
   - Akka 2.4.9-RC2 -> 2.4.9
 
@@ -666,6 +655,7 @@ This source code is made available under the [Apache 2.0 License][apache]. The [
 
 Have fun!
 
+[monktastic]: https://github.com/monktastic
 [fcristovao]: https://github.com/fcristovao
 [ellawala]: https://github.com/charithe
 [turner]: https://github.com/wwwiiilll

@@ -6,7 +6,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/a5d8576c2a56479ab1c40d87c78bba58)](https://www.codacy.com/app/dnvriend/akka-persistence-jdbc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dnvriend/akka-persistence-jdbc&amp;utm_campaign=Badge_Grade)
 [![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
 
-Akka-persistence-jdbc writes journal and snapshot entries entries to a configured JDBC store. It implements the full akka-persistence-query API and is therefor very useful for implementing DDD-style application models using Akka and Scala for creating reactive applications.
+Akka-persistence-jdbc writes journal and snapshot entries entries to a configured JDBC store. It implements the full akka-persistence-query API and is therefore very useful for implementing DDD-style application models using Akka and Scala for creating reactive applications.
 
 ## Installation
 Add the following to your `build.sbt`:
@@ -30,7 +30,7 @@ Contributions via GitHub pull requests are gladly accepted from their original a
 This code is open source software licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
 
 ## Configuration
-The new plugin relies on Slick to do create the SQL dialect for the database in use, therefor the following must be configured in `application.conf`
+The new plugin relies on Slick to do create the SQL dialect for the database in use, therefore the following must be configured in `application.conf`
 
 Configure `akka-persistence`:
 - instruct akka persistence to use the `jdbc-journal` plugin,
@@ -56,7 +56,7 @@ jdbc-journal {
   }
 }
 ```
-   
+
 ## Postgres configuration
 Base your akka-persistence-jdbc `application.conf` on [this config file][postgres-application.conf]
 
@@ -87,7 +87,7 @@ The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery`
 ```scala
 import akka.persistence.query.PersistenceQuery
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
- 
+
 val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 ```
 
@@ -125,8 +125,8 @@ val willCompleteTheStream: Source[String, NotUsed] = readJournal.currentPersiste
 
 The returned event stream is unordered and you can expect different order for multiple executions of the query.
 
-When using the `allPersistenceIds` query, the stream is not completed when it reaches the end of the currently used persistenceIds, 
-but it continues to push new persistenceIds when new persistent actors are created. 
+When using the `allPersistenceIds` query, the stream is not completed when it reaches the end of the currently used persistenceIds,
+but it continues to push new persistenceIds when new persistent actors are created.
 
 When using the `currentPersistenceIds` query, the stream is completed when the end of the current list of persistenceIds is reached,
 thus it is not a `live` query.
@@ -134,7 +134,7 @@ thus it is not a `live` query.
 The stream is completed with failure if there is a failure in executing the query in the backend journal.
 
 ## EventsByPersistenceIdQuery and CurrentEventsByPersistenceIdQuery
-`eventsByPersistenceId` and `currentEventsByPersistenceId` is used for retrieving events for 
+`eventsByPersistenceId` and `currentEventsByPersistenceId` is used for retrieving events for
 a specific PersistentActor identified by persistenceId.
 
 ```scala
@@ -160,7 +160,7 @@ The returned event stream is ordered by sequence number, i.e. the same order as 
 The stream is completed with failure if there is a failure in executing the query in the backend journal.
 
 ## EventsByTag and CurrentEventsByTag
-`eventsByTag` and `currentEventsByTag` are used for retrieving events that were marked with a given 
+`eventsByTag` and `currentEventsByTag` are used for retrieving events that were marked with a given
 `tag`, e.g. all domain events of an Aggregate Root type.
 
 ```scala
@@ -228,7 +228,7 @@ The returned event stream contains only events that correspond to the given tag,
 
 ## Custom DAO Implementation
 The plugin supports loading a custom DAO for the journal and snapshot. You should implement a custom Data Access Object (DAO) if you wish to alter the default persistency strategy in
-any way, but wish to reuse all the logic that the plugin already has in place, eg. the Akka Persistence Query API. For example, the default persistency strategy that the plugin 
+any way, but wish to reuse all the logic that the plugin already has in place, eg. the Akka Persistence Query API. For example, the default persistency strategy that the plugin
 supports serializes journal and snapshot messages using a serializer of your choice and stores them as byte arrays in the database.
 
 By means of configuration in `application.conf` a DAO can be configured, below the default DAOs are shown:
@@ -247,17 +247,17 @@ jdbc-read-journal {
 }
 ```
 
-Storing messages as byte arrays in blobs is not the only way to store information in a database. For example, you could store messages with full type information as a normal database rows, each event type having its own table. 
+Storing messages as byte arrays in blobs is not the only way to store information in a database. For example, you could store messages with full type information as a normal database rows, each event type having its own table.
 For example, implementing a Journal Log table that stores all persistenceId, sequenceNumber and event type discriminator field, and storing the event data in another table with full typing
 
-You only have to implement two interfaces `akka.persistence.jdbc.dao.JournalDao` and/or `akka.persistence.jdbc.dao.SnapshotDao`. As these APIs are only now exposed for public use, the interfaces may change when the API needs to 
+You only have to implement two interfaces `akka.persistence.jdbc.dao.JournalDao` and/or `akka.persistence.jdbc.dao.SnapshotDao`. As these APIs are only now exposed for public use, the interfaces may change when the API needs to
 change for whatever reason.
 
 For example, take a look at the following two custom DAOs:
- 
+
 ```scala
 class MyCustomJournalDao(db: Database, val profile: JdbcProfile, journalConfig: JournalConfig, serialization: Serialization)(implicit ec: ExecutionContext, mat: Materializer) extends JournalDao {
-    // snip 
+    // snip
 }
 
 class MyCustomSnapshotDao(db: JdbcBackend#Database, val profile: JdbcProfile, snapshotConfig: SnapshotConfig, serialization: Serialization)(implicit ec: ExecutionContext, val mat: Materializer) extends SnapshotDao {
@@ -265,14 +265,14 @@ class MyCustomSnapshotDao(db: JdbcBackend#Database, val profile: JdbcProfile, sn
 }
 ```
 
-As you can see, the custom DAOs get a _Slick database_, a _Slick profile_, the journal or snapshot _configuration_, an _akka.serialization.Serialization_, an _ExecutionContext_ and _Materializer_ injected after constructed. 
+As you can see, the custom DAOs get a _Slick database_, a _Slick profile_, the journal or snapshot _configuration_, an _akka.serialization.Serialization_, an _ExecutionContext_ and _Materializer_ injected after constructed.
 You should register the Fully Qualified Class Name in `application.conf` so that the custom DAOs will be used.
 
 For more information please review the two default implementations `akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao` and `akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao` or the demo custom DAO example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc) site.
 
 ## Explicitly shutting down the database connections
 The plugin automatically shuts down the HikariCP connection pool only when the ActorSystem is explicitly terminated.
-It is advisable to register a shutdown hook to be run when the VM exits that terminates the ActorSystem: 
+It is advisable to register a shutdown hook to be run when the VM exits that terminates the ActorSystem:
 
 ```scala
 sys.addShutdownHook(system.terminate())
@@ -328,7 +328,7 @@ Is Event Sourcing getting traction? I would say so:
     more events belonging to an actor, that will handle the business rules eventually. Using actors or a shard region for that matter, just gives to much
     actor life cycle overhead ie. too many calls to the data store. The `akka.persistence.query.scaladsl.EventWriter` interface is non-official and puts all
     responsibility of ensuring the integrity of the journal on you. This means when some strange things are happening caused by wrong loading of the data,
-    and therefor breaking the integrity and ruleset of akka-persistence, all the responsibility on fixing it is on you, and not on the Akka team.
+    and therefore breaking the integrity and ruleset of akka-persistence, all the responsibility on fixing it is on you, and not on the Akka team.
 
 - 2.6.0 (2016-07-17)
   - Removed the `deleted_to` and `created` columns of the `journal` table to become compatible with
@@ -360,10 +360,10 @@ Is Event Sourcing getting traction? I would say so:
     2. The DAOs constructor has changed from (db: Database, profile: JdbcProfile, cfg: JournalConfig) to (db: Database, profile: JdbcProfile, cfg: JournalConfig, serialization: Serialization), so it gets the akka.serialization.Serialization injected.
   - Removed the `jdbc-journal.serialization`, `jdbc-snapshot-store.serialization` and `jdbc-read-journal.serialization` setting as the DAOs have to implement their own serialization strategy.
   - The following interfaces `akka.persistence.jdbc.dao.JournalDao`, `akka.persistence.jdbc.dao.ReadJournalDao` and `akka.persistence.jdbc.dao.SnapshotDao` have been changed as the DAOs have to implement their own strategy, they'll have to work with `AtomicWrite`, `PersistentRepr` and `Any` as types.   
-  
+
 - 2.3.3 (2016-06-13)
   - Fix for the async query `eventsByTag` that failed when using an Oracle database.
-  
+
 - 2.3.2 (2016-06-12)
   - This release has a configuration how the the slick database driver gets resolved. The following driver names must be used:
     - `slick.driver.PostgresDriver$`
@@ -372,12 +372,12 @@ Is Event Sourcing getting traction? I would say so:
   - The journal, snapshot and readjournal plugins now all use defaults as stated in the reference.conf, it is not necessary to define properties when using a plugin-id that has not been defined in reference.conf          
 
 - 2.3.1 (2016-06-10)
-  - Async queries should take a max number of elements from the result set according to the 
+  - Async queries should take a max number of elements from the result set according to the
   `jdbc-read-journal.max-buffer-size` configuration. This should result in better memory usage and better IO performance.
-  
+
 - 2.3.0 (2016-06-10)
   - This is a feature, configuration and (maybe) API breaking release when you rely on the DAO's, my apologies.
-  - Killed some [feature-creep], this will result in a better design of the plugin. 
+  - Killed some [feature-creep], this will result in a better design of the plugin.
     - Removed support for the Varchar (base64/text based serialization),
     - Removed support for the in-memory storage, please use the [akka.persistence-inmemory][inmemory] plugin,
     - Removed the queries `eventsByPersistenceIdAndTag` and `currentEventsByPersistenceIdAndTag` as they are not supported by Akka natively and can be configured by filtering the event stream.
@@ -387,23 +387,23 @@ Is Event Sourcing getting traction? I would say so:
 - 2.2.25 (2016-06-08)
   - Merged PR #54 [Charith Ellawala][ellawala] Honour the schemaName setting for the snapshot table, thanks!
   - Compiling for Java 8 as Akka 2.4.x dropped support for Java 6 and 7 and only works on Java 8 and above  
-  
+
 - 2.2.24 (2016-06-05)
   - Akka 2.4.6 -> 2.4.7
 
 - 2.2.23 (2016-05-25)
   - Akka 2.4.5 -> 2.4.6
-  
+
 - 2.2.22 (2016-05-18)
   - Merged PR #52 [Gopal Shah][shah] for issue [#44 - Unable to differentiate between persistence failures and serialization issues](https://github.com/dnvriend/akka-persistence-jdbc/issues/51), thanks!
   - Akka 2.4.4 -> 2.4.5
 
 - 2.2.21 (2016-04-30)
-  - Disabled the default dependency on HikariCP-Java6 v2.3.7, 
+  - Disabled the default dependency on HikariCP-Java6 v2.3.7,
   - Added dependency on HikariCP v2.4.6 for better performance and bug fixes
 
 - 2.2.20 (2016-04-29)
-  - Merged PR #50 [Andrey Kouznetsov][kouznetsov] for issue [#44 - Leaking connections](https://github.com/dnvriend/akka-persistence-jdbc/issues/44), thanks! 
+  - Merged PR #50 [Andrey Kouznetsov][kouznetsov] for issue [#44 - Leaking connections](https://github.com/dnvriend/akka-persistence-jdbc/issues/44), thanks!
 
 - 2.2.19 (2016-04-26)
   - Merged PR #46 [Andrey Kouznetsov][kouznetsov] Significant performance boost by using compiled queries, thanks!
@@ -422,20 +422,20 @@ Is Event Sourcing getting traction? I would say so:
 
 - 2.2.15 (2016-03-18)
   - Merged PR #37 [William Turner][turner] Make offset sequential on eventsByTag queries, thanks!
-  
+
 - 2.2.14 (2016-03-17)
   - Determine events where appropriate by using an offset using the query api was not tested and thus the implementation was incorrect. This has been corrected and the documentation altered where appropriate.
 
 - 2.2.13 (2016-03-17)
   - Release to enable Bintray to sync with JCenter, so no big changes here  
-  
+
 - 2.2.12 (2016-03-17)
   - Added the appropriate Maven POM resources to be publishing to Bintray's JCenter
   - Refactored the akka-persistence-query interfaces, integrated it back again in one jar, for jcenter deployment simplicity
 
 - 2.2.11 (2016-03-09)
   - Journal and SnapshotDAO implementation are configurable, when you need to implement your own persistency strategy,
-  - Enable/Disable Serialization, the default journal and snapshot DAO rely on serialization, only disable when you known what you are doing, 
+  - Enable/Disable Serialization, the default journal and snapshot DAO rely on serialization, only disable when you known what you are doing,
   - Scala 2.11.7 -> 2.11.8
 
 - 2.2.10 (2016-03-04)
@@ -459,9 +459,9 @@ Is Event Sourcing getting traction? I would say so:
 - 2.2.4 (2016-02-08)
   - Compatibility with Akka 2.4.2-RC2
   - Refactored the akka-persistence-query extension interfaces to its own jar: `"com.github.dnvriend" %% "akka-persistence-jdbc-query" % "1.0.0"`
-  
+
 - 2.2.3 (2016-01-29)
-  - Refactored the akka-persistence-query package structure. It wasn't optimized for use with javadsl. Now the name of the ReadJournal is `JdbcReadJournal` for both Java and Scala, only the package name has been changed to reflect which language it is for. 
+  - Refactored the akka-persistence-query package structure. It wasn't optimized for use with javadsl. Now the name of the ReadJournal is `JdbcReadJournal` for both Java and Scala, only the package name has been changed to reflect which language it is for.
   - __Scala:__ akka.persistence.jdbc.query.journal.`scaladsl`.JdbcReadJournal
   - __Java:__ akka.persistence.jdbc.query.journal.`javadsl`.JdbcReadJournal
 
@@ -480,9 +480,9 @@ Is Event Sourcing getting traction? I would say so:
 - 2.2.1 (2016-01-24)
   - Support for the `eventsByTag` live query
   - Tags are now separated by a character, and not by a tagPrefix
-  - Please note the configuration change. 
+  - Please note the configuration change.
 
-- 2.1.0 (2016-01-24) 
+- 2.1.0 (2016-01-24)
  - Support for the `currentEventsByTag` query, the tagged events will be sorted by event sequence number.
  - Table column names are configurable.
  - Schema change for the journal table, added two columns, `tags` and `created`, please update your schema.
@@ -492,10 +492,10 @@ Is Event Sourcing getting traction? I would say so:
  - Uses HikariCP as the connection pool,
  - Table names and schema names are configurable,
  - Akka Stream 2.0.1 -> 2.0.1
- - Tested with Oracle XE 
+ - Tested with Oracle XE
 
 - 2.0.3 (2016-01-18)
- - Optimization for the `eventsByPersistenceId` and `allPersistenceIds` queries. 
+ - Optimization for the `eventsByPersistenceId` and `allPersistenceIds` queries.
 
 - 2.0.2 (2016-01-17)
  - Support for the `eventsByPersistenceId` live query
@@ -508,36 +508,36 @@ Is Event Sourcing getting traction? I would say so:
 
 - 1.2.2 (2015-10-14) - Akka v2.4.x
  - Merged PR #28 [Andrey Kouznetsov][kouznetsov] Removing Unused ExecutionContext, thanks!
- 
-- 1.2.1 (2015-10-12) 
- - Merged PR #27 [Andrey Kouznetsov][kouznetsov] don't fail on asyncWrite with empty messages, thanks! 
+
+- 1.2.1 (2015-10-12)
+ - Merged PR #27 [Andrey Kouznetsov][kouznetsov] don't fail on asyncWrite with empty messages, thanks!
 
 - 1.2.0 (2015-10-02)
  - Compatibility with Akka 2.4.0
  - Akka 2.4.0-RC3 -> 2.4.0
  - scalikejdbc 2.2.7 -> 2.2.8
  - No obvious optimalizations are applied, and no schema refactorings are needed (for now)
- - Fully backwards compatible with akka-persistence-jdbc v1.1.8's schema and configuration 
+ - Fully backwards compatible with akka-persistence-jdbc v1.1.8's schema and configuration
 
-- 1.2.0-RC3 (2015-09-17) 
+- 1.2.0-RC3 (2015-09-17)
  - Compatibility with Akka 2.4.0-RC3
  - No obvious optimalizations are applied, and no schema refactorings are needed (for now)
  - Please note; schema, serialization (strategy) and code refactoring will be iteratively applied on newer release of the 2.4.0-xx branch, but for each step, a migration guide and SQL scripts will be made available.
  - Use the following library dependency: "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.0-RC3"
- - Fully backwards compatible with akka-persistence-jdbc v1.1.8's schema and configuration 
+ - Fully backwards compatible with akka-persistence-jdbc v1.1.8's schema and configuration
 
-- 1.2.0-RC2 (2015-09-07) 
+- 1.2.0-RC2 (2015-09-07)
  - Compatibility with Akka 2.4.0-RC2
  - No obvious optimalizations are applied, and no schema refactorings are needed (for now)
  - Please note; schema, serialization (strategy) and code refactoring will be iteratively applied on newer release of the 2.4.0-xx branch, but for each step, a migration guide and SQL scripts will be made available.
  - Use the following library dependency: "com.github.dnvriend" %% "akka-persistence-jdbc" % "1.2.0-RC2"
- - Fully backwards compatible with akka-persistence-jdbc v1.1.8's schema and configuration 
+ - Fully backwards compatible with akka-persistence-jdbc v1.1.8's schema and configuration
 
 - 1.1.9 (2015-10-12) - Akka v2.3.x
  - scala 2.10.5 -> 2.10.6
  - akka 2.3.13 -> 2.3.14
  - scalikejdbc 2.2.7 -> 2.2.8
- 
+
 - 1.1.8 (2015-09-04)
  - Compatibility with Akka 2.3.13
  - Akka 2.3.12 -> 2.3.13
@@ -597,7 +597,7 @@ Is Event Sourcing getting traction? I would say so:
 - 1.0.7 (2014-09-16)
   - Merged [mwkohout][mwkohout] fix using Oracle's MERGE on issue #3, thanks!
 
-- 1.0.6 
+- 1.0.6
   - Fixed - Issue3: Handling save attempts with duplicate snapshot ids and persistence ids
   - Fixed - Issue5: Connection pool is being redefined when using journal and snapshot store
 
@@ -605,7 +605,7 @@ Is Event Sourcing getting traction? I would say so:
   - Akka 2.3.5 -> 2.3.6
   - ScalikeJDBC 2.1.0 -> 2.1.1
 
-- 1.0.4 
+- 1.0.4
   - Added schema name configuration for the journal and snapshot
   - Added table name configuration for the journal and snapshot
   - ScalikeJDBC 2.0.5 -> 2.1.0
@@ -614,7 +614,7 @@ Is Event Sourcing getting traction? I would say so:
 - 1.0.3 (2014-07-23)
   - IBM Informix 12.10 supported
 
-- 1.0.2 
+- 1.0.2
   - Oracle XE 11g supported
 
 - 1.0.1
@@ -625,7 +625,7 @@ Is Event Sourcing getting traction? I would say so:
   - Release to Maven Central
 
 - 0.0.6
- - Tested against MySQL/5.6.19 MySQL Community Server (GPL) 
+ - Tested against MySQL/5.6.19 MySQL Community Server (GPL)
  - Tested against H2/1.4.179
 
 - 0.0.5
@@ -636,11 +636,11 @@ Is Event Sourcing getting traction? I would say so:
 
 - 0.0.3 (2014-07-01)
  - Using [Martin Krasser's][krasser] [akka-persistence-testkit][ap-testkit]
-  to test the akka-persistence-jdbc plugin. 
+  to test the akka-persistence-jdbc plugin.
  - Update to Akka 2.3.4
 
 - 0.0.2 (2014-06-30)
- - Using [ScalikeJDBC][scalikejdbc] as the JDBC access library instead of my home-brew one. 
+ - Using [ScalikeJDBC][scalikejdbc] as the JDBC access library instead of my home-brew one.
 
 - 0.0.1 (2014-05-23)
  - Initial commit
@@ -663,7 +663,7 @@ Have fun!
 [boldyrev]: https://github.com/bpg
 [roman]: https://github.com/romusz
 [vila]: https://github.com/miguel-vila
-[mwkohout]: https://github.com/mwkohout 
+[mwkohout]: https://github.com/mwkohout
 [krasser]: https://github.com/krasserm
 [shah]: https://github.com/gopalsaob
 [rockjam]: https://github.com/rockjam

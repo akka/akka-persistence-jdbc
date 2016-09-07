@@ -36,8 +36,8 @@ abstract class TestSpec(override val config: Config) extends SimpleSpec with Mat
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   val log: LoggingAdapter = Logging(system, this.getClass)
-  implicit val pc: PatienceConfig = PatienceConfig(timeout = 5.minutes)
-  implicit val timeout = Timeout(5.minutes)
+  implicit val pc: PatienceConfig = PatienceConfig(timeout = 40.minutes)
+  implicit val timeout = Timeout(40.minutes)
   val serialization = SerializationExtension(system)
 
   val cfg = system.settings.config.getConfig("jdbc-journal")

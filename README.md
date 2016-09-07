@@ -15,6 +15,11 @@ Add the following to your `build.sbt`:
 libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.6"
 ```
 
+Please note [PR #75 - Removed binary dependency on slick-extensions](https://github.com/dnvriend/akka-persistence-jdbc/pull/75),
+if you are using the Oracle driver, you must have a [Lightbend subscription](https://www.lightbend.com/platform/subscription).
+I have misinterpreted Lightbend open sourcing slick-extensions 3.1.0 as a change to the license, it didn't so you __cannot__ use it
+for free.
+
 If using Oracle, you'll also need the Slick Oracle driver:
 
 ```scala
@@ -304,6 +309,11 @@ Is Event Sourcing getting traction? I would say so:
 
 
 ## What's new?
+## 2.6.6 (2016-08-22)
+  - Merged PR #75 [jroper][jroper] - Removed binary dependency on slick-extensions, thanks!
+  - Please note, slick-extensions 3.1.0 are open source, but the license didn't change, so you cannot use it for free, you still need a [Lightbend Subscription](https://www.lightbend.com/platform/subscription).
+  - Akka 2.4.9 -> 2.4.10
+
 ## 2.6.6 (2016-08-22)
   - Merged PR #66 [monktastic][monktastic], eventsByPersistenceId should terminate when toSequenceNr is reached, thanks!
 
@@ -671,6 +681,7 @@ Have fun!
 [shah]: https://github.com/gopalsaob
 [rockjam]: https://github.com/rockjam
 [jtysper]: https://github.com/jtysper
+[jroper]: https://github.com/jroper
 
 [scalikejdbc]: http://scalikejdbc.org/
 [slick]: http://slick.typesafe.com/

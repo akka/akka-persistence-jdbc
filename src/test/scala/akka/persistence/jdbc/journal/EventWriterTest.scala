@@ -40,7 +40,7 @@ abstract class EventWriterTest(config: Config, schemaType: SchemaType) extends T
 
   lazy val chars = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
 
-  final val Cycles = 100
+  final val Cycles = 1
 
   def result(pid: String, offset: Int = 0): Seq[EventEnvelope] =
     Source.cycle(() => chars.iterator).take(chars.size * Cycles).zipWithIndex.map {

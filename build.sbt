@@ -37,7 +37,7 @@ libraryDependencies ++= {
     "com.github.dnvriend" %% "akka-persistence-query-writer" % "0.0.2",
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.slick" %% "slick" % slickVersion,
-    "com.typesafe.slick" %% "slick-extensions" % "3.1.0",
+    "com.typesafe.slick" %% "slick-extensions" % "3.1.0" % Test,
     "com.typesafe.slick" %% "slick-hikaricp" % slickVersion exclude("com.zaxxer", "HikariCP-java6"),
     "com.zaxxer" % "HikariCP" % hikariCPVersion,
     "com.github.dnvriend" %% "akka-stream-extensions" % "0.0.2" % Test,

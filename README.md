@@ -12,13 +12,16 @@ Akka-persistence-jdbc writes journal and snapshot entries entries to a configure
 Add the following to your `build.sbt`:
 
 ```scala
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.6"
+```
+
+If using Oracle, you'll also need the Slick Oracle driver:
+
+```scala
 // to resolve the slick-extensions you need the following repo
 resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-releases/"
 
-// akka-persistence-jdbc is available in Bintray's JCenter
-resolvers += Resolver.jcenterRepo
-
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.6"
+libraryDependencies += "com.typesafe.slick" %% "slick-extensions" % "3.1.0"
 ```
 
 ## Contribution policy

@@ -12,7 +12,7 @@ Akka-persistence-jdbc writes journal and snapshot entries entries to a configure
 Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.6"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.7"
 ```
 
 Please note [PR #75 - Removed binary dependency on slick-extensions](https://github.com/dnvriend/akka-persistence-jdbc/pull/75),
@@ -309,7 +309,7 @@ Is Event Sourcing getting traction? I would say so:
 
 
 ## What's new?
-## 2.6.6 (2016-08-22)
+## 2.6.7 (2016-08-22)
   - Merged PR #75 [jroper][jroper] - Removed binary dependency on slick-extensions, thanks!
   - Please note, slick-extensions 3.1.0 are open source, but the license didn't change, so you cannot use it for free, you still need a [Lightbend Subscription](https://www.lightbend.com/platform/subscription).
   - Akka 2.4.9 -> 2.4.10

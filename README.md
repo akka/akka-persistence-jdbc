@@ -310,7 +310,6 @@ Is Event Sourcing getting traction? I would say so:
 
 ## What's new?
 ## 2.6.8-SNAPSHOT (NOT-YET-RELEASED)
-  - Merged PR # 72 [jroper][jroper] - Snapshot table should only define one primary key, thanks!
   - Merged PR # 74 [jroper][jroper] - Ensure Journal tags DDL is nullable, thanks!
 
 ## 2.6.7 (2016-09-07)

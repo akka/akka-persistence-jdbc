@@ -309,6 +309,10 @@ Is Event Sourcing getting traction? I would say so:
 
 
 ## What's new?
+## 2.6.8-SNAPSHOT (NOT-YET-RELEASED)
+  - Merged PR # 72 [jroper][jroper] - Snapshot table should only define one primary key, thanks!
+  - Merged PR # 74 [jroper][jroper] - Ensure Journal tags DDL is nullable, thanks!
+
 ## 2.6.7 (2016-09-07)
   - Merged PR #75 [jroper][jroper] - Removed binary dependency on slick-extensions, thanks!
   - Please note, slick-extensions 3.1.0 are open source, but the license didn't change, so you cannot use it for free, you still need a [Lightbend Subscription](https://www.lightbend.com/platform/subscription).

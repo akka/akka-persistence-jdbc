@@ -18,6 +18,7 @@ package akka.persistence.jdbc.dao.bytea.snapshot
 
 import akka.persistence.jdbc.config.SnapshotTableConfiguration
 import akka.persistence.jdbc.dao.bytea.snapshot.SnapshotTables._
+import org.apache.commons.io.IOUtils
 
 object SnapshotTables {
   case class SnapshotRow(persistenceId: String, sequenceNumber: Long, created: Long, snapshot: Array[Byte])
@@ -25,6 +26,8 @@ object SnapshotTables {
 
 trait SnapshotTables {
   val profile: slick.driver.JdbcProfile
+
+  private lazy val isOracleDriver = profile.getClass.getName.contains("OracleDriver")
 
   import profile.api._
 
@@ -40,5 +43,17 @@ trait SnapshotTables {
     val pk = primaryKey("snapshot_pk", (persistenceId, sequenceNumber))
   }
 
-  lazy val SnapshotTable = new TableQuery(tag => new Snapshot(tag))
+  case class OracleSnapshot(_tableTag: Tag) extends Snapshot(_tableTag) {
+    import java.sql.Blob
+    import javax.sql.rowset.serial.SerialBlob
+
+    private def toBlob(bytes: Array[Byte]) = new SerialBlob(bytes)
+    private val columnType = MappedColumnType.base[Array[Byte], Blob](
+      bytes => new SerialBlob(bytes),
+      blob => IOUtils.toByteArray(blob.getBinaryStream)
+    )
+    override val snapshot: Rep[Array[Byte]] = column[Array[Byte]](snapshotTableCfg.columnNames.snapshot)(columnType)
+  }
+
+  lazy val SnapshotTable = new TableQuery(tag => if (isOracleDriver) new OracleSnapshot(tag) else new Snapshot(tag))
 }

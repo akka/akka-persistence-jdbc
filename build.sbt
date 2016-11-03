@@ -18,7 +18,7 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.6.8-SNAPSHOT"
+version := "2.6.8"
 
 resolvers += Resolver.typesafeRepo("releases")
 

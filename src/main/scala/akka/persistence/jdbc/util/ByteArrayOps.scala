@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.generator
+package akka.persistence.jdbc.util
 
-import org.scalacheck.Gen
+import java.io.{ ByteArrayInputStream, InputStream }
+import java.util.Base64
 
-import scala.collection.AbstractIterator
-
-object GeneratorHelper {
-  implicit class IteratorGen[T](gen: Gen[T]) extends AbstractIterator[T] {
-    override def hasNext: Boolean = true
-
-    def get(e: Option[T]): T = if (e.isDefined) e.get else get(gen.sample)
-
-    override def next(): T = get(gen.sample)
+object ByteArrayOps {
+  implicit class ByteArrayImplicits(val that: Array[Byte]) extends AnyVal {
+    def encodeBase64: String = Base64.getEncoder.encodeToString(that)
+    def toInputStream: InputStream = new ByteArrayInputStream(that)
   }
 }

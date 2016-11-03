@@ -31,7 +31,10 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
     JournalTable.filter(_.persistenceId === persistenceId).sortBy(_.sequenceNumber.desc)
 
   def markJournalMessagesAsDeleted(persistenceId: String, maxSequenceNr: Long) =
-    JournalTable.filter(_.persistenceId === persistenceId).filter(_.sequenceNumber <= maxSequenceNr)
+    JournalTable
+      .filter(_.persistenceId === persistenceId)
+      .filter(_.sequenceNumber <= maxSequenceNr)
+      .filter(_.deleted === false)
       .map(_.deleted).update(true)
 
   private def _highestSequenceNrForPersistenceId(persistenceId: Rep[String]): Query[Rep[Long], Long, Seq] =

@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.query.scaladsl
+package akka.persistence.jdbc.query
+package scaladsl
 
 import akka.NotUsed
 import akka.actor.ExtendedActorSystem
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.dao.ReadJournalDao
 import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
-import akka.persistence.query.EventEnvelope
-import akka.persistence.query.scaladsl.EventWriter.WriteEvent
+import akka.persistence.query.{ EventEnvelope, EventEnvelope2, Offset, Sequence }
 import akka.persistence.query.scaladsl._
 import akka.serialization.{ Serialization, SerializationExtension }
-import akka.stream.scaladsl.{ Flow, Sink, Source }
+import akka.stream.scaladsl.{ Sink, Source }
 import akka.stream.{ ActorMaterializer, Materializer }
 import com.typesafe.config.Config
 import slick.driver.JdbcProfile
@@ -46,8 +46,9 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     with CurrentEventsByPersistenceIdQuery
     with EventsByPersistenceIdQuery
     with CurrentEventsByTagQuery
-    with EventWriter
-    with EventsByTagQuery {
+    with CurrentEventsByTagQuery2
+    with EventsByTagQuery
+    with EventsByTagQuery2 {
 
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val mat: Materializer = ActorMaterializer()
@@ -112,12 +113,18 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
       }
     }.mapConcat(identity)
 
+  override def currentEventsByTag(tag: String, offset: Offset): Source[EventEnvelope2, NotUsed] =
+    currentEventsByTag(tag, offset.value)
+
   override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     readJournalDao.eventsByTag(tag, offset, Long.MaxValue)
       .mapAsync(1)(Future.fromTry)
       .map {
         case (repr, _, row) => EventEnvelope(row.ordering, repr.persistenceId, repr.sequenceNr, repr.payload)
       }
+
+  override def eventsByTag(tag: String, offset: Offset): Source[EventEnvelope2, NotUsed] =
+    eventsByTag(tag, offset.value)
 
   override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     Source.unfoldAsync[Long, Seq[EventEnvelope]](offset) { (from: Long) =>
@@ -126,11 +133,8 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
       }
       delaySource.flatMapConcat(_ => currentEventsByTag(tag, from)
         .take(readJournalConfig.maxBufferSize)).runWith(Sink.seq).map { xs =>
-        val newFromSeqNr = nextFromOffset(xs)
+        val newFromSeqNr: Long = nextFromOffset(xs)
         Some((newFromSeqNr, xs))
       }
     }.mapConcat(identity)
-
-  override def eventWriter: Flow[WriteEvent, WriteEvent, NotUsed] =
-    Flow[WriteEvent].via(readJournalDao.writeEvents)
 }

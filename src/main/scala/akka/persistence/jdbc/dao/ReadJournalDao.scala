@@ -19,8 +19,7 @@ package akka.persistence.jdbc.dao
 import akka.NotUsed
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
-import akka.persistence.query.scaladsl.EventWriter.WriteEvent
-import akka.stream.scaladsl.{ Flow, Source }
+import akka.stream.scaladsl.Source
 
 import scala.collection.immutable._
 import scala.util.Try
@@ -41,9 +40,4 @@ trait ReadJournalDao {
    * Returns a Source of bytes for a certain persistenceId
    */
   def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed]
-
-  /**
-   * Writes a list of events to the store
-   */
-  def writeEvents: Flow[WriteEvent, WriteEvent, NotUsed]
 }

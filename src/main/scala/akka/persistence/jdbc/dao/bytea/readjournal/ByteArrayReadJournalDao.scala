@@ -23,16 +23,15 @@ import akka.persistence.jdbc.dao.ReadJournalDao
 import akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalSerializer
 import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
-import akka.persistence.query.scaladsl.EventWriter.WriteEvent
 import akka.serialization.Serialization
 import akka.stream.Materializer
-import akka.stream.scaladsl.{ Flow, Source }
+import akka.stream.scaladsl.Source
 import slick.driver.JdbcProfile
 import slick.jdbc.GetResult
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable._
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 trait BaseByteArrayReadJournalDao extends ReadJournalDao {
@@ -54,18 +53,6 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao {
   override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
     Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
       .via(serializer.deserializeFlowWithoutTags)
-
-  override def writeEvents: Flow[WriteEvent, WriteEvent, NotUsed] = {
-    def keepRow(tup: (WriteEvent, JournalRow)) = tup._2
-    def keepEvent(tup: (WriteEvent, JournalRow)) = tup._1
-    Flow[WriteEvent].flatMapConcat {
-      case event @ WriteEvent(repr, tags) =>
-        Source.fromFuture(Future.fromTry(serializer.serialize(repr, tags))).map((event, _))
-    }.grouped(readJournalConfig.batchSize).flatMapConcat { xs =>
-      Source.fromFuture(db.run(queries.writeJournalRows(xs.map(keepRow)))).map(_ => xs)
-    }.mapConcat(identity)
-      .map(keepEvent)
-  }
 }
 
 trait OracleReadJournalDao extends ReadJournalDao {

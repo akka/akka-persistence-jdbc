@@ -14,29 +14,12 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.generator
+package akka.persistence.jdbc.util
 
-import akka.persistence.{ AtomicWrite, PersistentRepr }
-import org.scalacheck.Gen
+import java.util.Base64
 
-object AkkaPersistenceGen {
-  val genPersistentRepr = for {
-    payload <- Gen.alphaStr
-  } yield PersistentRepr(payload)
-
-  val genAtomicWrite = for {
-    repr <- genPersistentRepr
-  } yield AtomicWrite(repr)
-
-  val genBytes = for {
-    str <- Gen.alphaStr
-  } yield str.getBytes
-
-  val genByteBuff = for {
-    bytes <- genBytes
-  } yield bytes
-
-  val genSeqNum = Gen.choose(0, Int.MaxValue)
-
-  val genCreated = Gen.choose(10000, 99999)
+object StringOps {
+  implicit class StringImplicits(val that: String) extends AnyVal {
+    def toByteArray: Array[Byte] = Base64.getDecoder.decode(that)
+  }
 }

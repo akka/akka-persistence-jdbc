@@ -12,7 +12,7 @@ Akka-persistence-jdbc writes journal and snapshot entries entries to a configure
 Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.7"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.8"
 ```
 
 Please note [PR #75 - Removed binary dependency on slick-extensions](https://github.com/dnvriend/akka-persistence-jdbc/pull/75),
@@ -309,8 +309,15 @@ Is Event Sourcing getting traction? I would say so:
 
 
 ## What's new?
-## 2.6.8-SNAPSHOT (NOT-YET-RELEASED)
-  - Merged PR # 74 [jroper][jroper] - Ensure Journal tags DDL is nullable, thanks!
+
+## 2.6.8 (2016-11-03)
+  - Akka 2.4.10 -> 2.4.12
+  - Fixed 'Snapshot storage BLOB handling' by [Sergey Kisel][skisel], thanks!
+  - Filter out events that have already been deleted.
+  - Removed the _non-official_ and __never-to-be-used__ bulk loading interface.
+  - Support for the new queries `CurrentEventsByTagQuery2` and `EventsByTagQuery2`, please read the akka-persistence-query documentation to see what has changed.
+  - The akka-persistence-jdbc plugin only supports the `akka.persistence.query.NoOffset` and the `akka.persistence.query.Sequence` offset types.
+  - There is no support for the `akka.persistence.query.TimeBasedUUID` offset type. When used, akka-persistence-jdbc will throw an IllegalArgumentException if offered to the read-journal.
 
 ## 2.6.7 (2016-09-07)
   - Merged PR #75 [jroper][jroper] - Removed binary dependency on slick-extensions, thanks!
@@ -685,6 +692,7 @@ Have fun!
 [rockjam]: https://github.com/rockjam
 [jtysper]: https://github.com/jtysper
 [jroper]: https://github.com/jroper
+[skisel]: https://github.com/skisel
 
 [scalikejdbc]: http://scalikejdbc.org/
 [slick]: http://slick.typesafe.com/

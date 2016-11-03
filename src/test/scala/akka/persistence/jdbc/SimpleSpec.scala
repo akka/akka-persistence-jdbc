@@ -21,7 +21,6 @@ import akka.persistence.jdbc.util.ClasspathResources
 import akka.testkit.TestProbe
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, ScalaFutures }
-import org.scalatest.prop.PropertyChecks
 
 trait SimpleSpec extends FlatSpec
     with Matchers
@@ -29,7 +28,6 @@ trait SimpleSpec extends FlatSpec
     with TryValues
     with OptionValues
     with Eventually
-    with PropertyChecks
     with ClasspathResources
     with BeforeAndAfterAll
     with BeforeAndAfterEach

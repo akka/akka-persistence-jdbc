@@ -21,20 +21,20 @@ import akka.NotUsed
 import akka.actor.ExtendedActorSystem
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.dao.ReadJournalDao
-import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
-import akka.persistence.query.{ EventEnvelope, EventEnvelope2, Offset, Sequence }
+import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
 import akka.persistence.query.scaladsl._
-import akka.serialization.{ Serialization, SerializationExtension }
-import akka.stream.scaladsl.{ Sink, Source }
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.persistence.query.{EventEnvelope, EventEnvelope2, Offset}
+import akka.serialization.{Serialization, SerializationExtension}
+import akka.stream.scaladsl.{Sink, Source}
+import akka.stream.{ActorMaterializer, Materializer}
 import com.typesafe.config.Config
-import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
+import slick.jdbc.JdbcProfile
 
 import scala.collection.immutable._
 import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 object JdbcReadJournal {
   final val Identifier = "jdbc-read-journal"
@@ -45,9 +45,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     with AllPersistenceIdsQuery
     with CurrentEventsByPersistenceIdQuery
     with EventsByPersistenceIdQuery
-    with CurrentEventsByTagQuery
     with CurrentEventsByTagQuery2
-    with EventsByTagQuery
     with EventsByTagQuery2 {
 
   implicit val ec: ExecutionContext = system.dispatcher
@@ -116,7 +114,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   override def currentEventsByTag(tag: String, offset: Offset): Source[EventEnvelope2, NotUsed] =
     currentEventsByTag(tag, offset.value)
 
-  override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
+  def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     readJournalDao.eventsByTag(tag, offset, Long.MaxValue)
       .mapAsync(1)(Future.fromTry)
       .map {
@@ -126,7 +124,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   override def eventsByTag(tag: String, offset: Offset): Source[EventEnvelope2, NotUsed] =
     eventsByTag(tag, offset.value)
 
-  override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
+  def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     Source.unfoldAsync[Long, Seq[EventEnvelope]](offset) { (from: Long) =>
       def nextFromOffset(xs: Seq[EventEnvelope]): Long = {
         if (xs.isEmpty) from else xs.map(_.offset).max + 1

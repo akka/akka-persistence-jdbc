@@ -17,12 +17,12 @@
 package akka.persistence.jdbc.dao.bytea.snapshot
 
 import akka.persistence.jdbc.dao.TablesTestSpec
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 
 class SnapshotTablesTest extends TablesTestSpec {
   val snapshotTableConfiguration = snapshotConfig.snapshotTableConfiguration
   object TestByteASnapshotTables extends SnapshotTables {
-    override val profile: JdbcProfile = slick.driver.PostgresDriver
+    override val profile: JdbcProfile = slick.jdbc.PostgresProfile
     override val snapshotTableCfg = snapshotTableConfiguration
   }
 

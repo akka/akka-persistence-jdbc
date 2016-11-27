@@ -22,11 +22,10 @@ import akka.persistence.jdbc.dao.SnapshotDao
 import akka.persistence.jdbc.dao.bytea.snapshot.SnapshotTables.SnapshotRow
 import akka.serialization.Serialization
 import akka.stream.Materializer
-import slick.driver.JdbcProfile
-import slick.jdbc.JdbcBackend
+import slick.jdbc.{JdbcBackend, JdbcProfile}
 
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 class ByteArraySnapshotDao(db: JdbcBackend#Database, profile: JdbcProfile, snapshotConfig: SnapshotConfig, serialization: Serialization)(implicit ec: ExecutionContext, val mat: Materializer) extends SnapshotDao {
   import profile.api._

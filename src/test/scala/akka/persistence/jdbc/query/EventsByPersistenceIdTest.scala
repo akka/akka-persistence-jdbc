@@ -17,10 +17,14 @@
 package akka.persistence.jdbc.query
 
 import akka.persistence.query.EventEnvelope
+import org.scalatest.time.{ Millis, Seconds, Span }
 
 import scala.concurrent.duration._
 
 abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(config) {
+
+  implicit override val patienceConfig =
+    PatienceConfig(timeout = scaled(Span(50, Seconds)), interval = scaled(Span(250, Millis)))
 
   it should "not find any events for unknown pid" in {
     withEventsByPersistenceId()("unkown-pid", 0L, Long.MaxValue) { tp =>

@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.query.EventEnvelope
+import akka.persistence.query.{ EventEnvelope, EventEnvelope2, Sequence }
 import akka.pattern.ask
 
 abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config) {
@@ -31,7 +31,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         countJournal.futureValue shouldBe 3
       }
 
-      withCurrentEventsByTag()("unknown", 0) { tp =>
+      withCurrentEventsByTag()("unknown", Sequence(0)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectComplete()
       }
@@ -48,36 +48,36 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         countJournal.futureValue shouldBe 3
       }
 
-      withCurrentEventsByTag()("number", 0) { tp =>
+      withCurrentEventsByTag()("number", Sequence(0)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(1), _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(2), _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(3), _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("number", 1) { tp =>
+      withCurrentEventsByTag()("number", Sequence(1)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(1), _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(2), _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(3), _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("number", 2) { tp =>
+      withCurrentEventsByTag()("number", Sequence(2)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(2), _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(3), _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("number", 3) { tp =>
+      withCurrentEventsByTag()("number", Sequence(3)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(3), _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("number", 4) { tp =>
+      withCurrentEventsByTag()("number", Sequence(4)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectComplete()
       }
@@ -104,52 +104,52 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         }
       }
 
-      withCurrentEventsByTag()("one", 0) { tp =>
+      withCurrentEventsByTag()("one", Sequence(0)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(1), _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("prime", 0) { tp =>
+      withCurrentEventsByTag()("prime", Sequence(0)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(5, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(6, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(7, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(1), _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(2), _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(3), _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(5), _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(6), _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(7), _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("3", 0) { tp =>
+      withCurrentEventsByTag()("3", Sequence(0)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(6, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(7, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(3), _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(6), _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(7), _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("4", 0) { tp =>
+      withCurrentEventsByTag()("4", Sequence(0)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(4, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(4), _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("four", 0) { tp =>
+      withCurrentEventsByTag()("four", Sequence(0)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(4, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(4), _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("5", 0) { tp =>
+      withCurrentEventsByTag()("5", Sequence(0)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(5, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(5), _, _, _) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("five", 0) { tp =>
+      withCurrentEventsByTag()("five", Sequence(0)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(5, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope2(Sequence(5), _, _, _) => }
         tp.expectComplete()
       }
     }

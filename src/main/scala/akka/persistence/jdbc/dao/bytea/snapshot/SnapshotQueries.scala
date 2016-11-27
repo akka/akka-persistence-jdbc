@@ -18,7 +18,7 @@ package akka.persistence.jdbc.dao.bytea.snapshot
 
 import akka.persistence.jdbc.config.SnapshotTableConfiguration
 import akka.persistence.jdbc.dao.bytea.snapshot.SnapshotTables.SnapshotRow
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 
 class SnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: SnapshotTableConfiguration) extends SnapshotTables {
   import profile.api._

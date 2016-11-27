@@ -25,7 +25,7 @@ import akka.persistence.{ SelectedSnapshot, SnapshotMetadata, SnapshotSelectionC
 import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.{ ActorMaterializer, Materializer }
 import com.typesafe.config.Config
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable._

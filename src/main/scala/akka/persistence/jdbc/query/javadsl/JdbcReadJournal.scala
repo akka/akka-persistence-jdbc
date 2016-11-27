@@ -17,9 +17,9 @@
 package akka.persistence.jdbc.query.javadsl
 
 import akka.NotUsed
-import akka.persistence.jdbc.query.scaladsl.{ JdbcReadJournal => ScalaJdbcReadJournal }
-import akka.persistence.query.EventEnvelope
+import akka.persistence.jdbc.query.scaladsl.{JdbcReadJournal => ScalaJdbcReadJournal}
 import akka.persistence.query.javadsl._
+import akka.persistence.query.{EventEnvelope, EventEnvelope2, Offset}
 import akka.stream.javadsl.Source
 
 object JdbcReadJournal {
@@ -31,8 +31,8 @@ class JdbcReadJournal(journal: ScalaJdbcReadJournal) extends ReadJournal
     with AllPersistenceIdsQuery
     with CurrentEventsByPersistenceIdQuery
     with EventsByPersistenceIdQuery
-    with CurrentEventsByTagQuery
-    with EventsByTagQuery {
+    with CurrentEventsByTagQuery2
+    with EventsByTagQuery2 {
 
   override def currentPersistenceIds(): Source[String, NotUsed] =
     journal.currentPersistenceIds().asJava
@@ -46,9 +46,7 @@ class JdbcReadJournal(journal: ScalaJdbcReadJournal) extends ReadJournal
   override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     journal.eventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).asJava
 
-  override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    journal.currentEventsByTag(tag, offset).asJava
+  override def currentEventsByTag(tag: String, offset: Offset): Source[EventEnvelope2, NotUsed] = journal.currentEventsByTag(tag, offset).asJava
 
-  override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    journal.eventsByTag(tag, offset).asJava
+  override def eventsByTag(tag: String, offset: Offset): Source[EventEnvelope2, NotUsed] = journal.eventsByTag(tag, offset).asJava
 }

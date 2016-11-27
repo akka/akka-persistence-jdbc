@@ -18,7 +18,7 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.6.8"
+version := "2.6.9-SNAPSHOT"
 
 resolvers += Resolver.typesafeRepo("releases")
 
@@ -28,7 +28,7 @@ scalaVersion := "2.11.8"
 
 libraryDependencies ++= {
   val akkaVersion = "2.4.12"
-  val slickVersion = "3.1.1"
+  val slickVersion = "3.2.0-M1"
   val hikariCPVersion = "2.5.1"
   Seq(
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
@@ -36,7 +36,6 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-persistence-query-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.slick" %% "slick" % slickVersion,
-    "com.typesafe.slick" %% "slick-extensions" % "3.1.0" % Test,
     "com.typesafe.slick" %% "slick-hikaricp" % slickVersion exclude("com.zaxxer", "HikariCP-java6"),
     "com.zaxxer" % "HikariCP" % hikariCPVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion % Test,

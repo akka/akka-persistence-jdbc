@@ -21,16 +21,16 @@ import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.dao.JournalDao
 import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
-import akka.persistence.{ AtomicWrite, PersistentRepr }
+import akka.persistence.{AtomicWrite, PersistentRepr}
 import akka.serialization.Serialization
 import akka.stream.Materializer
-import akka.stream.scaladsl.{ Flow, Source }
-import slick.driver.JdbcProfile
+import akka.stream.scaladsl.{Flow, Source}
 import slick.jdbc.JdbcBackend._
+import slick.jdbc.JdbcProfile
 
 import scala.collection.immutable._
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success, Try }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 /**
  * The DefaultJournalDao contains all the knowledge to persist and load serialized journal entries
@@ -75,9 +75,9 @@ trait BaseByteArrayJournalDao extends JournalDao {
 trait H2JournalDao extends JournalDao {
   val profile: JdbcProfile
 
-  private lazy val isH2Driver = profile match {
-    case slick.driver.H2Driver => true
-    case _                     => false
+  private lazy val isH2Profile = profile match {
+    case slick.jdbc.H2Profile => true
+    case _                    => false
   }
 
   abstract override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] = {
@@ -85,7 +85,7 @@ trait H2JournalDao extends JournalDao {
   }
 
   private def correctMaxForH2Driver(max: Long): Long = {
-    if (isH2Driver) {
+    if (isH2Profile) {
       Math.min(max, Int.MaxValue) // H2 only accepts a LIMIT clause as an Integer
     } else {
       max

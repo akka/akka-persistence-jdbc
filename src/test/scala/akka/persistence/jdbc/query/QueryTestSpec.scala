@@ -23,13 +23,13 @@ import akka.persistence.jdbc.TestSpec
 import akka.persistence.jdbc.query.javadsl.{ JdbcReadJournal => JavaJdbcReadJournal }
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 import akka.persistence.journal.Tagged
-import akka.persistence.query.{ EventEnvelope, PersistenceQuery }
+import akka.persistence.query.{ Sequence, _ }
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.javadsl.{ TestSink => JavaSink }
 import akka.stream.testkit.scaladsl.TestSink
-import slick.driver.PostgresDriver.api._
+import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.duration.{ FiniteDuration, _ }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -39,8 +39,10 @@ trait ReadJournalOperations {
   def withAllPersistenceIds(within: FiniteDuration = 60.second)(f: TestSubscriber.Probe[String] => Unit): Unit
   def withCurrentEventsByPersistenceId(within: FiniteDuration = 60.second)(persistenceId: String, fromSequenceNr: Long = 0, toSequenceNr: Long = Long.MaxValue)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit
   def withEventsByPersistenceId(within: FiniteDuration = 60.second)(persistenceId: String, fromSequenceNr: Long = 0, toSequenceNr: Long = Long.MaxValue)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit
-  def withCurrentEventsByTag(within: FiniteDuration = 60.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit
-  def withEventsByTag(within: FiniteDuration = 60.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit
+  //  def withCurrentEventsByTag(within: FiniteDuration = 60.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit
+  //  def withEventsByTag(within: FiniteDuration = 60.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit
+  def withCurrentEventsByTag(within: FiniteDuration = 60.second)(tag: String, offset: Offset)(f: TestSubscriber.Probe[EventEnvelope2] => Unit): Unit
+  def withEventsByTag(within: FiniteDuration = 60.second)(tag: String, offset: Offset)(f: TestSubscriber.Probe[EventEnvelope2] => Unit): Unit
   def countJournal: Future[Long]
 }
 
@@ -73,13 +75,13 @@ trait ScalaJdbcReadJournalOperations extends ReadJournalOperations {
     tp.within(within)(f(tp))
   }
 
-  def withCurrentEventsByTag(within: FiniteDuration)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
-    val tp = readJournal.currentEventsByTag(tag, offset).runWith(TestSink.probe[EventEnvelope])
+  def withCurrentEventsByTag(within: FiniteDuration)(tag: String, offset: Offset)(f: TestSubscriber.Probe[EventEnvelope2] => Unit): Unit = {
+    val tp = readJournal.currentEventsByTag(tag, offset).runWith(TestSink.probe[EventEnvelope2])
     tp.within(within)(f(tp))
   }
 
-  def withEventsByTag(within: FiniteDuration)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
-    val tp = readJournal.eventsByTag(tag, offset).runWith(TestSink.probe[EventEnvelope])
+  def withEventsByTag(within: FiniteDuration)(tag: String, offset: Offset)(f: TestSubscriber.Probe[EventEnvelope2] => Unit): Unit = {
+    val tp = readJournal.eventsByTag(tag, offset).runWith(TestSink.probe[EventEnvelope2])
     tp.within(within)(f(tp))
   }
 
@@ -120,12 +122,12 @@ trait JavaDslJdbcReadJournalOperations extends ReadJournalOperations {
     tp.within(within)(f(tp))
   }
 
-  def withCurrentEventsByTag(within: FiniteDuration = 1.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
+  def withCurrentEventsByTag(within: FiniteDuration = 1.second)(tag: String, offset: Offset)(f: TestSubscriber.Probe[EventEnvelope2] => Unit): Unit = {
     val tp = readJournal.currentEventsByTag(tag, offset).runWith(JavaSink.probe(system), mat)
     tp.within(within)(f(tp))
   }
 
-  def withEventsByTag(within: FiniteDuration = 1.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
+  def withEventsByTag(within: FiniteDuration = 1.second)(tag: String, offset: Offset)(f: TestSubscriber.Probe[EventEnvelope2] => Unit): Unit = {
     val tp = readJournal.eventsByTag(tag, offset).runWith(JavaSink.probe(system), mat)
     tp.within(within)(f(tp))
   }
@@ -143,7 +145,7 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJ
 
   case class DeleteCmd(toSequenceNr: Long = Long.MaxValue) extends Serializable
 
-  final val ExpectNextTimeout = 10.second
+  final val ExpectNextTimeout = 20.second
 
   class TestActor(id: Int) extends PersistentActor {
     override val persistenceId: String = "my-" + id

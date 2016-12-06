@@ -26,7 +26,7 @@ import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 import slick.jdbc.GetResult
 import slick.jdbc.JdbcBackend._
 
@@ -110,8 +110,8 @@ trait H2ReadJournalDao extends ReadJournalDao {
   val profile: JdbcProfile
 
   private lazy val isH2Driver = profile match {
-    case slick.driver.H2Driver => true
-    case _                     => false
+    case slick.jdbc.H2Profile => true
+    case _                    => false
   }
 
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =

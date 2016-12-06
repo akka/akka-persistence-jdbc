@@ -6,10 +6,10 @@ The schema is available [here][oracle-schema]
 
 Configure `slick`:
 - The following slick drivers are supported:
-  - `slick.driver.PostgresDriver$`
-  - `slick.driver.MySQLDriver$`
-  - `slick.driver.H2Driver$`
-  - `com.typesafe.slick.driver.oracle.OracleDriver$`
+  - `slick.jdbc.PostgresProfile$`
+  - `slick.jdbc.MySQLProfile$`
+  - `slick.jdbc.H2Profile$`
+  - `slick.jdbc.OracleProfile$`
 
 
 ## Slick Extensions Licensing Changing to Open Source

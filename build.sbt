@@ -18,7 +18,7 @@ name := "akka-persistence-jdbc"
 
 organization := "com.github.dnvriend"
 
-version := "2.6.8"
+version := "2.7.0-M1"
 
 resolvers += Resolver.typesafeRepo("releases")
 
@@ -26,9 +26,11 @@ resolvers += Resolver.jcenterRepo
 
 scalaVersion := "2.11.8"
 
+crossScalaVersions := Seq("2.11.8", "2.12.1")
+
 libraryDependencies ++= {
-  val akkaVersion = "2.4.12"
-  val slickVersion = "3.1.1"
+  val akkaVersion = "2.4.14"
+  val slickVersion = "3.2.0-M2"
   val hikariCPVersion = "2.5.1"
   Seq(
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
@@ -36,7 +38,6 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-persistence-query-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.slick" %% "slick" % slickVersion,
-    "com.typesafe.slick" %% "slick-extensions" % "3.1.0" % Test,
     "com.typesafe.slick" %% "slick-hikaricp" % slickVersion exclude("com.zaxxer", "HikariCP-java6"),
     "com.zaxxer" % "HikariCP" % hikariCPVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion % Test,
@@ -47,7 +48,7 @@ libraryDependencies ++= {
     "mysql" % "mysql-connector-java" % "6.0.5" % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
-    "org.scalatest" %% "scalatest" % "3.0.0" % Test
+    "org.scalatest" %% "scalatest" % "3.0.1" % Test
   )
 }
 
@@ -66,11 +67,10 @@ scalacOptions ++= Seq(
   "-Xlog-reflective-calls",
   "-language:higherKinds",
   "-language:implicitConversions",
-  "-Ybackend:GenBCode",
   "-Ydelambdafy:method",
   "-target:jvm-1.8",
   "-Xexperimental"
-)
+) ++ (if (scalaVersion.value.startsWith("2.11")) Seq("-Ybackend:GenBCode") else Seq.empty)
 
 testOptions in Test += Tests.Argument("-oD")
 

@@ -22,7 +22,7 @@ import akka.persistence.jdbc.dao.SnapshotDao
 import akka.persistence.jdbc.dao.bytea.snapshot.SnapshotTables.SnapshotRow
 import akka.serialization.Serialization
 import akka.stream.Materializer
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 import slick.jdbc.JdbcBackend
 
 import scala.concurrent.{ ExecutionContext, Future }

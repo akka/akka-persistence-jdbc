@@ -20,13 +20,13 @@ import javax.naming.InitialContext
 
 import akka.persistence.jdbc.config.SlickConfiguration
 import com.typesafe.config.Config
-import slick.backend.DatabaseConfig
-import slick.driver.JdbcProfile
+import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcBackend._
+import slick.jdbc.JdbcProfile
 
 object SlickDriver {
   def forDriverName(config: Config): JdbcProfile =
-    DatabaseConfig.forConfig[JdbcProfile]("slick", config).driver
+    DatabaseConfig.forConfig[JdbcProfile]("slick", config).profile
 }
 
 object SlickDatabase {

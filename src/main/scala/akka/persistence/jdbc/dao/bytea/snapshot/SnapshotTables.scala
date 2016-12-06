@@ -18,7 +18,7 @@ package akka.persistence.jdbc.dao.bytea.snapshot
 
 import akka.persistence.jdbc.config.SnapshotTableConfiguration
 import akka.persistence.jdbc.util.InputStreamOps._
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 
 object SnapshotTables {
   case class SnapshotRow(persistenceId: String, sequenceNumber: Long, created: Long, snapshot: Array[Byte])
@@ -29,7 +29,7 @@ object SnapshotTables {
 
 trait SnapshotTables {
   import SnapshotTables._
-  val profile: slick.driver.JdbcProfile
+  val profile: slick.jdbc.JdbcProfile
 
   import profile.api._
 

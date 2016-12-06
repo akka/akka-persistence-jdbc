@@ -18,7 +18,7 @@ package akka.persistence.jdbc.dao.bytea.journal
 
 import akka.persistence.jdbc.config.JournalTableConfiguration
 import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 
 class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration) extends JournalTables {
 

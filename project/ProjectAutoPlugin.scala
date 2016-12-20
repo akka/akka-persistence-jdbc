@@ -8,7 +8,7 @@ import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 
 object ProjectAutoPlugin extends AutoPlugin {
-  val AkkaVersion = "2.4.14"
+  val AkkaVersion = "2.4.16"
   val SlickVersion = "3.1.1"
   val HikariCPVersion = "2.5.1"
   val ScalaTestVersion = "3.0.1"

@@ -1,6 +1,7 @@
 language: scala
 sudo: true
 services:
+  - mysql
   - postgresql
   - docker
 before_install:

@@ -4,9 +4,9 @@ services:
   - postgresql
   - docker
 before_install:
-  - docker pull mysql
-  - docker run --name mysql -d -p 127.0.0.1:3306:3306 -e MYSQL_ROOT_PASSWORD=root mysql
-  - docker inspect mysql
+#  - docker pull mysql
+#  - docker run --name mysql -d -p 127.0.0.1:3306:3306 -e MYSQL_ROOT_PASSWORD=root mysql
+#  - docker inspect mysql
   - docker pull wnameless/oracle-xe-11g
   - docker run --name oracle -d -p 127.0.0.1:1521:1521 -e ORACLE_ALLOW_REMOTE=true wnameless/oracle-xe-11g
   - docker inspect oracle

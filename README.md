@@ -15,7 +15,7 @@ Add the following to your `build.sbt`:
 // the library is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.11"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.12"
 ```
 
 Please note [PR #75 - Removed binary dependency on slick-extensions](https://github.com/dnvriend/akka-persistence-jdbc/pull/75),
@@ -313,6 +313,10 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## Changelog
+
+### 2.6.12 (2016-12-20)
+  - Akka 2.4.14 -> 2.4.16
+
 ### 2.6.11 (2016-12-09)
   - Merged PR #3 [Sergey Kisel][skisel] - Freeslick support to use it with Oracle, thanks!
 

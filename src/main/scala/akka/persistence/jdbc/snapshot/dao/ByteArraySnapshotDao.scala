@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea.snapshot
+package akka.persistence.jdbc.snapshot.dao
 
 import akka.persistence.SnapshotMetadata
 import akka.persistence.jdbc.config.SnapshotConfig
-import akka.persistence.jdbc.dao.SnapshotDao
-import akka.persistence.jdbc.dao.bytea.snapshot.SnapshotTables.SnapshotRow
+import akka.persistence.jdbc.snapshot.dao.SnapshotTables.SnapshotRow
 import akka.serialization.Serialization
 import akka.stream.Materializer
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend
 
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 class ByteArraySnapshotDao(db: JdbcBackend#Database, profile: JdbcProfile, snapshotConfig: SnapshotConfig, serialization: Serialization)(implicit ec: ExecutionContext, val mat: Materializer) extends SnapshotDao {
   import profile.api._

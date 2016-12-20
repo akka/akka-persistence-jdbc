@@ -19,10 +19,11 @@ package akka.persistence.jdbc.util
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 
-import scala.concurrent.duration.{ Duration, FiniteDuration }
-import scala.util.{ Failure, Try }
+import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.language.implicitConversions
+import scala.util.Try
 
 object ConfigOps {
   implicit class ConfigOperations(val config: Config) extends AnyVal {

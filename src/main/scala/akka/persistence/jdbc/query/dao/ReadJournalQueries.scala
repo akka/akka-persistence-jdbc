@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea.readjournal
+package akka.persistence.jdbc
+package query.dao
 
 import akka.persistence.jdbc.config.JournalTableConfiguration
-import akka.persistence.jdbc.dao.bytea.journal.JournalTables
-import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
+import akka.persistence.jdbc.journal.dao.JournalTables
 import slick.driver.JdbcProfile
 
 class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration) extends JournalTables {

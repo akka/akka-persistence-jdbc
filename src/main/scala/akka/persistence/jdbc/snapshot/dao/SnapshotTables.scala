@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea.snapshot
+package akka.persistence.jdbc.snapshot.dao
 
 import akka.persistence.jdbc.config.SnapshotTableConfiguration
 import akka.persistence.jdbc.util.InputStreamOps._
@@ -24,7 +24,7 @@ object SnapshotTables {
   case class SnapshotRow(persistenceId: String, sequenceNumber: Long, created: Long, snapshot: Array[Byte])
 
   def isOracleDriver(profile: JdbcProfile) =
-    profile.getClass.getName.contains("OracleDriver")
+    profile.getClass.getName.contains("Oracle")
 }
 
 trait SnapshotTables {

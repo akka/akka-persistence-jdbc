@@ -19,11 +19,11 @@ package akka.persistence.jdbc.journal
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDatabase }
+import akka.persistence.jdbc.util.{ClasspathResources, DropCreate, SlickDatabase}
 import akka.persistence.journal.JournalSpec
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
 import scala.concurrent.duration._
 
@@ -70,5 +70,7 @@ class PostgresJournalSpec extends JdbcJournalSpec(ConfigFactory.load("postgres-a
 class MySQLJournalSpec extends JdbcJournalSpec(ConfigFactory.load("mysql-application.conf"), MySQL())
 
 class OracleJournalSpec extends JdbcJournalSpec(ConfigFactory.load("oracle-application.conf"), Oracle())
+
+class FreeslickOracleJournalSpec extends JdbcJournalSpec(ConfigFactory.load("freeslick-oracle-application.conf"), Oracle())
 
 class H2JournalSpec extends JdbcJournalSpec(ConfigFactory.load("h2-application.conf"), H2())

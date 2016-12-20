@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea.journal
+package akka.persistence.jdbc
+package journal.dao
 
-import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
-import akka.persistence.jdbc.{ MaterializerSpec, SimpleSpec }
-import akka.persistence.{ AtomicWrite, PersistentRepr }
+import akka.persistence.jdbc.{MaterializerSpec, SimpleSpec}
+import akka.persistence.{AtomicWrite, PersistentRepr}
 import akka.serialization.SerializationExtension
 import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
-import scala.collection.immutable._
 
+import scala.collection.immutable._
 import scala.concurrent.duration._
 import scala.util.Try
 

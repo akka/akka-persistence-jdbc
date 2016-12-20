@@ -20,13 +20,13 @@ import java.io.InputStream
 
 import akka.NotUsed
 import akka.stream.IOResult
-import akka.stream.scaladsl.{ Source, StreamConverters }
+import akka.stream.scaladsl.{Source, StreamConverters}
 import akka.util.ByteString
 
 import scala.concurrent.Future
-import scala.io.{ Source => ScalaIOSource }
+import scala.io.{Source => ScalaIOSource}
 import scala.util.Try
-import scala.xml.pull.{ XMLEvent, XMLEventReader }
+import scala.xml.pull.{XMLEvent, XMLEventReader}
 
 object ClasspathResources extends ClasspathResources
 

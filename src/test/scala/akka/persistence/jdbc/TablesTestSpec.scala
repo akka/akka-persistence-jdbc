@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao
+package akka.persistence.jdbc
 
 import akka.persistence.jdbc.config._
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.{FlatSpec, Matchers}
 
 class TablesTestSpec extends FlatSpec with Matchers {
 

@@ -18,16 +18,16 @@ package akka.persistence.jdbc
 
 import java.util.UUID
 
-import akka.event.{ Logging, LoggingAdapter }
+import akka.event.{Logging, LoggingAdapter}
 import akka.persistence.jdbc.config.JournalConfig
-import akka.persistence.jdbc.util.{ DropCreate, SlickDatabase }
+import akka.persistence.jdbc.util.{DropCreate, SlickDatabase}
 import akka.serialization.SerializationExtension
 import akka.util.Timeout
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.BeforeAndAfterAll
 
 import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContextExecutor, Future }
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.Try
 
 abstract class TestSpec(override val config: Config) extends SimpleSpec with MaterializerSpec with DropCreate with BeforeAndAfterAll {

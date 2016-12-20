@@ -16,21 +16,21 @@
 
 package akka.persistence.jdbc.snapshot
 
-import akka.actor.{ ActorSystem, ExtendedActorSystem }
+import akka.actor.{ActorSystem, ExtendedActorSystem}
 import akka.persistence.jdbc.config.SnapshotConfig
-import akka.persistence.jdbc.dao.SnapshotDao
-import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
+import akka.persistence.jdbc.snapshot.dao.SnapshotDao
+import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
 import akka.persistence.snapshot.SnapshotStore
-import akka.persistence.{ SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria }
-import akka.serialization.{ Serialization, SerializationExtension }
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.persistence.{SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria}
+import akka.serialization.{Serialization, SerializationExtension}
+import akka.stream.{ActorMaterializer, Materializer}
 import com.typesafe.config.Config
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable._
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 object JdbcSnapshotStore {
 

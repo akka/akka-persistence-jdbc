@@ -17,7 +17,7 @@
 package akka.persistence.jdbc.query
 
 import akka.persistence.jdbc.query.TaggingEventAdapter.TagEvent
-import akka.persistence.journal.{ Tagged, WriteEventAdapter }
+import akka.persistence.journal.{Tagged, WriteEventAdapter}
 
 object TaggingEventAdapter {
   case class TagEvent(payload: Any, tags: Set[String])

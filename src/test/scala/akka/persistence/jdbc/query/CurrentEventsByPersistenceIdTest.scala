@@ -136,4 +136,6 @@ class MySQLScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersiste
 
 class OracleScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
 
+class FreeslickOracleScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("freeslick-oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
+
 class H2ScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner

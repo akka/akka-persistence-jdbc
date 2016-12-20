@@ -17,10 +17,10 @@
 package akka.persistence.jdbc.util
 
 import akka.NotUsed
-import akka.stream.scaladsl.{ Flow, Source }
+import akka.stream.scaladsl.{Flow, Source}
 
 import scala.collection.immutable._
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 object TrySeq {
   def sequence[A]: Flow[Iterable[Try[A]], Try[Seq[A]], NotUsed] =

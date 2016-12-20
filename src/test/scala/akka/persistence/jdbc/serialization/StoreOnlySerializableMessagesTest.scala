@@ -16,11 +16,11 @@
 
 package akka.persistence.jdbc.serialization
 
-import akka.actor.{ ActorRef, Props }
+import akka.actor.{ActorRef, Props}
 import akka.event.LoggingReceive
 import akka.persistence.jdbc.TestSpec
-import akka.persistence.jdbc.util.Schema.{ H2, MySQL, Oracle, Postgres, SchemaType }
-import akka.persistence.{ PersistentActor, RecoveryCompleted }
+import akka.persistence.jdbc.util.Schema.{H2, MySQL, Oracle, Postgres, SchemaType}
+import akka.persistence.{PersistentActor, RecoveryCompleted}
 import akka.testkit.TestProbe
 
 import scala.concurrent.duration._
@@ -131,5 +131,7 @@ class PostgresStoreOnlySerializableMessagesTest extends StoreOnlySerializableMes
 class MySQLStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("mysql-application.conf", MySQL())
 
 class OracleStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("oracle-application.conf", Oracle())
+
+class FreeslickOracleStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("freeslick-oracle-application.conf", Oracle())
 
 class H2StoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("h2-application.conf", H2())

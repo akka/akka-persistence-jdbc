@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao
+package akka.persistence.jdbc.snapshot.dao
 
 import akka.persistence.SnapshotMetadata
 

@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
+// to deploy to bintray
+addSbtPlugin("me.lessis" % "bintray-sbt" % "0.3.0")
+
 // to format scala source code
-// see: https://github.com/sbt/sbt-scalariform
 addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.6.0")
 
 // enable updating file headers eg. for copyright
-// see: https://github.com/sbt/sbt-header
 addSbtPlugin("de.heikoseeberger" % "sbt-header" % "1.5.1")
 
-// generates Scala source from your build definitions //
-// see: https://github.com/sbt/sbt-buildinfo
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.6.1")
 
-addSbtPlugin("me.lessis" % "bintray-sbt" % "0.3.0")
+addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.3")

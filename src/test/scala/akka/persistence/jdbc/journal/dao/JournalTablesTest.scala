@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea.journal
+package akka.persistence.jdbc.journal.dao
 
-import akka.persistence.jdbc.dao.TablesTestSpec
+import akka.persistence.jdbc.TablesTestSpec
 import slick.driver.JdbcProfile
 
 class JournalTablesTest extends TablesTestSpec {

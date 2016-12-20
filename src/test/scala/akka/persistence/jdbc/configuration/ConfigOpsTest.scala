@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc.configuration
 
-import akka.persistence.jdbc.{ MaterializerSpec, SimpleSpec }
+import akka.persistence.jdbc.{MaterializerSpec, SimpleSpec}
 import akka.persistence.jdbc.util.ConfigOps
 import ConfigOps._
 import com.typesafe.config.ConfigFactory

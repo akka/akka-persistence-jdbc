@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea.journal
+package akka.persistence.jdbc.journal.dao
 
 import akka.persistence.jdbc.util.TrySeq
-import akka.persistence.jdbc.{ MaterializerSpec, SimpleSpec }
+import akka.persistence.jdbc.{MaterializerSpec, SimpleSpec}
 import akka.stream.scaladsl.Source
 import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.scaladsl.TestSink
 
 import scala.collection.immutable._
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 class TrySeqTest extends SimpleSpec with MaterializerSpec {
   implicit class SourceOps[A, M](src: Source[A, M]) {

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea.snapshot
+package akka.persistence.jdbc.snapshot.dao
 
-import akka.persistence.jdbc.dao.TablesTestSpec
+import akka.persistence.jdbc.TablesTestSpec
 import slick.driver.JdbcProfile
 
 class SnapshotTablesTest extends TablesTestSpec {

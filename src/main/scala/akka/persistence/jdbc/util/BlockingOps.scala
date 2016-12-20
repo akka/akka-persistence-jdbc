@@ -16,8 +16,8 @@
 
 package akka.persistence.jdbc.util
 
-import scala.concurrent.duration.{ FiniteDuration, _ }
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.duration.{FiniteDuration, _}
+import scala.concurrent.{Await, Future}
 
 object BlockingOps {
   implicit class BlockingFutureImplicits[T](val that: Future[T]) extends AnyVal {

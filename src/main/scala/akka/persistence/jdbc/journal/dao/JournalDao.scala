@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao
+package akka.persistence.jdbc.journal.dao
 
 import akka.NotUsed
-import akka.persistence.{ AtomicWrite, PersistentRepr }
+import akka.persistence.{AtomicWrite, PersistentRepr}
 import akka.stream.scaladsl._
 
 import scala.concurrent.Future

@@ -19,7 +19,7 @@ package akka.persistence.jdbc.config
 import akka.persistence.jdbc.util.ConfigOps._
 import com.typesafe.config.Config
 
-import scala.concurrent.duration.{ FiniteDuration, _ }
+import scala.concurrent.duration.{FiniteDuration, _}
 
 class SlickConfiguration(config: Config) {
   private val cfg = config.asConfig("slick")

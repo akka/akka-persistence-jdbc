@@ -262,4 +262,6 @@ class MySQLScalaEventByTagTest extends EventsByTagTest("mysql-application.conf")
 
 class OracleScalaEventByTagTest extends EventsByTagTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
 
+class FreeslickOracleScalaEventByTagTest extends EventsByTagTest("freeslick-oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
+
 class H2ScalaEventsByTagTest extends EventsByTagTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner

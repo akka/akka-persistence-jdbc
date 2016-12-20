@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea.journal
+package akka.persistence.jdbc
+package journal.dao
 
 import akka.persistence.jdbc.config.JournalTableConfiguration
-import akka.persistence.jdbc.dao.bytea.journal.JournalTables._
-
-object JournalTables {
-  case class JournalRow(ordering: Long, deleted: Boolean, persistenceId: String, sequenceNumber: Long, message: Array[Byte], tags: Option[String] = None)
-}
 
 trait JournalTables {
   val profile: slick.driver.JdbcProfile

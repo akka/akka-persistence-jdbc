@@ -14,27 +14,17 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea.journal
+package akka.persistence.jdbc
+package journal.dao
 
 import akka.persistence.PersistentRepr
-import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 
 import scala.collection.immutable._
 import scala.util.Try
 
-object ByteArrayJournalSerializer {
-  def encodeTags(tags: Set[String], separator: String): Option[String] =
-    if (tags.isEmpty) None else Option(tags.mkString(separator))
-
-  def decodeTags(tags: Option[String], separator: String): Set[String] =
-    tags.map(_.split(separator).toSet).getOrElse(Set.empty[String])
-}
-
 class ByteArrayJournalSerializer(serialization: Serialization, separator: String) extends FlowPersistentReprSerializer[JournalRow] {
-  import ByteArrayJournalSerializer._
-
   override def serialize(persistentRepr: PersistentRepr, tags: Set[String]): Try[JournalRow] = {
     serialization
       .serialize(persistentRepr)

@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc
+package akka.persistence.jdbc.journal
 
-import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
-import com.typesafe.config.ConfigFactory
+import scala.collection.immutable.Set
 
-trait MaterializerSpec {
-  val config = ConfigFactory.load()
-  implicit val system: ActorSystem = ActorSystem("test", config)
-  implicit val mat: Materializer = ActorMaterializer()
+package object dao {
+  def encodeTags(tags: Set[String], separator: String): Option[String] =
+    if (tags.isEmpty) None else Option(tags.mkString(separator))
+
+  def decodeTags(tags: Option[String], separator: String): Set[String] =
+    tags.map(_.split(separator).toSet).getOrElse(Set.empty[String])
+
 }

@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea.journal
+package akka.persistence.jdbc.journal.dao
 
 import akka.persistence.jdbc.TestSpec
 
 class TagsSerializationTest extends TestSpec {
-
-  import ByteArrayJournalSerializer._
 
   "Encode" should "no tags" in {
     encodeTags(Set.empty[String], ",") shouldBe None

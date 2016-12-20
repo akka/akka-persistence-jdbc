@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao
+package akka.persistence.jdbc
+package query.dao
 
 import akka.NotUsed
 import akka.persistence.PersistentRepr
-import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
 import akka.stream.scaladsl.Source
 
 import scala.collection.immutable._

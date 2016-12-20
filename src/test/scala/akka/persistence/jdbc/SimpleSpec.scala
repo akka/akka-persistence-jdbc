@@ -16,11 +16,11 @@
 
 package akka.persistence.jdbc
 
-import akka.actor.{ ActorRef, ActorSystem, PoisonPill }
+import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.persistence.jdbc.util.ClasspathResources
 import akka.testkit.TestProbe
 import org.scalatest._
-import org.scalatest.concurrent.{ Eventually, ScalaFutures }
+import org.scalatest.concurrent.{Eventually, ScalaFutures}
 
 trait SimpleSpec extends FlatSpec
     with Matchers

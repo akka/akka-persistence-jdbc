@@ -19,11 +19,11 @@ package akka.persistence.jdbc.journal
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDatabase }
+import akka.persistence.jdbc.util.{ClasspathResources, DropCreate, SlickDatabase}
 import akka.persistence.journal.JournalPerfSpec
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach, Ignore }
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Ignore}
 
 import scala.concurrent.duration._
 
@@ -85,6 +85,16 @@ class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql
 }
 
 class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-application.conf"), Oracle()) {
+  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 10.minutes)
+
+  override def eventsCount: Int = 100
+
+  override def awaitDurationMillis: Long = 10.minutes.toMillis
+
+  override def measurementIterations: Int = 1
+}
+
+class FreeslickOracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("freeslick-oracle-application.conf"), Oracle()) {
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 10.minutes)
 
   override def eventsCount: Int = 100

@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea.readjournal
+package akka.persistence.jdbc
+package query.dao
 
 import akka.NotUsed
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.config.ReadJournalConfig
-import akka.persistence.jdbc.dao.ReadJournalDao
-import akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalSerializer
-import akka.persistence.jdbc.dao.bytea.journal.JournalTables.JournalRow
+import akka.persistence.jdbc.journal.dao.ByteArrayJournalSerializer
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 import akka.stream.Materializer
@@ -69,7 +68,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
 
   import profile.api._
 
-  private lazy val isOracleDriver = profile.getClass.getName.contains("OracleDriver")
+  private lazy val isOracleDriver = profile.getClass.getName.contains("Oracle")
 
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] = {
     if (isOracleDriver) {

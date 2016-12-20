@@ -16,23 +16,23 @@
 
 package akka.persistence.jdbc.query
 
-import akka.actor.{ ActorRef, ActorSystem, Props }
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingReceive
 import akka.persistence.PersistentActor
 import akka.persistence.jdbc.TestSpec
-import akka.persistence.jdbc.query.javadsl.{ JdbcReadJournal => JavaJdbcReadJournal }
+import akka.persistence.jdbc.query.javadsl.{JdbcReadJournal => JavaJdbcReadJournal}
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 import akka.persistence.journal.Tagged
-import akka.persistence.query.{ EventEnvelope, PersistenceQuery }
+import akka.persistence.query.{EventEnvelope, PersistenceQuery}
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import akka.stream.testkit.TestSubscriber
-import akka.stream.testkit.javadsl.{ TestSink => JavaSink }
+import akka.stream.testkit.javadsl.{TestSink => JavaSink}
 import akka.stream.testkit.scaladsl.TestSink
 import slick.driver.PostgresDriver.api._
 
-import scala.concurrent.duration.{ FiniteDuration, _ }
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.duration.{FiniteDuration, _}
+import scala.concurrent.{ExecutionContext, Future}
 
 trait ReadJournalOperations {
   def withCurrentPersistenceIds(within: FiniteDuration = 60.second)(f: TestSubscriber.Probe[String] => Unit): Unit

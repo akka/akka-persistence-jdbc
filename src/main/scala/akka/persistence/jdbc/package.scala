@@ -14,14 +14,8 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc
+package akka.persistence
 
-import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
-import com.typesafe.config.ConfigFactory
-
-trait MaterializerSpec {
-  val config = ConfigFactory.load()
-  implicit val system: ActorSystem = ActorSystem("test", config)
-  implicit val mat: Materializer = ActorMaterializer()
+package object jdbc {
+  final case class JournalRow(ordering: Long, deleted: Boolean, persistenceId: String, sequenceNumber: Long, message: Array[Byte], tags: Option[String] = None)
 }

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package akka.persistence.jdbc.dao.bytea.snapshot
+package akka.persistence.jdbc.snapshot.dao
 
 import akka.persistence.SnapshotMetadata
-import akka.persistence.jdbc.dao.bytea.snapshot.SnapshotTables.SnapshotRow
 import akka.persistence.jdbc.serialization.SnapshotSerializer
+import akka.persistence.jdbc.snapshot.dao.SnapshotTables.SnapshotRow
 import akka.persistence.serialization.Snapshot
 import akka.serialization.Serialization
 

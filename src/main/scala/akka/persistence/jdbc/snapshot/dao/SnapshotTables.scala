@@ -18,18 +18,22 @@ package akka.persistence.jdbc.snapshot.dao
 
 import akka.persistence.jdbc.config.SnapshotTableConfiguration
 import akka.persistence.jdbc.util.InputStreamOps._
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 
 object SnapshotTables {
   case class SnapshotRow(persistenceId: String, sequenceNumber: Long, created: Long, snapshot: Array[Byte])
 
-  def isOracleDriver(profile: JdbcProfile) =
-    profile.getClass.getName.contains("Oracle")
+  def isOracleDriver(profile: JdbcProfile): Boolean = profile match {
+    case slick.jdbc.OracleProfile => true
+    case _                        => false
+  }
 }
 
 trait SnapshotTables {
+
   import SnapshotTables._
-  val profile: slick.driver.JdbcProfile
+
+  val profile: slick.jdbc.JdbcProfile
 
   import profile.api._
 
@@ -46,6 +50,7 @@ trait SnapshotTables {
   }
 
   case class OracleSnapshot(_tableTag: Tag) extends Snapshot(_tableTag) {
+
     import java.sql.Blob
     import javax.sql.rowset.serial.SerialBlob
 
@@ -55,5 +60,6 @@ trait SnapshotTables {
     )
     override val snapshot: Rep[Array[Byte]] = column[Array[Byte]](snapshotTableCfg.columnNames.snapshot)(columnType)
   }
+
   lazy val SnapshotTable = new TableQuery(tag => if (isOracleDriver(profile)) OracleSnapshot(tag) else new Snapshot(tag))
 }

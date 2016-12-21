@@ -1,15 +1,16 @@
-import sbt._
-import sbt.Keys._
-
-import de.heikoseeberger.sbtheader._
-import de.heikoseeberger.sbtheader.HeaderKey._
-import de.heikoseeberger.sbtheader.license.Apache2_0
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import de.heikoseeberger.sbtheader.HeaderKey._
+import de.heikoseeberger.sbtheader.license.Apache2_0
+import sbt.Keys._
+import sbt._
+
+import scala.Seq
+import scalariform.formatter.preferences.FormattingPreferences
 
 object ProjectAutoPlugin extends AutoPlugin {
   val AkkaVersion = "2.4.16"
-  val SlickVersion = "3.1.1"
+  val SlickVersion = "3.2.0-M2"
   val HikariCPVersion = "2.5.1"
   val ScalaTestVersion = "3.0.1"
 
@@ -20,9 +21,7 @@ object ProjectAutoPlugin extends AutoPlugin {
   object autoImport {
   }
 
-  import autoImport._
-
-  override lazy val projectSettings = SbtScalariform.scalariformSettings ++ Seq(
+  override lazy val projectSettings: Seq[Setting[_]] = SbtScalariform.scalariformSettings ++ Seq(
     name := "akka-persistence-jdbc",
     organization := "com.github.dnvriend",
     organizationName := "Dennis Vriend",
@@ -32,6 +31,8 @@ object ProjectAutoPlugin extends AutoPlugin {
     licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php")),
 
     scalaVersion := "2.11.8",
+
+    crossScalaVersions := Seq("2.11.8", "2.12.1"),
 
     fork in Test := true,
 
@@ -76,14 +77,11 @@ object ProjectAutoPlugin extends AutoPlugin {
    libraryDependencies += "com.typesafe.akka" %% "akka-persistence-query-experimental" % AkkaVersion,
    libraryDependencies += "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
    libraryDependencies += "com.typesafe.slick" %% "slick" % SlickVersion,
-   libraryDependencies += "com.typesafe.slick" %% "slick-extensions" % "3.1.0" % Test,
-   libraryDependencies += "org.suecarter" %% "freeslick" % "3.1.1.1" % Test,
-   libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion exclude("com.zaxxer", "HikariCP-java6"),
-   libraryDependencies += "com.zaxxer" % "HikariCP" % HikariCPVersion,
+   libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
    libraryDependencies += "org.postgresql" % "postgresql" % "9.4.1212" % Test,
    libraryDependencies += "com.h2database" % "h2" % "1.4.193" % Test,
    libraryDependencies += "mysql" % "mysql-connector-java" % "6.0.5" % Test,
-   libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.7" % Test,
+   libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.8" % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-persistence-tck" % AkkaVersion % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % AkkaVersion % Test,
@@ -91,7 +89,7 @@ object ProjectAutoPlugin extends AutoPlugin {
    libraryDependencies += "org.scalatest" %% "scalatest" % ScalaTestVersion % Test   
  )   
 
-  def formattingPreferences = {
+  def formattingPreferences: FormattingPreferences = {
     import scalariform.formatter.preferences._
     FormattingPreferences()
       .setPreference(AlignSingleLineCaseStatements, true)

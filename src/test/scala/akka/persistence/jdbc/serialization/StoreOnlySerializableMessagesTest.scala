@@ -132,6 +132,4 @@ class MySQLStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessag
 
 class OracleStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("oracle-application.conf", Oracle())
 
-class FreeslickOracleStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("freeslick-oracle-application.conf", Oracle())
-
 class H2StoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("h2-application.conf", H2())

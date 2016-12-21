@@ -94,14 +94,4 @@ class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("orac
   override def measurementIterations: Int = 1
 }
 
-class FreeslickOracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("freeslick-oracle-application.conf"), Oracle()) {
-  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 10.minutes)
-
-  override def eventsCount: Int = 100
-
-  override def awaitDurationMillis: Long = 10.minutes.toMillis
-
-  override def measurementIterations: Int = 1
-}
-
 class H2JournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("h2-application.conf"), H2())

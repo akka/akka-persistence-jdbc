@@ -24,7 +24,7 @@ import akka.persistence.{AtomicWrite, PersistentRepr}
 import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, Source}
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable._
@@ -75,8 +75,8 @@ trait H2JournalDao extends JournalDao {
   val profile: JdbcProfile
 
   private lazy val isH2Driver = profile match {
-    case slick.driver.H2Driver => true
-    case _                     => false
+    case slick.jdbc.H2Profile => true
+    case _                    => false
   }
 
   abstract override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] = {

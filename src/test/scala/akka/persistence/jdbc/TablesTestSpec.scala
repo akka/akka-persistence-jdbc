@@ -59,7 +59,7 @@ class TablesTestSpec extends FlatSpec with Matchers {
       |  dao = "akka.persistence.jdbc.dao.bytea.ByteArrayJournalDao"
       |
       |  slick {
-      |    driver = "slick.driver.PostgresDriver"
+      |    driver = "slick.jdbc.PostgresProfile"
       |    db {
       |      host = "boot2docker"
       |      host = ${?POSTGRES_HOST}
@@ -119,7 +119,7 @@ class TablesTestSpec extends FlatSpec with Matchers {
       |  dao = "akka.persistence.jdbc.dao.bytea.ByteArraySnapshotDao"
       |
       |  slick {
-      |    driver = "slick.driver.PostgresDriver"
+      |    driver = "slick.jdbc.PostgresProfile"
       |    db {
       |      host = "boot2docker"
       |      host = ${?POSTGRES_HOST}
@@ -189,7 +189,7 @@ class TablesTestSpec extends FlatSpec with Matchers {
       |  tagSeparator = ","
       |
       |  slick {
-      |    driver = "slick.driver.PostgresDriver"
+      |    driver = "slick.jdbc.PostgresProfile"
       |    db {
       |      host = "boot2docker"
       |      host = ${?POSTGRES_HOST}

@@ -46,6 +46,4 @@ class MySQLScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("mys
 
 class OracleScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
 
-class FreeslickOracleScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("freeslick-oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
-
 class H2ScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner

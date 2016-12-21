@@ -15,28 +15,8 @@ Add the following to your `build.sbt`:
 // the library is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.12"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.12-3.2.0-M2"
 ```
-
-Please note [PR #75 - Removed binary dependency on slick-extensions](https://github.com/dnvriend/akka-persistence-jdbc/pull/75),
-if you are using the Oracle driver from slick-extensions, you must have a [Lightbend subscription](https://www.lightbend.com/platform/subscription).
-I have misinterpreted Lightbend open sourcing slick-extensions 3.1.0 as a change to the license, it didn't so you __cannot__ use it
-for free.
-
-```
-// to resolve the slick-extensions you need the following repo
-resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-releases/"
-
-libraryDependencies += "com.typesafe.slick" %% "slick-extensions" % "3.1.0"
-```
-
-If you do not have subscription you may use [freeslick](https://github.com/smootoo/freeslick), because it provides a free open-source driver for Oracle:
-
-```
-libraryDependencies += "org.suecarter" %% "freeslick" % "3.1.1.1"
-```
-
-
 
 ## Contribution policy
 
@@ -59,47 +39,26 @@ Configure `akka-persistence`:
 
 Configure `slick`:
 - The following slick drivers are supported:
-  - `slick.driver.PostgresDriver$`
-  - `slick.driver.MySQLDriver$`
-  - `slick.driver.H2Driver$`
-  - `com.typesafe.slick.driver.oracle.OracleDriver$`
-  - `freeslick.OracleProfile$`
+  - `slick.jdbc.PostgresProfile$`
+  - `slick.jdbc.MySQLProfile$`
+  - `slick.jdbc.H2Profile$`
+  - `slick.jdbc.OracleProfile$`
 
 ## Database Schema
 
-Postgres
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/schema/postgres/postgres-schema.sql)
-
-MySQL
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/schema/mysql/mysql-schema.sql)
-
-Oracle
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/schema/oracle/oracle-schema.sql)
-    
-H2
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/schema/h2/h2-schema.sql)
+- [Postgres Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/postgres/postgres-schema.sql)
+- [MySQL Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/mysql/mysql-schema.sql)
+- [Oracle Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/oracle/oracle-schema.sql)
+- [H2 Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/h2/h2-schema.sql)
 
 
 ## Configuration
 
-Default
-:   @@snip[application.conf](/../../../../jdbc/src/main/resources/reference.conf)        
-
-Postgres
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/postgres-application.conf)
-
-MySQL
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/mysql-application.conf)
-
-Oracle (with slick-extensions)
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/oracle-application.conf)
-
-Oracle (with freeslick)
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/freeslick-oracle-application.conf)
-    
-H2
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/h2-application.conf)
-
+- [Default](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/reference.conf)
+- [Postgres](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/postgres-application.conf)
+- [MySQL](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/mysql-application.conf)
+- [Oracle](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/oracle-application.conf)
+- [H2](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/h2-application.conf)
 
 ## DataSource lookup by JNDI name
 The plugin uses `slick` as the database access library. Slick [supports jndi][slick-jndi] for looking up [DataSource][ds]s.
@@ -109,7 +68,7 @@ To enable the JNDI lookup, you must add the following to your application.conf:
 ```
 jdbc-journal {
   slick {
-    driver = "slick.driver.PostgresDriver$"
+    driver = "slick.jdbc.PostgresProfile$"
     jndiName = "java:jboss/datasources/PostgresDS"   
   }
 }
@@ -313,6 +272,9 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## Changelog
+
+### 2.6.12-3.2.0-M2 (2016-12-21)
+  - Slick 3.1.1 -> 3.2.0-M2
 
 ### 2.6.12 (2016-12-20)
   - Akka 2.4.14 -> 2.4.16

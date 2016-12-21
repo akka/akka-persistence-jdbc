@@ -19,7 +19,7 @@ package query.dao
 
 import akka.persistence.jdbc.config.JournalTableConfiguration
 import akka.persistence.jdbc.journal.dao.JournalTables
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 
 class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration) extends JournalTables {
   import profile.api._

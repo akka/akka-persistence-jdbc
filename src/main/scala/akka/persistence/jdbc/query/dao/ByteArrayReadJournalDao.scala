@@ -25,7 +25,7 @@ import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 import slick.jdbc.GetResult
 import slick.jdbc.JdbcBackend._
 
@@ -68,10 +68,13 @@ trait OracleReadJournalDao extends ReadJournalDao {
 
   import profile.api._
 
-  private lazy val isOracleDriver = profile.getClass.getName.contains("Oracle")
+  private def isOracleDriver(profile: JdbcProfile): Boolean = profile match {
+    case slick.jdbc.OracleProfile => true
+    case _                        => false
+  }
 
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] = {
-    if (isOracleDriver) {
+    if (isOracleDriver(profile)) {
       Source.fromPublisher(
         db.stream(sql"""SELECT DISTINCT "#$persistenceId" FROM #$theTableName WHERE rownum <= $max""".as[String])
       )
@@ -83,7 +86,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
   implicit val getJournalRow = GetResult(r => JournalRow(r.<<, r.<<, r.<<, r.<<, r.nextBytes(), r.<<))
 
   abstract override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] = {
-    if (isOracleDriver) {
+    if (isOracleDriver(profile)) {
       val theOffset = Math.max(0, offset)
       val theTag = s"%$tag%"
 
@@ -108,9 +111,9 @@ trait OracleReadJournalDao extends ReadJournalDao {
 trait H2ReadJournalDao extends ReadJournalDao {
   val profile: JdbcProfile
 
-  private lazy val isH2Driver = profile match {
-    case slick.driver.H2Driver => true
-    case _                     => false
+  private def isH2Driver(profile: JdbcProfile): Boolean = profile match {
+    case slick.jdbc.H2Profile => true
+    case _                    => false
   }
 
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
@@ -123,7 +126,7 @@ trait H2ReadJournalDao extends ReadJournalDao {
     super.messages(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max))
 
   private def correctMaxForH2Driver(max: Long): Long = {
-    if (isH2Driver) {
+    if (isH2Driver(profile)) {
       Math.min(max, Int.MaxValue) // H2 only accepts a LIMIT clause as an Integer
     } else {
       max

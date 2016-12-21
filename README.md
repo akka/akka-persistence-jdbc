@@ -67,39 +67,24 @@ Configure `slick`:
 
 ## Database Schema
 
-Postgres
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/schema/postgres/postgres-schema.sql)
-
-MySQL
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/schema/mysql/mysql-schema.sql)
-
-Oracle
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/schema/oracle/oracle-schema.sql)
-    
-H2
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/schema/h2/h2-schema.sql)
-
+- [Postgres Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/postgres/postgres-schema.sql)
+- [MySQL Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/mysql/mysql-schema.sql)
+- [H2 Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/h2/h2-schema.sql)
+- [Oracle Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/oracle/oracle-schema.sql)
 
 ## Configuration
 
-Default
-:   @@snip[application.conf](/../../../../jdbc/src/main/resources/reference.conf)        
+__Reference:__
+- [Default](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/reference.conf)
 
-Postgres
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/postgres-application.conf)
+__Free database profiles:__
+- [Postgres](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/postgres-application.conf)
+- [MySQL](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/mysql-application.conf)
+- [FeeSlick-Oracle](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/freeslick-oracle-application.conf)
+- [H2](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/h2-application.conf)
 
-MySQL
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/mysql-application.conf)
-
-Oracle (with slick-extensions)
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/oracle-application.conf)
-
-Oracle (with freeslick)
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/freeslick-oracle-application.conf)
-    
-H2
-:   @@snip[application.conf](/../../../../jdbc/src/test/resources/h2-application.conf)
-
+__Non free database profile:__
+- [Oracle](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/oracle-application.conf)
 
 ## DataSource lookup by JNDI name
 The plugin uses `slick` as the database access library. Slick [supports jndi][slick-jndi] for looking up [DataSource][ds]s.
@@ -313,6 +298,18 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## Changelog
+
+### 2.6.12-3.2.0-M2 (2016-12-21)
+  - Special thanks to [joseblas][joseblas] for PR #85: Slick 3.2.0-M1 migration, thanks!
+  - Special thanks to [Timothy Klim][timothyklim] for PR #86: Upgrade slick to 3.2.0-M2, thanks!
+  - Slick 3.2.0-M2 test release
+  - Scala 2.11.8 and 2.12.1 build
+  - Only availabe in Bintray's JCenter
+  - The following slick drivers are supported:
+    - `slick.jdbc.PostgresProfile$`
+    - `slick.jdbc.MySQLProfile$`
+    - `slick.jdbc.H2Profile$`
+    - `slick.jdbc.OracleProfile$`
 
 ### 2.6.12 (2016-12-20)
   - Akka 2.4.14 -> 2.4.16
@@ -699,6 +696,8 @@ sys.addShutdownHook(system.terminate())
 [jtysper]: https://github.com/jtysper
 [jroper]: https://github.com/jroper
 [skisel]: https://github.com/skisel
+[joseblas]: https://github.com/joseblas
+[timothyklim]: https://github.com/TimothyKlim
 
 [scalikejdbc]: http://scalikejdbc.org/
 [slick]: http://slick.typesafe.com/

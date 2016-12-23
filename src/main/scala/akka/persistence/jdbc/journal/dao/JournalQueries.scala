@@ -24,8 +24,10 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
 
   import profile.api._
 
+  private val JournalTableC = Compiled(JournalTable)
+
   def writeJournalRows(xs: Seq[JournalRow]) =
-    JournalTable ++= xs.sortBy(_.sequenceNumber)
+    JournalTableC ++= xs.sortBy(_.sequenceNumber)
 
   private def selectAllJournalForPersistenceId(persistenceId: Rep[String]): Query[Journal, JournalRow, Seq] =
     JournalTable.filter(_.persistenceId === persistenceId).sortBy(_.sequenceNumber.desc)

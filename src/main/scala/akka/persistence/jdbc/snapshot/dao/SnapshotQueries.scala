@@ -23,8 +23,10 @@ import slick.driver.JdbcProfile
 class SnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: SnapshotTableConfiguration) extends SnapshotTables {
   import profile.api._
 
+  private val SnapshotTableC = Compiled(SnapshotTable)
+
   def insertOrUpdate(snapshotRow: SnapshotRow) =
-    SnapshotTable.insertOrUpdate(snapshotRow)
+    SnapshotTableC.insertOrUpdate(snapshotRow)
 
   private def _selectAll(persistenceId: Rep[String]) =
     SnapshotTable.filter(_.persistenceId === persistenceId).sortBy(_.sequenceNumber.desc)

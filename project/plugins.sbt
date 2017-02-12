@@ -23,10 +23,6 @@ addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.6.0")
 // enable updating file headers eg. for copyright
 addSbtPlugin("de.heikoseeberger" % "sbt-header" % "1.5.1")
 
-// I know this because build.sbt knows this.
-// https://github.com/sbt/sbt-buildinfo
-addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.6.1")
-
 // enable release process
 // https://github.com/sbt/sbt-release
 addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.3")

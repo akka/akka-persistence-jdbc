@@ -8,10 +8,12 @@ import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 
 object ProjectAutoPlugin extends AutoPlugin {
-  val AkkaVersion = "2.4.16"
+  val AkkaVersion = "2.4.17"
   val SlickVersion = "3.1.1"
-  val HikariCPVersion = "2.5.1"
+  val HikariCPVersion = "2.6.0"
   val ScalaTestVersion = "3.0.1"
+
+  val year: String = new java.text.SimpleDateFormat("yyyy").format(new java.util.Date())
 
   override def requires = com.typesafe.sbt.SbtScalariform
 
@@ -59,8 +61,8 @@ object ProjectAutoPlugin extends AutoPlugin {
     testOptions in Test += Tests.Argument("-oDF"),
 
     headers := headers.value ++ Map(
-      "scala" -> Apache2_0("2016", "Dennis Vriend"),
-      "conf" -> Apache2_0("2016", "Dennis Vriend", "#")
+      "scala" -> Apache2_0(year, "Dennis Vriend"),
+      "conf" -> Apache2_0(year, "Dennis Vriend", "#")
     ),
 
     resolvers += Resolver.typesafeRepo("releases"),
@@ -83,7 +85,7 @@ object ProjectAutoPlugin extends AutoPlugin {
    libraryDependencies += "org.postgresql" % "postgresql" % "9.4.1212" % Test,
    libraryDependencies += "com.h2database" % "h2" % "1.4.193" % Test,
    libraryDependencies += "mysql" % "mysql-connector-java" % "6.0.5" % Test,
-   libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.7" % Test,
+   libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.1" % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-persistence-tck" % AkkaVersion % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % AkkaVersion % Test,

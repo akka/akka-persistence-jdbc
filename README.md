@@ -15,7 +15,7 @@ Add the following to your `build.sbt`:
 // the library is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.6.12"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.4.17.0"
 ```
 
 Please note [PR #75 - Removed binary dependency on slick-extensions](https://github.com/dnvriend/akka-persistence-jdbc/pull/75),
@@ -298,6 +298,9 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## Changelog
+### 2.4.17.0 (2016-02-12)
+  - New versioning scheme; now using the version of Akka with the akka-persistence-inmemory version appended to it, starting from `.0`
+  - Akka 2.4.16 -> 2.4.17
 
 ### 2.6.12-3.2.0-M2 (2016-12-21)
   - Special thanks to [joseblas][joseblas] for PR #85: Slick 3.2.0-M1 migration, thanks!

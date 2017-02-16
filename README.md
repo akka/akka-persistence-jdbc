@@ -298,6 +298,11 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## Changelog
+### 2.4.17.0.3.2.0-RC1
+  - Slick 3.2.0-RC1 test release
+  - Akka 2.4.17
+  - Only availabe on Bintray's JCenter
+
 ### 2.4.17.0 (2016-02-12)
   - New versioning scheme; now using the version of Akka with the akka-persistence-inmemory version appended to it, starting from `.0`
   - Akka 2.4.16 -> 2.4.17
@@ -307,7 +312,7 @@ sys.addShutdownHook(system.terminate())
   - Special thanks to [Timothy Klim][timothyklim] for PR #86: Upgrade slick to 3.2.0-M2, thanks!
   - Slick 3.2.0-M2 test release
   - Scala 2.11.8 and 2.12.1 build
-  - Only availabe in Bintray's JCenter
+  - Only availabe on Bintray's JCenter
   - The following slick drivers are supported:
     - `slick.jdbc.PostgresProfile$`
     - `slick.jdbc.MySQLProfile$`

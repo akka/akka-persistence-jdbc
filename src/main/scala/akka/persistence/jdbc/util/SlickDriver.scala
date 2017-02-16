@@ -31,10 +31,8 @@ object SlickDriver {
 
 object SlickDatabase {
   def forConfig(config: Config, slickConfiguration: SlickConfiguration): Database = {
-    if (slickConfiguration.jndiName.isDefined)
-      Database.forName(slickConfiguration.jndiName.get)
-    else if (slickConfiguration.jndiDbName.isDefined)
-      new InitialContext().lookup(slickConfiguration.jndiDbName.get).asInstanceOf[Database]
-    else Database.forConfig("slick.db", config)
+    val jndiName = slickConfiguration.jndiName.map(Database.forName(_, None))
+    val jndiDbName = slickConfiguration.jndiDbName.map(new InitialContext().lookup(_).asInstanceOf[Database])
+    jndiName.orElse(jndiDbName).getOrElse(Database.forConfig("slick.db", config))
   }
 }

@@ -9,8 +9,8 @@ import scala.Seq
 import scalariform.formatter.preferences.FormattingPreferences
 
 object ProjectAutoPlugin extends AutoPlugin {
-  val AkkaVersion = "2.4.16"
-  val SlickVersion = "3.2.0-M2"
+  val AkkaVersion = "2.4.17"
+  val SlickVersion = "3.2.0-RC1"
   val HikariCPVersion = "2.5.1"
   val ScalaTestVersion = "3.0.1"
 
@@ -26,7 +26,7 @@ object ProjectAutoPlugin extends AutoPlugin {
     organization := "com.github.dnvriend",
     organizationName := "Dennis Vriend",
     description := "A plugin for storing events in an event journal akka-persistence-jdbc",
-    startYear := Some(2016),
+    startYear := Some(2014),
 
     licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php")),
 
@@ -60,14 +60,12 @@ object ProjectAutoPlugin extends AutoPlugin {
     testOptions in Test += Tests.Argument("-oDF"),
 
     headers := headers.value ++ Map(
-      "scala" -> Apache2_0("2016", "Dennis Vriend"),
-      "conf" -> Apache2_0("2016", "Dennis Vriend", "#")
+      "scala" -> Apache2_0("2017", "Dennis Vriend"),
+      "conf" -> Apache2_0("2017", "Dennis Vriend", "#")
     ),
 
     resolvers += Resolver.typesafeRepo("releases"),
     resolvers += Resolver.jcenterRepo,
-    resolvers += Resolver.bintrayRepo("scalaz", "releases"),
-    resolvers += Resolver.bintrayRepo("stew", "snapshots"),
 
     ScalariformKeys.preferences in Compile := formattingPreferences,
     ScalariformKeys.preferences in Test := formattingPreferences,
@@ -81,7 +79,7 @@ object ProjectAutoPlugin extends AutoPlugin {
    libraryDependencies += "org.postgresql" % "postgresql" % "9.4.1212" % Test,
    libraryDependencies += "com.h2database" % "h2" % "1.4.193" % Test,
    libraryDependencies += "mysql" % "mysql-connector-java" % "6.0.5" % Test,
-   libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.8" % Test,
+   libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.1" % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-persistence-tck" % AkkaVersion % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % AkkaVersion % Test,

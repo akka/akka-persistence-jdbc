@@ -19,12 +19,12 @@ package query.dao
 
 import akka.persistence.jdbc.config.JournalTableConfiguration
 import akka.persistence.jdbc.journal.dao.JournalTables
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 
 class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration) extends JournalTables {
   import profile.api._
 
-  def journalRowByPersistenceIds(persistenceIds: Iterable[String]): Query[Rep[String], String, Seq] =
+  def journalRowByPersistenceIds(persistenceIds: Iterable[String]) =
     for {
       query <- JournalTable.map(_.persistenceId)
       if query inSetBind persistenceIds
@@ -34,7 +34,7 @@ class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg:
     JournalTable.map(_.persistenceId).distinct.take(max)
   val allPersistenceIdsDistinct = Compiled(_allPersistenceIdsDistinct _)
 
-  private def _messagesQuery(persistenceId: Rep[String], fromSequenceNr: Rep[Long], toSequenceNr: Rep[Long], max: ConstColumn[Long]): Query[Journal, JournalRow, Seq] =
+  private def _messagesQuery(persistenceId: Rep[String], fromSequenceNr: Rep[Long], toSequenceNr: Rep[Long], max: ConstColumn[Long]) =
     JournalTable
       .filter(_.persistenceId === persistenceId)
       .filter(_.sequenceNumber >= fromSequenceNr)
@@ -43,7 +43,7 @@ class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg:
       .take(max)
   val messagesQuery = Compiled(_messagesQuery _)
 
-  private def _eventsByTag(tag: Rep[String], offset: ConstColumn[Long], max: ConstColumn[Long]): Query[Journal, JournalRow, Seq] =
+  private def _eventsByTag(tag: Rep[String], offset: ConstColumn[Long], max: ConstColumn[Long]) =
     JournalTable
       .filter(_.tags like tag)
       .sortBy(_.ordering.asc)

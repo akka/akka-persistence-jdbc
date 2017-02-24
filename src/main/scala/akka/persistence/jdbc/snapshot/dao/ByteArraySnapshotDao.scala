@@ -21,7 +21,7 @@ import akka.persistence.jdbc.config.SnapshotConfig
 import akka.persistence.jdbc.snapshot.dao.SnapshotTables.SnapshotRow
 import akka.serialization.Serialization
 import akka.stream.Materializer
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 import slick.jdbc.JdbcBackend
 
 import scala.concurrent.{ExecutionContext, Future}

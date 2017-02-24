@@ -15,28 +15,8 @@ Add the following to your `build.sbt`:
 // the library is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.4.17.0"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.4.17.1"
 ```
-
-Please note [PR #75 - Removed binary dependency on slick-extensions](https://github.com/dnvriend/akka-persistence-jdbc/pull/75),
-if you are using the Oracle driver from slick-extensions, you must have a [Lightbend subscription](https://www.lightbend.com/platform/subscription).
-I have misinterpreted Lightbend open sourcing slick-extensions 3.1.0 as a change to the license, it didn't so you __cannot__ use it
-for free.
-
-```
-// to resolve the slick-extensions you need the following repo
-resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-releases/"
-
-libraryDependencies += "com.typesafe.slick" %% "slick-extensions" % "3.1.0"
-```
-
-If you do not have subscription you may use [freeslick](https://github.com/smootoo/freeslick), because it provides a free open-source driver for Oracle:
-
-```
-libraryDependencies += "org.suecarter" %% "freeslick" % "3.1.1.1"
-```
-
-
 
 ## Contribution policy
 
@@ -51,7 +31,7 @@ If you want to take action, feel free to contact Dennis Vriend <dnvriend@gmail.c
 This source code is made available under the [Apache 2.0 License][apache]. The [quick summary of what this license means is available here](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0))
 
 ## Configuration
-The new plugin relies on Slick to do create the SQL dialect for the database in use, therefore the following must be configured in `application.conf`
+The plugin relies on Slick 3.2.0 to do create the SQL dialect for the database in use, therefore the following must be configured in `application.conf`
 
 Configure `akka-persistence`:
 - instruct akka persistence to use the `jdbc-journal` plugin,
@@ -59,11 +39,10 @@ Configure `akka-persistence`:
 
 Configure `slick`:
 - The following slick drivers are supported:
-  - `slick.driver.PostgresDriver$`
-  - `slick.driver.MySQLDriver$`
-  - `slick.driver.H2Driver$`
-  - `com.typesafe.slick.driver.oracle.OracleDriver$`
-  - `freeslick.OracleProfile$`
+  - `slick.jdbc.PostgresProfile$`
+  - `slick.jdbc.MySQLProfile$`
+  - `slick.jdbc.H2Profile$`
+  - `slick.jdbc.OracleProfile$`
 
 ## Database Schema
 
@@ -74,16 +53,10 @@ Configure `slick`:
 
 ## Configuration
 
-__Reference:__
 - [Default](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/reference.conf)
-
-__Free database profiles:__
 - [Postgres](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/postgres-application.conf)
 - [MySQL](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/mysql-application.conf)
-- [FeeSlick-Oracle](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/freeslick-oracle-application.conf)
 - [H2](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/h2-application.conf)
-
-__Non free database profile:__
 - [Oracle](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/oracle-application.conf)
 
 ## DataSource lookup by JNDI name
@@ -94,7 +67,7 @@ To enable the JNDI lookup, you must add the following to your application.conf:
 ```
 jdbc-journal {
   slick {
-    driver = "slick.driver.PostgresDriver$"
+    driver = "slick.jdbc.PostgresDriver$"
     jndiName = "java:jboss/datasources/PostgresDS"   
   }
 }
@@ -254,22 +227,22 @@ By means of configuration in `application.conf` a DAO can be configured, below t
 
 ```bash
 jdbc-journal {
-  dao = "akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao"
+  dao = "akka.persistence.jdbc.journal.dao.ByteArrayJournalDao"
 }
 
 jdbc-snapshot-store {
-  dao = "akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao"
+  dao = "akka.persistence.jdbc.snapshot.dao.ByteArraySnapshotDao"
 }
 
 jdbc-read-journal {
-  dao = "akka.persistence.jdbc.dao.bytea.readjournal.ByteArrayReadJournalDao"
+  dao = "akka.persistence.jdbc.query.dao.ByteArrayReadJournalDao"
 }
 ```
 
 Storing messages as byte arrays in blobs is not the only way to store information in a database. For example, you could store messages with full type information as a normal database rows, each event type having its own table.
 For example, implementing a Journal Log table that stores all persistenceId, sequenceNumber and event type discriminator field, and storing the event data in another table with full typing
 
-You only have to implement two interfaces `akka.persistence.jdbc.dao.JournalDao` and/or `akka.persistence.jdbc.dao.SnapshotDao`. As these APIs are only now exposed for public use, the interfaces may change when the API needs to
+You only have to implement two interfaces `akka.persistence.jdbc.journal.dao.JournalDao` and/or `akka.persistence.jdbc.snapshot.dao.SnapshotDao`. As these APIs are only now exposed for public use, the interfaces may change when the API needs to
 change for whatever reason.
 
 For example, take a look at the following two custom DAOs:
@@ -298,6 +271,15 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## Changelog
+### 2.4.17.1 (2017-02-24)
+  - Slick 3.1.1 -> 3.2.0
+  - Scala 2.11.8 and 2.12.1 support
+  - The following slick drivers are supported:
+    - `slick.jdbc.PostgresProfile$`
+    - `slick.jdbc.MySQLProfile$`
+    - `slick.jdbc.H2Profile$`
+    - `slick.jdbc.OracleProfile$`
+
 ### 2.4.17.0.3.2.0-RC1
   - Slick 3.2.0-RC1 test release
   - Akka 2.4.17

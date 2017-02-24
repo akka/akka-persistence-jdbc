@@ -11,9 +11,20 @@
     </appender>
 
     <!--<logger name="akka.persistence.jdbc" level="debug"/>-->
-    <!--<logger name="slick.backend.DatabaseComponent.action" level="debug"/>-->
     <!--<logger name="com.zaxxer.hikari.pool.HikariPool" level="debug"/>-->
     <!--<logger name="akka.persistence.jdbc.journal" level="info"/>-->
+
+    <!--<logger name="slick.backend.DatabaseComponent.action" level="debug"/>-->
+
+    <!-- Logs session events such as opening/closing connections -->
+    <!--<logger name="slick.session" level="debug"/>-->
+
+    <!-- Logs SQL sent to the database -->
+    <!--<logger name="slick.jdbc.JdbcBackend.statement" level="DEBUG"/>-->
+
+    <!-- Logs the first few results of each query. -->
+    <!--<logger name="slick.jdbc.StatementInvoker.result" level="DEBUG"/>-->
+
     <root level="error">
         <appender-ref ref="console"/>
     </root>

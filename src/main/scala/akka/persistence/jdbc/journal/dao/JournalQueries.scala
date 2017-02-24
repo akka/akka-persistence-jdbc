@@ -18,7 +18,7 @@ package akka.persistence.jdbc
 package journal.dao
 
 import akka.persistence.jdbc.config.JournalTableConfiguration
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 
 class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration) extends JournalTables {
 
@@ -27,7 +27,7 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
   def writeJournalRows(xs: Seq[JournalRow]) =
     JournalTable ++= xs.sortBy(_.sequenceNumber)
 
-  private def selectAllJournalForPersistenceId(persistenceId: Rep[String]): Query[Journal, JournalRow, Seq] =
+  private def selectAllJournalForPersistenceId(persistenceId: Rep[String]) =
     JournalTable.filter(_.persistenceId === persistenceId).sortBy(_.sequenceNumber.desc)
 
   def markJournalMessagesAsDeleted(persistenceId: String, maxSequenceNr: Long) =
@@ -42,7 +42,7 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
 
   val highestSequenceNrForPersistenceId = Compiled(_highestSequenceNrForPersistenceId _)
 
-  private def _selectByPersistenceIdAndMaxSequenceNumber(persistenceId: Rep[String], maxSequenceNr: Rep[Long]): Query[Journal, JournalRow, Seq] =
+  private def _selectByPersistenceIdAndMaxSequenceNumber(persistenceId: Rep[String], maxSequenceNr: Rep[Long]) =
     selectAllJournalForPersistenceId(persistenceId).filter(_.sequenceNumber <= maxSequenceNr)
 
   val selectByPersistenceIdAndMaxSequenceNumber = Compiled(_selectByPersistenceIdAndMaxSequenceNumber _)
@@ -57,7 +57,7 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
     if query inSetBind persistenceIds
   } yield query
 
-  private def _messagesQuery(persistenceId: Rep[String], fromSequenceNr: Rep[Long], toSequenceNr: Rep[Long], max: ConstColumn[Long]): Query[Journal, JournalRow, Seq] =
+  private def _messagesQuery(persistenceId: Rep[String], fromSequenceNr: Rep[Long], toSequenceNr: Rep[Long], max: ConstColumn[Long]) =
     JournalTable
       .filter(_.persistenceId === persistenceId)
       .filter(_.deleted === false)

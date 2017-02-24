@@ -71,6 +71,4 @@ class MySQLJournalSpec extends JdbcJournalSpec(ConfigFactory.load("mysql-applica
 
 class OracleJournalSpec extends JdbcJournalSpec(ConfigFactory.load("oracle-application.conf"), Oracle())
 
-class FreeslickOracleJournalSpec extends JdbcJournalSpec(ConfigFactory.load("freeslick-oracle-application.conf"), Oracle())
-
 class H2JournalSpec extends JdbcJournalSpec(ConfigFactory.load("h2-application.conf"), H2())

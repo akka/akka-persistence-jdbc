@@ -20,7 +20,7 @@ package journal.dao
 import akka.persistence.jdbc.config.JournalTableConfiguration
 
 trait JournalTables {
-  val profile: slick.driver.JdbcProfile
+  val profile: slick.jdbc.JdbcProfile
 
   import profile.api._
 

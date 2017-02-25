@@ -271,6 +271,10 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## Changelog
+### 2.4.17.2 (NOT YET RELEASED)
+  - Merged PR #88 [Andrey Kouznetsov][kouznetsov] Compiled inserts, thanks!
+  - Tweaked threads, maxConnections and minConnections to leverage [slick issue #1461 - fixes issue 1274: Slick deadlock](https://github.com/slick/slick/pull/1461)
+
 ### 2.4.17.1 (2017-02-24)
   - Slick 3.1.1 -> 3.2.0
   - Scala 2.11.8 and 2.12.1 support

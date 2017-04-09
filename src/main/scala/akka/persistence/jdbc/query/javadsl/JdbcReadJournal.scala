@@ -18,7 +18,7 @@ package akka.persistence.jdbc.query.javadsl
 
 import akka.NotUsed
 import akka.persistence.jdbc.query.scaladsl.{JdbcReadJournal => ScalaJdbcReadJournal}
-import akka.persistence.query.EventEnvelope
+import akka.persistence.query.{EventEnvelope, Offset}
 import akka.persistence.query.javadsl._
 import akka.stream.javadsl.Source
 
@@ -28,7 +28,7 @@ object JdbcReadJournal {
 
 class JdbcReadJournal(journal: ScalaJdbcReadJournal) extends ReadJournal
     with CurrentPersistenceIdsQuery
-    with AllPersistenceIdsQuery
+    with PersistenceIdsQuery
     with CurrentEventsByPersistenceIdQuery
     with EventsByPersistenceIdQuery
     with CurrentEventsByTagQuery
@@ -37,8 +37,8 @@ class JdbcReadJournal(journal: ScalaJdbcReadJournal) extends ReadJournal
   override def currentPersistenceIds(): Source[String, NotUsed] =
     journal.currentPersistenceIds().asJava
 
-  override def allPersistenceIds(): Source[String, NotUsed] =
-    journal.allPersistenceIds().asJava
+  override def persistenceIds(): Source[String, NotUsed] =
+    journal.persistenceIds().asJava
 
   override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     journal.currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).asJava
@@ -46,9 +46,9 @@ class JdbcReadJournal(journal: ScalaJdbcReadJournal) extends ReadJournal
   override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     journal.eventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).asJava
 
-  override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
+  override def currentEventsByTag(tag: String, offset: Offset): Source[EventEnvelope, NotUsed] =
     journal.currentEventsByTag(tag, offset).asJava
 
-  override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
+  override def eventsByTag(tag: String, offset: Offset): Source[EventEnvelope, NotUsed] =
     journal.eventsByTag(tag, offset).asJava
 }

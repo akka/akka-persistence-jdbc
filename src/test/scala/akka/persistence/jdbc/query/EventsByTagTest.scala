@@ -16,7 +16,8 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.query.EventEnvelope
+import akka.persistence.query.{EventEnvelope, Sequence}
+
 import scala.concurrent.duration._
 import akka.pattern.ask
 
@@ -50,38 +51,38 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
 
       withEventsByTag()("number", Long.MinValue) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
-        tp.expectNext(EventEnvelope(2, "my-2", 1, 2))
-        tp.expectNext(EventEnvelope(3, "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
         tp.cancel()
       }
 
       withEventsByTag()("number", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
-        tp.expectNext(EventEnvelope(2, "my-2", 1, 2))
-        tp.expectNext(EventEnvelope(3, "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
         tp.cancel()
       }
 
       withEventsByTag()("number", 1) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
-        tp.expectNext(EventEnvelope(2, "my-2", 1, 2))
-        tp.expectNext(EventEnvelope(3, "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
         tp.cancel()
       }
 
       withEventsByTag()("number", 2) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(2, "my-2", 1, 2))
-        tp.expectNext(EventEnvelope(3, "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
         tp.cancel()
       }
 
       withEventsByTag()("number", 3) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(3, "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
         tp.cancel()
       }
 
@@ -94,19 +95,19 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
 
       withEventsByTag()("number", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
-        tp.expectNext(EventEnvelope(2, "my-2", 1, 2))
-        tp.expectNext(EventEnvelope(3, "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
         tp.expectNoMsg(NoMsgTime)
 
         actor1 ! withTags(1, "number")
-        tp.expectNext(EventEnvelope(4, "my-1", 2, 1))
+        tp.expectNext(EventEnvelope(Sequence(4), "my-1", 2, 1))
 
         actor1 ! withTags(1, "number")
-        tp.expectNext(EventEnvelope(5, "my-1", 3, 1))
+        tp.expectNext(EventEnvelope(Sequence(5), "my-1", 3, 1))
 
         actor1 ! withTags(1, "number")
-        tp.expectNext(EventEnvelope(6, "my-1", 4, 1))
+        tp.expectNext(EventEnvelope(Sequence(6), "my-1", 4, 1))
         tp.cancel()
         tp.expectNoMsg(NoMsgTime)
       }
@@ -125,12 +126,12 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
 
       withEventsByTag()("number", 2) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(2, "my-2", 1, 2))
-        tp.expectNext(EventEnvelope(3, "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
         tp.expectNoMsg(NoMsgTime)
 
         actor1 ! withTags(1, "number")
-        tp.expectNext(EventEnvelope(4, "my-1", 2, 1))
+        tp.expectNext(EventEnvelope(Sequence(4), "my-1", 2, 1))
         tp.cancel()
         tp.expectNoMsg(NoMsgTime)
       }
@@ -144,15 +145,15 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.expectNoMsg(NoMsgTime)
 
         actor1 ! withTags(1, "one") // 1
-        tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
         tp.expectNoMsg(NoMsgTime)
 
         actor2 ! withTags(1, "one") // 2
-        tp.expectNext(EventEnvelope(2, "my-2", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 1))
         tp.expectNoMsg(NoMsgTime)
 
         actor3 ! withTags(1, "one") // 3
-        tp.expectNext(EventEnvelope(3, "my-3", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 1))
         tp.expectNoMsg(NoMsgTime)
 
         actor1 ! withTags(2, "two") // 4
@@ -165,15 +166,15 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.expectNoMsg(NoMsgTime)
 
         actor1 ! withTags(1, "one") // 7
-        tp.expectNext(EventEnvelope(7, "my-1", 3, 1))
+        tp.expectNext(EventEnvelope(Sequence(7), "my-1", 3, 1))
         tp.expectNoMsg(NoMsgTime)
 
         actor2 ! withTags(1, "one") // 8
-        tp.expectNext(EventEnvelope(8, "my-2", 3, 1))
+        tp.expectNext(EventEnvelope(Sequence(8), "my-2", 3, 1))
         tp.expectNoMsg(NoMsgTime)
 
         actor3 ! withTags(1, "one") // 9
-        tp.expectNext(EventEnvelope(9, "my-3", 3, 1))
+        tp.expectNext(EventEnvelope(Sequence(9), "my-3", 3, 1))
         tp.expectNoMsg(NoMsgTime)
         tp.cancel()
         tp.expectNoMsg(NoMsgTime)
@@ -203,51 +204,51 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
 
       withEventsByTag(10.seconds)("prime", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
-        tp.expectNext(EventEnvelope(2, "my-1", 2, 2))
-        tp.expectNext(EventEnvelope(3, "my-1", 3, 3))
-        tp.expectNext(EventEnvelope(5, "my-1", 5, 5))
-        tp.expectNext(EventEnvelope(6, "my-2", 1, 3))
-        tp.expectNext(EventEnvelope(7, "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
+        tp.expectNext(EventEnvelope(Sequence(5), "my-1", 5, 5))
+        tp.expectNext(EventEnvelope(Sequence(6), "my-2", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(7), "my-3", 1, 3))
         tp.expectNoMsg(NoMsgTime)
         tp.cancel()
       }
 
       withEventsByTag(10.seconds)("three", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(3, "my-1", 3, 3))
-        tp.expectNext(EventEnvelope(6, "my-2", 1, 3))
-        tp.expectNext(EventEnvelope(7, "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
+        tp.expectNext(EventEnvelope(Sequence(6), "my-2", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(7), "my-3", 1, 3))
         tp.expectNoMsg(NoMsgTime)
         tp.cancel()
       }
 
       withEventsByTag(10.seconds)("3", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(3, "my-1", 3, 3))
-        tp.expectNext(EventEnvelope(6, "my-2", 1, 3))
-        tp.expectNext(EventEnvelope(7, "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
+        tp.expectNext(EventEnvelope(Sequence(6), "my-2", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(7), "my-3", 1, 3))
         tp.expectNoMsg(NoMsgTime)
         tp.cancel()
       }
 
       withEventsByTag(10.seconds)("one", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
         tp.expectNoMsg(NoMsgTime)
         tp.cancel()
       }
 
       withEventsByTag(10.seconds)("four", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(4, "my-1", 4, 4) => }
+        tp.expectNextPF { case EventEnvelope(Sequence(4), "my-1", 4, 4) => }
         tp.expectNoMsg(NoMsgTime)
         tp.cancel()
       }
 
       withEventsByTag(10.seconds)("five", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(5, "my-1", 5, 5))
+        tp.expectNext(EventEnvelope(Sequence(5), "my-1", 5, 5))
         tp.expectNoMsg(NoMsgTime)
         tp.cancel()
         tp.expectNoMsg(NoMsgTime)

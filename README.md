@@ -15,6 +15,10 @@ Add the following to your `build.sbt`:
 // the library is available in Bintray's JCenter
 resolvers += Resolver.jcenterRepo
 
+// akka 2.5.x
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.5.0.0"
+
+// akka 2.4.x
 libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.4.17.1"
 ```
 
@@ -271,6 +275,10 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## Changelog
+### 2.5.0.0 (2017-04-13)
+  - Merged PR #97 [Dan Di Spaltro][dispalt] Update to akka-2.5.0-RC2, thanks!
+  - Akka 2.5.0-RC2 -> Akka 2.5.0
+
 ### 2.4.17.2 (NOT YET RELEASED)
   - Merged PR #88 [Andrey Kouznetsov][kouznetsov] Compiled inserts, thanks!
   - Tweaked threads, maxConnections and minConnections to leverage [slick issue #1461 - fixes issue 1274: Slick deadlock](https://github.com/slick/slick/pull/1461)
@@ -675,6 +683,7 @@ sys.addShutdownHook(system.terminate())
 ### 0.0.1 (2014-05-23)
  - Initial commit
 
+[dispalt]: https://github.com/dispalt
 [monktastic]: https://github.com/monktastic
 [fcristovao]: https://github.com/fcristovao
 [ellawala]: https://github.com/charithe

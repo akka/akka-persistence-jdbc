@@ -8,19 +8,27 @@ import sbt._
 import scalariform.formatter.preferences.FormattingPreferences
 
 object ProjectAutoPlugin extends AutoPlugin {
-  val AkkaVersion = "2.4.17"
-  val SlickVersion = "3.2.0"
-  val HikariCPVersion = "2.5.1"
-  val ScalaTestVersion = "3.0.1"
+  final val AkkaVersion = "2.4.18"
+  final val SlickVersion = "3.2.0"
+  final val HikariCPVersion = "2.5.1"
+  final val ScalaTestVersion = "3.0.3"
 
-  override def requires = com.typesafe.sbt.SbtScalariform
+  final val formattingPreferences: FormattingPreferences = {
+    import scalariform.formatter.preferences._
+    FormattingPreferences()
+      .setPreference(AlignSingleLineCaseStatements, true)
+      .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 100)
+      .setPreference(DoubleIndentClassDeclaration, true)
+  }
 
-  override def trigger = allRequirements
+  override val requires = com.typesafe.sbt.SbtScalariform
+
+  override val trigger: PluginTrigger = allRequirements
 
   object autoImport {
   }
 
-  override lazy val projectSettings: Seq[Setting[_]] = SbtScalariform.scalariformSettings ++ Seq(
+  override val projectSettings: Seq[Setting[_]] = SbtScalariform.scalariformSettings ++ Seq(
     name := "akka-persistence-jdbc",
     organization := "com.github.dnvriend",
     organizationName := "Dennis Vriend",
@@ -29,9 +37,9 @@ object ProjectAutoPlugin extends AutoPlugin {
 
     licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php")),
 
-    scalaVersion := "2.11.8",
+    scalaVersion := "2.12.2",
 
-    crossScalaVersions := Seq("2.11.8", "2.12.1"),
+    crossScalaVersions := Seq("2.11.11", "2.12.2"),
 
     fork in Test := true,
 
@@ -51,9 +59,8 @@ object ProjectAutoPlugin extends AutoPlugin {
       "-target:jvm-1.8"
     ),
 
-    javacOptions ++= Seq(
-      "-Xlint:unchecked"
-    ),
+    scalacOptions += "-Ypartial-unification",
+    scalacOptions += "-Ydelambdafy:method",
 
     // show full stack traces and test case durations
     testOptions in Test += Tests.Argument("-oDF"),
@@ -75,22 +82,14 @@ object ProjectAutoPlugin extends AutoPlugin {
    libraryDependencies += "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
    libraryDependencies += "com.typesafe.slick" %% "slick" % SlickVersion,
    libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
-   libraryDependencies += "org.postgresql" % "postgresql" % "9.4.1212" % Test,
-   libraryDependencies += "com.h2database" % "h2" % "1.4.193" % Test,
-   libraryDependencies += "mysql" % "mysql-connector-java" % "6.0.5" % Test,
-   libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.1" % Test,
+   libraryDependencies += "org.postgresql" % "postgresql" % "42.0.0" % Test,
+   libraryDependencies += "com.h2database" % "h2" % "1.4.195" % Test,
+   libraryDependencies += "mysql" % "mysql-connector-java" % "6.0.6" % Test,
+   libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-persistence-tck" % AkkaVersion % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % AkkaVersion % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % AkkaVersion % Test,
    libraryDependencies += "org.scalatest" %% "scalatest" % ScalaTestVersion % Test   
- )   
-
-  def formattingPreferences: FormattingPreferences = {
-    import scalariform.formatter.preferences._
-    FormattingPreferences()
-      .setPreference(AlignSingleLineCaseStatements, true)
-      .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 100)
-      .setPreference(DoubleIndentClassDeclaration, true)
-  }
+ )
 }

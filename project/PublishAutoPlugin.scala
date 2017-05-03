@@ -4,16 +4,16 @@ import bintray.BintrayKeys._
 
 object PublishAutoPlugin extends AutoPlugin { 
 
-  override def trigger: PluginTrigger = allRequirements
+  override val trigger: PluginTrigger = allRequirements
 
-  override def requires: Plugins = sbtrelease.ReleasePlugin
+  override val requires: Plugins = sbtrelease.ReleasePlugin
 
   object autoImport {
   }
 
  import autoImport._
 
- override lazy val projectSettings = Seq(
+ override val projectSettings = Seq(
     publishMavenStyle := true,
     pomExtraSetting("akka-persistence-jdbc"),
     homepageSetting("akka-persistence-jdbc"),

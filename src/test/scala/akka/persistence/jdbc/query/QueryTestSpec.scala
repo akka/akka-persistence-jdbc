@@ -169,6 +169,15 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJ
           updateState(payload)
           sender() ! akka.actor.Status.Success((payload, tags))
         }
+      case event: String =>
+        persist(event) { evt =>
+          sender() ! akka.actor.Status.Success(evt)
+        }
+
+      case event @ Tagged(payload: String, tags) =>
+        persist(event) { evt =>
+          sender() ! akka.actor.Status.Success((payload, tags))
+        }
     }
 
     def updateState(event: Int): Unit = {

@@ -33,6 +33,9 @@ import scala.collection.immutable._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
+object JdbcAsyncWriteJournal {
+  val Identifier = "jdbc-journal"
+}
 class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val system: ActorSystem = context.system

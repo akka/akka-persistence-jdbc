@@ -12,21 +12,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-
-package akka.persistence.jdbc.query.adapter
-
-import akka.persistence.journal.{EventSeq, ReadEventAdapter}
+ */package akka.persistence.jdbc.query.adapter
 
 /**
-  * Event adapter that creates two events from one persisted event for the string events.
-  * The string is concatenated with itself as a result.
+  * Sample domain event used in [[akka.persistence.jdbc.query.EventAdapterTest]]
   */
-class StringEventAdapter extends ReadEventAdapter {
-  override def fromJournal(event: Any, manifest: String): EventSeq = {
-    event match {
-      case s: String => EventSeq(s, s+s)
-      case _ => EventSeq.single(event)
-    }
-  }
-}
+case class DomainEvent(value: String)

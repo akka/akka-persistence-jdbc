@@ -59,7 +59,8 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   val db = SlickDatabase.forConfig(config, readJournalConfig.slickConfiguration)
   sys.addShutdownHook(db.close())
 
-  val eventAdapters = Persistence(system).adaptersFor(JdbcAsyncWriteJournal.Identifier)
+  private val writePluginId = config.getString("write-plugin")
+  private val eventAdapters = Persistence(system).adaptersFor(writePluginId)
 
   val readJournalDao: ReadJournalDao = {
     val fqcn = readJournalConfig.pluginConfig.dao

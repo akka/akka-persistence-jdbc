@@ -20,31 +20,59 @@ import akka.persistence.query.EventEnvelope
 
 import scala.concurrent.duration._
 import akka.pattern.ask
-import akka.persistence.jdbc.query.adapter.DomainEvent
+import akka.persistence.journal.{EventSeq, ReadEventAdapter, Tagged, WriteEventAdapter}
 
+object EventAdapterTest {
+
+  case class Event(value: String) {
+    def adapted = EventAdapted(value)
+  }
+
+  case class TaggedEvent(event: Event, tag: String)
+
+  case class EventAdapted(value: String) {
+    def restored = EventRestored(value)
+  }
+
+  case class EventRestored(value: String)
+
+  class TestReadEventAdapter extends ReadEventAdapter {
+    override def fromJournal(event: Any, manifest: String): EventSeq = event match {
+        case e: EventAdapted => EventSeq.single(e.restored)
+      }
+  }
+
+  class TestWriteEventAdapter extends WriteEventAdapter {
+    override def manifest(event: Any): String = ""
+
+    override def toJournal(event: Any): Any = event match {
+      case e: Event => e.adapted
+      case TaggedEvent(e: Event, tags) => Tagged(e.adapted, Set(tags))
+      case _ => event
+    }
+  }
+
+}
 /**
   * Tests that check persistence queries when event adapter is configured for persisted event.
-  * The test is configured to use [[akka.persistence.jdbc.query.adapter.DomainEventAdapter]] that creates
-  * two event out of one persisted event.
   */
 abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
+  import EventAdapterTest._
 
   final val NoMsgTime: FiniteDuration = 100.millis
 
-  it should "find events for actor with pid 'my-1' using event adapters" in {
+  it should "apply event adapter when querying events for actor with pid 'my-1'" in {
       withTestActors() { (actor1, actor2, actor3) =>
         withEventsByPersistenceId()("my-1", 0) { tp =>
           tp.request(10)
           tp.expectNoMsg(100.millis)
 
-          actor1 ! DomainEvent("1")
-          tp.expectNext(ExpectNextTimeout, EventEnvelope(1, "my-1", 1, DomainEvent("1")))
-          tp.expectNext(ExpectNextTimeout, EventEnvelope(1, "my-1", 1, DomainEvent("11")))
+          actor1 ! Event("1")
+          tp.expectNext(ExpectNextTimeout, EventEnvelope(1, "my-1", 1, EventRestored("1")))
           tp.expectNoMsg(100.millis)
 
-          actor1 ! DomainEvent("2")
-          tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-1", 2, DomainEvent("2")))
-          tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-1", 2, DomainEvent("22")))
+          actor1 ! Event("2")
+          tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-1", 2, EventRestored("2")))
           tp.expectNoMsg(100.millis)
           tp.cancel()
         }
@@ -52,126 +80,109 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
 
   }
 
-  it should "find events by tag from an offset when using event adapters" in {
+  it should "apply event adapters when querying events by tag from an offset" in {
     withTestActors() { (actor1, actor2, actor3) =>
 
-      (actor1 ? withTags(DomainEvent("1"), "domainEvent")).futureValue
-      (actor2 ? withTags(DomainEvent("2"), "domainEvent")).futureValue
-      (actor3 ? withTags(DomainEvent("3"), "domainEvent")).futureValue
+      (actor1 ? TaggedEvent(Event("1"), "event")).futureValue
+      (actor2 ? TaggedEvent(Event("2"), "event")).futureValue
+      (actor3 ? TaggedEvent(Event("3"), "event")).futureValue
 
       eventually {
-        countJournal.futureValue shouldBe 6 // each event is doubled
+        countJournal.futureValue shouldBe 3
       }
 
-      withEventsByTag(10.seconds)("domainEvent", 2) { tp =>
+      withEventsByTag(10.seconds)("event", 2) { tp =>
 
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(2, "my-2", 1, DomainEvent("2")))
-        tp.expectNext(EventEnvelope(2, "my-2", 1, DomainEvent("22")))
-        tp.expectNext(EventEnvelope(3, "my-3", 1, DomainEvent("3")))
-        tp.expectNext(EventEnvelope(3, "my-3", 1, DomainEvent("33")))
+        tp.expectNext(EventEnvelope(2, "my-2", 1, EventRestored("2")))
+        tp.expectNext(EventEnvelope(3, "my-3", 1, EventRestored("3")))
         tp.expectNoMsg(NoMsgTime)
 
-        actor1 ! withTags(DomainEvent("1"), "domainEvent")
-        tp.expectNext(EventEnvelope(4, "my-1", 2, DomainEvent("1")))
-        tp.expectNext(EventEnvelope(4, "my-1", 2, DomainEvent("11")))
+        actor1 ! TaggedEvent(Event("1"), "event")
+        tp.expectNext(EventEnvelope(4, "my-1", 2, EventRestored("1")))
         tp.cancel()
         tp.expectNoMsg(NoMsgTime)
       }
     }
   }
 
-  it should "find current events for actors when using event adapters" in {
+  it should "apply event adapters when querying current events for actors" in {
     withTestActors() { (actor1, actor2, actor3) =>
-      actor1 ! DomainEvent("1")
-      actor1 ! DomainEvent("2")
-      actor1 ! DomainEvent("3")
+      actor1 ! Event("1")
+      actor1 ! Event("2")
+      actor1 ! Event("3")
 
       eventually {
-        countJournal.futureValue shouldBe 6 // events are doubled
+        countJournal.futureValue shouldBe 3
       }
 
       withCurrentEventsByPersistenceId()("my-1", 1, 1) { tp =>
         tp.request(Int.MaxValue)
-          .expectNext(EventEnvelope(1, "my-1", 1, DomainEvent("1")))
-          .expectNext(EventEnvelope(1, "my-1", 1, DomainEvent("11")))
+          .expectNext(EventEnvelope(1, "my-1", 1, EventRestored("1")))
           .expectComplete()
       }
 
       withCurrentEventsByPersistenceId()("my-1", 2, 2) { tp =>
         tp.request(Int.MaxValue)
-          .expectNext(EventEnvelope(2, "my-1", 2, DomainEvent("2")))
-          .expectNext(EventEnvelope(2, "my-1", 2, DomainEvent("22")))
+          .expectNext(EventEnvelope(2, "my-1", 2, EventRestored("2")))
           .expectComplete()
       }
 
       withCurrentEventsByPersistenceId()("my-1", 3, 3) { tp =>
         tp.request(Int.MaxValue)
-          .expectNext(EventEnvelope(3, "my-1", 3, DomainEvent("3")))
-          .expectNext(EventEnvelope(3, "my-1", 3, DomainEvent("33")))
+          .expectNext(EventEnvelope(3, "my-1", 3, EventRestored("3")))
           .expectComplete()
       }
 
       withCurrentEventsByPersistenceId()("my-1", 2, 3) { tp =>
         tp.request(Int.MaxValue)
-          .expectNext(EventEnvelope(2, "my-1", 2, DomainEvent("2")))
-          .expectNext(EventEnvelope(2, "my-1", 2, DomainEvent("22")))
-          .expectNext(EventEnvelope(3, "my-1", 3, DomainEvent("3")))
-          .expectNext(EventEnvelope(3, "my-1", 3, DomainEvent("33")))
+          .expectNext(EventEnvelope(2, "my-1", 2, EventRestored("2")))
+          .expectNext(EventEnvelope(3, "my-1", 3, EventRestored("3")))
           .expectComplete()
       }
     }
   }
 
-  it should "find all current events by tag when using event adapters" in {
+  it should "apply event adapters when querying all current events by tag" in {
     withTestActors() { (actor1, actor2, actor3) =>
-      (actor1 ? withTags(DomainEvent("1"), "domainEvent")).futureValue
-      (actor2 ? withTags(DomainEvent("2"), "domainEvent")).futureValue
-      (actor3 ? withTags(DomainEvent("3"), "domainEvent")).futureValue
+      (actor1 ? TaggedEvent(Event("1"), "event")).futureValue
+      (actor2 ? TaggedEvent(Event("2"), "event")).futureValue
+      (actor3 ? TaggedEvent(Event("3"), "event")).futureValue
 
       eventually {
-        countJournal.futureValue shouldBe 6 // events are doubled
+        countJournal.futureValue shouldBe 3
       }
 
-      withCurrentEventsByTag()("domainEvent", 0) { tp =>
+      withCurrentEventsByTag()("event", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(1, _, _, EventRestored("1")) => }
+        tp.expectNextPF { case EventEnvelope(2, _, _, EventRestored("2")) => }
+        tp.expectNextPF { case EventEnvelope(3, _, _, EventRestored("3")) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("domainEvent", 1) { tp =>
+      withCurrentEventsByTag()("event", 1) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(1, _, _, EventRestored("1")) => }
+        tp.expectNextPF { case EventEnvelope(2, _, _, EventRestored("2")) => }
+        tp.expectNextPF { case EventEnvelope(3, _, _, EventRestored("3")) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("domainEvent", 2) { tp =>
+      withCurrentEventsByTag()("event", 2) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(2, _, _, EventRestored("2")) => }
+        tp.expectNextPF { case EventEnvelope(3, _, _, EventRestored("3")) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("domainEvent", 3) { tp =>
+      withCurrentEventsByTag()("event", 3) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
+        tp.expectNextPF { case EventEnvelope(3, _, _, EventRestored("3")) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("domainEvent", 4) { tp =>
+      withCurrentEventsByTag()("event", 4) { tp =>
         tp.request(Int.MaxValue)
         tp.expectComplete()
       }

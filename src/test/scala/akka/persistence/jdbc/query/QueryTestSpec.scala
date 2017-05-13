@@ -20,7 +20,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingReceive
 import akka.persistence.PersistentActor
 import akka.persistence.jdbc.TestSpec
-import akka.persistence.jdbc.query.adapter.DomainEvent
+import akka.persistence.jdbc.query.EventAdapterTest.{Event, TaggedEvent}
 import akka.persistence.jdbc.query.javadsl.{JdbcReadJournal => JavaJdbcReadJournal}
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 import akka.persistence.journal.Tagged
@@ -170,14 +170,14 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJ
           updateState(payload)
           sender() ! akka.actor.Status.Success((payload, tags))
         }
-      case event: DomainEvent =>
+      case event: Event =>
         persist(event) { evt =>
           sender() ! akka.actor.Status.Success(evt)
         }
 
-      case event @ Tagged(payload: DomainEvent, tags) =>
+      case event @ TaggedEvent(payload: Event, tag) =>
         persist(event) { evt =>
-          sender() ! akka.actor.Status.Success((payload, tags))
+          sender() ! akka.actor.Status.Success((payload, tag))
         }
     }
 

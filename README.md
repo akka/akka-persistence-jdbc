@@ -19,7 +19,7 @@ resolvers += Resolver.jcenterRepo
 libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.5.1.0"
 
 // akka 2.4.x
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.4.18.0"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.4.18.1"
 ```
 
 ## Contribution policy
@@ -275,6 +275,9 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## Changelog
+## 2.4.18.1 (2017-06-04)
+  - Merged PR #103 [[aenevala]][[aenevala]] Added support for event adapters on query side, thanks!
+
 ### 2.5.1.0 (2017-05-03)
   - Akka 2.5.0 -> 2.5.1
 
@@ -687,6 +690,7 @@ sys.addShutdownHook(system.terminate())
 ### 0.0.1 (2014-05-23)
  - Initial commit
 
+[aenevala]: https://github.com/aenevala
 [dispalt]: https://github.com/dispalt
 [monktastic]: https://github.com/monktastic
 [fcristovao]: https://github.com/fcristovao

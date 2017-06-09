@@ -16,7 +16,7 @@ Add the following to your `build.sbt`:
 resolvers += Resolver.jcenterRepo
 
 // akka 2.5.x
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.5.1.0"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.5.2.0"
 
 // akka 2.4.x
 libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.4.18.1"
@@ -275,8 +275,12 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## Changelog
+## 2.5.2.0 (2017-06-09)
+  - Merged PR #105 [aenevala][aenevala] Added support for event adapters on query side for 2.5.2.0, thanks!
+  - Akka 2.5.1 -> 2.5.2
+
 ## 2.4.18.1 (2017-06-04)
-  - Merged PR #103 [[aenevala]][[aenevala]] Added support for event adapters on query side, thanks!
+  - Merged PR #103 [aenevala][aenevala] Added support for event adapters on query side, thanks!
 
 ### 2.5.1.0 (2017-05-03)
   - Akka 2.5.0 -> 2.5.1

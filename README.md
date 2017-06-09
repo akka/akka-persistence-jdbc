@@ -275,6 +275,9 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## Changelog
+## 2.4.18.2 (2017-06-09)
+  - Fixed Issue #106 'JdbcReadJournal in javadsl does not support CurrentEventsByTagQuery2 and EventsByTagQuery2'
+
 ## 2.5.2.0 (2017-06-09)
   - Merged PR #105 [aenevala][aenevala] Added support for event adapters on query side for 2.5.2.0, thanks!
   - Akka 2.5.1 -> 2.5.2

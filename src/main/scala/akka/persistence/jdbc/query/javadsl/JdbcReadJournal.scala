@@ -18,37 +18,52 @@ package akka.persistence.jdbc.query.javadsl
 
 import akka.NotUsed
 import akka.persistence.jdbc.query.scaladsl.{JdbcReadJournal => ScalaJdbcReadJournal}
-import akka.persistence.query.EventEnvelope
-import akka.persistence.query.javadsl._
+import akka.persistence.query.{EventEnvelope, Offset, EventEnvelope2, javadsl}
 import akka.stream.javadsl.Source
 
 object JdbcReadJournal {
   final val Identifier = ScalaJdbcReadJournal.Identifier
 }
 
-class JdbcReadJournal(journal: ScalaJdbcReadJournal) extends ReadJournal
-    with CurrentPersistenceIdsQuery
-    with AllPersistenceIdsQuery
-    with CurrentEventsByPersistenceIdQuery
-    with EventsByPersistenceIdQuery
-    with CurrentEventsByTagQuery
-    with EventsByTagQuery {
+class JdbcReadJournal(journal: ScalaJdbcReadJournal) extends javadsl.ReadJournal
+    with javadsl.CurrentPersistenceIdsQuery
+    with javadsl.AllPersistenceIdsQuery
+    with javadsl.CurrentEventsByPersistenceIdQuery
+    with javadsl.EventsByPersistenceIdQuery
+    with javadsl.CurrentEventsByTagQuery
+    with javadsl.CurrentEventsByTagQuery2
+    with javadsl.EventsByTagQuery
+    with javadsl.EventsByTagQuery2 {
 
-  override def currentPersistenceIds(): Source[String, NotUsed] =
+  override def currentPersistenceIds(): Source[String, NotUsed] = {
     journal.currentPersistenceIds().asJava
+  }
 
-  override def allPersistenceIds(): Source[String, NotUsed] =
+  override def allPersistenceIds(): Source[String, NotUsed] = {
     journal.allPersistenceIds().asJava
+  }
 
-  override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
+  override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] = {
     journal.currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).asJava
+  }
 
-  override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
+  override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] = {
     journal.eventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).asJava
+  }
 
-  override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
+  override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] = {
     journal.currentEventsByTag(tag, offset).asJava
+  }
 
-  override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
+  override def currentEventsByTag(tag: String, offset: Offset): Source[EventEnvelope2, NotUsed] = {
+    journal.currentEventsByTag(tag, offset).asJava
+  }
+
+  override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] = {
     journal.eventsByTag(tag, offset).asJava
+  }
+
+  override def eventsByTag(tag: String, offset: Offset): Source[EventEnvelope2, NotUsed] = {
+    journal.eventsByTag(tag, offset).asJava
+  }
 }

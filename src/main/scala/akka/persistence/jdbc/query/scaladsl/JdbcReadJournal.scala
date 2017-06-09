@@ -21,7 +21,6 @@ import akka.NotUsed
 import akka.actor.ExtendedActorSystem
 import akka.persistence.jdbc.JournalRow
 import akka.persistence.jdbc.config.ReadJournalConfig
-import akka.persistence.jdbc.journal.JdbcAsyncWriteJournal
 import akka.persistence.jdbc.query.dao.ReadJournalDao
 import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
 import akka.persistence.query.scaladsl._

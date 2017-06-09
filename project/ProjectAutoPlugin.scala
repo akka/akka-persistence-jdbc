@@ -8,7 +8,7 @@ import sbt._
 import scalariform.formatter.preferences.FormattingPreferences
 
 object ProjectAutoPlugin extends AutoPlugin {
-  final val AkkaVersion = "2.5.1"
+  final val AkkaVersion = "2.5.2"
   final val SlickVersion = "3.2.0"
   final val HikariCPVersion = "2.5.1"
   final val ScalaTestVersion = "3.0.3"
@@ -82,7 +82,7 @@ object ProjectAutoPlugin extends AutoPlugin {
    libraryDependencies += "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
    libraryDependencies += "com.typesafe.slick" %% "slick" % SlickVersion,
    libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
-   libraryDependencies += "org.postgresql" % "postgresql" % "9.4.1212" % Test,
+   libraryDependencies += "org.postgresql" % "postgresql" % "42.1.1" % Test,
    libraryDependencies += "com.h2database" % "h2" % "1.4.195" % Test,
    libraryDependencies += "mysql" % "mysql-connector-java" % "6.0.6" % Test,
    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,

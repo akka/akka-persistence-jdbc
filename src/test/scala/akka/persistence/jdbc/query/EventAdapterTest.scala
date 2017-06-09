@@ -38,45 +38,45 @@ object EventAdapterTest {
 
   class TestReadEventAdapter extends ReadEventAdapter {
     override def fromJournal(event: Any, manifest: String): EventSeq = event match {
-        case e: EventAdapted => EventSeq.single(e.restored)
-      }
+      case e: EventAdapted => EventSeq.single(e.restored)
+    }
   }
 
   class TestWriteEventAdapter extends WriteEventAdapter {
     override def manifest(event: Any): String = ""
 
     override def toJournal(event: Any): Any = event match {
-      case e: Event => e.adapted
+      case e: Event                    => e.adapted
       case TaggedEvent(e: Event, tags) => Tagged(e.adapted, Set(tags))
-      case _ => event
+      case _                           => event
     }
   }
 
 }
 /**
-  * Tests that check persistence queries when event adapter is configured for persisted event.
-  */
+ * Tests that check persistence queries when event adapter is configured for persisted event.
+ */
 abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
   import EventAdapterTest._
 
   final val NoMsgTime: FiniteDuration = 100.millis
 
   it should "apply event adapter when querying events for actor with pid 'my-1'" in {
-      withTestActors() { (actor1, actor2, actor3) =>
-        withEventsByPersistenceId()("my-1", 0) { tp =>
-          tp.request(10)
-          tp.expectNoMsg(100.millis)
+    withTestActors() { (actor1, actor2, actor3) =>
+      withEventsByPersistenceId()("my-1", 0) { tp =>
+        tp.request(10)
+        tp.expectNoMsg(100.millis)
 
-          actor1 ! Event("1")
-          tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, EventRestored("1")))
-          tp.expectNoMsg(100.millis)
+        actor1 ! Event("1")
+        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, EventRestored("1")))
+        tp.expectNoMsg(100.millis)
 
-          actor1 ! Event("2")
-          tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, EventRestored("2")))
-          tp.expectNoMsg(100.millis)
-          tp.cancel()
-        }
+        actor1 ! Event("2")
+        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, EventRestored("2")))
+        tp.expectNoMsg(100.millis)
+        tp.cancel()
       }
+    }
 
   }
 

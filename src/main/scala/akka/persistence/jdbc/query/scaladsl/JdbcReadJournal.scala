@@ -19,6 +19,8 @@ package scaladsl
 
 import akka.NotUsed
 import akka.actor.ExtendedActorSystem
+import akka.persistence.{Persistence, PersistentRepr}
+import akka.persistence.jdbc.JournalRow
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.query.dao.ReadJournalDao
 import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
@@ -53,6 +55,9 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   val readJournalConfig = new ReadJournalConfig(config)
   val db = SlickDatabase.forConfig(config, readJournalConfig.slickConfiguration)
   sys.addShutdownHook(db.close())
+
+  private val writePluginId = config.getString("write-plugin")
+  private val eventAdapters = Persistence(system).adaptersFor(writePluginId)
 
   val readJournalDao: ReadJournalDao = {
     val fqcn = readJournalConfig.pluginConfig.dao
@@ -89,9 +94,18 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
         (id) => next(id)
       }
 
-  override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
+  private def adaptEvents(repr: PersistentRepr): Seq[PersistentRepr] = {
+    val adapter = eventAdapters.get(repr.payload.getClass)
+    adapter.fromJournal(repr.payload, repr.manifest).events.map(repr.withPayload)
+  }
+
+  private def currentJournalEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[PersistentRepr, NotUsed] =
     readJournalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, Long.MaxValue)
       .mapAsync(1)(deserializedRepr => Future.fromTry(deserializedRepr))
+
+  override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
+    currentJournalEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr)
+      .mapConcat(adaptEvents)
       .map(repr => EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload))
 
   override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
@@ -103,22 +117,29 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
         case x if x > toSequenceNr => Future.successful(None)
         case _ =>
           delaySource.flatMapConcat(_ =>
-            currentEventsByPersistenceId(persistenceId, from, toSequenceNr)
-              .take(readJournalConfig.maxBufferSize)).runWith(Sink.seq).map { xs =>
-            val newFromSeqNr = nextFromSeqNr(xs)
-            Some((newFromSeqNr, xs))
-          }
+            currentJournalEventsByPersistenceId(persistenceId, from, toSequenceNr)
+              .take(readJournalConfig.maxBufferSize))
+            .mapConcat(adaptEvents)
+            .map(repr => EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload))
+            .runWith(Sink.seq).map { xs =>
+              val newFromSeqNr = nextFromSeqNr(xs)
+              Some((newFromSeqNr, xs))
+            }
       }
     }.mapConcat(identity)
 
   override def currentEventsByTag(tag: String, offset: Offset): Source[EventEnvelope, NotUsed] =
     currentEventsByTag(tag, offset.value)
 
-  def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
+  private def currentJournalEventsByTag(tag: String, offset: Long): Source[(PersistentRepr, Set[String], JournalRow), NotUsed] = {
     readJournalDao.eventsByTag(tag, offset, Long.MaxValue)
       .mapAsync(1)(Future.fromTry)
-      .map {
-        case (repr, _, row) => EventEnvelope(Sequence(row.ordering), repr.persistenceId, repr.sequenceNr, repr.payload)
+  }
+
+  def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
+    currentJournalEventsByTag(tag, offset)
+      .mapConcat {
+        case (repr, _, row) => adaptEvents(repr).map(r => EventEnvelope(Sequence(row.ordering), r.persistenceId, r.sequenceNr, r.payload))
       }
 
   override def eventsByTag(tag: String, offset: Offset): Source[EventEnvelope, NotUsed] =
@@ -129,10 +150,15 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
       def nextFromOffset(xs: Seq[EventEnvelope]): Long = {
         if (xs.isEmpty) from else xs.map(_.offset.value).max + 1
       }
-      delaySource.flatMapConcat(_ => currentEventsByTag(tag, from)
-        .take(readJournalConfig.maxBufferSize)).runWith(Sink.seq).map { xs =>
-        val newFromSeqNr: Long = nextFromOffset(xs)
-        Some((newFromSeqNr, xs))
-      }
+      delaySource.flatMapConcat(_ => currentJournalEventsByTag(tag, from)
+        .take(readJournalConfig.maxBufferSize))
+        .mapConcat {
+          case (repr, _, row) =>
+            adaptEvents(repr).map(r => EventEnvelope(Sequence(row.ordering), r.persistenceId, r.sequenceNr, r.payload))
+        }
+        .runWith(Sink.seq).map { xs =>
+          val newFromSeqNr: Long = nextFromOffset(xs)
+          Some((newFromSeqNr, xs))
+        }
     }.mapConcat(identity)
 }

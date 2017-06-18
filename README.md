@@ -55,7 +55,7 @@ Configure `slick`:
 - [MySQL Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/mysql/mysql-schema.sql)
 - [H2 Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/h2/h2-schema.sql)
 - [Oracle Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/oracle/oracle-schema.sql)
-- [SQLServer Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/oracle/sqlserver-schema.sql)
+- [SQLServer Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/sqlserver/sqlserver-schema.sql)
 
 ## Configuration
 

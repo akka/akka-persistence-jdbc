@@ -26,13 +26,13 @@ oracle:
   ports:
     - "1521:1521" # DB_CONN: credentials (system:oracle)
 
-  sqlserver:
-    image: microsoft/mssql-server-linux
-    container_name: sqlserver-test
-    environment:
-      - "TZ=Europe/Amsterdam"
-      - "DBCA_TOTAL_MEMORY=1024"
-      - "ACCEPT_EULA=Y"
-      - "SA_PASSWORD=P4ssw0rd"
-    ports:
-      - "1433:1433" # credentials (sa:P4ssw0rd)
+sqlserver:
+  image: microsoft/mssql-server-linux
+  container_name: sqlserver-test
+  environment:
+    - "TZ=Europe/Amsterdam"
+    - "DBCA_TOTAL_MEMORY=1024"
+    - "ACCEPT_EULA=Y"
+    - "SA_PASSWORD=P4ssw0rd"
+  ports:
+    - "1433:1433" # credentials (sa:P4ssw0rd)

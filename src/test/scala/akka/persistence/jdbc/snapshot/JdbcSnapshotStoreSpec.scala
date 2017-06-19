@@ -50,4 +50,6 @@ class MySQLSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("m
 
 class OracleSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("oracle-application.conf"), Oracle())
 
+class SqlServerSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("sqlserver-application.conf"), SqlServer())
+
 class H2SnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("h2-application.conf"), H2())

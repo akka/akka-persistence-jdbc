@@ -66,4 +66,6 @@ class MySQLScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("mysql-appli
 
 class OracleScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
 
+class SqlServerScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("sqlserver-application.conf") with ScalaJdbcReadJournalOperations with SqlServerCleaner
+
 class H2ScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner

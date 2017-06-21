@@ -4,7 +4,6 @@ services:
   - mysql
   - postgresql
   - docker
-  - sqlserver
 before_install:
 #  - docker pull mysql
 #  - docker run --name mysql -d -p 127.0.0.1:3306:3306 -e MYSQL_ROOT_PASSWORD=root mysql

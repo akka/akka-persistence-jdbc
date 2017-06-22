@@ -17,7 +17,7 @@
 export VM_HOST="${VM_HOST:-boot2docker}"
 
 # Wait for a certain service to become available
-# Usage: wait 3306 Mysql
+# Usage: wait 1433 SqlServer
 wait() {
 while true; do
   if ! nc -z $VM_HOST $1
@@ -31,10 +31,7 @@ while true; do
 done;
 }
 
-docker-compose -f scripts/docker-compose.yml kill
-docker-compose -f scripts/docker-compose.yml rm -f
-docker-compose -f scripts/docker-compose.yml up -d
-wait 3306 MySQL
-wait 5432 Postgres
-wait 1521 Oracle
+docker-compose -f scripts/sqlserver.yml kill
+docker-compose -f scripts/sqlserver.yml rm -f
+docker-compose -f scripts/sqlserver.yml up -d
 wait 1433 SqlServer

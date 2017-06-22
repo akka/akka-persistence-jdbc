@@ -47,6 +47,7 @@ Configure `slick`:
   - `slick.jdbc.MySQLProfile$`
   - `slick.jdbc.H2Profile$`
   - `slick.jdbc.OracleProfile$`
+  - `slick.jdbc.SQLServerProfile$`
 
 ## Database Schema
 
@@ -54,6 +55,7 @@ Configure `slick`:
 - [MySQL Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/mysql/mysql-schema.sql)
 - [H2 Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/h2/h2-schema.sql)
 - [Oracle Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/oracle/oracle-schema.sql)
+- [SQLServer Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/sqlserver/sqlserver-schema.sql)
 
 ## Configuration
 
@@ -62,6 +64,7 @@ Configure `slick`:
 - [MySQL](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/mysql-application.conf)
 - [H2](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/h2-application.conf)
 - [Oracle](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/oracle-application.conf)
+- [SQLServer](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/sqlserver-application.conf)
 
 ## DataSource lookup by JNDI name
 The plugin uses `slick` as the database access library. Slick [supports jndi][slick-jndi] for looking up [DataSource][ds]s.

@@ -161,4 +161,6 @@ class MySQLScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-app
 
 class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
 
+class SqlServerScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("sqlserver-application.conf") with ScalaJdbcReadJournalOperations with SqlServerCleaner
+
 class H2ScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner

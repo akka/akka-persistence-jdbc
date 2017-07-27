@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.query.EventEnvelope
+import akka.persistence.query.{EventEnvelope, Offset, Sequence}
 
 import scala.concurrent.duration._
 import akka.pattern.ask
@@ -68,11 +68,11 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
         tp.expectNoMsg(100.millis)
 
         actor1 ! Event("1")
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(1, "my-1", 1, EventRestored("1")))
+        tp.expectNext(ExpectNextTimeout, EventEnvelope(Offset.sequence(1), "my-1", 1, EventRestored("1")))
         tp.expectNoMsg(100.millis)
 
         actor1 ! Event("2")
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(2, "my-1", 2, EventRestored("2")))
+        tp.expectNext(ExpectNextTimeout, EventEnvelope(Offset.sequence(2), "my-1", 2, EventRestored("2")))
         tp.expectNoMsg(100.millis)
         tp.cancel()
       }
@@ -94,12 +94,12 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
       withEventsByTag(10.seconds)("event", 2) { tp =>
 
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(2, "my-2", 1, EventRestored("2")))
-        tp.expectNext(EventEnvelope(3, "my-3", 1, EventRestored("3")))
+        tp.expectNext(EventEnvelope(Offset.sequence(2), "my-2", 1, EventRestored("2")))
+        tp.expectNext(EventEnvelope(Offset.sequence(3), "my-3", 1, EventRestored("3")))
         tp.expectNoMsg(NoMsgTime)
 
         actor1 ! TaggedEvent(Event("1"), "event")
-        tp.expectNext(EventEnvelope(4, "my-1", 2, EventRestored("1")))
+        tp.expectNext(EventEnvelope(Offset.sequence(4), "my-1", 2, EventRestored("1")))
         tp.cancel()
         tp.expectNoMsg(NoMsgTime)
       }
@@ -118,26 +118,26 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
 
       withCurrentEventsByPersistenceId()("my-1", 1, 1) { tp =>
         tp.request(Int.MaxValue)
-          .expectNext(EventEnvelope(1, "my-1", 1, EventRestored("1")))
+          .expectNext(EventEnvelope(Offset.sequence(1), "my-1", 1, EventRestored("1")))
           .expectComplete()
       }
 
       withCurrentEventsByPersistenceId()("my-1", 2, 2) { tp =>
         tp.request(Int.MaxValue)
-          .expectNext(EventEnvelope(2, "my-1", 2, EventRestored("2")))
+          .expectNext(EventEnvelope(Offset.sequence(2), "my-1", 2, EventRestored("2")))
           .expectComplete()
       }
 
       withCurrentEventsByPersistenceId()("my-1", 3, 3) { tp =>
         tp.request(Int.MaxValue)
-          .expectNext(EventEnvelope(3, "my-1", 3, EventRestored("3")))
+          .expectNext(EventEnvelope(Offset.sequence(3), "my-1", 3, EventRestored("3")))
           .expectComplete()
       }
 
       withCurrentEventsByPersistenceId()("my-1", 2, 3) { tp =>
         tp.request(Int.MaxValue)
-          .expectNext(EventEnvelope(2, "my-1", 2, EventRestored("2")))
-          .expectNext(EventEnvelope(3, "my-1", 3, EventRestored("3")))
+          .expectNext(EventEnvelope(Offset.sequence(2), "my-1", 2, EventRestored("2")))
+          .expectNext(EventEnvelope(Offset.sequence(3), "my-1", 3, EventRestored("3")))
           .expectComplete()
       }
     }
@@ -155,30 +155,30 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
 
       withCurrentEventsByTag()("event", 0) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, EventRestored("1")) => }
-        tp.expectNextPF { case EventEnvelope(2, _, _, EventRestored("2")) => }
-        tp.expectNextPF { case EventEnvelope(3, _, _, EventRestored("3")) => }
+        tp.expectNextPF { case EventEnvelope(Sequence(1), _, _, EventRestored("1")) => }
+        tp.expectNextPF { case EventEnvelope(Sequence(2), _, _, EventRestored("2")) => }
+        tp.expectNextPF { case EventEnvelope(Sequence(3), _, _, EventRestored("3")) => }
         tp.expectComplete()
       }
 
       withCurrentEventsByTag()("event", 1) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, EventRestored("1")) => }
-        tp.expectNextPF { case EventEnvelope(2, _, _, EventRestored("2")) => }
-        tp.expectNextPF { case EventEnvelope(3, _, _, EventRestored("3")) => }
+        tp.expectNextPF { case EventEnvelope(Sequence(1), _, _, EventRestored("1")) => }
+        tp.expectNextPF { case EventEnvelope(Sequence(2), _, _, EventRestored("2")) => }
+        tp.expectNextPF { case EventEnvelope(Sequence(3), _, _, EventRestored("3")) => }
         tp.expectComplete()
       }
 
       withCurrentEventsByTag()("event", 2) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(2, _, _, EventRestored("2")) => }
-        tp.expectNextPF { case EventEnvelope(3, _, _, EventRestored("3")) => }
+        tp.expectNextPF { case EventEnvelope(Sequence(2), _, _, EventRestored("2")) => }
+        tp.expectNextPF { case EventEnvelope(Sequence(3), _, _, EventRestored("3")) => }
         tp.expectComplete()
       }
 
       withCurrentEventsByTag()("event", 3) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(3, _, _, EventRestored("3")) => }
+        tp.expectNextPF { case EventEnvelope(Sequence(3), _, _, EventRestored("3")) => }
         tp.expectComplete()
       }
 

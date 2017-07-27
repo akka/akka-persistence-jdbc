@@ -29,12 +29,4 @@ package object query {
       case _                     => throw new IllegalArgumentException("akka-persistence-jdbc does not support " + that.getClass.getName + " offsets")
     }
   }
-
-  def toNewEnvelope(env: EventEnvelope): EventEnvelope2 = env match {
-    case EventEnvelope(offset, persistenceId, sequenceNr, event) =>
-      EventEnvelope2(Sequence(offset), persistenceId, sequenceNr, event)
-  }
-
-  implicit def oldSrcToNewSrc(that: Source[EventEnvelope, NotUsed]): Source[EventEnvelope2, NotUsed] =
-    that.map(toNewEnvelope)
 }

@@ -6,3 +6,8 @@
 /target/
 .idea/
 *.iml
+*.iws
+.settings
+.classpath
+.project
+.worksheet

@@ -21,6 +21,7 @@ import akka.event.LoggingReceive
 import akka.persistence.PersistentActor
 import akka.persistence.jdbc.TestSpec
 import akka.persistence.jdbc.query.EventAdapterTest.{Event, TaggedEvent}
+import akka.persistence.jdbc.query.JournalSequenceActor.{GetMaxOrderingId, MaxOrderingId}
 import akka.persistence.jdbc.query.javadsl.{JdbcReadJournal => JavaJdbcReadJournal}
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 import akka.persistence.journal.Tagged
@@ -30,6 +31,7 @@ import akka.stream.scaladsl.Sink
 import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.javadsl.{TestSink => JavaSink}
 import akka.stream.testkit.scaladsl.TestSink
+import akka.util.Timeout
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.duration.{FiniteDuration, _}
@@ -90,6 +92,14 @@ trait ScalaJdbcReadJournalOperations extends ReadJournalOperations {
       .mapAsync(1) { pid =>
         readJournal.currentEventsByPersistenceId(pid, 0, Long.MaxValue).map(_ => 1L).runWith(Sink.seq).map(_.sum)
       }.runWith(Sink.seq).map(_.sum)
+
+  def latestOrdering: Future[Long] = {
+    import akka.pattern.ask
+    implicit val askTimeout = Timeout(100.millis)
+    readJournal.orderingActor.ask(GetMaxOrderingId)
+      .mapTo[MaxOrderingId]
+      .map(_.maxOrdering)
+  }
 }
 
 trait JavaDslJdbcReadJournalOperations extends ReadJournalOperations {

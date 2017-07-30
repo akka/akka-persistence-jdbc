@@ -99,9 +99,20 @@ class SnapshotConfig(config: Config) {
   override def toString: String = s"SnapshotConfig($slickConfiguration,$snapshotTableConfiguration,$pluginConfig)"
 }
 
+object JournalSequenceRetrievalConfig {
+  def apply(config: Config): JournalSequenceRetrievalConfig = JournalSequenceRetrievalConfig(
+    batchSize = config.asInt("journal-sequence-retrieval.batch-size", 10000),
+    maxTries = config.asInt("journal-sequence-retrieval.max-tries", 10),
+    queryDelay = config.asFiniteDuration("journal-sequence-retrieval.query-delay", 1.second),
+    maxBackoffQueryDelay = config.asFiniteDuration("journal-sequence-retrieval.max-backoff-query-delay", 1.minute)
+  )
+}
+case class JournalSequenceRetrievalConfig(batchSize: Int, maxTries: Int, queryDelay: FiniteDuration, maxBackoffQueryDelay: FiniteDuration)
+
 class ReadJournalConfig(config: Config) {
   val slickConfiguration = new SlickConfiguration(config)
   val journalTableConfiguration = new JournalTableConfiguration(config)
+  val journalSequenceRetrievalConfiguration = JournalSequenceRetrievalConfig(config)
   val pluginConfig = new ReadJournalPluginConfig(config)
   val refreshInterval: FiniteDuration = config.asFiniteDuration("refresh-interval", 1.second)
   val maxBufferSize: Int = config.as[String]("max-buffer-size", "500").toInt

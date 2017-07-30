@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS journal (
   PRIMARY KEY(persistence_id, sequence_number)
 );
 
+CREATE UNIQUE INDEX journal_ordering_idx ON journal(ordering);
+
 DROP TABLE IF EXISTS snapshot;
 
 CREATE TABLE IF NOT EXISTS snapshot (

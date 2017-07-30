@@ -38,6 +38,10 @@ object ConfigOps {
       Try(config.getConfig(key))
         .getOrElse(default)
 
+    def asInt(key: String, default: Int): Int =
+      Try(config.getInt(key))
+        .getOrElse(default)
+
     def asBoolean(key: String, default: Boolean) =
       Try(config.getBoolean(key))
         .getOrElse(default)

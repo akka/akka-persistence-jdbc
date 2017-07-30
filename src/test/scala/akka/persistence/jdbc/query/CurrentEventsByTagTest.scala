@@ -19,7 +19,7 @@ package akka.persistence.jdbc.query
 import akka.persistence.query.EventEnvelope
 import akka.pattern.ask
 
-abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config) {
+abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config) with ScalaJdbcReadJournalOperations {
 
   it should "not find an event by tag for unknown tag" in {
     withTestActors() { (actor1, actor2, actor3) =>
@@ -29,6 +29,9 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
 
       eventually {
         countJournal.futureValue shouldBe 3
+      }
+      eventually {
+        latestOrdering.futureValue shouldBe 3
       }
 
       withCurrentEventsByTag()("unknown", 0) { tp =>
@@ -46,6 +49,10 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
 
       eventually {
         countJournal.futureValue shouldBe 3
+      }
+
+      eventually {
+        latestOrdering.futureValue shouldBe 3
       }
 
       withCurrentEventsByTag()("number", 0) { tp =>
@@ -102,6 +109,9 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         eventually {
           countJournal.futureValue shouldBe 9
         }
+        eventually {
+          latestOrdering.futureValue shouldBe 9
+        }
       }
 
       withCurrentEventsByTag()("one", 0) { tp =>
@@ -155,10 +165,10 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
     }
 }
 
-class PostgresScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with ScalaJdbcReadJournalOperations with PostgresCleaner
+class PostgresScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with PostgresCleaner
 
-class MySQLScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") with ScalaJdbcReadJournalOperations with MysqlCleaner
+class MySQLScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") with MysqlCleaner
 
-class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
+class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") with OracleCleaner
 
-class H2ScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner
+class H2ScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("h2-application.conf") with H2Cleaner

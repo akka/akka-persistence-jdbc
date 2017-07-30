@@ -30,7 +30,7 @@ import slick.jdbc.GetResult
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable._
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 trait BaseByteArrayReadJournalDao extends ReadJournalDao {
@@ -45,13 +45,20 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao {
   override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct(max).result))
 
-  override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] =
-    Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", offset, max).result))
+  override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] =
+    Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", offset, maxOffset, max).result))
       .via(serializer.deserializeFlow)
 
   override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
     Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
       .via(serializer.deserializeFlowWithoutTags)
+
+  override def journalSequence(offset: Long, limit: Long): Source[Long, NotUsed] =
+    Source.fromPublisher(db.stream(queries.journalSequenceQuery(offset, limit).result))
+
+  override def maxJournalSequence(): Future[Long] = {
+    db.run(queries.maxJournalSequenceQuery.result)
+  }
 }
 
 trait OracleReadJournalDao extends ReadJournalDao {
@@ -85,7 +92,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
 
   implicit val getJournalRow = GetResult(r => JournalRow(r.<<, r.<<, r.<<, r.<<, r.nextBytes(), r.<<))
 
-  abstract override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] = {
+  abstract override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] = {
     if (isOracleDriver(profile)) {
       val theOffset = Math.max(0, offset)
       val theTag = s"%$tag%"
@@ -98,13 +105,14 @@ trait OracleReadJournalDao extends ReadJournalDao {
               SELECT * FROM #$theTableName
               WHERE "#$tags" LIKE $theTag
               AND "#$ordering" >= $theOffset
+              AND "#$ordering" <= $maxOffset
               ORDER BY "#$ordering"
             )
             WHERE rownum < $max""".as[JournalRow]
         )
       }.via(serializer.deserializeFlow)
     } else {
-      super.eventsByTag(tag, offset, max)
+      super.eventsByTag(tag, offset, maxOffset, max)
     }
   }
 }
@@ -119,8 +127,8 @@ trait H2ReadJournalDao extends ReadJournalDao {
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
     super.allPersistenceIdsSource(correctMaxForH2Driver(max))
 
-  abstract override def eventsByTag(tag: String, offset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] =
-    super.eventsByTag(tag, offset, correctMaxForH2Driver(max))
+  abstract override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] =
+    super.eventsByTag(tag, offset, maxOffset, correctMaxForH2Driver(max))
 
   abstract override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
     super.messages(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max))

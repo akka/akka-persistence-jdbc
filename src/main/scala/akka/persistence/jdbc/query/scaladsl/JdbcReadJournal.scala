@@ -133,13 +133,13 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   override def currentEventsByTag(tag: String, offset: Offset): Source[EventEnvelope2, NotUsed] =
     currentEventsByTag(tag, offset.value)
 
-  private def currentJournalEventsByTag(tag: String, offset: Long): Source[(PersistentRepr, Set[String], JournalRow), NotUsed] = {
-    readJournalDao.eventsByTag(tag, offset, Long.MaxValue)
+  private def currentJournalEventsByTag(tag: String, offset: Long, max: Long): Source[(PersistentRepr, Set[String], JournalRow), NotUsed] = {
+    readJournalDao.eventsByTag(tag, offset, max)
       .mapAsync(1)(Future.fromTry)
   }
 
   override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    currentJournalEventsByTag(tag, offset)
+    currentJournalEventsByTag(tag, offset, Long.MaxValue)
       .mapConcat {
         case (repr, _, row) => adaptEvents(repr).map(r => EventEnvelope(row.ordering, r.persistenceId, r.sequenceNr, r.payload))
       }
@@ -152,8 +152,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
       def nextFromOffset(xs: Seq[EventEnvelope]): Long = {
         if (xs.isEmpty) from else xs.map(_.offset).max + 1
       }
-      delaySource.flatMapConcat(_ => currentJournalEventsByTag(tag, from)
-        .take(readJournalConfig.maxBufferSize))
+      delaySource.flatMapConcat(_ => currentJournalEventsByTag(tag, from, readJournalConfig.maxBufferSize))
         .mapConcat {
           case (repr, _, row) =>
             adaptEvents(repr).map(r => EventEnvelope(row.ordering, r.persistenceId, r.sequenceNr, r.payload))

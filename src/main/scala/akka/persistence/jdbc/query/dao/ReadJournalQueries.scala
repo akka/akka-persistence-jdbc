@@ -43,13 +43,26 @@ class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg:
       .take(max)
   val messagesQuery = Compiled(_messagesQuery _)
 
-  private def _eventsByTag(tag: Rep[String], offset: ConstColumn[Long], max: ConstColumn[Long]) =
+  private def _eventsByTag(tag: Rep[String], offset: ConstColumn[Long], maxOffset: ConstColumn[Long], max: ConstColumn[Long]) =
     JournalTable
       .filter(_.tags like tag)
       .sortBy(_.ordering.asc)
-      .filter(_.ordering >= offset)
+      .filter(row => row.ordering >= offset && row.ordering <= maxOffset)
       .take(max)
   val eventsByTag = Compiled(_eventsByTag _)
 
   def writeJournalRows(xs: Seq[JournalRow]) = JournalTable ++= xs.sortBy(_.sequenceNumber)
+
+  private def _journalSequenceQuery(from: ConstColumn[Long], limit: ConstColumn[Long]) =
+    JournalTable
+      .filter(_.ordering > from)
+      .map(_.ordering)
+      .sorted
+      .take(limit)
+
+  val journalSequenceQuery = Compiled(_journalSequenceQuery _)
+
+  val maxJournalSequenceQuery = Compiled {
+    JournalTable.map(_.ordering).max.getOrElse(0L)
+  }
 }

@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS PUBLIC.journal (
   PRIMARY KEY(persistence_id, sequence_number)
 );
 
+CREATE UNIQUE INDEX journal_ordering_idx ON PUBLIC.journal(ordering);
+
 DROP TABLE IF EXISTS PUBLIC.snapshot;
 
 CREATE TABLE IF NOT EXISTS PUBLIC.snapshot (

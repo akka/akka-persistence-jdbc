@@ -12,6 +12,9 @@ CREATE TABLE "journal" (
 )
 /
 
+CREATE UNIQUE INDEX "journal_ordering_idx" ON "journal"("ordering")
+/
+
 CREATE OR REPLACE TRIGGER "ordering_seq_trigger"
 BEFORE INSERT ON "journal"
 FOR EACH ROW

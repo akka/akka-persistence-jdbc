@@ -21,6 +21,7 @@ import akka.NotUsed
 import akka.actor.ExtendedActorSystem
 import akka.persistence.jdbc.JournalRow
 import akka.persistence.jdbc.config.ReadJournalConfig
+import akka.persistence.jdbc.query.JournalSequenceActor.{GetMaxOrderingId, MaxOrderingId}
 import akka.persistence.jdbc.query.dao.ReadJournalDao
 import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
 import akka.persistence.query.scaladsl._
@@ -29,6 +30,7 @@ import akka.persistence.{Persistence, PersistentRepr}
 import akka.serialization.{Serialization, SerializationExtension}
 import akka.stream.scaladsl.{Sink, Source}
 import akka.stream.{ActorMaterializer, Materializer}
+import akka.util.Timeout
 import com.typesafe.config.Config
 import slick.jdbc.JdbcBackend._
 import slick.jdbc.JdbcProfile
@@ -78,6 +80,8 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     }
   }
 
+  // Started lazily to prevent the actor for querying the db if no eventsByTag queries are used
+  private[query] lazy val orderingActor = system.actorOf(JournalSequenceActor.props(readJournalDao, readJournalConfig.journalSequenceRetrievalConfiguration))
   private val delaySource =
     Source.tick(readJournalConfig.refreshInterval, 0.seconds, 0).take(1)
 
@@ -134,7 +138,13 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     currentEventsByTag(tag, offset.value)
 
   private def currentJournalEventsByTag(tag: String, offset: Long, max: Long): Source[(PersistentRepr, Set[String], JournalRow), NotUsed] = {
-    readJournalDao.eventsByTag(tag, offset, max)
+    import akka.pattern.ask
+    implicit val askTimeout = Timeout(100.millis)
+    Source.fromFuture(orderingActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId])
+      .flatMapConcat { latestOrdering =>
+        if (latestOrdering.maxOrdering < offset) Source.empty
+        else readJournalDao.eventsByTag(tag, offset, latestOrdering.maxOrdering, max)
+      }
       .mapAsync(1)(Future.fromTry)
   }
 

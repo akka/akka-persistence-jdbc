@@ -16,14 +16,17 @@
 
 package akka.persistence.jdbc.journal
 
+import akka.actor.Props
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
 import akka.persistence.jdbc.util.{ClasspathResources, DropCreate, SlickDatabase}
 import akka.persistence.journal.JournalPerfSpec
+import akka.persistence.journal.JournalPerfSpec.{BenchActor, Cmd, ResetCounter}
+import akka.testkit.TestProbe
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Ignore}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
 import scala.concurrent.duration._
 
@@ -60,6 +63,52 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
   override def afterAll(): Unit = {
     db.close()
     super.afterAll()
+  }
+
+  def actorCount = 100
+
+  private val commands = Vector(1 to eventsCount: _*)
+
+  "A PersistentActor's performance" must {
+    s"measure: persist()-ing $eventsCount events for $actorCount actors" in {
+      val testProbe = TestProbe()
+      val replyAfter = eventsCount
+      def createBenchActor(actorNumber: Int) = system.actorOf(Props(classOf[BenchActor], s"$pid--$actorNumber", testProbe.ref, replyAfter))
+      val actors = 1.to(actorCount).map(createBenchActor)
+
+      measure(d ⇒ s"Persist()-ing $eventsCount * $actorCount took ${d.toMillis} ms") {
+        for (cmd <- commands; actor <- actors) {
+          actor ! Cmd("p", cmd)
+        }
+        for (_ <- actors) {
+          testProbe.expectMsg(awaitDurationMillis.millis, commands.last)
+        }
+        for (actor <- actors) {
+          actor ! ResetCounter
+        }
+      }
+    }
+  }
+
+  "A PersistentActor's performance" must {
+    s"measure: persistAsync()-ing $eventsCount events for $actorCount actors" in {
+      val testProbe = TestProbe()
+      val replyAfter = eventsCount
+      def createBenchActor(actorNumber: Int) = system.actorOf(Props(classOf[BenchActor], s"$pid--$actorNumber", testProbe.ref, replyAfter))
+      val actors = 1.to(actorCount).map(createBenchActor)
+
+      measure(d ⇒ s"persistAsync()-ing $eventsCount * $actorCount took ${d.toMillis} ms") {
+        for (cmd <- commands; actor <- actors) {
+          actor ! Cmd("pa", cmd)
+        }
+        for (_ <- actors) {
+          testProbe.expectMsg(awaitDurationMillis.millis, commands.last)
+        }
+        for (actor <- actors) {
+          actor ! ResetCounter
+        }
+      }
+    }
   }
 }
 

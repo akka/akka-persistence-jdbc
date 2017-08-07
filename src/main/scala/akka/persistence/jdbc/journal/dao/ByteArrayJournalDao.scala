@@ -22,14 +22,14 @@ import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.persistence.{AtomicWrite, PersistentRepr}
 import akka.serialization.Serialization
-import akka.stream.Materializer
-import akka.stream.scaladsl.{Flow, Source}
+import akka.stream.{Materializer, OverflowStrategy, QueueOfferResult}
+import akka.stream.scaladsl.{Keep, Sink, Source}
 import slick.jdbc.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable._
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.util.Try
 
 /**
  * The DefaultJournalDao contains all the knowledge to persist and load serialized journal entries
@@ -39,26 +39,58 @@ trait BaseByteArrayJournalDao extends JournalDao {
   val db: Database
   val profile: JdbcProfile
   val queries: JournalQueries
+  val journalConfig: JournalConfig
   val serializer: FlowPersistentReprSerializer[JournalRow]
   implicit val ec: ExecutionContext
+  implicit val mat: Materializer
 
   import profile.api._
+  import journalConfig.daoConfig.{batchSize, bufferSize, parallelism}
 
-  private def futureExtractor: Flow[Try[Future[Unit]], Try[Unit], NotUsed] =
-    Flow[Try[Future[Unit]]].mapAsync(1) {
-      case Success(future) => future.map(Success(_))
-      case Failure(t)      => Future.successful(Failure(t))
+  private val writeQueue = Source.queue[(Promise[Unit], Seq[JournalRow])](bufferSize, OverflowStrategy.dropNew)
+    .batchWeighted[(Seq[Promise[Unit]], Seq[JournalRow])](batchSize, _._2.size, tup => Vector(tup._1) -> tup._2) {
+      case ((promises, rows), (newPromise, newRows)) => (promises :+ newPromise) -> (rows ++ newRows)
+    }.mapAsync(parallelism) {
+      case (promises, rows) =>
+        writeJournalRows(rows)
+          .map(unit => promises.foreach(_.success(unit)))
+          .recover { case t => promises.foreach(_.failure(t)) }
+    }.toMat(Sink.ignore)(Keep.left).run()
+
+  private def queueWriteJournalRows(xs: Seq[JournalRow]): Future[Unit] = {
+    val promise = Promise[Unit]()
+    writeQueue.offer(promise -> xs).flatMap {
+      case QueueOfferResult.Enqueued =>
+        promise.future
+      case QueueOfferResult.Failure(t) =>
+        Future.failed(new Exception("Failed to write journal row batch", t))
+      case QueueOfferResult.Dropped =>
+        Future.failed(new Exception(s"Failed to enqueue journal row batch write, the queue buffer was full ($bufferSize elements) please check the jdbc-journal.bufferSize setting"))
+      case QueueOfferResult.QueueClosed =>
+        Future.failed(new Exception("Failed to enqueue journal row batch write, the queue was closed"))
     }
+  }
 
   private def writeJournalRows(xs: Seq[JournalRow]): Future[Unit] = for {
     _ <- db.run(queries.writeJournalRows(xs))
   } yield ()
 
-  override def writeFlow: Flow[AtomicWrite, Try[Unit], NotUsed] =
-    Flow[AtomicWrite]
-      .via(serializer.serializeFlow)
-      .map(_.map(writeJournalRows))
-      .via(futureExtractor)
+  /**
+   * @see [[akka.persistence.journal.AsyncWriteJournal.asyncWriteMessages(messages)]]
+   */
+  def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] = {
+    val serializedTries = serializer.serialize(messages)
+
+    // If serialization fails for some AtomicWrites, the other AtomicWrites may still be written
+    val rowsToWrite = for {
+      serializeTry <- serializedTries
+      row <- serializeTry.getOrElse(Seq.empty)
+    } yield row
+    def resultWhenWriteComplete =
+      if (serializedTries.forall(_.isSuccess)) Nil else serializedTries.map(_.map(_ => ()))
+
+    queueWriteJournalRows(rowsToWrite).map(_ => resultWhenWriteComplete)
+  }
 
   override def delete(persistenceId: String, maxSequenceNr: Long): Future[Unit] = for {
     _ <- db.run(queries.markJournalMessagesAsDeleted(persistenceId, maxSequenceNr))
@@ -94,7 +126,7 @@ trait H2JournalDao extends JournalDao {
   }
 }
 
-class ByteArrayJournalDao(val db: Database, val profile: JdbcProfile, journalConfig: JournalConfig, serialization: Serialization)(implicit val ec: ExecutionContext, val mat: Materializer) extends BaseByteArrayJournalDao with H2JournalDao {
+class ByteArrayJournalDao(val db: Database, val profile: JdbcProfile, val journalConfig: JournalConfig, serialization: Serialization)(implicit val ec: ExecutionContext, val mat: Materializer) extends BaseByteArrayJournalDao with H2JournalDao {
   val queries = new JournalQueries(profile, journalConfig.journalTableConfiguration)
   val serializer = new ByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator)
 }

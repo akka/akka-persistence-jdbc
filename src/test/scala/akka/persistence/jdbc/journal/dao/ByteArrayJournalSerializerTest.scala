@@ -17,15 +17,10 @@
 package akka.persistence.jdbc
 package journal.dao
 
-import akka.persistence.jdbc.{MaterializerSpec, SimpleSpec}
 import akka.persistence.{AtomicWrite, PersistentRepr}
 import akka.serialization.SerializationExtension
-import akka.stream.scaladsl.Source
-import akka.stream.testkit.scaladsl.TestSink
 
 import scala.collection.immutable._
-import scala.concurrent.duration._
-import scala.util.Try
 
 class ByteArrayJournalSerializerTest extends SimpleSpec with MaterializerSpec {
 
@@ -33,41 +28,25 @@ class ByteArrayJournalSerializerTest extends SimpleSpec with MaterializerSpec {
 
   it should "serialize a serializable message and indicate whether or not the serialization succeeded" in {
     val serializer = new ByteArrayJournalSerializer(serialization, ",")
-    val probe = Source.single(AtomicWrite(PersistentRepr("foo")))
-      .via(serializer.serializeFlow)
-      .runWith(TestSink.probe[Try[Iterable[JournalRow]]])
-      .request(Int.MaxValue)
-
-    probe.within(10.seconds) {
-      probe.expectNext() should be a 'success
-    }
+    val result = serializer.serialize(Seq(AtomicWrite(PersistentRepr("foo"))))
+    result should have size 1
+    result.head should be a 'success
   }
 
   it should "not serialize a non-serializable message and indicate whether or not the serialization succeeded" in {
     class Test
     val serializer = new ByteArrayJournalSerializer(serialization, ",")
-    val probe = Source.single(AtomicWrite(PersistentRepr(new Test)))
-      .via(serializer.serializeFlow)
-      .runWith(TestSink.probe[Try[Iterable[JournalRow]]])
-      .request(Int.MaxValue)
-
-    probe.within(10.seconds) {
-      probe.expectNext() should be a 'failure
-    }
+    val result = serializer.serialize(Seq(AtomicWrite(PersistentRepr(new Test))))
+    result should have size 1
+    result.head should be a 'failure
   }
 
-  it should
-    "serialize non-serializable and serializable messages and indicate whether or not the serialization succeeded" in {
-      class Test
-      val serializer = new ByteArrayJournalSerializer(serialization, ",")
-      val probe = Source(List(AtomicWrite(PersistentRepr(new Test)), AtomicWrite(PersistentRepr("foo"))))
-        .via(serializer.serializeFlow)
-        .runWith(TestSink.probe[Try[Iterable[JournalRow]]])
-        .request(Int.MaxValue)
-
-      probe.within(10.seconds) {
-        probe.expectNext() should be a 'failure
-        probe.expectNext() should be a 'success
-      }
-    }
+  it should "serialize non-serializable and serializable messages and indicate whether or not the serialization succeeded" in {
+    class Test
+    val serializer = new ByteArrayJournalSerializer(serialization, ",")
+    val result = serializer.serialize(List(AtomicWrite(PersistentRepr(new Test)), AtomicWrite(PersistentRepr("foo"))))
+    result should have size 2
+    result.head should be a 'failure
+    result.last should be a 'success
+  }
 }

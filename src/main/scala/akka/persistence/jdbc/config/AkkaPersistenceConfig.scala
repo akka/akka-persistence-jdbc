@@ -72,6 +72,13 @@ class JournalPluginConfig(config: Config) {
   override def toString: String = s"JournalPluginConfig($tagSeparator,$dao)"
 }
 
+class BaseByteArrayJournalDaoConfig(config: Config) {
+  val bufferSize: Int = config.asInt("bufferSize", 1000)
+  val batchSize: Int = config.asInt("batchSize", 400)
+  val parallelism: Int = config.asInt("parallelism", 8)
+  override def toString: String = s"BaseByteArrayJournalDaoConfig($bufferSize,$batchSize,$parallelism)"
+}
+
 class ReadJournalPluginConfig(config: Config) {
   val tagSeparator: String = config.as[String]("tagSeparator", ",")
   val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.readjournal.ByteArrayReadJournalDao")
@@ -89,6 +96,7 @@ class JournalConfig(config: Config) {
   val slickConfiguration = new SlickConfiguration(config)
   val journalTableConfiguration = new JournalTableConfiguration(config)
   val pluginConfig = new JournalPluginConfig(config)
+  val daoConfig = new BaseByteArrayJournalDaoConfig(config)
   override def toString: String = s"JournalConfig($slickConfiguration,$journalTableConfiguration,$pluginConfig)"
 }
 
@@ -116,6 +124,5 @@ class ReadJournalConfig(config: Config) {
   val pluginConfig = new ReadJournalPluginConfig(config)
   val refreshInterval: FiniteDuration = config.asFiniteDuration("refresh-interval", 1.second)
   val maxBufferSize: Int = config.as[String]("max-buffer-size", "500").toInt
-  val batchSize: Int = config.as[String]("batch-size", "250").toInt
   override def toString: String = s"ReadJournalConfig($slickConfiguration,$journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize)"
 }

@@ -27,6 +27,19 @@ import scala.util.Try
 
 trait PersistentReprSerializer[T] {
 
+  /**
+   * An akka.persistence.AtomicWrite contains a Sequence of events (with metadata, the PersistentRepr)
+   * that must all be persisted or all fail, what makes the operation atomic. The function converts
+   * each AtomicWrite to a Try[Seq[T]].
+   * The Try denotes whether there was a problem with the AtomicWrite or not.
+   */
+  def serialize(messages: Seq[AtomicWrite]): Seq[Try[Seq[T]]] = {
+    messages.map { atomicWrite =>
+      val serialized = atomicWrite.payload.map(serialize)
+      TrySeq.sequence(serialized)
+    }
+  }
+
   def serialize(persistentRepr: PersistentRepr): Try[T] = persistentRepr.payload match {
     case Tagged(payload, tags) =>
       serialize(persistentRepr.withPayload(payload), tags)
@@ -40,18 +53,6 @@ trait PersistentReprSerializer[T] {
 }
 
 trait FlowPersistentReprSerializer[T] extends PersistentReprSerializer[T] {
-
-  /**
-   * An akka.persistence.AtomicWrite contains a Sequence of events (with metadata, the PersistentRepr)
-   * that must all be persisted or all fail, what makes the operation atomic. The flow converts
-   * akka.persistence.AtomicWrite and converts them to a Try[Seq[T]].
-   * The Try denotes whether there was a problem with the AtomicWrite or not.
-   */
-  def serializeFlow: Flow[AtomicWrite, Try[Seq[T]], NotUsed] = {
-    Flow[AtomicWrite]
-      .map(_.payload.map(serialize))
-      .via(TrySeq.sequence)
-  }
 
   def deserializeFlow: Flow[T, Try[(PersistentRepr, Set[String], T)], NotUsed] = {
     Flow[T].map(deserialize)

@@ -20,6 +20,7 @@ import akka.NotUsed
 import akka.persistence.{AtomicWrite, PersistentRepr}
 import akka.stream.scaladsl._
 
+import scala.collection.immutable.Seq
 import scala.concurrent.Future
 import scala.util.Try
 
@@ -41,7 +42,7 @@ trait JournalDao {
   def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed]
 
   /**
-   * Writes serialized messages
+   * @see [[akka.persistence.journal.AsyncWriteJournal.asyncWriteMessages(messages)]]
    */
-  def writeFlow: Flow[AtomicWrite, Try[Unit], NotUsed]
+  def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]]
 }

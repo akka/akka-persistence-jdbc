@@ -23,7 +23,6 @@ import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
 import akka.persistence.journal.AsyncWriteJournal
 import akka.persistence.{AtomicWrite, PersistentRepr}
 import akka.serialization.{Serialization, SerializationExtension}
-import akka.stream.scaladsl.Source
 import akka.stream.{ActorMaterializer, Materializer}
 import com.typesafe.config.Config
 import slick.jdbc.JdbcProfile
@@ -58,10 +57,10 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
     }
   }
 
-  override def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] =
-    Source(messages)
-      .via(journalDao.writeFlow)
-      .runFold(List.empty[Try[Unit]])(_ :+ _)
+  override def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] = {
+    // TODO like akka persistence cassandra, make sure that concurrent requests for the highest sequence number give the correct results
+    journalDao.asyncWriteMessages(messages)
+  }
 
   override def asyncDeleteMessagesTo(persistenceId: String, toSequenceNr: Long): Future[Unit] =
     journalDao.delete(persistenceId, toSequenceNr)

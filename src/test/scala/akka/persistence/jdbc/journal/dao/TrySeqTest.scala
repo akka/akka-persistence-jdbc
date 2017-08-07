@@ -18,71 +18,43 @@ package akka.persistence.jdbc.journal.dao
 
 import akka.persistence.jdbc.util.TrySeq
 import akka.persistence.jdbc.{MaterializerSpec, SimpleSpec}
-import akka.stream.scaladsl.Source
-import akka.stream.testkit.TestSubscriber
-import akka.stream.testkit.scaladsl.TestSink
 
 import scala.collection.immutable._
 import scala.util.{Failure, Success}
 
 class TrySeqTest extends SimpleSpec with MaterializerSpec {
-  implicit class SourceOps[A, M](src: Source[A, M]) {
-    def testProbe(f: TestSubscriber.Probe[A] ⇒ Unit): Unit =
-      f(src.runWith(TestSink.probe(system)))
-  }
-
-  implicit class TestProbeOps[A](tp: TestSubscriber.Probe[A]) {
-    def assertNext(right: PartialFunction[Any, _]) = tp.requestNext() should matchPattern(right)
-  }
 
   def failure(text: String) = Failure(new RuntimeException(text))
 
   it should "sequence an empty immutable.Seq" in {
-    Source.single(Seq.empty).via(TrySeq.sequence).testProbe { tp =>
-      tp.request(Long.MaxValue)
-      tp.expectNext(Success(Seq.empty))
-    }
+    TrySeq.sequence(Seq.empty) shouldBe Success(Seq.empty)
   }
 
   it should "sequence an empty immutable.Vector" in {
-    Source.single(Vector.empty).via(TrySeq.sequence).testProbe { tp =>
-      tp.request(Long.MaxValue)
-      tp.expectNext(Success(Seq.empty))
-    }
+    TrySeq.sequence(Vector.empty) shouldBe Success(Seq.empty)
   }
 
   it should "sequence a immutable.Seq of success/success" in {
-    Source.single(Seq(Success("a"), Success("b"))).via(TrySeq.sequence).testProbe { tp =>
-      tp.request(Long.MaxValue)
-      tp.expectNext(Success(Seq("a", "b")))
-    }
+    TrySeq.sequence(Seq(Success("a"), Success("b"))) shouldBe Success(Seq("a", "b"))
   }
 
   it should "sequence an immutable Seq of success/failure" in {
-    Source.single(List(Success("a"), failure("b"))).via(TrySeq.sequence).testProbe { tp =>
-      tp.request(Long.MaxValue)
-      tp.assertNext { case Failure(cause) if cause.getMessage.contains("b") => }
-    }
+    val result = TrySeq.sequence(List(Success("a"), failure("b")))
+    result should matchPattern { case Failure(cause) if cause.getMessage.contains("b") => }
   }
 
   it should "sequence an immutable Seq of failure/success" in {
-    Source.single(List(failure("a"), Success("b"))).via(TrySeq.sequence).testProbe { tp =>
-      tp.request(Long.MaxValue)
-      tp.assertNext { case Failure(cause) if cause.getMessage.contains("a") => }
-    }
+    val result = TrySeq.sequence(List(failure("a"), Success("b")))
+    result should matchPattern { case Failure(cause) if cause.getMessage.contains("a") => }
   }
 
   it should "sequence an immutable.Seq of failure/failure" in {
-    Source.single(Seq(failure("a"), failure("b"))).via(TrySeq.sequence).testProbe { tp =>
-      tp.request(Long.MaxValue)
-      tp.assertNext { case Failure(cause) if cause.getMessage.contains("a") => }
-    }
+    val result = TrySeq.sequence(Seq(failure("a"), failure("b")))
+    result should matchPattern { case Failure(cause) if cause.getMessage.contains("a") => }
   }
 
   it should "sequence an immutable.Vector of failure/failure" in {
-    Source.single(Vector(failure("a"), failure("b"))).via(TrySeq.sequence).testProbe { tp =>
-      tp.request(Long.MaxValue)
-      tp.assertNext { case Failure(cause) if cause.getMessage.contains("a") => }
-    }
+    val result = TrySeq.sequence(Vector(failure("a"), failure("b")))
+    result should matchPattern { case Failure(cause) if cause.getMessage.contains("a") => }
   }
 }

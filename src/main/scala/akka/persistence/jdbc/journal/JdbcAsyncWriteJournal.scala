@@ -16,8 +16,11 @@
 
 package akka.persistence.jdbc.journal
 
+import java.util.{HashMap => JHMap, Map => JMap}
+
 import akka.actor.{ActorSystem, ExtendedActorSystem}
 import akka.persistence.jdbc.config.JournalConfig
+import akka.persistence.jdbc.journal.JdbcAsyncWriteJournal.WriteFinished
 import akka.persistence.jdbc.journal.dao.JournalDao
 import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
 import akka.persistence.journal.AsyncWriteJournal
@@ -31,6 +34,10 @@ import slick.jdbc.JdbcBackend._
 import scala.collection.immutable._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
+
+object JdbcAsyncWriteJournal {
+  private case class WriteFinished(pid: String, f: Future[_])
+}
 
 class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   implicit val ec: ExecutionContext = context.dispatcher
@@ -57,16 +64,32 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
     }
   }
 
+  // readHighestSequence must be performed after pending write for a persistenceId
+  // when the persistent actor is restarted.
+  private val writeInProgress: JMap[String, Future[_]] = new JHMap
+
   override def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] = {
-    // TODO like akka persistence cassandra, make sure that concurrent requests for the highest sequence number give the correct results
-    journalDao.asyncWriteMessages(messages)
+    val future = journalDao.asyncWriteMessages(messages)
+    val persistenceId = messages.head.persistenceId
+    writeInProgress.put(persistenceId, future)
+    future.onComplete(_ => self ! WriteFinished(persistenceId, future))
+    future
   }
 
   override def asyncDeleteMessagesTo(persistenceId: String, toSequenceNr: Long): Future[Unit] =
     journalDao.delete(persistenceId, toSequenceNr)
 
-  override def asyncReadHighestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] =
-    journalDao.highestSequenceNr(persistenceId, fromSequenceNr)
+  override def asyncReadHighestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] = {
+    def fetchHighestSeqNr() = journalDao.highestSequenceNr(persistenceId, fromSequenceNr)
+    writeInProgress.get(persistenceId) match {
+      case null => fetchHighestSeqNr()
+      case f =>
+        // we must fetch the highest sequence number after the previous write has completed
+        // If the previous write failed then we can ignore this
+        f.recover { case _ => () }.flatMap(_ => fetchHighestSeqNr())
+    }
+
+  }
 
   override def asyncReplayMessages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(recoveryCallback: (PersistentRepr) => Unit): Future[Unit] =
     journalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, max)
@@ -77,5 +100,10 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   override def postStop(): Unit = {
     db.close()
     super.postStop()
+  }
+
+  override def receivePluginInternal: Receive = {
+    case WriteFinished(persistenceId, future) =>
+      writeInProgress.remove(persistenceId, future)
   }
 }

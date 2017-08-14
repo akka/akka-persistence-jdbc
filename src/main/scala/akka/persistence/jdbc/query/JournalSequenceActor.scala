@@ -1,6 +1,6 @@
 package akka.persistence.jdbc.query
 
-import akka.actor.{Actor, ActorLogging, Cancellable, Props, Status}
+import akka.actor.{Actor, ActorLogging, Props, Status, Timers}
 import akka.persistence.jdbc.query.dao.ReadJournalDao
 import akka.pattern.pipe
 import akka.persistence.jdbc.config.JournalSequenceRetrievalConfig
@@ -15,10 +15,14 @@ object JournalSequenceActor {
   private case object QueryOrderingIds
   private case class NewOrderingIds(elements: Seq[OrderingId])
 
+  private case class ScheduleAssumeMaxOrderingId(max: OrderingId)
   private case class AssumeMaxOrderingId(max: OrderingId)
 
   case object GetMaxOrderingId
   case class MaxOrderingId(maxOrdering: OrderingId)
+
+  private case object QueryOrderingIdsTimerKey
+  private case object AssumeMaxOrderingIdTimerKey
 
   private type OrderingId = Long
 }
@@ -28,7 +32,7 @@ object JournalSequenceActor {
  * This is required to guarantee the EventByTag does not skip any rows in case rows with a higher (ordering) id are
  * visible in the database before rows with a lower (ordering) id.
  */
-class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequenceRetrievalConfig)(implicit materializer: Materializer) extends Actor with ActorLogging {
+class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequenceRetrievalConfig)(implicit materializer: Materializer) extends Actor with ActorLogging with Timers {
   import JournalSequenceActor._
   import context.dispatcher
   import config.{maxTries, maxBackoffQueryDelay, queryDelay, batchSize}
@@ -37,12 +41,9 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
 
   override def preStart(): Unit = {
     self ! QueryOrderingIds
-    val scheduler = context.system.scheduler
     readJournalDao.maxJournalSequence().mapTo[Long].onComplete {
       case scala.util.Success(maxInDatabase) =>
-        // All elements smaller than max can be assumed missing after this delay
-        val delay = queryDelay * maxTries
-        scheduler.scheduleOnce(delay, self, AssumeMaxOrderingId(maxInDatabase))
+        self ! ScheduleAssumeMaxOrderingId(maxInDatabase)
       case scala.util.Failure(t) =>
         log.info("Failed to recover fast, using event-by-event recovery instead. Cause: {}", t)
     }
@@ -56,6 +57,10 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
    * @param previousDelay The last used delay (may change in case failures occur)
    */
   def receive(currentMaxOrdering: OrderingId, missingByCounter: Map[Int, Set[OrderingId]], moduloCounter: Int, previousDelay: FiniteDuration = queryDelay): Receive = {
+    case ScheduleAssumeMaxOrderingId(max) =>
+      // All elements smaller than max can be assumed missing after this delay
+      val delay = queryDelay * maxTries
+      timers.startSingleTimer(key = AssumeMaxOrderingIdTimerKey, AssumeMaxOrderingId(max), delay)
     case AssumeMaxOrderingId(max) =>
       if (currentMaxOrdering < max) {
         context.become(receive(max, missingByCounter, moduloCounter, previousDelay))
@@ -102,13 +107,7 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
       context.become(receive(currentMaxOrdering, missingByCounter, moduloCounter, newDelay))
   }
 
-  var lastScheduledEvent: Option[Cancellable] = None
-
   def scheduleQuery(delay: FiniteDuration): Unit = {
-    lastScheduledEvent = Some(context.system.scheduler.scheduleOnce(delay, self, QueryOrderingIds))
-  }
-
-  override def postStop(): Unit = {
-    lastScheduledEvent.foreach(_.cancel())
+    timers.startSingleTimer(key = QueryOrderingIdsTimerKey, QueryOrderingIds, delay)
   }
 }

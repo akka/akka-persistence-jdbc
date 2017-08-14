@@ -153,6 +153,7 @@ class MockDaoJournalSequenceActorTest extends SimpleSpec with MaterializerSpec {
 
       // Reply to prevent a dead letter warning on the timeout
       daoProbe.reply(Seq.empty)
+      daoProbe.expectNoMsg(almostImmediately)
     }
   }
 
@@ -188,6 +189,7 @@ class MockDaoJournalSequenceActorTest extends SimpleSpec with MaterializerSpec {
 
       // Reply to prevent a dead letter warning on the timeout
       daoProbe.reply(Seq.empty)
+      daoProbe.expectNoMsg(almostImmediately)
     }
   }
 

@@ -158,7 +158,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     Source.unfoldAsync[Long, Seq[EventEnvelope]](offset) { (from: Long) =>
       def nextFromOffset(xs: Seq[EventEnvelope]): Long = {
-        if (xs.isEmpty) from else xs.map(_.offset.value).max + 1
+        if (xs.isEmpty) from else xs.map(_.offset.value).max
       }
       delaySource.flatMapConcat(_ => currentJournalEventsByTag(tag, from, readJournalConfig.maxBufferSize))
         .mapConcat {

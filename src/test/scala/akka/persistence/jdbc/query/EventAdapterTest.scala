@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.query.{EventEnvelope, Sequence}
+import akka.persistence.query.{EventEnvelope, NoOffset, Sequence}
 
 import scala.concurrent.duration._
 import akka.pattern.ask
@@ -91,7 +91,7 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
         countJournal.futureValue shouldBe 3
       }
 
-      withEventsByTag(10.seconds)("event", 2) { tp =>
+      withEventsByTag(10.seconds)("event", Sequence(1)) { tp =>
 
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, EventRestored("2")))
@@ -153,7 +153,7 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
         countJournal.futureValue shouldBe 3
       }
 
-      withCurrentEventsByTag()("event", 0) { tp =>
+      withCurrentEventsByTag()("event", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNextPF { case EventEnvelope(Sequence(1), _, _, EventRestored("1")) => }
         tp.expectNextPF { case EventEnvelope(Sequence(2), _, _, EventRestored("2")) => }
@@ -161,7 +161,7 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("event", 1) { tp =>
+      withCurrentEventsByTag()("event", Sequence(0)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNextPF { case EventEnvelope(Sequence(1), _, _, EventRestored("1")) => }
         tp.expectNextPF { case EventEnvelope(Sequence(2), _, _, EventRestored("2")) => }
@@ -169,20 +169,20 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("event", 2) { tp =>
+      withCurrentEventsByTag()("event", Sequence(1)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNextPF { case EventEnvelope(Sequence(2), _, _, EventRestored("2")) => }
         tp.expectNextPF { case EventEnvelope(Sequence(3), _, _, EventRestored("3")) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("event", 3) { tp =>
+      withCurrentEventsByTag()("event", Sequence(2)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNextPF { case EventEnvelope(Sequence(3), _, _, EventRestored("3")) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("event", 4) { tp =>
+      withCurrentEventsByTag()("event", Sequence(3)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectComplete()
       }

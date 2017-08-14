@@ -47,7 +47,7 @@ class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg:
     JournalTable
       .filter(_.tags like tag)
       .sortBy(_.ordering.asc)
-      .filter(row => row.ordering >= offset && row.ordering <= maxOffset)
+      .filter(row => row.ordering > offset && row.ordering <= maxOffset)
       .take(max)
   val eventsByTag = Compiled(_eventsByTag _)
 

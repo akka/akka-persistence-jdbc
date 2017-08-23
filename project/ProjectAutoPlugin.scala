@@ -8,7 +8,7 @@ import sbt._
 import scalariform.formatter.preferences.FormattingPreferences
 
 object ProjectAutoPlugin extends AutoPlugin {
-  final val AkkaVersion = "2.4.20"
+  final val AkkaVersion = "2.5.2"
   final val SlickVersion = "3.2.1"
   final val ScalaTestVersion = "3.0.3"
 
@@ -77,7 +77,7 @@ object ProjectAutoPlugin extends AutoPlugin {
 
    libraryDependencies += "com.typesafe.akka" %% "akka-actor" % AkkaVersion,
    libraryDependencies += "com.typesafe.akka" %% "akka-persistence" % AkkaVersion,
-   libraryDependencies += "com.typesafe.akka" %% "akka-persistence-query-experimental" % AkkaVersion,
+   libraryDependencies += "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
    libraryDependencies += "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
    libraryDependencies += "com.typesafe.slick" %% "slick" % SlickVersion,
    libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,

@@ -25,7 +25,7 @@ import akka.persistence.jdbc.query.JournalSequenceActor.{GetMaxOrderingId, MaxOr
 import akka.persistence.jdbc.query.javadsl.{JdbcReadJournal => JavaJdbcReadJournal}
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 import akka.persistence.journal.Tagged
-import akka.persistence.query.{EventEnvelope, PersistenceQuery}
+import akka.persistence.query.{EventEnvelope, PersistenceQuery, Sequence}
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import akka.stream.testkit.TestSubscriber
@@ -39,7 +39,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait ReadJournalOperations {
   def withCurrentPersistenceIds(within: FiniteDuration = 60.second)(f: TestSubscriber.Probe[String] => Unit): Unit
-  def withAllPersistenceIds(within: FiniteDuration = 60.second)(f: TestSubscriber.Probe[String] => Unit): Unit
+  def withPersistenceIds(within: FiniteDuration = 60.second)(f: TestSubscriber.Probe[String] => Unit): Unit
   def withCurrentEventsByPersistenceId(within: FiniteDuration = 60.second)(persistenceId: String, fromSequenceNr: Long = 0, toSequenceNr: Long = Long.MaxValue)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit
   def withEventsByPersistenceId(within: FiniteDuration = 60.second)(persistenceId: String, fromSequenceNr: Long = 0, toSequenceNr: Long = Long.MaxValue)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit
   def withCurrentEventsByTag(within: FiniteDuration = 60.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit
@@ -61,8 +61,8 @@ trait ScalaJdbcReadJournalOperations extends ReadJournalOperations {
     tp.within(within)(f(tp))
   }
 
-  def withAllPersistenceIds(within: FiniteDuration)(f: TestSubscriber.Probe[String] => Unit): Unit = {
-    val tp = readJournal.allPersistenceIds().runWith(TestSink.probe[String])
+  def withPersistenceIds(within: FiniteDuration)(f: TestSubscriber.Probe[String] => Unit): Unit = {
+    val tp = readJournal.persistenceIds().runWith(TestSink.probe[String])
     tp.within(within)(f(tp))
   }
 
@@ -116,8 +116,8 @@ trait JavaDslJdbcReadJournalOperations extends ReadJournalOperations {
     tp.within(within)(f(tp))
   }
 
-  def withAllPersistenceIds(within: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] => Unit): Unit = {
-    val tp = readJournal.allPersistenceIds().runWith(JavaSink.probe(system), mat)
+  def withPersistenceIds(within: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] => Unit): Unit = {
+    val tp = readJournal.persistenceIds().runWith(JavaSink.probe(system), mat)
     tp.within(within)(f(tp))
   }
 
@@ -132,12 +132,12 @@ trait JavaDslJdbcReadJournalOperations extends ReadJournalOperations {
   }
 
   def withCurrentEventsByTag(within: FiniteDuration = 1.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
-    val tp = readJournal.currentEventsByTag(tag, offset).runWith(JavaSink.probe(system), mat)
+    val tp = readJournal.currentEventsByTag(tag, Sequence(offset)).runWith(JavaSink.probe(system), mat)
     tp.within(within)(f(tp))
   }
 
   def withEventsByTag(within: FiniteDuration = 1.second)(tag: String, offset: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
-    val tp = readJournal.eventsByTag(tag, offset).runWith(JavaSink.probe(system), mat)
+    val tp = readJournal.eventsByTag(tag, Sequence(offset)).runWith(JavaSink.probe(system), mat)
     tp.within(within)(f(tp))
   }
 

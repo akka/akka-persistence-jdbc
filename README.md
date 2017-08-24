@@ -282,7 +282,7 @@ Changes since v2.4.18.2
   - Fixed bug in eventsByTag and currentEventsByTag query, which could case some event to be skipped
   - Implemented batch writing for the journal which results in better throughput.
   - Fixed a potential issue where actors could retrieve their latest sequence number too early upon restart.
-  - Slick 3.2.0 -> 3.2.1
+  - Slick 3.2.0 -> 3.2.1 (Note: Slick 3.2.1 is not binary compatible with 3.2.0)
   - Akka 2.4.18 -> 2.4.20
 
 

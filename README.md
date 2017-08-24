@@ -274,15 +274,26 @@ It is advisable to register a shutdown hook to be run when the VM exits that ter
 sys.addShutdownHook(system.terminate())
 ```
 
-## Changelog
-## 2.4.18.2 (2017-06-09)
+## Changelog  
+### 2.7.0 (TO BE RELEASED)
+Changes since v2.4.18.2
+  - For use with Akka 2.4.x only, please use release 3.0.0 with Akka 2.5
+  - The database schemas have been updated with an extra index to improve the eventsByTag query performance
+  - Fixed bug in eventsByTag and currentEventsByTag query, which could case some event to be skipped
+  - Implemented batch writing for the journal which results in better throughput.
+  - Fixed a potential issue where actors could retrieve their latest sequence number too early upon restart.
+  - Slick 3.2.0 -> 3.2.1
+  - Akka 2.4.18 -> 2.4.20
+
+
+### 2.4.18.2 (2017-06-09)
   - Fixed Issue #106 'JdbcReadJournal in javadsl does not support CurrentEventsByTagQuery2 and EventsByTagQuery2'
 
-## 2.5.2.0 (2017-06-09)
+### 2.5.2.0 (2017-06-09)
   - Merged PR #105 [aenevala][aenevala] Added support for event adapters on query side for 2.5.2.0, thanks!
   - Akka 2.5.1 -> 2.5.2
 
-## 2.4.18.1 (2017-06-04)
+### 2.4.18.1 (2017-06-04)
   - Merged PR #103 [aenevala][aenevala] Added support for event adapters on query side, thanks!
 
 ### 2.5.1.0 (2017-05-03)

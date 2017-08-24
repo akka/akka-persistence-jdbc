@@ -1,4 +1,5 @@
 -J-Xms512M
 -J-Xmx4096M
+-J-XX:-UseConcMarkSweepGC
 -J-XX:+UseG1GC
--J-XX:+CMSClassUnloadingEnabled
+-J-XX:MaxGCPauseMillis=200

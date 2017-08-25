@@ -22,3 +22,14 @@ before_script:
 addons:
   postgresql: "9.4"
 script: "./build.sh"
+
+before_cache:
+  - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
+  - find $HOME/.sbt -name "*.lock" -delete
+
+cache:
+  directories:
+   - $HOME/.m2
+   - $HOME/.ivy2
+   - $HOME/.sbt/boot/scala-$TRAVIS_SCALA_VERSION
+   - $HOME/.sbt/launchers

@@ -10,6 +10,7 @@ import akka.persistence.jdbc.query.dao.TestProbeReadJournalDao
 import akka.persistence.jdbc.util.SlickDriver
 import akka.stream.scaladsl.{Sink, Source}
 import akka.testkit.TestProbe
+import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.Future
@@ -179,11 +180,10 @@ class MockDaoJournalSequenceActorTest extends SimpleSpec with MaterializerSpec {
 
       // sanity check
       retryResponse.last shouldBe 142
-      withClue("The elements 41 and 42 should be assumed missing") {
-        fetchMaxOrderingId(actor).futureValue shouldBe 142
-      }
-      withClue("Since a full batch has been receive the actor should query again immediately") {
+      withClue("The elements 41 and 42 should be assumed missing, " +
+        "the actor should query again immediately since a full batch has been received") {
         daoProbe.expectMsg(almostImmediately, TestProbeReadJournalDao.JournalSequence(142, batchSize))
+        fetchMaxOrderingId(actor).futureValue shouldBe 142
       }
 
       // Reply to prevent a dead letter warning on the timeout

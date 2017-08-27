@@ -285,6 +285,9 @@ Changes since v2.5.2.0
   - Fixed a potential issue where actors could retrieve their latest sequence number too early upon restart.
   - Slick 3.2.0 -> 3.2.1 (Note: Slick 3.2.1 is not binary compatible with 3.2.0)
   - Akka 2.5.2 -> 2.5.4
+  - Merged PRs #121, #119, #117, #115, #114, #113, #111, #110. Thanks to [Jimin Hsieh][jiminhsieh],
+    [Renato Cavalcanti][rcavalcanti], [Frederic Gendebien][frederic-gendebien], [Sullis][sullis],
+    [Ruud Welling][WellingR], [Sarah Gerweck][sarahgerweck].
 
 
 ### 2.7.0 (TO BE RELEASED)
@@ -296,6 +299,9 @@ Changes since v2.4.18.2
   - Fixed a potential issue where actors could retrieve their latest sequence number too early upon restart.
   - Slick 3.2.0 -> 3.2.1 (Note: Slick 3.2.1 is not binary compatible with 3.2.0)
   - Akka 2.4.18 -> 2.4.20
+  - Merged PRs #121, #119, #117, #115, #114, #113, #111, #110. Thanks to [Jimin Hsieh][jiminhsieh],
+    [Renato Cavalcanti][rcavalcanti], [Frederic Gendebien][frederic-gendebien], [Sullis][sullis],
+    [Ruud Welling][WellingR], [Sarah Gerweck][sarahgerweck].
 
 
 ### 2.4.18.2 (2017-06-09)
@@ -739,6 +745,12 @@ Changes since v2.4.18.2
 [skisel]: https://github.com/skisel
 [joseblas]: https://github.com/joseblas
 [timothyklim]: https://github.com/TimothyKlim
+[jiminhsieh]: http://github.com/jiminhsieh
+[rcavalcanti]: http://github.com/rcavalcanti
+[frederic-gendebien]: http://github.com/frederic-gendebien
+[sullis]: http://github.com/sullis
+[wellingr]: http://github.com/wellingr
+[sarahgerweck]: http://github.com/sarahgerweck
 
 [scalikejdbc]: http://scalikejdbc.org/
 [slick]: http://slick.typesafe.com/

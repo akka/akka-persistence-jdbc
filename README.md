@@ -42,7 +42,7 @@ Configure `akka-persistence`:
 - instruct akka persistence to use the `jdbc-snapshot-store` plugin,
 
 Configure `slick`:
-- The following slick drivers are supported:
+- The following slick profiles are supported:
   - `slick.jdbc.PostgresProfile$`
   - `slick.jdbc.MySQLProfile$`
   - `slick.jdbc.H2Profile$`
@@ -71,7 +71,7 @@ To enable the JNDI lookup, you must add the following to your application.conf:
 ```
 jdbc-journal {
   slick {
-    driver = "slick.jdbc.PostgresDriver$"
+    profile = "slick.jdbc.PostgresProfile$"
     jndiName = "java:jboss/datasources/PostgresDS"   
   }
 }
@@ -329,7 +329,7 @@ Changes since v2.4.18.2
 ### 2.4.17.1 (2017-02-24)
   - Slick 3.1.1 -> 3.2.0
   - Scala 2.11.8 and 2.12.1 support
-  - The following slick drivers are supported:
+  - The following slick profiles are supported:
     - `slick.jdbc.PostgresProfile$`
     - `slick.jdbc.MySQLProfile$`
     - `slick.jdbc.H2Profile$`
@@ -350,7 +350,7 @@ Changes since v2.4.18.2
   - Slick 3.2.0-M2 test release
   - Scala 2.11.8 and 2.12.1 build
   - Only availabe on Bintray's JCenter
-  - The following slick drivers are supported:
+  - The following slick profiles are supported:
     - `slick.jdbc.PostgresProfile$`
     - `slick.jdbc.MySQLProfile$`
     - `slick.jdbc.H2Profile$`

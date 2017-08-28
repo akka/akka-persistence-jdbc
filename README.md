@@ -278,14 +278,17 @@ sys.addShutdownHook(system.terminate())
 ### 3.0.0 (TO BE RELEASED)
 Changes since v2.5.2.0
   - Akka 2.5 release only, please use the 2.7.x release for Akka 2.4 
-  - EventsByTag query treats the offset as exclusive instead of inclusive. **This is a breaking change!**
+  - EventsByTag query treats the offset as exclusive instead of inclusive. **This is a breaking change!** All users of
+    the eventsByTag query can now reuse the `Offset` from the last received `EventEnvelope` to resume the query.
   - The database schemas have been updated with an extra index to improve the eventsByTag query performance
   - Fixed bug in eventsByTag and currentEventsByTag query, which could case some event to be skipped
   - Implemented batch writing for the journal which results in better throughput.
+  - The reference config no longer contains environment specific defaults such as the slick profile and the databas url.
+    Instead, the reference config documents how to configure these. 
   - Fixed a potential issue where actors could retrieve their latest sequence number too early upon restart.
   - Slick 3.2.0 -> 3.2.1 (Note: Slick 3.2.1 is not binary compatible with 3.2.0)
   - Akka 2.5.2 -> 2.5.4
-  - Merged PRs #121, #119, #117, #115, #114, #113, #111, #110. Thanks to [Jimin Hsieh][jiminhsieh],
+  - Merged PRs #121, #120, #119, #117, #115, #114, #113, #111, #110. Thanks to [Jimin Hsieh][jiminhsieh],
     [Renato Cavalcanti][rcavalcanti], [Frederic Gendebien][frederic-gendebien], [Sullis][sullis],
     [Ruud Welling][WellingR], [Sarah Gerweck][sarahgerweck].
 
@@ -296,10 +299,12 @@ Changes since v2.4.18.2
   - The database schemas have been updated with an extra index to improve the eventsByTag query performance
   - Fixed bug in eventsByTag and currentEventsByTag query, which could case some event to be skipped
   - Implemented batch writing for the journal which results in better throughput.
+  - The reference config no longer contains environment specific defaults such as the slick profile and the databas url.
+    Instead, the reference config documents how to configure these. 
   - Fixed a potential issue where actors could retrieve their latest sequence number too early upon restart.
   - Slick 3.2.0 -> 3.2.1 (Note: Slick 3.2.1 is not binary compatible with 3.2.0)
   - Akka 2.4.18 -> 2.4.20
-  - Merged PRs #121, #119, #117, #115, #114, #113, #111, #110. Thanks to [Jimin Hsieh][jiminhsieh],
+  - Merged PRs #121, #120, #119, #117, #115, #114, #113, #111, #110. Thanks to [Jimin Hsieh][jiminhsieh],
     [Renato Cavalcanti][rcavalcanti], [Frederic Gendebien][frederic-gendebien], [Sullis][sullis],
     [Ruud Welling][WellingR], [Sarah Gerweck][sarahgerweck].
 

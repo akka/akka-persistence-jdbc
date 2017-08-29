@@ -16,10 +16,10 @@ Add the following to your `build.sbt`:
 resolvers += Resolver.jcenterRepo
 
 // akka 2.5.x
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.5.2.0"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.0.0"
 
 // akka 2.4.x
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.4.18.1"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.7.0"
 ```
 
 ## Contribution policy
@@ -275,7 +275,7 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## Changelog  
-### 3.0.0 (TO BE RELEASED)
+### 3.0.0 (2017-08-29)
 Changes since v2.5.2.0
   - Akka 2.5 release only, please use the 2.7.x release for Akka 2.4 
   - EventsByTag query treats the offset as exclusive instead of inclusive. **This is a breaking change!** All users of
@@ -289,11 +289,11 @@ Changes since v2.5.2.0
   - Slick 3.2.0 -> 3.2.1 (Note: Slick 3.2.1 is not binary compatible with 3.2.0)
   - Akka 2.5.2 -> 2.5.4
   - Merged PRs #121, #120, #119, #117, #115, #114, #113, #111, #110. Thanks to [Jimin Hsieh][jiminhsieh],
-    [Renato Cavalcanti][rcavalcanti], [Frederic Gendebien][frederic-gendebien], [Sullis][sullis],
+    [Renato Cavalcanti][rcavalcanti], [Frederic Gendebien][frederic-gendebien], [Sean Sullivan][sullis],
     [Ruud Welling][WellingR], [Sarah Gerweck][sarahgerweck].
 
 
-### 2.7.0 (TO BE RELEASED)
+### 2.7.0 (2017-08-29)
 Changes since v2.4.18.2
   - For use with Akka 2.4.x only, please use release 3.0.0 with Akka 2.5
   - The database schemas have been updated with an extra index to improve the eventsByTag query performance
@@ -305,7 +305,7 @@ Changes since v2.4.18.2
   - Slick 3.2.0 -> 3.2.1 (Note: Slick 3.2.1 is not binary compatible with 3.2.0)
   - Akka 2.4.18 -> 2.4.20
   - Merged PRs #121, #120, #119, #117, #115, #114, #113, #111, #110. Thanks to [Jimin Hsieh][jiminhsieh],
-    [Renato Cavalcanti][rcavalcanti], [Frederic Gendebien][frederic-gendebien], [Sullis][sullis],
+    [Renato Cavalcanti][rcavalcanti], [Frederic Gendebien][frederic-gendebien], [Sean Sullivan][sullis],
     [Ruud Welling][WellingR], [Sarah Gerweck][sarahgerweck].
 
 

@@ -25,4 +25,4 @@ addSbtPlugin("de.heikoseeberger" % "sbt-header" % "1.8.0")
 
 // enable release process
 // https://github.com/sbt/sbt-release
-addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.3")
+addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.6")

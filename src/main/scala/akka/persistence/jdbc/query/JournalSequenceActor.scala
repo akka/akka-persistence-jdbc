@@ -110,7 +110,7 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
 
             // if it's a gap and has been detected before on a previous iteration we give up
             // that means that we consider it a genuine gap that will never be filled
-            case e if givenUp(e) => missing
+            case e if givenUp(e)               => missing
 
             // any other case is a gap that we expect to be filled soon
             case _ =>
@@ -128,7 +128,12 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
           (newMax, currentElement, newMissing)
       }
 
-    val newMissingByCounter = missingByCounter + (moduloCounter -> missingElems)
+    val newMissingByCounter =
+      (missingByCounter + (moduloCounter -> missingElems))
+        .map {
+          case (key, value) =>
+            key -> value.filter(missingId => missingId > nextMax)
+        }
 
     // did we detect gaps in the current batch?
     val noGapsFound = newMissingByCounter.values.forall(_.isEmpty)

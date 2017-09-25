@@ -100,7 +100,7 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
   def findGaps(elements: Seq[OrderingId], currentMaxOrdering: OrderingId, missingByCounter: Map[Int, Set[OrderingId]], moduloCounter: Int) = {
 
     // list of elements that will be considered as genuine gaps.
-    // `givenUp` is whether empty or is was filled on a previous iteration
+    // `givenUp` is either empty or is was filled on a previous iteration
     val givenUp = missingByCounter.getOrElse(moduloCounter, Set.empty)
 
     val (nextMax, _, missingElems) =
@@ -127,10 +127,14 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
               missing ++ currentlyMissing.filterNot(alreadyMissing)
           }
 
-          // we must decide if the if we move the cursor forward
+          // we must decide if we move the cursor forward
           val newMax =
-            if ((currentMax + 1).until(currentElement).forall(givenUp.contains)) currentElement
-            else currentMax
+            if ((currentMax + 1).until(currentElement).forall(givenUp.contains)) {
+              // we move the cursor forward when:
+              // 1) they have been detected as missing on previous iteration, it's time now to give up
+              // 2) current + 1 == currentElement (meaning no gap). Note that `forall` on an empty range always returns true
+              currentElement
+            } else currentMax
 
           (newMax, currentElement, newMissing)
       }
@@ -147,7 +151,7 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
 
     // full batch means that we retrieved as much elements as the batchSize
     // that happens when we are not yet at the end of the stream
-    val isFullBatch = elements.size >= batchSize
+    val isFullBatch = elements.size == batchSize
 
     if (noGapsFound && isFullBatch) {
       // Many elements have been retrieved but none are missing
@@ -155,7 +159,7 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
       self ! QueryOrderingIds
       context.become(receive(nextMax, newMissingByCounter, moduloCounter))
     } else {
-      // whether we detected gaps or we reached the end of stream (batch not full)
+      // either we detected gaps or we reached the end of stream (batch not full)
       // in this case we want to keep querying but not immediately
       scheduleQuery(queryDelay)
       context.become(receive(nextMax, newMissingByCounter, (moduloCounter + 1) % maxTries))

@@ -195,7 +195,7 @@ class MockDaoJournalSequenceActorTest extends SimpleSpec with MaterializerSpec {
 
   def withTestProbeJournalSequenceActor(batchSize: Int, maxTries: Int, queryDelay: FiniteDuration)(f: (TestProbe, ActorRef) => Unit): Unit = {
     val testProbe = TestProbe()
-    val config = JournalSequenceRetrievalConfig(batchSize = batchSize, maxTries = maxTries, queryDelay = queryDelay, maxBackoffQueryDelay = 4.seconds)
+    val config = JournalSequenceRetrievalConfig(batchSize = batchSize, maxTries = maxTries, queryDelay = queryDelay, maxBackoffQueryDelay = 4.seconds, askTimeout = 100.millis)
     val mockDao = new TestProbeReadJournalDao(testProbe)
     val actor = system.actorOf(JournalSequenceActor.props(mockDao, config))
     try f(testProbe, actor) finally system.stop(actor)

@@ -139,7 +139,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
 
   private def currentJournalEventsByTag(tag: String, offset: Long, max: Long): Source[(PersistentRepr, Set[String], JournalRow), NotUsed] = {
     import akka.pattern.ask
-    implicit val askTimeout = Timeout(100.millis)
+    implicit val askTimeout = Timeout(readJournalConfig.journalSequenceRetrievalConfiguration.askTimeout)
     Source.fromFuture(orderingActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId])
       .flatMapConcat { latestOrdering =>
         if (latestOrdering.maxOrdering < offset) Source.empty

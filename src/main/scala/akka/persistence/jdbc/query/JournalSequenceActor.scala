@@ -13,7 +13,7 @@ object JournalSequenceActor {
   def props(readJournalDao: ReadJournalDao, config: JournalSequenceRetrievalConfig)(implicit materializer: Materializer): Props = Props(new JournalSequenceActor(readJournalDao, config))
 
   private case object QueryOrderingIds
-  private case class NewOrderingIds(elements: Seq[OrderingId])
+  private case class NewOrderingIds(originalOffset: Long, elements: Seq[OrderingId])
 
   private case class AssumeMaxOrderingId(max: OrderingId)
 
@@ -60,39 +60,24 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
       if (currentMaxOrdering < max) {
         context.become(receive(max, missingByCounter, moduloCounter, previousDelay))
       }
+
     case GetMaxOrderingId =>
       sender() ! MaxOrderingId(currentMaxOrdering)
+
     case QueryOrderingIds =>
-      readJournalDao.journalSequence(currentMaxOrdering, batchSize).runWith(Sink.seq)
-        .map(result => NewOrderingIds(result)) pipeTo self
-    case NewOrderingIds(elements) =>
-      val givenUp = missingByCounter.getOrElse(moduloCounter, Set.empty)
-      val (nextmax, _, missingElems) = elements.foldLeft[(OrderingId, OrderingId, Set[OrderingId])](currentMaxOrdering, currentMaxOrdering, Set.empty) {
-        case ((currentMax, previousElement, missing), elem) =>
-          val newMissing = if (previousElement + 1 < elem && !givenUp(elem)) {
-            val currentlyMissing = previousElement + 1 until elem
-            def alreadyMissing(e: Long) = missingByCounter.values.exists(_.contains(e))
-            missing ++ currentlyMissing.filterNot(alreadyMissing)
-          } else missing
-          val newMax =
-            if (currentMax + 1 == elem) elem
-            else if ((currentMax + 1).until(elem).forall(givenUp.contains)) elem
-            else currentMax
-          (newMax, elem, newMissing)
-      }
-      val newMissingByCounter = (missingByCounter + (moduloCounter -> missingElems)).map {
-        case (key, value) =>
-          key -> value.filter(missingId => missingId > nextmax)
-      }
-      if (nextmax - currentMaxOrdering >= batchSize && newMissingByCounter.values.forall(_.isEmpty)) {
-        // Many elements have been retrieved but none are missing
-        // We can query again immediately, as this allows the actor to rapidly retrieve the real max ordering
-        self ! QueryOrderingIds
-        context.become(receive(nextmax, newMissingByCounter, moduloCounter))
-      } else {
-        scheduleQuery(queryDelay)
-        context.become(receive(nextmax, newMissingByCounter, (moduloCounter + 1) % maxTries))
-      }
+      readJournalDao
+        .journalSequence(currentMaxOrdering, batchSize)
+        .runWith(Sink.seq)
+        .map(result => NewOrderingIds(currentMaxOrdering, result)) pipeTo self
+
+    case NewOrderingIds(originalOffset, _) if originalOffset < currentMaxOrdering =>
+      // search was done using an offset that became obsolete in the meantime
+      // therefore we start a new query
+      self ! QueryOrderingIds
+
+    case NewOrderingIds(_, elements) =>
+      findGaps(elements, currentMaxOrdering, missingByCounter, moduloCounter)
+
     case Status.Failure(t) =>
       val newDelay = maxBackoffQueryDelay.min(previousDelay * 2)
       if (newDelay == maxBackoffQueryDelay) {
@@ -100,6 +85,69 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
       }
       scheduleQuery(newDelay)
       context.become(receive(currentMaxOrdering, missingByCounter, moduloCounter, newDelay))
+  }
+
+  /**
+   * This method that implements the "find gaps" algo. It's the meat and main purpose of this actor.
+   */
+  def findGaps(elements: Seq[OrderingId], currentMaxOrdering: OrderingId, missingByCounter: Map[Int, Set[OrderingId]], moduloCounter: Int) = {
+
+    // list of elements that will be considered as genuine gaps.
+    // `givenUp` is whether empty or is was filled on a previous iteration
+    val givenUp = missingByCounter.getOrElse(moduloCounter, Set.empty)
+
+    val (nextMax, _, missingElems) =
+      // using the ordering elements that were fetched, we verify if there are any gaps
+      elements.foldLeft[(OrderingId, OrderingId, Set[OrderingId])](currentMaxOrdering, currentMaxOrdering, Set.empty) {
+
+        case ((currentMax, previousElement, missing), currentElement) =>
+
+          // we accumulate in newMissing the gaps we detect on each iteration
+          val newMissing = currentElement match {
+
+            // if current element is contiguous to previous, there is no gap
+            case e if e == previousElement + 1 => missing
+
+            // if it's a gap and has been detected before on a previous iteration we give up
+            // that means that we consider it a genuine gap that will never be filled
+            case e if givenUp(e) => missing
+
+            // any other case is a gap that we expect to be filled soon
+            case _ =>
+              val currentlyMissing = previousElement + 1 until currentElement
+              // we don't want to declare it as missing if it has been already declared on a previous iterations
+              def alreadyMissing(e: Long) = missingByCounter.values.exists(_.contains(e))
+              missing ++ currentlyMissing.filterNot(alreadyMissing)
+          }
+
+          // we must decide if the if we move the cursor forward
+          val newMax =
+            if ((currentMax + 1).until(currentElement).forall(givenUp.contains)) currentElement
+            else currentMax
+
+          (newMax, currentElement, newMissing)
+      }
+
+    val newMissingByCounter = missingByCounter + (moduloCounter -> missingElems)
+
+    // did we detect gaps in the current batch?
+    val noGapsFound = newMissingByCounter.values.forall(_.isEmpty)
+
+    // full batch means that we retrieved as much elements as the batchSize
+    // that happens when we are not yet at the end of the stream
+    val isFullBatch = elements.size >= batchSize
+
+    if (noGapsFound && isFullBatch) {
+      // Many elements have been retrieved but none are missing
+      // We can query again immediately, as this allows the actor to rapidly retrieve the real max ordering
+      self ! QueryOrderingIds
+      context.become(receive(nextMax, newMissingByCounter, moduloCounter))
+    } else {
+      // whether we detected gaps or we reached the end of stream (batch not full)
+      // in this case we want to keep querying but not immediately
+      scheduleQuery(queryDelay)
+      context.become(receive(nextMax, newMissingByCounter, (moduloCounter + 1) % maxTries))
+    }
   }
 
   var lastScheduledEvent: Option[Cancellable] = None

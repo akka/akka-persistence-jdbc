@@ -20,9 +20,25 @@ import akka.persistence.query.EventEnvelope
 
 import scala.concurrent.duration._
 import akka.pattern.ask
-import akka.persistence.jdbc.query.EventAdapterTest.{Event, EventRestored, TaggedEvent}
+import akka.persistence.jdbc.query.EventAdapterTest.{Event, EventRestored, TaggedAsyncEvent, TaggedEvent}
+import com.typesafe.config.{ConfigValue, ConfigValueFactory}
 
-abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
+import scala.concurrent.duration._
+import scala.concurrent.Future
+import EventsByTagTest._
+import akka.Done
+
+object EventsByTagTest {
+  val maxBufferSize = 20
+  val refreshInterval = 500.milliseconds
+
+  val configOverrides: Map[String, ConfigValue] = Map(
+    "jdbc-read-journal.max-buffer-size" -> ConfigValueFactory.fromAnyRef(maxBufferSize.toString),
+    "jdbc-read-journal.refresh-interval" -> ConfigValueFactory.fromAnyRef(refreshInterval.toString())
+  )
+}
+
+abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, configOverrides) {
 
   final val NoMsgTime: FiniteDuration = 100.millis
 
@@ -68,7 +84,6 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
 
       withEventsByTag()("number", 1) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(1, "my-1", 1, 1))
         tp.expectNext(EventEnvelope(2, "my-2", 1, 2))
         tp.expectNext(EventEnvelope(3, "my-3", 1, 3))
         tp.cancel()
@@ -76,18 +91,11 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
 
       withEventsByTag()("number", 2) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(2, "my-2", 1, 2))
         tp.expectNext(EventEnvelope(3, "my-3", 1, 3))
         tp.cancel()
       }
 
       withEventsByTag()("number", 3) { tp =>
-        tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(3, "my-3", 1, 3))
-        tp.cancel()
-      }
-
-      withEventsByTag()("number", 4) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNoMsg(NoMsgTime)
         tp.cancel()
@@ -155,7 +163,6 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
 
       withEventsByTag()("number", 2) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(2, "my-2", 1, 2))
         tp.expectNext(EventEnvelope(3, "my-3", 1, 3))
         tp.expectNoMsg(NoMsgTime)
 
@@ -280,6 +287,47 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.expectNext(EventEnvelope(5, "my-1", 5, 5))
         tp.expectNoMsg(NoMsgTime)
         tp.cancel()
+        tp.expectNoMsg(NoMsgTime)
+      }
+    }
+  }
+
+  it should "show the configured performance characteristics" in {
+    withTestActors() { (actor1, actor2, actor3) =>
+      def sendMessagesWithTag(tag: String, numberOfMessagesPerActor: Int): Future[Done] = {
+        val futures = for (actor <- Seq(actor1, actor2, actor3); i <- 1 to numberOfMessagesPerActor) yield {
+          actor ? TaggedAsyncEvent(Event(i.toString), tag)
+        }
+        Future.sequence(futures).map(_ => Done)
+      }
+
+      val tag1 = "someTag"
+      // send a batch of 3 * 50
+      sendMessagesWithTag(tag1, 50)
+
+      // start the query before the future completes
+      withEventsByTag()(tag1, 0) { tp =>
+        tp.within(5.seconds) {
+          tp.request(Int.MaxValue)
+          tp.expectNextN(150)
+        }
+        tp.expectNoMsg(NoMsgTime)
+
+        // Send a small batch of 3 * 5 messages
+        sendMessagesWithTag(tag1, 5)
+        // Since queries are executed `refreshInterval`, there must be a small delay before this query gives a result
+        tp.within(min = refreshInterval / 2, max = 2.seconds) {
+          tp.expectNextN(15)
+        }
+        tp.expectNoMsg(NoMsgTime)
+
+        // another large batch should be retrieved fast
+        // send a second batch of 3 * 100
+        sendMessagesWithTag(tag1, 100)
+        tp.within(min = refreshInterval / 2, max = 10.seconds) {
+          tp.request(Int.MaxValue)
+          tp.expectNextN(300)
+        }
         tp.expectNoMsg(NoMsgTime)
       }
     }

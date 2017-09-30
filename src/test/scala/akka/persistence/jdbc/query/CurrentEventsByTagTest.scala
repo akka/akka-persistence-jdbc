@@ -18,8 +18,26 @@ package akka.persistence.jdbc.query
 
 import akka.persistence.query.EventEnvelope
 import akka.pattern.ask
+import com.typesafe.config.{ConfigValue, ConfigValueFactory}
+import scala.concurrent.duration._
+import akka.Done
+import akka.persistence.jdbc.query.EventAdapterTest.{Event, TaggedAsyncEvent}
 
-abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config) with ScalaJdbcReadJournalOperations {
+import scala.concurrent.Future
+
+import CurrentEventsByTagTest._
+
+object CurrentEventsByTagTest {
+  val maxBufferSize = 20
+  val refreshInterval = 500.milliseconds
+
+  val configOverrides: Map[String, ConfigValue] = Map(
+    "jdbc-read-journal.max-buffer-size" -> ConfigValueFactory.fromAnyRef(maxBufferSize.toString),
+    "jdbc-read-journal.refresh-interval" -> ConfigValueFactory.fromAnyRef(refreshInterval.toString())
+  )
+}
+
+abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config, configOverrides) with ScalaJdbcReadJournalOperations {
 
   it should "not find an event by tag for unknown tag" in {
     withTestActors() { (actor1, actor2, actor3) =>
@@ -50,7 +68,6 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
       eventually {
         countJournal.futureValue shouldBe 3
       }
-
       eventually {
         latestOrdering.futureValue shouldBe 3
       }
@@ -65,7 +82,6 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
 
       withCurrentEventsByTag()("number", 1) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, _) => }
         tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
         tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
         tp.expectComplete()
@@ -73,18 +89,11 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
 
       withCurrentEventsByTag()("number", 2) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(2, _, _, _) => }
         tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
         tp.expectComplete()
       }
 
       withCurrentEventsByTag()("number", 3) { tp =>
-        tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(3, _, _, _) => }
-        tp.expectComplete()
-      }
-
-      withCurrentEventsByTag()("number", 4) { tp =>
         tp.request(Int.MaxValue)
         tp.expectComplete()
       }
@@ -163,6 +172,38 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         tp.expectComplete()
       }
     }
+
+  it should "complete without any gaps in case events are being persisted when the query is executed" in {
+    withTestActors() { (actor1, actor2, actor3) =>
+      def sendMessagesWithTag(tag: String, numberOfMessagesPerActor: Int): Future[Done] = {
+        val futures = for (actor <- Seq(actor1, actor2, actor3); i <- 1 to numberOfMessagesPerActor) yield {
+          actor ? TaggedAsyncEvent(Event(i.toString), tag)
+        }
+        Future.sequence(futures).map(_ => Done)
+      }
+
+      val tag = "someTag"
+      // send a batch of 3 * 200
+      val batch1 = sendMessagesWithTag(tag, 200)
+      // Try to persist a large batch of events per actor. Some of these may be returned, but not all!
+      sendMessagesWithTag(tag, 10000)
+
+      // wait for acknowledgement of the first batch only
+      batch1.futureValue
+      // Sanity check, all events in the first batch must be in the journal
+      countJournal.futureValue should be >= 600L
+
+      // start the query before the last batch completes
+      withCurrentEventsByTag()(tag, 0) { tp =>
+        // The stream must complete within the given amount of time
+        // This make take a while in case the journal sequence actor detects gaps
+        val allEvents = tp.toStrict(atMost = 20.seconds)
+        allEvents.size should be >= 600
+        val expectedOffsets = 1L.to(allEvents.size)
+        allEvents.map(_.offset) shouldBe expectedOffsets
+      }
+    }
+  }
 }
 
 class PostgresScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with PostgresCleaner

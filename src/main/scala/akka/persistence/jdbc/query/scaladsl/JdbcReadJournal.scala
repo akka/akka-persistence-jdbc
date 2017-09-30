@@ -19,7 +19,6 @@ package scaladsl
 
 import akka.NotUsed
 import akka.actor.ExtendedActorSystem
-import akka.persistence.jdbc.JournalRow
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.query.JournalSequenceActor.{GetMaxOrderingId, MaxOrderingId}
 import akka.persistence.jdbc.query.dao.ReadJournalDao
@@ -42,6 +41,20 @@ import scala.util.{Failure, Success}
 
 object JdbcReadJournal {
   final val Identifier = "jdbc-read-journal"
+
+  private sealed trait FlowControl
+
+  /** Keep querying - used when we are sure that there is more events to fetch */
+  private case object Continue extends FlowControl
+
+  /**
+   * Keep querying with delay - used when we have consumed all events,
+   * but want to poll for future events
+   */
+  private case object ContinueDelayed extends FlowControl
+
+  /** Stop querying - used when we reach the desired offset  */
+  private case object Stop extends FlowControl
 }
 
 class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) extends ReadJournal
@@ -81,7 +94,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   }
 
   // Started lazily to prevent the actor for querying the db if no eventsByTag queries are used
-  private[query] lazy val orderingActor = system.actorOf(JournalSequenceActor.props(readJournalDao, readJournalConfig.journalSequenceRetrievalConfiguration))
+  private[query] lazy val journalSequenceActor = system.actorOf(JournalSequenceActor.props(readJournalDao, readJournalConfig.journalSequenceRetrievalConfiguration))
   private val delaySource =
     Source.tick(readJournalConfig.refreshInterval, 0.seconds, 0).take(1)
 
@@ -122,9 +135,11 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
       from match {
         case x if x > toSequenceNr => Future.successful(None)
         case _ =>
-          delaySource.flatMapConcat(_ =>
-            currentJournalEventsByPersistenceId(persistenceId, from, toSequenceNr)
-              .take(readJournalConfig.maxBufferSize))
+          delaySource
+            .flatMapConcat { _ =>
+              currentJournalEventsByPersistenceId(persistenceId, from, toSequenceNr)
+                .take(readJournalConfig.maxBufferSize)
+            }
             .mapConcat(adaptEvents)
             .map(repr => EventEnvelope(repr.sequenceNr, repr.persistenceId, repr.sequenceNr, repr.payload))
             .runWith(Sink.seq).map { xs =>
@@ -137,39 +152,76 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   override def currentEventsByTag(tag: String, offset: Offset): Source[EventEnvelope2, NotUsed] =
     currentEventsByTag(tag, offset.value)
 
-  private def currentJournalEventsByTag(tag: String, offset: Long, max: Long): Source[(PersistentRepr, Set[String], JournalRow), NotUsed] = {
-    import akka.pattern.ask
-    implicit val askTimeout = Timeout(readJournalConfig.journalSequenceRetrievalConfiguration.askTimeout)
-    Source.fromFuture(orderingActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId])
-      .flatMapConcat { latestOrdering =>
-        if (latestOrdering.maxOrdering < offset) Source.empty
-        else readJournalDao.eventsByTag(tag, offset, latestOrdering.maxOrdering, max)
-      }
-      .mapAsync(1)(Future.fromTry)
+  private def currentJournalEventsByTag(tag: String, offset: Long, max: Long, latestOrdering: MaxOrderingId): Source[EventEnvelope, NotUsed] = {
+    if (latestOrdering.maxOrdering < offset) Source.empty
+    else {
+      readJournalDao.eventsByTag(tag, offset, latestOrdering.maxOrdering, max)
+        .mapAsync(1)(Future.fromTry)
+        .mapConcat {
+          case (repr, _, row) =>
+            adaptEvents(repr).map(r => EventEnvelope(row.ordering, r.persistenceId, r.sequenceNr, r.payload))
+        }
+    }
   }
 
-  override def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    currentJournalEventsByTag(tag, offset, Long.MaxValue)
-      .mapConcat {
-        case (repr, _, row) => adaptEvents(repr).map(r => EventEnvelope(row.ordering, r.persistenceId, r.sequenceNr, r.payload))
+  /**
+   * @param terminateAfterOffset If None, the stream never completes. If a Some, then the stream will complete once a
+   *                             query has been executed which might return an event with this offset (or a higher offset).
+   *                             The stream may include offsets higher than the value in terminateAfterOffset, since the last batch
+   *                             will be returned completely.
+   */
+  private def eventsByTag(tag: String, offset: Long, terminateAfterOffset: Option[Long]): Source[EventEnvelope, NotUsed] = {
+
+    import akka.pattern.ask
+    import JdbcReadJournal._
+    implicit val askTimeout: Timeout = Timeout(readJournalConfig.journalSequenceRetrievalConfiguration.askTimeout)
+    val batchSize = readJournalConfig.maxBufferSize
+
+    Source.unfoldAsync[(Long, FlowControl), Seq[EventEnvelope]]((offset, Continue)) {
+      case (from, control) =>
+        def retrieveNextBatch() = {
+          for {
+            queryUntil <- journalSequenceActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId]
+            xs <- currentJournalEventsByTag(tag, from, batchSize, queryUntil).runWith(Sink.seq)
+          } yield {
+
+            val hasMoreEvents = xs.size == batchSize
+            val control =
+              terminateAfterOffset match {
+                // we may stop if target is behind queryUntil and we don't have more events to fetch
+                case Some(target) if !hasMoreEvents && target <= queryUntil.maxOrdering => Stop
+                // We may also stop if we have found an event with an offset >= target
+                case Some(target) if xs.exists(_.offset >= target)                      => Stop
+
+                // otherwise, disregarding if Some or None, we must decide how to continue
+                case _ =>
+                  if (hasMoreEvents) Continue else ContinueDelayed
+              }
+
+            val nextStartingOffset = if (xs.isEmpty) from else xs.map(_.offset).max
+            Some((nextStartingOffset, control), xs)
+          }
+        }
+
+        control match {
+          case Stop     => Future.successful(None)
+          case Continue => retrieveNextBatch()
+          case ContinueDelayed =>
+            akka.pattern.after(readJournalConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
+        }
+
+    }.mapConcat(identity)
+  }
+
+  def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
+    Source.fromFuture(readJournalDao.maxJournalSequence())
+      .flatMapConcat { maxOrderingInDb =>
+        eventsByTag(tag, offset, terminateAfterOffset = Some(maxOrderingInDb))
       }
 
   override def eventsByTag(tag: String, offset: Offset): Source[EventEnvelope2, NotUsed] =
     eventsByTag(tag, offset.value)
 
   override def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    Source.unfoldAsync[Long, Seq[EventEnvelope]](offset) { (from: Long) =>
-      def nextFromOffset(xs: Seq[EventEnvelope]): Long = {
-        if (xs.isEmpty) from else xs.map(_.offset).max + 1
-      }
-      delaySource.flatMapConcat(_ => currentJournalEventsByTag(tag, from, readJournalConfig.maxBufferSize))
-        .mapConcat {
-          case (repr, _, row) =>
-            adaptEvents(repr).map(r => EventEnvelope(row.ordering, r.persistenceId, r.sequenceNr, r.payload))
-        }
-        .runWith(Sink.seq).map { xs =>
-          val newFromSeqNr: Long = nextFromOffset(xs)
-          Some((newFromSeqNr, xs))
-        }
-    }.mapConcat(identity)
+    eventsByTag(tag, offset, terminateAfterOffset = None)
 }

@@ -104,11 +104,11 @@ trait OracleReadJournalDao extends ReadJournalDao {
             FROM (
               SELECT * FROM #$theTableName
               WHERE "#$tags" LIKE $theTag
-              AND "#$ordering" >= $theOffset
+              AND "#$ordering" > $theOffset
               AND "#$ordering" <= $maxOffset
               ORDER BY "#$ordering"
             )
-            WHERE rownum < $max""".as[JournalRow]
+            WHERE rownum <= $max""".as[JournalRow]
         )
       }.via(serializer.deserializeFlow)
     } else {

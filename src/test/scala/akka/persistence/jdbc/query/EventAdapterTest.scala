@@ -30,6 +30,8 @@ object EventAdapterTest {
 
   case class TaggedEvent(event: Event, tag: String)
 
+  case class TaggedAsyncEvent(event: Event, tag: String)
+
   case class EventAdapted(value: String) {
     def restored = EventRestored(value)
   }
@@ -46,9 +48,10 @@ object EventAdapterTest {
     override def manifest(event: Any): String = ""
 
     override def toJournal(event: Any): Any = event match {
-      case e: Event                    => e.adapted
-      case TaggedEvent(e: Event, tags) => Tagged(e.adapted, Set(tags))
-      case _                           => event
+      case e: Event                        => e.adapted
+      case TaggedEvent(e: Event, tag)      => Tagged(e.adapted, Set(tag))
+      case TaggedAsyncEvent(e: Event, tag) => Tagged(e.adapted, Set(tag))
+      case _                               => event
     }
   }
 
@@ -91,7 +94,7 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
         countJournal.futureValue shouldBe 3
       }
 
-      withEventsByTag(10.seconds)("event", 2) { tp =>
+      withEventsByTag(10.seconds)("event", 1) { tp =>
 
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(2, "my-2", 1, EventRestored("2")))
@@ -163,7 +166,6 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
 
       withCurrentEventsByTag()("event", 1) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(1, _, _, EventRestored("1")) => }
         tp.expectNextPF { case EventEnvelope(2, _, _, EventRestored("2")) => }
         tp.expectNextPF { case EventEnvelope(3, _, _, EventRestored("3")) => }
         tp.expectComplete()
@@ -171,18 +173,11 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
 
       withCurrentEventsByTag()("event", 2) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(2, _, _, EventRestored("2")) => }
         tp.expectNextPF { case EventEnvelope(3, _, _, EventRestored("3")) => }
         tp.expectComplete()
       }
 
       withCurrentEventsByTag()("event", 3) { tp =>
-        tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(3, _, _, EventRestored("3")) => }
-        tp.expectComplete()
-      }
-
-      withCurrentEventsByTag()("event", 4) { tp =>
         tp.request(Int.MaxValue)
         tp.expectComplete()
       }

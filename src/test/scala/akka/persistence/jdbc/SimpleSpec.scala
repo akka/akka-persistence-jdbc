@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc
 
-import akka.actor.{ActorRef, ActorSystem, PoisonPill}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.persistence.jdbc.util.ClasspathResources
 import akka.testkit.TestProbe
 import org.scalatest._
@@ -42,7 +42,7 @@ trait SimpleSpec extends FlatSpec
     val tp = TestProbe()
     actors.foreach { (actor: ActorRef) =>
       tp watch actor
-      actor ! PoisonPill
+      system.stop(actor)
       tp.expectTerminated(actor)
     }
   }

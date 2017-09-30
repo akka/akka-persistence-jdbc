@@ -92,14 +92,6 @@ trait ScalaJdbcReadJournalOperations extends ReadJournalOperations {
       .mapAsync(1) { pid =>
         readJournal.currentEventsByPersistenceId(pid, 0, Long.MaxValue).map(_ => 1L).runWith(Sink.seq).map(_.sum)
       }.runWith(Sink.seq).map(_.sum)
-
-  def latestOrdering: Future[Long] = {
-    import akka.pattern.ask
-    implicit val askTimeout = Timeout(100.millis)
-    readJournal.orderingActor.ask(GetMaxOrderingId)
-      .mapTo[MaxOrderingId]
-      .map(_.maxOrdering)
-  }
 }
 
 trait JavaDslJdbcReadJournalOperations extends ReadJournalOperations {

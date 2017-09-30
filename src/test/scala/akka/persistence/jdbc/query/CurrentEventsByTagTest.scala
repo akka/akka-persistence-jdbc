@@ -30,9 +30,6 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
       eventually {
         countJournal.futureValue shouldBe 3
       }
-      eventually {
-        latestOrdering.futureValue shouldBe 3
-      }
 
       withCurrentEventsByTag()("unknown", NoOffset) { tp =>
         tp.request(Int.MaxValue)
@@ -49,10 +46,6 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
 
       eventually {
         countJournal.futureValue shouldBe 3
-      }
-
-      eventually {
-        latestOrdering.futureValue shouldBe 3
       }
 
       withCurrentEventsByTag()("number", NoOffset) { tp =>
@@ -108,9 +101,6 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
 
         eventually {
           countJournal.futureValue shouldBe 9
-        }
-        eventually {
-          latestOrdering.futureValue shouldBe 9
         }
       }
 

@@ -155,28 +155,26 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     import akka.pattern.ask
     implicit val askTimeout: Timeout = Timeout(readJournalConfig.journalSequenceRetrievalConfiguration.askTimeout)
     /* We unfold with 3 parameters:
-     * - the first if the starting offset (i.e. the minimum value) to query from
-     * - The second is the max ordering id (according to the journal sequence actor) until which we have retrieved ALL
-     *   events (with lower sequence number). (Note that in case we have retrieved a full batch, we should not increment
-     *   this value because there may still be events with a sequence number lower than this value that should be retrieved).
-     *   This parameter is used to determine if the stream may be completed (if terminateAfterOffset is defined)
-     * - The third parameter is a boolean which determines whether the database query should be executed immediately,
-     *   or after a delay
+     * - The first parameter (from) determines the starting offset (i.e. the minimum value) to query from.
+     * - The second parameter (completeImmediately) signifies that we have queried events until at least
+     *   `terminateAfterOffset`, therefore the stream no longer needs to continue.
+     * - The third parameter (retrieveImmediately) is a boolean which determines whether the database query should be
+     *   executed immediately, or after a delay.
      */
-    Source.unfoldAsync[(Long, MaxOrderingId, Boolean), Seq[EventEnvelope]]((offset, MaxOrderingId(0L), false)) {
-      case (from: Long, alreadyQueriedUntil: MaxOrderingId, retrieveImmediately: Boolean) =>
-        def retrieveNextBatch(): Future[Some[((Long, MaxOrderingId, Boolean), Seq[EventEnvelope])]] = {
+    Source.unfoldAsync[(Long, Boolean, Boolean), Seq[EventEnvelope]]((offset, false, false)) {
+      case (from: Long, completeImmediately: Boolean, retrieveImmediately: Boolean) =>
+        def retrieveNextBatch(): Future[Some[((Long, Boolean, Boolean), Seq[EventEnvelope])]] = {
           for {
             queryUntil <- journalSequenceActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId]
             xs <- currentJournalEventsByTag(tag, from, readJournalConfig.maxBufferSize, queryUntil).runWith(Sink.seq)
           } yield {
             val isFullBatch = xs.size == readJournalConfig.maxBufferSize
-            val queriedUntil = if (isFullBatch) alreadyQueriedUntil else queryUntil
+            val completeStreamAfterThisBatch = !isFullBatch && terminateAfterOffset.exists(_ <= queryUntil.maxOrdering)
             val nextStartingOffset = if (xs.isEmpty) from else xs.map(_.offset.value).max
-            Some((nextStartingOffset, queriedUntil, isFullBatch), xs)
+            Some((nextStartingOffset, completeStreamAfterThisBatch, isFullBatch), xs)
           }
         }
-        if (terminateAfterOffset.exists(_ <= alreadyQueriedUntil.maxOrdering)) Future.successful(None)
+        if (completeImmediately) Future.successful(None)
         else {
           if (retrieveImmediately) retrieveNextBatch()
           else akka.pattern.after(readJournalConfig.refreshInterval, system.scheduler)(retrieveNextBatch())

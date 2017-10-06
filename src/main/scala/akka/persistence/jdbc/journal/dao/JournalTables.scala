@@ -35,7 +35,8 @@ trait JournalTables {
     val deleted: Rep[Boolean] = column[Boolean](journalTableCfg.columnNames.deleted, O.Default(false))
     val tags: Rep[Option[String]] = column[Option[String]](journalTableCfg.columnNames.tags, O.Length(255, varying = true))
     val message: Rep[Array[Byte]] = column[Array[Byte]](journalTableCfg.columnNames.message)
-    val pk = primaryKey("journal_pk", (ordering, persistenceId, sequenceNumber))
+    val pk = primaryKey("journal_pk", (persistenceId, sequenceNumber))
+    val orderingIdx = index("journal_ordering_idx", ordering, unique = true)
   }
 
   lazy val JournalTable = new TableQuery(tag => new Journal(tag))

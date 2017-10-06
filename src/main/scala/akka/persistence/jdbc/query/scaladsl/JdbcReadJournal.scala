@@ -186,19 +186,8 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
             xs <- currentJournalEventsByTag(tag, from, batchSize, queryUntil).runWith(Sink.seq)
           } yield {
 
-            def decideHowToContinue = {
-              val possibleRangeSize = queryUntil.maxOrdering - from
-              if (possibleRangeSize > xs.size || xs.size == batchSize) {
-                // there are certainly more to fetch
-                Continue
-              } else {
-                // if query is not being limited by batch size and we fetched all possible items,
-                // we can consider that there is nothing else to fetch for the moment
-                ContinueDelayed
-              }
-            }
-
             val offsetsOnly = xs.map(_.offset.value)
+
             val control =
               terminateAfterOffset
                 // keep it as Some if target is reached
@@ -206,7 +195,10 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
                 // we can stop, we have reached the target offset
                 .map(_ => Stop)
                 // otherwise we must decide how to continue
-                .getOrElse(decideHowToContinue)
+                .getOrElse {
+                  if (xs.size == batchSize) Continue
+                  else ContinueDelayed // if fetched less, add delay on next query
+                }
 
             val nextStartingOffset = if (xs.isEmpty) from else offsetsOnly.max
 

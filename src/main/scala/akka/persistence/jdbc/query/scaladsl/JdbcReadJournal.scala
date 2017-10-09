@@ -187,9 +187,8 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
 
             // calculates if we have more events to fetch
             val hasMoreEvents = {
-
               val possibleRangeSize = queryUntil.maxOrdering - from
-
+              
               // when batch is being limited by queryUntil
               // we can consider that there is nothing else to fetch
               if (possibleRangeSize <= batchSize) false
@@ -205,7 +204,8 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
                 // otherwise, disregarding if Some or None,
                 // we must decide how to continue
                 case _ =>
-                  // continue immediately when retrieving full batches
+                  // continue immediately when are sure that there are more events to be fetched
+                  // otherwise let it happen within configured delay
                   if (hasMoreEvents) Continue else ContinueDelayed
               }
 

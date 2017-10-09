@@ -180,27 +180,36 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
         val batchSize = readJournalConfig.maxBufferSize
 
         def retrieveNextBatch() = {
-
           for {
             queryUntil <- journalSequenceActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId]
             xs <- currentJournalEventsByTag(tag, from, batchSize, queryUntil).runWith(Sink.seq)
           } yield {
 
-            val offsetsOnly = xs.map(_.offset.value)
+            // calculates if we have more events to fetch
+            val hasMoreEvents = {
+
+              val possibleRangeSize = queryUntil.maxOrdering - from
+
+              // when batch is being limited by queryUntil and we did fetch everything we could,
+              // we can consider that there is nothing else to fetch
+              if (possibleRangeSize <= batchSize && xs.size == possibleRangeSize) false
+              // otherwise, base decision solely on batch size
+              else xs.size == batchSize
+            }
 
             val control =
-              terminateAfterOffset
-                // keep it as Some if target is reached
-                .filter(target => offsetsOnly.contains(target))
-                // we can stop, we have reached the target offset
-                .map(_ => Stop)
-                // otherwise we must decide how to continue
-                .getOrElse {
-                  if (xs.size == batchSize) Continue
-                  else ContinueDelayed // if fetched less, add delay on next query
-                }
+              terminateAfterOffset match {
+                // we may stop if target is behind queryUntil and we don't have more events to fetch
+                case Some(target) if !hasMoreEvents && target <= queryUntil.maxOrdering => Stop
 
-            val nextStartingOffset = if (xs.isEmpty) from else offsetsOnly.max
+                // otherwise, disregarding if Some or None,
+                // we must decide how to continue
+                case _ =>
+                  // continue immediately when retrieving full batches
+                  if (hasMoreEvents) Continue else ContinueDelayed
+              }
+
+            val nextStartingOffset = if (xs.isEmpty) from else xs.map(_.offset.value).max
 
             Some((nextStartingOffset, control), xs)
           }
@@ -228,4 +237,3 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   def eventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
     eventsByTag(tag, offset, terminateAfterOffset = None)
 }
-

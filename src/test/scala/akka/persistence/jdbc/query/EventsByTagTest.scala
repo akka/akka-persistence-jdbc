@@ -28,7 +28,7 @@ import scala.concurrent.Future
 import EventsByTagTest._
 
 object EventsByTagTest {
-  val maxBufferSize = 40
+  val maxBufferSize = 20
   val refreshInterval = 500.milliseconds
 
   val configOverrides: Map[String, ConfigValue] = Map(
@@ -316,24 +316,24 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
 
       // start the query before the future completes
       withEventsByTag()(tag1, NoOffset) { tp =>
-        tp.within(3.seconds) {
+        tp.within(5.seconds) {
           tp.request(Int.MaxValue)
           tp.expectNextN(150)
         }
         tp.expectNoMsg(NoMsgTime)
 
-        // Send a small batch of 3 * 10 messages
-        sendMessagesWithTag(tag1, 10)
+        // Send a small batch of 3 * 5 messages
+        sendMessagesWithTag(tag1, 5)
         // Since queries are executed `refreshInterval`, there must be a small delay before this query gives a result
-        tp.within(min = refreshInterval / 2, max = 3.seconds) {
-          tp.expectNextN(30)
+        tp.within(min = refreshInterval / 2, max = 2.seconds) {
+          tp.expectNextN(15)
         }
         tp.expectNoMsg(NoMsgTime)
 
         // another large batch should be retrieved fast
         // send a second batch of 3 * 100
         sendMessagesWithTag(tag1, 100)
-        tp.within(min = refreshInterval / 2, max = 3.seconds) {
+        tp.within(min = refreshInterval / 2, max = 10.seconds) {
           tp.request(Int.MaxValue)
           tp.expectNextN(300)
         }

@@ -16,13 +16,28 @@
 
 package akka.persistence.jdbc.query
 
+import akka.Done
 import akka.persistence.query.{EventEnvelope, NoOffset, Sequence}
+import akka.pattern.ask
+import akka.persistence.jdbc.query.EventAdapterTest.{Event, EventRestored, TaggedAsyncEvent, TaggedEvent}
+import com.typesafe.config.{ConfigValue, ConfigValueFactory}
 
 import scala.concurrent.duration._
-import akka.pattern.ask
-import akka.persistence.jdbc.query.EventAdapterTest.{Event, EventRestored, TaggedEvent}
+import scala.concurrent.Future
 
-abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
+import EventsByTagTest._
+
+object EventsByTagTest {
+  val maxBufferSize = 40
+  val refreshInterval = 500.milliseconds
+
+  val configOverrides: Map[String, ConfigValue] = Map(
+    "jdbc-read-journal.max-buffer-size" -> ConfigValueFactory.fromAnyRef(maxBufferSize.toString),
+    "jdbc-read-journal.refresh-interval" -> ConfigValueFactory.fromAnyRef(refreshInterval.toString())
+  )
+}
+
+abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, configOverrides) {
 
   final val NoMsgTime: FiniteDuration = 100.millis
 
@@ -280,6 +295,48 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config) {
         tp.expectNext(EventEnvelope(Sequence(5), "my-1", 5, 5))
         tp.expectNoMsg(NoMsgTime)
         tp.cancel()
+        tp.expectNoMsg(NoMsgTime)
+      }
+    }
+  }
+
+  it should "show the configured performance characteristics" in {
+    withTestActors() { (actor1, actor2, actor3) =>
+      def sendMessagesWithTag(tag: String, numberOfMessagesPerActor: Int): Future[Done] = {
+        val futures = for (actor <- Seq(actor1, actor2, actor3); i <- 1 to numberOfMessagesPerActor) yield {
+          actor ? TaggedAsyncEvent(Event(i.toString), tag)
+        }
+        Future.sequence(futures).map(_ => Done)
+      }
+
+
+      val tag1 = "someTag"
+      // send a batch of 3 * 50
+      sendMessagesWithTag(tag1, 50)
+
+      // start the query before the future completes
+      withEventsByTag()(tag1, NoOffset) { tp =>
+        tp.within(3.seconds) {
+          tp.request(Int.MaxValue)
+          tp.expectNextN(150)
+        }
+        tp.expectNoMsg(NoMsgTime)
+
+        // Send a small batch of 3 * 10 messages
+        sendMessagesWithTag(tag1, 10)
+        // Since queries are executed `refreshInterval`, there must be a small delay before this query gives a result
+        tp.within(min = refreshInterval / 2, max = 3.seconds) {
+          tp.expectNextN(30)
+        }
+        tp.expectNoMsg(NoMsgTime)
+
+        // another large batch should be retrieved fast
+        // send a second batch of 3 * 100
+        sendMessagesWithTag(tag1, 100)
+        tp.within(min = refreshInterval / 2, max = 3.seconds) {
+          tp.request(Int.MaxValue)
+          tp.expectNextN(300)
+        }
         tp.expectNoMsg(NoMsgTime)
       }
     }

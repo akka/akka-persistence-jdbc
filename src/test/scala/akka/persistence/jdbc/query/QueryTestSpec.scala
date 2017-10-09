@@ -20,7 +20,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingReceive
 import akka.persistence.PersistentActor
 import akka.persistence.jdbc.TestSpec
-import akka.persistence.jdbc.query.EventAdapterTest.{Event, TaggedEvent}
+import akka.persistence.jdbc.query.EventAdapterTest.{Event, TaggedAsyncEvent, TaggedEvent}
 import akka.persistence.jdbc.query.JournalSequenceActor.{GetMaxOrderingId, MaxOrderingId}
 import akka.persistence.jdbc.query.javadsl.{JdbcReadJournal => JavaJdbcReadJournal}
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
@@ -32,6 +32,7 @@ import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.javadsl.{TestSink => JavaSink}
 import akka.stream.testkit.scaladsl.TestSink
 import akka.util.Timeout
+import com.typesafe.config.ConfigValue
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.duration.{FiniteDuration, _}
@@ -142,7 +143,7 @@ trait JavaDslJdbcReadJournalOperations extends ReadJournalOperations {
       .map(_.sum)
 }
 
-abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJournalOperations {
+abstract class QueryTestSpec(config: String, configOverrides: Map[String, ConfigValue] = Map.empty) extends TestSpec(config, configOverrides) with ReadJournalOperations {
 
   case class DeleteCmd(toSequenceNr: Long = Long.MaxValue) extends Serializable
 
@@ -179,6 +180,10 @@ abstract class QueryTestSpec(config: String) extends TestSpec(config) with ReadJ
 
       case event @ TaggedEvent(payload: Event, tag) =>
         persist(event) { evt =>
+          sender() ! akka.actor.Status.Success((payload, tag))
+        }
+      case event @ TaggedAsyncEvent(payload: Event, tag) =>
+        persistAsync(event) { evt =>
           sender() ! akka.actor.Status.Success((payload, tag))
         }
     }

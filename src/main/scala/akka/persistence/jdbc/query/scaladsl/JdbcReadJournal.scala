@@ -190,9 +190,9 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
 
               val possibleRangeSize = queryUntil.maxOrdering - from
 
-              // when batch is being limited by queryUntil and we did fetch everything we could,
+              // when batch is being limited by queryUntil
               // we can consider that there is nothing else to fetch
-              if (possibleRangeSize <= batchSize && xs.size == possibleRangeSize) false
+              if (possibleRangeSize <= batchSize) false
               // otherwise, base decision solely on batch size
               else xs.size == batchSize
             }

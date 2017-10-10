@@ -41,6 +41,20 @@ import scala.util.{Failure, Success}
 
 object JdbcReadJournal {
   final val Identifier = "jdbc-read-journal"
+
+  private sealed trait FlowControl
+
+  /** Keep querying - used when we are sure that there is more events to fetch */
+  private object Continue extends FlowControl
+
+  /**
+   * Keep querying with delay - used when we have consumed all events,
+   * but want to poll for future events
+   */
+  private object ContinueDelayed extends FlowControl
+
+  /** Stop querying - used when we reach the desired offset  */
+  private object Stop extends FlowControl
 }
 
 class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) extends ReadJournal
@@ -157,21 +171,8 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   private def eventsByTag(tag: String, offset: Long, terminateAfterOffset: Option[Long]): Source[EventEnvelope, NotUsed] = {
 
     import akka.pattern.ask
+    import JdbcReadJournal._
     implicit val askTimeout: Timeout = Timeout(readJournalConfig.journalSequenceRetrievalConfiguration.askTimeout)
-
-    sealed trait FlowControl
-
-    /** Keep querying - used when we are sure that there is more events to fetch */
-    object Continue extends FlowControl
-
-    /**
-     * Keep querying with delay - used when we have consumed all events,
-     * but want to poll for future events
-     */
-    object ContinueDelayed extends FlowControl
-
-    /** Stop querying - used when we reach the desired offset  */
-    object Stop extends FlowControl
 
     Source.unfoldAsync[(Long, FlowControl), Seq[EventEnvelope]]((offset, Continue)) {
 

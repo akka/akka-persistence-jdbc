@@ -173,45 +173,28 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     import akka.pattern.ask
     import JdbcReadJournal._
     implicit val askTimeout: Timeout = Timeout(readJournalConfig.journalSequenceRetrievalConfiguration.askTimeout)
+    val batchSize = readJournalConfig.maxBufferSize
 
     Source.unfoldAsync[(Long, FlowControl), Seq[EventEnvelope]]((offset, Continue)) {
-
       case (from, control) =>
-
-        val batchSize = readJournalConfig.maxBufferSize
-
         def retrieveNextBatch() = {
           for {
             queryUntil <- journalSequenceActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId]
             xs <- currentJournalEventsByTag(tag, from, batchSize, queryUntil).runWith(Sink.seq)
           } yield {
 
-            // calculates if we have more events to fetch
-            val hasMoreEvents = {
-              val possibleRangeSize = queryUntil.maxOrdering - from
-              
-              // when batch is being limited by queryUntil
-              // we can consider that there is nothing else to fetch
-              if (possibleRangeSize <= batchSize) false
-              // otherwise, base decision solely on batch size
-              else xs.size == batchSize
-            }
-
+            val hasMoreEvents = xs.size == batchSize
             val control =
               terminateAfterOffset match {
                 // we may stop if target is behind queryUntil and we don't have more events to fetch
                 case Some(target) if !hasMoreEvents && target <= queryUntil.maxOrdering => Stop
 
-                // otherwise, disregarding if Some or None,
-                // we must decide how to continue
+                // otherwise, disregarding if Some or None, we must decide how to continue
                 case _ =>
-                  // continue immediately when are sure that there are more events to be fetched
-                  // otherwise let it happen within configured delay
                   if (hasMoreEvents) Continue else ContinueDelayed
               }
 
             val nextStartingOffset = if (xs.isEmpty) from else xs.map(_.offset.value).max
-
             Some((nextStartingOffset, control), xs)
           }
         }

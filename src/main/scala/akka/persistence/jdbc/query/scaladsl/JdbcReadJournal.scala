@@ -41,6 +41,20 @@ import scala.util.{Failure, Success}
 
 object JdbcReadJournal {
   final val Identifier = "jdbc-read-journal"
+
+  private sealed trait FlowControl
+
+  /** Keep querying - used when we are sure that there is more events to fetch */
+  private object Continue extends FlowControl
+
+  /**
+   * Keep querying with delay - used when we have consumed all events,
+   * but want to poll for future events
+   */
+  private object ContinueDelayed extends FlowControl
+
+  /** Stop querying - used when we reach the desired offset  */
+  private object Stop extends FlowControl
 }
 
 class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) extends ReadJournal
@@ -119,9 +133,11 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
       from match {
         case x if x > toSequenceNr => Future.successful(None)
         case _ =>
-          delaySource.flatMapConcat(_ =>
-            currentJournalEventsByPersistenceId(persistenceId, from, toSequenceNr)
-              .take(readJournalConfig.maxBufferSize))
+          delaySource
+            .flatMapConcat { _ =>
+              currentJournalEventsByPersistenceId(persistenceId, from, toSequenceNr)
+                .take(readJournalConfig.maxBufferSize)
+            }
             .mapConcat(adaptEvents)
             .map(repr => EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload))
             .runWith(Sink.seq).map { xs =>
@@ -139,46 +155,57 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     else {
       readJournalDao.eventsByTag(tag, offset, latestOrdering.maxOrdering, max)
         .mapAsync(1)(Future.fromTry)
-        .mapConcat { case (repr, _, row) =>
-          adaptEvents(repr).map(r => EventEnvelope(Sequence(row.ordering), r.persistenceId, r.sequenceNr, r.payload))
+        .mapConcat {
+          case (repr, _, row) =>
+            adaptEvents(repr).map(r => EventEnvelope(Sequence(row.ordering), r.persistenceId, r.sequenceNr, r.payload))
         }
     }
   }
 
   /**
-    * @param terminateAfterOffset If None, the stream never completes. If a Some, then the stream will complete once a
-    *                             query has been executed which might return an event with this offset (or a higher offset).
-    *                             The stream may include offsets higher than the value in terminateAfterOffset, since the last batch
-    *                             will be returned completely.
-    */
+   * @param terminateAfterOffset If None, the stream never completes. If a Some, then the stream will complete once a
+   *                             query has been executed which might return an event with this offset (or a higher offset).
+   *                             The stream may include offsets higher than the value in terminateAfterOffset, since the last batch
+   *                             will be returned completely.
+   */
   private def eventsByTag(tag: String, offset: Long, terminateAfterOffset: Option[Long]): Source[EventEnvelope, NotUsed] = {
+
     import akka.pattern.ask
+    import JdbcReadJournal._
     implicit val askTimeout: Timeout = Timeout(readJournalConfig.journalSequenceRetrievalConfiguration.askTimeout)
-    /* We unfold with 3 parameters:
-     * - The first parameter (from) determines the starting offset (i.e. the minimum value) to query from.
-     * - The second parameter (completeImmediately) signifies that we have queried events until at least
-     *   `terminateAfterOffset`, therefore the stream no longer needs to continue.
-     * - The third parameter (retrieveImmediately) is a boolean which determines whether the database query should be
-     *   executed immediately, or after a delay.
-     */
-    Source.unfoldAsync[(Long, Boolean, Boolean), Seq[EventEnvelope]]((offset, false, false)) {
-      case (from: Long, completeImmediately: Boolean, retrieveImmediately: Boolean) =>
-        def retrieveNextBatch(): Future[Some[((Long, Boolean, Boolean), Seq[EventEnvelope])]] = {
+    val batchSize = readJournalConfig.maxBufferSize
+
+    Source.unfoldAsync[(Long, FlowControl), Seq[EventEnvelope]]((offset, Continue)) {
+      case (from, control) =>
+        def retrieveNextBatch() = {
           for {
             queryUntil <- journalSequenceActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId]
-            xs <- currentJournalEventsByTag(tag, from, readJournalConfig.maxBufferSize, queryUntil).runWith(Sink.seq)
+            xs <- currentJournalEventsByTag(tag, from, batchSize, queryUntil).runWith(Sink.seq)
           } yield {
-            val isFullBatch = xs.size == readJournalConfig.maxBufferSize
-            val completeStreamAfterThisBatch = !isFullBatch && terminateAfterOffset.exists(_ <= queryUntil.maxOrdering)
+
+            val hasMoreEvents = xs.size == batchSize
+            val control =
+              terminateAfterOffset match {
+                // we may stop if target is behind queryUntil and we don't have more events to fetch
+                case Some(target) if !hasMoreEvents && target <= queryUntil.maxOrdering => Stop
+
+                // otherwise, disregarding if Some or None, we must decide how to continue
+                case _ =>
+                  if (hasMoreEvents) Continue else ContinueDelayed
+              }
+
             val nextStartingOffset = if (xs.isEmpty) from else xs.map(_.offset.value).max
-            Some((nextStartingOffset, completeStreamAfterThisBatch, isFullBatch), xs)
+            Some((nextStartingOffset, control), xs)
           }
         }
-        if (completeImmediately) Future.successful(None)
-        else {
-          if (retrieveImmediately) retrieveNextBatch()
-          else akka.pattern.after(readJournalConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
+
+        control match {
+          case Stop     => Future.successful(None)
+          case Continue => retrieveNextBatch()
+          case ContinueDelayed =>
+            akka.pattern.after(readJournalConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
         }
+
     }.mapConcat(identity)
   }
 

@@ -45,16 +45,16 @@ object JdbcReadJournal {
   private sealed trait FlowControl
 
   /** Keep querying - used when we are sure that there is more events to fetch */
-  private object Continue extends FlowControl
+  private case object Continue extends FlowControl
 
   /**
    * Keep querying with delay - used when we have consumed all events,
    * but want to poll for future events
    */
-  private object ContinueDelayed extends FlowControl
+  private case object ContinueDelayed extends FlowControl
 
   /** Stop querying - used when we reach the desired offset  */
-  private object Stop extends FlowControl
+  private case object Stop extends FlowControl
 }
 
 class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) extends ReadJournal
@@ -188,6 +188,8 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
               terminateAfterOffset match {
                 // we may stop if target is behind queryUntil and we don't have more events to fetch
                 case Some(target) if !hasMoreEvents && target <= queryUntil.maxOrdering => Stop
+                // We may also stop if we have found an event with an offset >= target
+                case Some(target) if xs.exists(_.offset.value >= target) => Stop
 
                 // otherwise, disregarding if Some or None, we must decide how to continue
                 case _ =>

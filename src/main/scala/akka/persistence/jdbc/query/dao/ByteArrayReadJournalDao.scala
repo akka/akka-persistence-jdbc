@@ -108,7 +108,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
               AND "#$ordering" <= $maxOffset
               ORDER BY "#$ordering"
             )
-            WHERE rownum < $max""".as[JournalRow]
+            WHERE rownum <= $max""".as[JournalRow]
         )
       }.via(serializer.deserializeFlow)
     } else {

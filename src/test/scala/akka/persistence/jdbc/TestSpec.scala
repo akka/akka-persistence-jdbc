@@ -23,7 +23,7 @@ import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.util.{DropCreate, SlickDatabase}
 import akka.serialization.SerializationExtension
 import akka.util.Timeout
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{Config, ConfigFactory, ConfigValue}
 import org.scalatest.BeforeAndAfterAll
 
 import scala.concurrent.duration._
@@ -32,7 +32,10 @@ import scala.util.Try
 
 abstract class TestSpec(override val config: Config) extends SimpleSpec with MaterializerSpec with DropCreate with BeforeAndAfterAll {
 
-  def this(config: String = "postgres-application.conf") = this(ConfigFactory.load(config))
+  def this(config: String = "postgres-application.conf", configOverrides: Map[String, ConfigValue] = Map.empty) =
+    this(configOverrides.foldLeft(ConfigFactory.load(config)){
+      case (conf, (path, configValue)) => conf.withValue(path, configValue)
+    })
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   val log: LoggingAdapter = Logging(system, this.getClass)

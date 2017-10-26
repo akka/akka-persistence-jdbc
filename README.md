@@ -1,6 +1,7 @@
 # akka-persistence-jdbc
 
 [![Join the chat at https://gitter.im/dnvriend/akka-persistence-jdbc](https://badges.gitter.im/dnvriend/akka-persistence-jdbc.svg)](https://gitter.im/dnvriend/akka-persistence-jdbc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the contributors chat at https://gitter.im/akka-persistence-jdbc/contributors](https://img.shields.io/badge/chat-contributors%20channel-green.svg)](https://gitter.im/akka-persistence-jdbc/contributors?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/dnvriend/akka-persistence-jdbc.svg?branch=master)](https://travis-ci.org/dnvriend/akka-persistence-jdbc)
 [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-persistence-jdbc/images/download.svg)](https://bintray.com/dnvriend/maven/akka-persistence-jdbc/_latestVersion)
 [![Latest version](https://index.scala-lang.org/dnvriend/akka-persistence-jdbc/akka-persistence-jdbc/latest.svg)](https://index.scala-lang.org/dnvriend/akka-persistence-jdbc/akka-persistence-jdbc)
@@ -26,10 +27,6 @@ libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.7.0
 ## Contribution policy
 
 Contributions via GitHub pull requests are gladly accepted from their original author. Along with any pull requests, please state that the contribution is your original work and that you license the work to the project under the project's open source license. Whether or not you state this explicitly, by submitting any copyrighted material via pull request, email, or other means you agree to license the material under the project's open source license and warrant that you have the legal authority to do so.
-
-We have a separated contributors Gitter channel where we discuss bug fixes and releases. Please, join us at: 
-[![Join the contributors chat at https://gitter.im/akka-persistence-jdbc/contributors](https://badges.gitter.im/akka-persistence-jdbc/contributors.svg)](https://gitter.im/akka-persistence-jdbc/contributors?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 
 ## Code of Conduct
 Contributors all agree to follow the [W3C Code of Ethics and Professional Conduct][w3c-cond].

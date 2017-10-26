@@ -18,10 +18,10 @@ Add the following to your `build.sbt`:
 resolvers += Resolver.jcenterRepo
 
 // akka 2.5.x
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.0.0"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.0.1"
 
 // akka 2.4.x
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.7.0"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.7.1"
 ```
 
 ## Contribution policy
@@ -277,6 +277,38 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## Changelog  
+
+### 3.0.1 (2017-10-27)
+Changes since v3.0.0
+  - Akka 2.5 release only, please use the 2.7.x release for Akka 2.4 
+  - Changed oracle test-docker image
+  - Align JournalTables with the sql schemas (issue #130)
+  - Current events by tag fix (issue #124)
+  - fixes for max ordering jump (issue #126)
+  - Allow configuration of ask timeout when querying maxOrdering
+  - Cache dependencies in Travis CI.
+  - sbt-release 1.0.6
+  - Akka 2.5.4 -> 2.5.6
+  - Merged PRs #122, #127, #128, #129, #132, #133, #135. Thanks to [Jimin Hsieh][jiminhsieh],
+    [Renato Cavalcanti][renatocaval], [Sean Sullivan][sullis],
+    [Ruud Welling][WellingR], [Adam Chaulk](acchaulk).
+
+
+### 2.7.1 (2017-10-27)
+Changes since v2.7.0
+  - For use with Akka 2.4.x only, please use release 3.0.0 with Akka 2.5
+  - Changed oracle test-docker image
+  - Align JournalTables with the sql schemas (issue #130)
+  - Current events by tag fix (issue #124) 
+  - fixes for max ordering jump (issue #126)
+  - Allow configuration of ask timeout when querying maxOrdering 
+  - sbt-release 1.0.6
+  - EventsByTag query treats the offset as exclusive instead of inclusive. **This is a breaking change!** All users of
+    the eventsByTag query can now reuse the `Offset` from the last received `EventEnvelope` to resume the query.
+  - Merged PRs #122, #127, #128, #129, #132, #133. Thanks to [Jimin Hsieh][jiminhsieh],
+    [Renato Cavalcanti][renatocaval], [Sean Sullivan][sullis],
+    [Ruud Welling][WellingR], [Adam Chaulk](acchaulk).
+
 ### 3.0.0 (2017-08-29)
 Changes since v2.5.2.0
   - Akka 2.5 release only, please use the 2.7.x release for Akka 2.4 
@@ -291,7 +323,7 @@ Changes since v2.5.2.0
   - Slick 3.2.0 -> 3.2.1 (Note: Slick 3.2.1 is not binary compatible with 3.2.0)
   - Akka 2.5.2 -> 2.5.4
   - Merged PRs #121, #120, #119, #117, #115, #114, #113, #111, #110. Thanks to [Jimin Hsieh][jiminhsieh],
-    [Renato Cavalcanti][rcavalcanti], [Frederic Gendebien][frederic-gendebien], [Sean Sullivan][sullis],
+    [Renato Cavalcanti][renatocaval], [Frederic Gendebien][frederic-gendebien], [Sean Sullivan][sullis],
     [Ruud Welling][WellingR], [Sarah Gerweck][sarahgerweck].
 
 
@@ -307,7 +339,7 @@ Changes since v2.4.18.2
   - Slick 3.2.0 -> 3.2.1 (Note: Slick 3.2.1 is not binary compatible with 3.2.0)
   - Akka 2.4.18 -> 2.4.20
   - Merged PRs #121, #120, #119, #117, #115, #114, #113, #111, #110. Thanks to [Jimin Hsieh][jiminhsieh],
-    [Renato Cavalcanti][rcavalcanti], [Frederic Gendebien][frederic-gendebien], [Sean Sullivan][sullis],
+    [Renato Cavalcanti][renatocaval], [Frederic Gendebien][frederic-gendebien], [Sean Sullivan][sullis],
     [Ruud Welling][WellingR], [Sarah Gerweck][sarahgerweck].
 
 
@@ -753,11 +785,12 @@ Changes since v2.4.18.2
 [joseblas]: https://github.com/joseblas
 [timothyklim]: https://github.com/TimothyKlim
 [jiminhsieh]: http://github.com/jiminhsieh
-[rcavalcanti]: http://github.com/rcavalcanti
+[renatocaval]: http://github.com/renatocaval
 [frederic-gendebien]: http://github.com/frederic-gendebien
 [sullis]: http://github.com/sullis
 [wellingr]: http://github.com/wellingr
 [sarahgerweck]: http://github.com/sarahgerweck
+[acchaulk]: https://github.com/acchaulk
 
 [scalikejdbc]: http://scalikejdbc.org/
 [slick]: http://slick.typesafe.com/

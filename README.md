@@ -281,11 +281,10 @@ sys.addShutdownHook(system.terminate())
 ### 3.0.1 (2017-10-27)
 Changes since v3.0.0
   - Akka 2.5 release only, please use the 2.7.x release for Akka 2.4 
-  - Changed oracle test-docker image
   - Align JournalTables with the sql schemas (issue #130)
   - Current events by tag fix (issue #124)
   - fixes for max ordering jump (issue #126)
-  - Allow configuration of ask timeout when querying maxOrdering
+  - Allow configuration of ask timeout when querying maxOrdering (issue #123)
   - Cache dependencies in Travis CI.
   - sbt-release 1.0.6
   - Akka 2.5.4 -> 2.5.6
@@ -297,11 +296,10 @@ Changes since v3.0.0
 ### 2.7.1 (2017-10-27)
 Changes since v2.7.0
   - For use with Akka 2.4.x only, please use release 3.0.0 with Akka 2.5
-  - Changed oracle test-docker image
   - Align JournalTables with the sql schemas (issue #130)
   - Current events by tag fix (issue #124) 
   - fixes for max ordering jump (issue #126)
-  - Allow configuration of ask timeout when querying maxOrdering 
+  - Allow configuration of ask timeout when querying maxOrdering (issue #123)
   - sbt-release 1.0.6
   - EventsByTag query treats the offset as exclusive instead of inclusive. **This is a breaking change!** All users of
     the eventsByTag query can now reuse the `Offset` from the last received `EventEnvelope` to resume the query.

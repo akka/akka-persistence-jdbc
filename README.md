@@ -279,8 +279,9 @@ sys.addShutdownHook(system.terminate())
 ## Changelog  
 
 ### 3.0.1 (2017-10-27)
+For use with Akka 2.5.x only, please use the 2.8.0 release for Akka 2.4 
+
 Changes since v3.0.0
-  - Akka 2.5 release only, please use the 2.7.x release for Akka 2.4 
   - Align JournalTables with the sql schemas (issue #130)
   - Current events by tag fix (issue #124)
   - fixes for max ordering jump (issue #126)
@@ -293,16 +294,17 @@ Changes since v3.0.0
     [Ruud Welling][WellingR], [Adam Chaulk](acchaulk).
 
 
-### 2.7.1 (2017-10-27)
+### 2.8.0 (2017-10-27)
+For use with Akka 2.4.x only, please use release 3.0.1 with Akka 2.5
+
 Changes since v2.7.0
-  - For use with Akka 2.4.x only, please use release 3.0.0 with Akka 2.5
+  - **This is a breaking change!**  EventsByTag query treats the offset as exclusive instead of inclusive. All users of
+    the eventsByTag query can now reuse the `Offset` from the last received `EventEnvelope` to resume the query.
   - Align JournalTables with the sql schemas (issue #130)
   - Current events by tag fix (issue #124) 
   - fixes for max ordering jump (issue #126)
   - Allow configuration of ask timeout when querying maxOrdering (issue #123)
   - sbt-release 1.0.6
-  - EventsByTag query treats the offset as exclusive instead of inclusive. **This is a breaking change!** All users of
-    the eventsByTag query can now reuse the `Offset` from the last received `EventEnvelope` to resume the query.
   - Merged PRs #122, #127, #128, #129, #132, #133. Thanks to [Jimin Hsieh][jiminhsieh],
     [Renato Cavalcanti][renatocaval], [Sean Sullivan][sullis],
     [Ruud Welling][WellingR], [Adam Chaulk](acchaulk).

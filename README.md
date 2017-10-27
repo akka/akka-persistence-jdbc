@@ -21,7 +21,7 @@ resolvers += Resolver.jcenterRepo
 libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.0.1"
 
 // akka 2.4.x
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.7.1"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.8.0"
 ```
 
 ## Contribution policy

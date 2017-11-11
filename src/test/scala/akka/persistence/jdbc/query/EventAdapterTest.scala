@@ -84,7 +84,7 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
   }
 
   it should "apply event adapters when querying events by tag from an offset" in {
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
 
       (actor1 ? TaggedEvent(Event("1"), "event")).futureValue
       (actor2 ? TaggedEvent(Event("2"), "event")).futureValue
@@ -101,7 +101,7 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
         tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, EventRestored("3")))
         tp.expectNoMessage(NoMsgTime)
 
-        actor1 ! TaggedEvent(Event("1"), "event")
+        actor1 ? TaggedEvent(Event("1"), "event")
         tp.expectNext(EventEnvelope(Sequence(4), "my-1", 2, EventRestored("1")))
         tp.cancel()
         tp.expectNoMessage(NoMsgTime)
@@ -147,7 +147,7 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
   }
 
   it should "apply event adapters when querying all current events by tag" in {
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       (actor1 ? TaggedEvent(Event("1"), "event")).futureValue
       (actor2 ? TaggedEvent(Event("2"), "event")).futureValue
       (actor3 ? TaggedEvent(Event("3"), "event")).futureValue

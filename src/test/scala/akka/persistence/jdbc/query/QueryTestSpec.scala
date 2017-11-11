@@ -149,7 +149,7 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
 
   final val ExpectNextTimeout = 10.second
 
-  class TestActor(id: Int) extends PersistentActor {
+  class TestActor(id: Int, replyToMessages: Boolean) extends PersistentActor {
     override val persistenceId: String = "my-" + id
 
     var state: Int = 0
@@ -160,31 +160,31 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
 
       case DeleteCmd(toSequenceNr) =>
         deleteMessages(toSequenceNr)
-        sender() ! s"deleted-$toSequenceNr"
+        if (replyToMessages) sender() ! s"deleted-$toSequenceNr"
 
       case event: Int =>
         persist(event) { (event: Int) =>
           updateState(event)
-          sender() ! akka.actor.Status.Success(event)
+          if (replyToMessages) sender() ! akka.actor.Status.Success(event)
         }
 
       case event @ Tagged(payload: Int, tags) =>
         persist(event) { (event: Tagged) =>
           updateState(payload)
-          sender() ! akka.actor.Status.Success((payload, tags))
+          if (replyToMessages) sender() ! akka.actor.Status.Success((payload, tags))
         }
       case event: Event =>
         persist(event) { evt =>
-          sender() ! akka.actor.Status.Success(evt)
+          if (replyToMessages) sender() ! akka.actor.Status.Success(evt)
         }
 
       case event @ TaggedEvent(payload: Event, tag) =>
         persist(event) { evt =>
-          sender() ! akka.actor.Status.Success((payload, tag))
+          if (replyToMessages) sender() ! akka.actor.Status.Success((payload, tag))
         }
       case event @ TaggedAsyncEvent(payload: Event, tag) =>
         persistAsync(event) { evt =>
-          sender() ! akka.actor.Status.Success((payload, tag))
+          if (replyToMessages) sender() ! akka.actor.Status.Success((payload, tag))
         }
     }
 
@@ -197,17 +197,17 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
     }
   }
 
-  def setupEmpty(persistenceId: Int): ActorRef = {
-    system.actorOf(Props(new TestActor(persistenceId)))
+  def setupEmpty(persistenceId: Int, replyToMessages: Boolean): ActorRef = {
+    system.actorOf(Props(new TestActor(persistenceId, replyToMessages)))
   }
 
-  def withTestActors(seq: Int = 1)(f: (ActorRef, ActorRef, ActorRef) => Unit): Unit = {
-    val refs = (seq until seq + 3).map(setupEmpty).toList
+  def withTestActors(seq: Int = 1, replyToMessages: Boolean = false)(f: (ActorRef, ActorRef, ActorRef) => Unit): Unit = {
+    val refs = (seq until seq + 3).map(setupEmpty(_, replyToMessages)).toList
     try f(refs.head, refs.drop(1).head, refs.drop(2).head) finally killActors(refs: _*)
   }
 
-  def withManyTestActors(amount: Int, seq: Int = 1)(f: Seq[ActorRef] => Unit): Unit = {
-    val refs = (seq until seq + amount).map(setupEmpty).toList
+  def withManyTestActors(amount: Int, seq: Int = 1, replyToMessages: Boolean = false)(f: Seq[ActorRef] => Unit): Unit = {
+    val refs = (seq until seq + amount).map(setupEmpty(_, replyToMessages)).toList
     try f(refs) finally killActors(refs: _*)
   }
 

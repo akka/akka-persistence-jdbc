@@ -41,7 +41,7 @@ object CurrentEventsByTagTest {
 abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config, configOverrides) with ScalaJdbcReadJournalOperations {
 
   it should "not find an event by tag for unknown tag" in {
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       (actor1 ? withTags(1, "one")).futureValue
       (actor2 ? withTags(2, "two")).futureValue
       (actor3 ? withTags(3, "three")).futureValue
@@ -58,7 +58,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
   }
 
   it should "find all events by tag" in {
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       (actor1 ? withTags(1, "number")).futureValue
       (actor2 ? withTags(2, "number")).futureValue
       (actor3 ? withTags(3, "number")).futureValue
@@ -104,7 +104,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
   }
 
   it should "persist and find a tagged event with multiple tags" in
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       withClue("Persisting multiple tagged events") {
         (actor1 ? withTags(1, "one", "1", "prime")).futureValue
         (actor1 ? withTags(2, "two", "2", "prime")).futureValue
@@ -175,7 +175,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
 
 
   it should "complete without any gaps in case events are being persisted when the query is executed" in {
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       def sendMessagesWithTag(tag: String, numberOfMessagesPerActor: Int): Future[Done] = {
         val futures = for (actor <- Seq(actor1, actor2, actor3); i <- 1 to numberOfMessagesPerActor) yield {
           actor ? TaggedAsyncEvent(Event(i.toString), tag)
@@ -188,7 +188,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
       // send a batch of 3 * 200
       val batch1 = sendMessagesWithTag(tag, 200)
       // Try to persist a large batch of events per actor. Some of these may be returned, but not all!
-      sendMessagesWithTag(tag, 10000)
+      val batch2 = sendMessagesWithTag(tag, 10000)
 
       // wait for acknowledgement of the first batch only
       batch1.futureValue
@@ -204,6 +204,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         val expectedOffsets = 1L.to(allEvents.size).map(Sequence.apply)
         allEvents.map(_.offset) shouldBe expectedOffsets
       }
+      batch2.futureValue
     }
   }
 }

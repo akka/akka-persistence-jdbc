@@ -60,7 +60,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
   }
 
   it should "find all events by tag" in {
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       (actor1 ? withTags(1, "number")).futureValue
       (actor2 ? withTags(2, "number")).futureValue
       (actor3 ? withTags(3, "number")).futureValue
@@ -116,13 +116,13 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
         tp.expectNoMessage(NoMsgTime)
 
-        actor1 ! withTags(1, "number")
+        actor1 ? withTags(1, "number")
         tp.expectNext(EventEnvelope(Sequence(4), "my-1", 2, 1))
 
-        actor1 ! withTags(1, "number")
+        actor1 ? withTags(1, "number")
         tp.expectNext(EventEnvelope(Sequence(5), "my-1", 3, 1))
 
-        actor1 ! withTags(1, "number")
+        actor1 ? withTags(1, "number")
         tp.expectNext(EventEnvelope(Sequence(6), "my-1", 4, 1))
         tp.cancel()
         tp.expectNoMessage(NoMsgTime)
@@ -159,7 +159,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
   }
 
   it should "find events by tag from an offset" in {
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       (actor1 ? withTags(1, "number")).futureValue
       (actor2 ? withTags(2, "number")).futureValue
       (actor3 ? withTags(3, "number")).futureValue
@@ -174,7 +174,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
         tp.expectNoMessage(NoMsgTime)
 
-        actor1 ! withTags(1, "number")
+        actor1 ? withTags(1, "number")
         tp.expectNext(EventEnvelope(Sequence(4), "my-1", 2, 1))
         tp.cancel()
         tp.expectNoMessage(NoMsgTime)
@@ -227,7 +227,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
   }
 
   it should "persist and find tagged events when stored with multiple tags" in {
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       (actor1 ? withTags(1, "one", "1", "prime")).futureValue
       (actor1 ? withTags(2, "two", "2", "prime")).futureValue
       (actor1 ? withTags(3, "three", "3", "prime")).futureValue
@@ -303,7 +303,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
   def timeoutMultiplier: Int = 1
 
   it should "show the configured performance characteristics" in {
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       def sendMessagesWithTag(tag: String, numberOfMessagesPerActor: Int): Future[Done] = {
         val futures = for (actor <- Seq(actor1, actor2, actor3); i <- 1 to numberOfMessagesPerActor) yield {
           actor ? TaggedAsyncEvent(Event(i.toString), tag)

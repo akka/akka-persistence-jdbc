@@ -300,6 +300,8 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
     }
   }
 
+  def timeoutMultiplier: Int = 1
+
   it should "show the configured performance characteristics" in {
     withTestActors() { (actor1, actor2, actor3) =>
       def sendMessagesWithTag(tag: String, numberOfMessagesPerActor: Int): Future[Done] = {
@@ -325,7 +327,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         // Send a small batch of 3 * 5 messages
         sendMessagesWithTag(tag1, 5)
         // Since queries are executed `refreshInterval`, there must be a small delay before this query gives a result
-        tp.within(min = refreshInterval / 2, max = 2.seconds) {
+        tp.within(min = refreshInterval / 2, max = 2.seconds * timeoutMultiplier) {
           tp.expectNextN(15)
         }
         tp.expectNoMsg(NoMsgTime)
@@ -333,7 +335,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         // another large batch should be retrieved fast
         // send a second batch of 3 * 100
         sendMessagesWithTag(tag1, 100)
-        tp.within(min = refreshInterval / 2, max = 10.seconds) {
+        tp.within(min = refreshInterval / 2, max = 10.seconds * timeoutMultiplier) {
           tp.request(Int.MaxValue)
           tp.expectNextN(300)
         }
@@ -347,6 +349,8 @@ class PostgresScalaEventsByTagTest extends EventsByTagTest("postgres-application
 
 class MySQLScalaEventByTagTest extends EventsByTagTest("mysql-application.conf") with ScalaJdbcReadJournalOperations with MysqlCleaner
 
-class OracleScalaEventByTagTest extends EventsByTagTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
+class OracleScalaEventByTagTest extends EventsByTagTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner {
+  override def timeoutMultiplier: Int = 2
+}
 
 class H2ScalaEventsByTagTest extends EventsByTagTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner

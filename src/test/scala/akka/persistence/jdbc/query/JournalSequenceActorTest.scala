@@ -127,21 +127,21 @@ class MockDaoJournalSequenceActorTest extends SimpleSpec with MaterializerSpec {
       val firstBatch = (1L to 40L) ++ (51L to 110L)
       daoProbe.reply(firstBatch)
       withClue(s"when events are missing, the actor should wait for $queryDelay before querying again") {
-        daoProbe.expectNoMsg(almostQueryDelay)
+        daoProbe.expectNoMessage(almostQueryDelay)
         daoProbe.expectMsg(almostQueryDelay, TestProbeReadJournalDao.JournalSequence(40, batchSize))
       }
       // number 41 is still missing after this batch
       val secondBatch = 42L to 110L
       daoProbe.reply(secondBatch)
       withClue(s"when events are missing, the actor should wait for $queryDelay before querying again") {
-        daoProbe.expectNoMsg(almostQueryDelay)
+        daoProbe.expectNoMessage(almostQueryDelay)
         daoProbe.expectMsg(almostQueryDelay, TestProbeReadJournalDao.JournalSequence(40, batchSize))
       }
       val thirdBatch = 41L to 110L
       daoProbe.reply(thirdBatch)
       withClue(s"when no more events are missing, but less that batchSize elemens have been received, " +
         s"the actor should wait for $queryDelay before querying again") {
-        daoProbe.expectNoMsg(almostQueryDelay)
+        daoProbe.expectNoMessage(almostQueryDelay)
         daoProbe.expectMsg(almostQueryDelay, TestProbeReadJournalDao.JournalSequence(110, batchSize))
       }
 
@@ -154,7 +154,7 @@ class MockDaoJournalSequenceActorTest extends SimpleSpec with MaterializerSpec {
 
       // Reply to prevent a dead letter warning on the timeout
       daoProbe.reply(Seq.empty)
-      daoProbe.expectNoMsg(almostImmediately)
+      daoProbe.expectNoMessage(almostImmediately)
     }
   }
 
@@ -189,7 +189,7 @@ class MockDaoJournalSequenceActorTest extends SimpleSpec with MaterializerSpec {
 
       // Reply to prevent a dead letter warning on the timeout
       daoProbe.reply(Seq.empty)
-      daoProbe.expectNoMsg(almostImmediately)
+      daoProbe.expectNoMessage(almostImmediately)
     }
   }
 

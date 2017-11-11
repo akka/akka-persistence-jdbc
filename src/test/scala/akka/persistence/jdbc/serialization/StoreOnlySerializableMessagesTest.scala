@@ -67,16 +67,16 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
       recover.expectMsg(RecoveryCompleted)
       tp.send(actor, "foo") // strings are serializable
       tp.expectMsg(akka.actor.Status.Success(""))
-      failure.expectNoMsg(100.millis)
-      rejected.expectNoMsg(100.millis)
+      failure.expectNoMessage(100.millis)
+      rejected.expectNoMessage(100.millis)
     }
 
     // the recover cycle
     withActor("1") { actor => recover => failure => rejected =>
       recover.expectMsg("foo")
       recover.expectMsg(RecoveryCompleted)
-      failure.expectNoMsg(100.millis)
-      rejected.expectNoMsg(100.millis)
+      failure.expectNoMessage(100.millis)
+      rejected.expectNoMessage(100.millis)
     }
   }
 
@@ -86,7 +86,7 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
       val tp = TestProbe()
       recover.expectMsg(RecoveryCompleted)
       tp.send(actor, new NotSerializable) // the NotSerializable class cannot be serialized
-      tp.expectNoMsg(300.millis) // the handler should not have been called, because persist has failed
+      tp.expectNoMessage(300.millis) // the handler should not have been called, because persist has failed
       // the actor should call the OnPersistRejected
       rejected.expectMsgPF() {
         case PersistRejected(_, _, _) =>
@@ -96,7 +96,7 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
     // the recover cycle, no message should be recovered
     withActor("2") { actor => recover => failure => rejected =>
       recover.expectMsg(RecoveryCompleted)
-      recover.expectNoMsg(100.millis)
+      recover.expectNoMessage(100.millis)
     }
   }
 
@@ -108,20 +108,20 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
       tp.send(actor, "foo")
       tp.expectMsg(akka.actor.Status.Success(""))
       tp.send(actor, new NotSerializable) // the NotSerializable class cannot be serialized
-      tp.expectNoMsg(300.millis) // the handler should not have been called, because persist has failed
+      tp.expectNoMessage(300.millis) // the handler should not have been called, because persist has failed
       // the actor should call the OnPersistRejected
       rejected.expectMsgPF() {
         case PersistRejected(_, _, _) =>
       }
-      rejected.expectNoMsg(100.millis)
+      rejected.expectNoMessage(100.millis)
     }
 
     // recover cycle
     withActor("3") { actor => recover => failure => rejected =>
       recover.expectMsg("foo")
       recover.expectMsg(RecoveryCompleted)
-      failure.expectNoMsg(100.millis)
-      rejected.expectNoMsg(100.millis)
+      failure.expectNoMessage(100.millis)
+      rejected.expectNoMessage(100.millis)
     }
   }
 }

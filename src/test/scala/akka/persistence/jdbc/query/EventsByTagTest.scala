@@ -53,7 +53,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
 
       withEventsByTag()("unknown", NoOffset) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
     }
@@ -104,9 +104,9 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
 
       withEventsByTag()("number", Sequence(3)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
         tp.cancel()
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
       }
 
       withEventsByTag()("number", NoOffset) { tp =>
@@ -114,7 +114,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
         tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
         tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
 
         actor1 ! withTags(1, "number")
         tp.expectNext(EventEnvelope(Sequence(4), "my-1", 2, 1))
@@ -125,7 +125,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         actor1 ! withTags(1, "number")
         tp.expectNext(EventEnvelope(Sequence(6), "my-1", 4, 1))
         tp.cancel()
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
       }
     }
   }
@@ -153,7 +153,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
           map.updated(actorIdx, msgNumber + 1)
         }
         tp.cancel()
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
       }
     }
   }
@@ -172,12 +172,12 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
         tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
 
         actor1 ! withTags(1, "number")
         tp.expectNext(EventEnvelope(Sequence(4), "my-1", 2, 1))
         tp.cancel()
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
       }
     }
   }
@@ -186,42 +186,42 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
     withTestActors() { (actor1, actor2, actor3) =>
       withEventsByTag(10.seconds)("one", NoOffset) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
 
         actor1 ! withTags(1, "one") // 1
         tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
 
         actor2 ! withTags(1, "one") // 2
         tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 1))
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
 
         actor3 ! withTags(1, "one") // 3
         tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 1))
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
 
         actor1 ! withTags(2, "two") // 4
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
 
         actor2 ! withTags(2, "two") // 5
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
 
         actor3 ! withTags(2, "two") // 6
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
 
         actor1 ! withTags(1, "one") // 7
         tp.expectNext(EventEnvelope(Sequence(7), "my-1", 3, 1))
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
 
         actor2 ! withTags(1, "one") // 8
         tp.expectNext(EventEnvelope(Sequence(8), "my-2", 3, 1))
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
 
         actor3 ! withTags(1, "one") // 9
         tp.expectNext(EventEnvelope(Sequence(9), "my-3", 3, 1))
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
         tp.cancel()
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
       }
     }
   }
@@ -254,7 +254,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.expectNext(EventEnvelope(Sequence(5), "my-1", 5, 5))
         tp.expectNext(EventEnvelope(Sequence(6), "my-2", 1, 3))
         tp.expectNext(EventEnvelope(Sequence(7), "my-3", 1, 3))
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
 
@@ -263,7 +263,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
         tp.expectNext(EventEnvelope(Sequence(6), "my-2", 1, 3))
         tp.expectNext(EventEnvelope(Sequence(7), "my-3", 1, 3))
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
 
@@ -272,30 +272,30 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
         tp.expectNext(EventEnvelope(Sequence(6), "my-2", 1, 3))
         tp.expectNext(EventEnvelope(Sequence(7), "my-3", 1, 3))
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
 
       withEventsByTag(10.seconds)("one", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
 
       withEventsByTag(10.seconds)("four", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNextPF { case EventEnvelope(Sequence(4), "my-1", 4, 4) => }
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
 
       withEventsByTag(10.seconds)("five", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(5), "my-1", 5, 5))
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
         tp.cancel()
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
       }
     }
   }
@@ -322,7 +322,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
           tp.request(Int.MaxValue)
           tp.expectNextN(150)
         }
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
 
         // Send a small batch of 3 * 5 messages
         sendMessagesWithTag(tag1, 5)
@@ -330,7 +330,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.within(min = refreshInterval / 2, max = 2.seconds * timeoutMultiplier) {
           tp.expectNextN(15)
         }
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
 
         // another large batch should be retrieved fast
         // send a second batch of 3 * 100
@@ -339,7 +339,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
           tp.request(Int.MaxValue)
           tp.expectNextN(300)
         }
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
       }
     }
   }

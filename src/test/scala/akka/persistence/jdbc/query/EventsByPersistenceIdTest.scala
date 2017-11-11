@@ -25,9 +25,9 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
   it should "not find any events for unknown pid" in {
     withEventsByPersistenceId()("unkown-pid", 0L, Long.MaxValue) { tp =>
       tp.request(1)
-      tp.expectNoMsg(100.millis)
+      tp.expectNoMessage(100.millis)
       tp.cancel()
-      tp.expectNoMsg(100.millis)
+      tp.expectNoMessage(100.millis)
     }
   }
 
@@ -130,15 +130,15 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
     withTestActors() { (actor1, actor2, actor3) =>
       withEventsByPersistenceId()("my-1", 0) { tp =>
         tp.request(10)
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         actor1 ! 1
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         actor1 ! 2
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, 2))
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
         tp.cancel()
       }
     }
@@ -148,27 +148,27 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
     withTestActors() { (actor1, actor2, actor3) =>
       withEventsByPersistenceId()("my-1", 0, Long.MaxValue) { tp =>
         tp.request(10)
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         actor1 ! 1
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         actor1 ! 2
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, 2))
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         actor2 ! 1
         actor2 ! 2
         actor2 ! 3
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         actor1 ! 3
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(3), "my-1", 3, 3))
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         tp.cancel()
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
       }
     }
   }
@@ -190,7 +190,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-2", 2, 2))
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(3), "my-2", 3, 3))
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         actor2 ! 5
         actor2 ! 6
@@ -204,10 +204,10 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(4), "my-2", 4, 5))
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(5), "my-2", 5, 6))
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(6), "my-2", 6, 7))
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         tp.cancel()
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
       }
     }
   }

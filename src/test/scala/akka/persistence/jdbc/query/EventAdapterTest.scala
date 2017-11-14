@@ -68,15 +68,15 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
     withTestActors() { (actor1, actor2, actor3) =>
       withEventsByPersistenceId()("my-1", 0) { tp =>
         tp.request(10)
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         actor1 ! Event("1")
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, EventRestored("1")))
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         actor1 ! Event("2")
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, EventRestored("2")))
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
         tp.cancel()
       }
     }
@@ -84,7 +84,7 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
   }
 
   it should "apply event adapters when querying events by tag from an offset" in {
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
 
       (actor1 ? TaggedEvent(Event("1"), "event")).futureValue
       (actor2 ? TaggedEvent(Event("2"), "event")).futureValue
@@ -99,12 +99,12 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, EventRestored("2")))
         tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, EventRestored("3")))
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
 
-        actor1 ! TaggedEvent(Event("1"), "event")
+        actor1 ? TaggedEvent(Event("1"), "event")
         tp.expectNext(EventEnvelope(Sequence(4), "my-1", 2, EventRestored("1")))
         tp.cancel()
-        tp.expectNoMsg(NoMsgTime)
+        tp.expectNoMessage(NoMsgTime)
       }
     }
   }
@@ -147,7 +147,7 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
   }
 
   it should "apply event adapters when querying all current events by tag" in {
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       (actor1 ? TaggedEvent(Event("1"), "event")).futureValue
       (actor2 ? TaggedEvent(Event("2"), "event")).futureValue
       (actor3 ? TaggedEvent(Event("3"), "event")).futureValue

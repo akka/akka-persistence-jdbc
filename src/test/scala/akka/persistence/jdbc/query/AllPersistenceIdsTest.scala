@@ -22,40 +22,40 @@ abstract class AllPersistenceIdsTest(config: String) extends QueryTestSpec(confi
   it should "not terminate the stream when there are not pids" in
     withPersistenceIds() { tp =>
       tp.request(1)
-      tp.expectNoMsg(100.millis)
+      tp.expectNoMessage(100.millis)
       tp.cancel()
-      tp.expectNoMsg(100.millis)
+      tp.expectNoMessage(100.millis)
     }
 
   it should "find persistenceIds for actors" in
     withTestActors() { (actor1, actor2, actor3) =>
       withPersistenceIds() { tp =>
         tp.request(10)
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         actor1 ! 1
         tp.expectNext(ExpectNextTimeout, "my-1")
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         actor2 ! 1
         tp.expectNext(ExpectNextTimeout, "my-2")
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         actor3 ! 1
         tp.expectNext(ExpectNextTimeout, "my-3")
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         actor1 ! 1
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         actor2 ! 1
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         actor3 ! 1
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
 
         tp.cancel()
-        tp.expectNoMsg(100.millis)
+        tp.expectNoMessage(100.millis)
       }
     }
 }

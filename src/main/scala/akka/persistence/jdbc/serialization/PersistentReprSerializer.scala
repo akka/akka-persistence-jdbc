@@ -48,18 +48,25 @@ trait PersistentReprSerializer[T] {
 
   def serialize(persistentRepr: PersistentRepr, tags: Set[String]): Try[T]
 
-  def deserialize(t: T): Try[(PersistentRepr, Set[String], T)]
+  /**
+    * deserialize into a PersistentRepr, a set of tags and a Long representing the global ordering of events
+    */
+  def deserialize(t: T): Try[(PersistentRepr, Set[String], Long)]
 
 }
 
 trait FlowPersistentReprSerializer[T] extends PersistentReprSerializer[T] {
 
-  def deserializeFlow: Flow[T, Try[(PersistentRepr, Set[String], T)], NotUsed] = {
+  /**
+    * A flow which deserializes each element into a PersistentRepr,
+    * a set of tags and a Long representing the global ordering of events
+    */
+  def deserializeFlow: Flow[T, Try[(PersistentRepr, Set[String], Long)], NotUsed] = {
     Flow[T].map(deserialize)
   }
 
   def deserializeFlowWithoutTags: Flow[T, Try[PersistentRepr], NotUsed] = {
-    def keepPersistentRepr(tup: (PersistentRepr, Set[String], T)): PersistentRepr = tup match {
+    def keepPersistentRepr(tup: (PersistentRepr, Set[String], Long)): PersistentRepr = tup match {
       case (repr, _, _) => repr
     }
     deserializeFlow.map(_.map(keepPersistentRepr))

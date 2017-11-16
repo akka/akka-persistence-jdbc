@@ -157,8 +157,8 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
       readJournalDao.eventsByTag(tag, offset, latestOrdering.maxOrdering, max)
         .mapAsync(1)(Future.fromTry)
         .mapConcat {
-          case (repr, _, row) =>
-            adaptEvents(repr).map(r => EventEnvelope(Sequence(row.ordering), r.persistenceId, r.sequenceNr, r.payload))
+          case (repr, _, ordering) =>
+            adaptEvents(repr).map(r => EventEnvelope(Sequence(ordering), r.persistenceId, r.sequenceNr, r.payload))
         }
     }
   }

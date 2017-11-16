@@ -38,8 +38,8 @@ class ByteArrayJournalSerializer(serialization: Serialization, separator: String
       ))
   }
 
-  override def deserialize(journalRow: JournalRow): Try[(PersistentRepr, Set[String], JournalRow)] = {
+  override def deserialize(journalRow: JournalRow): Try[(PersistentRepr, Set[String], Long)] = {
     serialization.deserialize(journalRow.message, classOf[PersistentRepr])
-      .map((_, decodeTags(journalRow.tags, separator), journalRow))
+      .map((_, decodeTags(journalRow.tags, separator), journalRow.ordering))
   }
 }

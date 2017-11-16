@@ -32,7 +32,7 @@ class TestProbeReadJournalDao(val probe: TestProbe) extends ReadJournalDao {
    * Returns a Source of bytes for certain tag from an offset. The result is sorted by
    * created time asc thus the offset is relative to the creation time
    */
-  override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], jdbc.JournalRow)], NotUsed] = ???
+  override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed] = ???
 
   /**
    * Returns a Source of bytes for a certain persistenceId

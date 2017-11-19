@@ -36,7 +36,7 @@ abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType) ext
 
   lazy val journalConfig = new JournalConfig(cfg)
 
-  lazy val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
+  lazy val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration, "slick.db")
 
   override def beforeAll(): Unit = {
     dropCreate(schemaType)

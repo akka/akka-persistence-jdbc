@@ -135,10 +135,12 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
   }
 }
 
-class PostgresScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("postgres-application.conf") with PostgresCleaner
+// Note: these tests use the shared-db configs, the test for all (so not only current) events use the regular db config
 
-class MySQLScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("mysql-application.conf") with MysqlCleaner
+class PostgresScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("postgres-shared-db-application.conf") with PostgresCleaner
 
-class OracleScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("oracle-application.conf") with OracleCleaner
+class MySQLScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("mysql-shared-db-application.conf") with MysqlCleaner
 
-class H2ScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("h2-application.conf") with H2Cleaner
+class OracleScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("oracle-shared-db-application.conf") with OracleCleaner
+
+class H2ScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("h2-shared-db-application.conf") with H2Cleaner

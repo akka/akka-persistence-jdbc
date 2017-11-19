@@ -42,6 +42,14 @@ object ConfigOps {
       Try(config.getInt(key))
         .getOrElse(default)
 
+    def asString(key: String, default: String): String =
+      Try(config.getString(key))
+        .getOrElse(default)
+
+    def asOptionalNonEmptyString(key: String): Option[String] = {
+      if (config.hasPath(key)) Some(config.getString(key)).filterNot(_.isEmpty) else None
+    }
+
     def asBoolean(key: String, default: Boolean) =
       Try(config.getBoolean(key))
         .getOrElse(default)

@@ -17,5 +17,9 @@
 package akka.persistence
 
 package object jdbc {
-  final case class JournalRow(ordering: Long, deleted: Boolean, persistenceId: String, sequenceNumber: Long, message: Array[Byte], tags: Option[String] = None)
+  trait OrderedJournalRow {
+    val ordering: Long
+  }
+
+  final case class JournalRow(ordering: Long, deleted: Boolean, persistenceId: String, sequenceNumber: Long, message: Array[Byte], tags: Option[String] = None) extends OrderedJournalRow
 }

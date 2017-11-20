@@ -35,7 +35,7 @@ trait ReadJournalDao {
    * Returns a Source of bytes for certain tag from an offset. The result is sorted by
    * created time asc thus the offset is relative to the creation time
    */
-  def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed]
+  def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], OrderedJournalRow)], NotUsed]
 
   /**
    * Returns a Source of bytes for a certain persistenceId

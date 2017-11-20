@@ -45,7 +45,7 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao {
   override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct(max).result))
 
-  override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] =
+  override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], OrderedJournalRow)], NotUsed] =
     Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", offset, maxOffset, max).result))
       .via(serializer.deserializeFlow)
 
@@ -92,7 +92,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
 
   implicit val getJournalRow = GetResult(r => JournalRow(r.<<, r.<<, r.<<, r.<<, r.nextBytes(), r.<<))
 
-  abstract override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] = {
+  abstract override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], OrderedJournalRow)], NotUsed] = {
     if (isOracleDriver(profile)) {
       val theOffset = Math.max(0, offset)
       val theTag = s"%$tag%"
@@ -127,7 +127,7 @@ trait H2ReadJournalDao extends ReadJournalDao {
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
     super.allPersistenceIdsSource(correctMaxForH2Driver(max))
 
-  abstract override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], JournalRow)], NotUsed] =
+  abstract override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], OrderedJournalRow)], NotUsed] =
     super.eventsByTag(tag, offset, maxOffset, correctMaxForH2Driver(max))
 
   abstract override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =

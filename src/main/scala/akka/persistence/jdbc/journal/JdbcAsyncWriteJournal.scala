@@ -40,6 +40,7 @@ object JdbcAsyncWriteJournal {
 }
 
 class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
+
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val system: ActorSystem = context.system
   implicit val mat: Materializer = ActorMaterializer()

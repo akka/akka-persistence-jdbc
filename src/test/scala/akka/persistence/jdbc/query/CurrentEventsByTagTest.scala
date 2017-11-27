@@ -37,7 +37,6 @@ object CurrentEventsByTagTest {
   )
 }
 
-
 abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config, configOverrides) with ScalaJdbcReadJournalOperations {
 
   it should "not find an event by tag for unknown tag" in {
@@ -173,7 +172,6 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
       }
     }
 
-
   it should "complete without any gaps in case events are being persisted when the query is executed" in {
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       def sendMessagesWithTag(tag: String, numberOfMessagesPerActor: Int): Future[Done] = {
@@ -182,7 +180,6 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         }
         Future.sequence(futures).map(_ => Done)
       }
-
 
       val tag = "someTag"
       // send a batch of 3 * 200

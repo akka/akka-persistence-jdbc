@@ -25,7 +25,18 @@ class SlickConfiguration(config: Config) {
   private val cfg = config.asConfig("slick")
   val jndiName: Option[String] = cfg.as[String]("jndiName").trim
   val jndiDbName: Option[String] = cfg.as[String]("jndiDbName")
-  override def toString: String = s"SlickConfiguration($jndiName,$jndiDbName)"
+  val asyncExecutorConfig = new AsyncExecutorConfig(cfg.asConfig("db"))
+  override def toString: String = s"SlickConfiguration($jndiName, $jndiDbName, $asyncExecutorConfig)"
+}
+
+class AsyncExecutorConfig(config: Config) {
+
+  val numThreads: Int = config.as[Int]("numThreads", 20)
+  val minConnections: Int = config.as[Int]("minConnections", 20)
+  val maxConnections: Int = config.as[Int]("maxConnections", 100)
+  val queueSize: Int = config.as[Int]("queueSize", 10000)
+
+  override def toString: String = s"AsyncExecutorConfig($numThreads, $minConnections, $maxConnections, $queueSize)"
 }
 
 class JournalTableColumnNames(config: Config) {
@@ -37,7 +48,7 @@ class JournalTableColumnNames(config: Config) {
   val created: String = cfg.as[String]("created", "created")
   val tags: String = cfg.as[String]("tags", "tags")
   val message: String = cfg.as[String]("message", "message")
-  override def toString: String = s"JournalTableColumnNames($persistenceId,$sequenceNumber,$created,$tags,$message)"
+  override def toString: String = s"JournalTableColumnNames($persistenceId, $sequenceNumber, $created, $tags, $message)"
 }
 
 class JournalTableConfiguration(config: Config) {
@@ -45,7 +56,7 @@ class JournalTableConfiguration(config: Config) {
   val tableName: String = cfg.as[String]("tableName", "journal")
   val schemaName: Option[String] = cfg.as[String]("schemaName").trim
   val columnNames: JournalTableColumnNames = new JournalTableColumnNames(config)
-  override def toString: String = s"JournalTableConfiguration($tableName,$schemaName,$columnNames)"
+  override def toString: String = s"JournalTableConfiguration($tableName, $schemaName, $columnNames)"
 }
 
 class SnapshotTableColumnNames(config: Config) {
@@ -54,7 +65,7 @@ class SnapshotTableColumnNames(config: Config) {
   val sequenceNumber: String = cfg.as[String]("sequenceNumber", "sequence_number")
   val created: String = cfg.as[String]("created", "created")
   val snapshot: String = cfg.as[String]("snapshot", "snapshot")
-  override def toString: String = s"SnapshotTableColumnNames($persistenceId,$sequenceNumber,$created,$snapshot)"
+  override def toString: String = s"SnapshotTableColumnNames($persistenceId, $sequenceNumber, $created, $snapshot)"
 }
 
 class SnapshotTableConfiguration(config: Config) {
@@ -62,26 +73,26 @@ class SnapshotTableConfiguration(config: Config) {
   val tableName: String = cfg.as[String]("tableName", "snapshot")
   val schemaName: Option[String] = cfg.as[String]("schemaName").trim
   val columnNames: SnapshotTableColumnNames = new SnapshotTableColumnNames(config)
-  override def toString: String = s"SnapshotTableConfiguration($tableName,$schemaName,$columnNames)"
+  override def toString: String = s"SnapshotTableConfiguration($tableName, $schemaName, $columnNames)"
 }
 
 class JournalPluginConfig(config: Config) {
   val tagSeparator: String = config.as[String]("tagSeparator", ",")
   val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao")
-  override def toString: String = s"JournalPluginConfig($tagSeparator,$dao)"
+  override def toString: String = s"JournalPluginConfig($tagSeparator, $dao)"
 }
 
 class BaseByteArrayJournalDaoConfig(config: Config) {
   val bufferSize: Int = config.asInt("bufferSize", 1000)
   val batchSize: Int = config.asInt("batchSize", 400)
   val parallelism: Int = config.asInt("parallelism", 8)
-  override def toString: String = s"BaseByteArrayJournalDaoConfig($bufferSize,$batchSize,$parallelism)"
+  override def toString: String = s"BaseByteArrayJournalDaoConfig($bufferSize, $batchSize, $parallelism)"
 }
 
 class ReadJournalPluginConfig(config: Config) {
   val tagSeparator: String = config.as[String]("tagSeparator", ",")
   val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.readjournal.ByteArrayReadJournalDao")
-  override def toString: String = s"ReadJournalPluginConfig($tagSeparator,$dao)"
+  override def toString: String = s"ReadJournalPluginConfig($tagSeparator, $dao)"
 }
 
 class SnapshotPluginConfig(config: Config) {

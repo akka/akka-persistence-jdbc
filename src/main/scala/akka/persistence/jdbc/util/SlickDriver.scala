@@ -17,12 +17,15 @@
 package akka.persistence.jdbc.util
 
 import javax.naming.InitialContext
+import javax.sql.DataSource
 
-import akka.persistence.jdbc.config.SlickConfiguration
+import akka.persistence.jdbc.config.{AsyncExecutorConfig, JournalConfig, SlickConfiguration}
 import com.typesafe.config.Config
+import slick.SlickException
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 import slick.jdbc.JdbcBackend._
+import slick.util.AsyncExecutor
 
 object SlickDriver {
   def forDriverName(config: Config): JdbcProfile =
@@ -30,9 +33,37 @@ object SlickDriver {
 }
 
 object SlickDatabase {
+
   def forConfig(config: Config, slickConfiguration: SlickConfiguration): Database = {
-    val jndiName = slickConfiguration.jndiName.map(Database.forName(_, None))
-    val jndiDbName = slickConfiguration.jndiDbName.map(new InitialContext().lookup(_).asInstanceOf[Database])
-    jndiName.orElse(jndiDbName).getOrElse(Database.forConfig("slick.db", config))
+
+    val asyncExecConfig = slickConfiguration.asyncExecutorConfig
+
+    val namingContext = new InitialContext()
+
+    // builds a Slick Database from using a JNDI DataSource
+    // together with a properly configured AsyncExecutor
+    def buildDbFromJndiDatasource(name: String) = {
+      namingContext.lookup(name) match {
+        case dataSource: DataSource => Database.forDataSource(
+          ds = dataSource,
+          maxConnections = Option(asyncExecConfig.maxConnections),
+          executor = AsyncExecutor(
+            name = "AsyncExecutor.default",
+            minThreads = asyncExecConfig.minConnections,
+            maxThreads = asyncExecConfig.numThreads,
+            queueSize = asyncExecConfig.queueSize,
+            maxConnections = asyncExecConfig.maxConnections
+          )
+        )
+        case x => throw new SlickException("Expected a DataSource for JNDI name " + name + ", but got " + x)
+      }
+    }
+
+    slickConfiguration.jndiName
+      .map(buildDbFromJndiDatasource)
+      .orElse {
+        slickConfiguration.jndiDbName.map(namingContext.lookup(_).asInstanceOf[Database])
+      }
+      .getOrElse(Database.forConfig("slick.db", config))
   }
 }

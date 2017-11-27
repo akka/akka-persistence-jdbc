@@ -220,6 +220,11 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 
+    cfg.slickConfiguration.asyncExecutorConfig.numThreads shouldBe 20
+    cfg.slickConfiguration.asyncExecutorConfig.minConnections shouldBe 20
+    cfg.slickConfiguration.asyncExecutorConfig.maxConnections shouldBe 100
+    cfg.slickConfiguration.asyncExecutorConfig.queueSize shouldBe 10000
+
     cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao"
     cfg.pluginConfig.tagSeparator shouldBe ","
 
@@ -239,6 +244,12 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 
+    cfg.slickConfiguration.asyncExecutorConfig.numThreads shouldBe 20
+    cfg.slickConfiguration.asyncExecutorConfig.minConnections shouldBe 20
+    cfg.slickConfiguration.asyncExecutorConfig.maxConnections shouldBe 100
+    cfg.slickConfiguration.asyncExecutorConfig.queueSize shouldBe 10000
+
+
     cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao"
 
     cfg.snapshotTableConfiguration.tableName shouldBe "snapshot"
@@ -254,6 +265,11 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     val cfg = new ReadJournalConfig(ConfigFactory.empty)
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
+
+    cfg.slickConfiguration.asyncExecutorConfig.numThreads shouldBe 20
+    cfg.slickConfiguration.asyncExecutorConfig.minConnections shouldBe 20
+    cfg.slickConfiguration.asyncExecutorConfig.maxConnections shouldBe 100
+    cfg.slickConfiguration.asyncExecutorConfig.queueSize shouldBe 10000
 
     cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.readjournal.ByteArrayReadJournalDao"
     cfg.pluginConfig.tagSeparator shouldBe ","
@@ -276,6 +292,11 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 
+    cfg.slickConfiguration.asyncExecutorConfig.numThreads shouldBe 4
+    cfg.slickConfiguration.asyncExecutorConfig.minConnections shouldBe 4
+    cfg.slickConfiguration.asyncExecutorConfig.maxConnections shouldBe 10
+    cfg.slickConfiguration.asyncExecutorConfig.queueSize shouldBe 10000
+
     cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao"
     cfg.pluginConfig.tagSeparator shouldBe ","
 
@@ -295,6 +316,11 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
 
+    cfg.slickConfiguration.asyncExecutorConfig.numThreads shouldBe 4
+    cfg.slickConfiguration.asyncExecutorConfig.minConnections shouldBe 4
+    cfg.slickConfiguration.asyncExecutorConfig.maxConnections shouldBe 10
+    cfg.slickConfiguration.asyncExecutorConfig.queueSize shouldBe 10000
+
     cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao"
 
     cfg.snapshotTableConfiguration.tableName shouldBe "snapshot"
@@ -310,6 +336,11 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     val cfg = new ReadJournalConfig(config.getConfig("jdbc-read-journal"))
     cfg.slickConfiguration.jndiDbName shouldBe None
     cfg.slickConfiguration.jndiDbName shouldBe None
+
+    cfg.slickConfiguration.asyncExecutorConfig.numThreads shouldBe 4
+    cfg.slickConfiguration.asyncExecutorConfig.minConnections shouldBe 4
+    cfg.slickConfiguration.asyncExecutorConfig.maxConnections shouldBe 10
+    cfg.slickConfiguration.asyncExecutorConfig.queueSize shouldBe 10000
 
     cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.readjournal.ByteArrayReadJournalDao"
     cfg.pluginConfig.tagSeparator shouldBe ","

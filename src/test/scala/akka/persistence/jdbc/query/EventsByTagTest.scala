@@ -358,7 +358,7 @@ class PostgresScalaEventsByTagTest extends EventsByTagTest("postgres-application
 class MySQLScalaEventByTagTest extends EventsByTagTest("mysql-application.conf") with MysqlCleaner
 
 class OracleScalaEventByTagTest extends EventsByTagTest("oracle-application.conf") with OracleCleaner {
-  override def timeoutMultiplier: Int = 2
+  override def timeoutMultiplier: Int = 4
 }
 
 class H2ScalaEventsByTagTest extends EventsByTagTest("h2-application.conf") with H2Cleaner

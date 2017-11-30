@@ -33,12 +33,10 @@ trait SimpleSpec extends FlatSpec
     with BeforeAndAfterEach
     with GivenWhenThen {
 
-  implicit def system: ActorSystem
-
   /**
    * Sends the PoisonPill command to an actor and waits for it to die
    */
-  def killActors(actors: ActorRef*): Unit = {
+  def killActors(actors: ActorRef*)(implicit system: ActorSystem): Unit = {
     val tp = TestProbe()
     actors.foreach { (actor: ActorRef) =>
       tp watch actor

@@ -16,9 +16,9 @@
 
 package akka.persistence.jdbc.journal.dao
 
-import akka.persistence.jdbc.TestSpec
+import akka.persistence.jdbc.SharedActorSystemTestSpec
 
-class TagsSerializationTest extends TestSpec {
+class TagsSerializationTest extends SharedActorSystemTestSpec {
 
   "Encode" should "no tags" in {
     encodeTags(Set.empty[String], ",") shouldBe None

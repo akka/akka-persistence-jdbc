@@ -18,9 +18,8 @@ package akka.persistence.jdbc.util
 
 import java.sql.Statement
 
-import akka.actor.ActorSystem
 import akka.persistence.jdbc.util.Schema.{Oracle, SchemaType}
-import slick.jdbc.JdbcBackend
+import slick.jdbc.JdbcBackend.{Database, Session}
 
 object Schema {
 
@@ -33,9 +32,7 @@ object Schema {
 
 trait DropCreate extends ClasspathResources {
 
-  def system: ActorSystem
-
-  def db: JdbcBackend#Database
+  def db: Database
 
   val listOfOracleDropQueries = List(
     """ALTER SESSION SET ddl_lock_timeout = 15""", // (ddl lock timeout in seconds) this allows tests which are still writing to the db to finish gracefully
@@ -78,10 +75,10 @@ trait DropCreate extends ClasspathResources {
     }
   }
 
-  def withDatabase[A](f: JdbcBackend#Database => A): A =
+  def withDatabase[A](f: Database => A): A =
     f(db)
 
-  def withSession[A](f: JdbcBackend#Session => A): A = {
+  def withSession[A](f: Session => A): A = {
     withDatabase { db =>
       val session = db.createSession()
       try f(session) finally session.close()

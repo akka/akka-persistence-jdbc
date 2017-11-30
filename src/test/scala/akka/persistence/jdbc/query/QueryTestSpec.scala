@@ -19,24 +19,22 @@ package akka.persistence.jdbc.query
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingReceive
 import akka.persistence.PersistentActor
-import akka.persistence.jdbc.TestSpec
+import akka.persistence.jdbc.SingleActorSystemPerTestSpec
 import akka.persistence.jdbc.query.EventAdapterTest.{Event, TaggedAsyncEvent, TaggedEvent}
-import akka.persistence.jdbc.query.JournalSequenceActor.{GetMaxOrderingId, MaxOrderingId}
 import akka.persistence.jdbc.query.javadsl.{JdbcReadJournal => JavaJdbcReadJournal}
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 import akka.persistence.journal.Tagged
-import akka.persistence.query.{EventEnvelope, Offset, PersistenceQuery, Sequence}
-import akka.stream.Materializer
+import akka.persistence.query.{EventEnvelope, Offset, PersistenceQuery}
 import akka.stream.scaladsl.Sink
 import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.javadsl.{TestSink => JavaSink}
 import akka.stream.testkit.scaladsl.TestSink
-import akka.util.Timeout
+import akka.stream.{ActorMaterializer, Materializer}
 import com.typesafe.config.ConfigValue
 import slick.jdbc.PostgresProfile.api._
 
+import scala.concurrent.Future
 import scala.concurrent.duration.{FiniteDuration, _}
-import scala.concurrent.{ExecutionContext, Future}
 
 trait ReadJournalOperations {
   def withCurrentPersistenceIds(within: FiniteDuration = 60.second)(f: TestSubscriber.Probe[String] => Unit): Unit
@@ -48,14 +46,12 @@ trait ReadJournalOperations {
   def countJournal: Future[Long]
 }
 
-trait ScalaJdbcReadJournalOperations extends ReadJournalOperations {
-  implicit def system: ActorSystem
+class ScalaJdbcReadJournalOperations(readJournal: JdbcReadJournal)
+                                    (implicit system: ActorSystem, mat: Materializer) extends ReadJournalOperations {
+  def this(system: ActorSystem) =
+    this(PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier))(system, ActorMaterializer()(system))
 
-  implicit def mat: Materializer
-
-  implicit def ec: ExecutionContext
-
-  lazy val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
+  import system.dispatcher
 
   def withCurrentPersistenceIds(within: FiniteDuration)(f: TestSubscriber.Probe[String] => Unit): Unit = {
     val tp = readJournal.currentPersistenceIds().runWith(TestSink.probe[String])
@@ -95,41 +91,39 @@ trait ScalaJdbcReadJournalOperations extends ReadJournalOperations {
       }.runWith(Sink.seq).map(_.sum)
 }
 
-trait JavaDslJdbcReadJournalOperations extends ReadJournalOperations {
-  implicit def system: ActorSystem
+class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)
+                                      (implicit system: ActorSystem, mat: Materializer) extends ReadJournalOperations {
+  def this(system: ActorSystem) =
+    this(PersistenceQuery.get(system).getReadJournalFor(classOf[javadsl.JdbcReadJournal], JavaJdbcReadJournal.Identifier))(system, ActorMaterializer()(system))
 
-  implicit def mat: Materializer
+  import system.dispatcher
 
-  implicit def ec: ExecutionContext
-
-  lazy val readJournal = PersistenceQuery.get(system).getReadJournalFor(classOf[javadsl.JdbcReadJournal], JavaJdbcReadJournal.Identifier)
-
-  def withCurrentPersistenceIds(within: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] => Unit): Unit = {
+  def withCurrentPersistenceIds(within: FiniteDuration)(f: TestSubscriber.Probe[String] => Unit): Unit = {
     val tp = readJournal.currentPersistenceIds().runWith(JavaSink.probe(system), mat)
     tp.within(within)(f(tp))
   }
 
-  def withPersistenceIds(within: FiniteDuration = 1.second)(f: TestSubscriber.Probe[String] => Unit): Unit = {
+  def withPersistenceIds(within: FiniteDuration)(f: TestSubscriber.Probe[String] => Unit): Unit = {
     val tp = readJournal.persistenceIds().runWith(JavaSink.probe(system), mat)
     tp.within(within)(f(tp))
   }
 
-  def withCurrentEventsByPersistenceId(within: FiniteDuration = 1.second)(persistenceId: String, fromSequenceNr: Long = 0, toSequenceNr: Long = Long.MaxValue)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
+  def withCurrentEventsByPersistenceId(within: FiniteDuration)(persistenceId: String, fromSequenceNr: Long = 0, toSequenceNr: Long = Long.MaxValue)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
     val tp = readJournal.currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).runWith(JavaSink.probe(system), mat)
     tp.within(within)(f(tp))
   }
 
-  def withEventsByPersistenceId(within: FiniteDuration = 1.second)(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
+  def withEventsByPersistenceId(within: FiniteDuration)(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
     val tp = readJournal.eventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).runWith(JavaSink.probe(system), mat)
     tp.within(within)(f(tp))
   }
 
-  def withCurrentEventsByTag(within: FiniteDuration = 1.second)(tag: String, offset: Offset)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
+  def withCurrentEventsByTag(within: FiniteDuration)(tag: String, offset: Offset)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
     val tp = readJournal.currentEventsByTag(tag, offset).runWith(JavaSink.probe(system), mat)
     tp.within(within)(f(tp))
   }
 
-  def withEventsByTag(within: FiniteDuration = 1.second)(tag: String, offset: Offset)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
+  def withEventsByTag(within: FiniteDuration)(tag: String, offset: Offset)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
     val tp = readJournal.eventsByTag(tag, offset).runWith(JavaSink.probe(system), mat)
     tp.within(within)(f(tp))
   }
@@ -143,7 +137,7 @@ trait JavaDslJdbcReadJournalOperations extends ReadJournalOperations {
       .map(_.sum)
 }
 
-abstract class QueryTestSpec(config: String, configOverrides: Map[String, ConfigValue] = Map.empty) extends TestSpec(config, configOverrides) with ReadJournalOperations {
+abstract class QueryTestSpec(config: String, configOverrides: Map[String, ConfigValue] = Map.empty) extends SingleActorSystemPerTestSpec(config, configOverrides) {
 
   case class DeleteCmd(toSequenceNr: Long = Long.MaxValue) extends Serializable
 
@@ -197,40 +191,36 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
     }
   }
 
-  def setupEmpty(persistenceId: Int, replyToMessages: Boolean): ActorRef = {
+  def setupEmpty(persistenceId: Int, replyToMessages: Boolean)(implicit system: ActorSystem): ActorRef = {
     system.actorOf(Props(new TestActor(persistenceId, replyToMessages)))
   }
 
-  def withTestActors(seq: Int = 1, replyToMessages: Boolean = false)(f: (ActorRef, ActorRef, ActorRef) => Unit): Unit = {
+  def withTestActors(seq: Int = 1, replyToMessages: Boolean = false)(f: (ActorRef, ActorRef, ActorRef) => Unit)(implicit system: ActorSystem): Unit = {
     val refs = (seq until seq + 3).map(setupEmpty(_, replyToMessages)).toList
     try f(refs.head, refs.drop(1).head, refs.drop(2).head) finally killActors(refs: _*)
   }
 
-  def withManyTestActors(amount: Int, seq: Int = 1, replyToMessages: Boolean = false)(f: Seq[ActorRef] => Unit): Unit = {
+  def withManyTestActors(amount: Int, seq: Int = 1, replyToMessages: Boolean = false)(f: Seq[ActorRef] => Unit)(implicit system: ActorSystem): Unit = {
     val refs = (seq until seq + amount).map(setupEmpty(_, replyToMessages)).toList
     try f(refs) finally killActors(refs: _*)
   }
 
   def withTags(payload: Any, tags: String*) = Tagged(payload, Set(tags: _*))
-
-  override protected def afterAll(): Unit = {
-    db.close()
-    system.terminate().toTry should be a 'success
-  }
 }
 
 trait PostgresCleaner extends QueryTestSpec {
   import akka.persistence.jdbc.util.Schema.Postgres
 
-  val actionsClearPostgres = (for {
-    _ <- sqlu"""TRUNCATE journal"""
-    _ <- sqlu"""TRUNCATE snapshot"""
-  } yield ()).transactionally
+  val actionsClearPostgres =
+    DBIO.seq(
+      sqlu"""TRUNCATE journal""",
+      sqlu"""TRUNCATE snapshot"""
+    ).transactionally
 
   def clearPostgres(): Unit =
     withDatabase(_.run(actionsClearPostgres).toTry) should be a 'success
 
-  override def beforeAll() = {
+  override def beforeAll(): Unit = {
     dropCreate(Postgres())
     super.beforeAll()
   }
@@ -239,25 +229,21 @@ trait PostgresCleaner extends QueryTestSpec {
     dropCreate(Postgres())
     super.beforeEach()
   }
-
-  override def afterAll(): Unit = {
-    clearPostgres()
-    super.afterAll()
-  }
 }
 
 trait MysqlCleaner extends QueryTestSpec {
   import akka.persistence.jdbc.util.Schema.MySQL
 
-  val actionsClearMySQL = (for {
-    _ <- sqlu"""TRUNCATE journal"""
-    _ <- sqlu"""TRUNCATE snapshot"""
-  } yield ()).transactionally
+  val actionsClearMySQL =
+    DBIO.seq(
+      sqlu"""TRUNCATE journal""",
+      sqlu"""TRUNCATE snapshot"""
+    ).transactionally
 
   def clearMySQL(): Unit =
     withDatabase(_.run(actionsClearMySQL).toTry) should be a 'success
 
-  override def beforeAll() = {
+  override def beforeAll(): Unit = {
     dropCreate(MySQL())
     super.beforeAll()
   }
@@ -266,33 +252,24 @@ trait MysqlCleaner extends QueryTestSpec {
     clearMySQL()
     super.beforeEach()
   }
-
-  override def afterAll(): Unit = {
-    clearMySQL()
-    super.afterAll()
-  }
 }
 
 trait OracleCleaner extends QueryTestSpec {
   import akka.persistence.jdbc.util.Schema.Oracle
 
-  val actionsClearOracle = (for {
-    _ <- sqlu"""DELETE FROM "journal""""
-    _ <- sqlu"""DELETE FROM "snapshot""""
-    _ <- sqlu"""BEGIN "reset_sequence"; END; """
-  } yield ()).transactionally
+  val actionsClearOracle =
+    DBIO.seq(
+      sqlu"""DELETE FROM "journal"""",
+      sqlu"""DELETE FROM "snapshot"""",
+      sqlu"""BEGIN "reset_sequence"; END; """
+    ).transactionally
 
   def clearOracle(): Unit =
     withDatabase(_.run(actionsClearOracle).toTry) should be a 'success
 
-  override def beforeAll() = {
+  override def beforeAll(): Unit = {
     dropCreate(Oracle())
     super.beforeAll()
-  }
-
-  override def afterAll(): Unit = {
-    dropOracle()
-    super.afterAll()
   }
 
   override def beforeEach(): Unit = {
@@ -304,23 +281,14 @@ trait OracleCleaner extends QueryTestSpec {
 trait H2Cleaner extends QueryTestSpec {
   import akka.persistence.jdbc.util.Schema.H2
 
-  val actionsClearH2 = (for {
-    _ <- sqlu"""TRUNCATE TABLE journal"""
-    _ <- sqlu"""TRUNCATE TABLE snapshot"""
-  } yield ()).transactionally
+  val actionsClearH2 =
+    DBIO.seq(
+      sqlu"""TRUNCATE TABLE journal""",
+      sqlu"""TRUNCATE TABLE snapshot"""
+    ).transactionally
 
   def clearH2(): Unit =
     withDatabase(_.run(actionsClearH2).toTry) should be a 'success
-
-  override def beforeAll() = {
-    dropCreate(H2())
-    super.beforeAll()
-  }
-
-  override def afterAll(): Unit = {
-    clearH2()
-    super.afterAll()
-  }
 
   override def beforeEach(): Unit = {
     dropCreate(H2())

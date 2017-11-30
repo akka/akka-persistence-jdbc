@@ -64,9 +64,10 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
 
   final val NoMsgTime: FiniteDuration = 100.millis
 
-  it should "apply event adapter when querying events for actor with pid 'my-1'" in {
+  it should "apply event adapter when querying events for actor with pid 'my-1'" in withActorSystem { implicit system =>
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors() { (actor1, actor2, actor3) =>
-      withEventsByPersistenceId()("my-1", 0) { tp =>
+      journalOps.withEventsByPersistenceId()("my-1", 0) { tp =>
         tp.request(10)
         tp.expectNoMessage(100.millis)
 
@@ -83,7 +84,8 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
 
   }
 
-  it should "apply event adapters when querying events by tag from an offset" in {
+  it should "apply event adapters when querying events by tag from an offset" in withActorSystem { implicit system =>
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
 
       (actor1 ? TaggedEvent(Event("1"), "event")).futureValue
@@ -91,10 +93,10 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
       (actor3 ? TaggedEvent(Event("3"), "event")).futureValue
 
       eventually {
-        countJournal.futureValue shouldBe 3
+        journalOps.countJournal.futureValue shouldBe 3
       }
 
-      withEventsByTag(10.seconds)("event", Sequence(1)) { tp =>
+      journalOps.withEventsByTag(10.seconds)("event", Sequence(1)) { tp =>
 
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, EventRestored("2")))
@@ -109,35 +111,36 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
     }
   }
 
-  it should "apply event adapters when querying current events for actors" in {
+  it should "apply event adapters when querying current events for actors" in withActorSystem { implicit system =>
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors() { (actor1, actor2, actor3) =>
       actor1 ! Event("1")
       actor1 ! Event("2")
       actor1 ! Event("3")
 
       eventually {
-        countJournal.futureValue shouldBe 3
+        journalOps.countJournal.futureValue shouldBe 3
       }
 
-      withCurrentEventsByPersistenceId()("my-1", 1, 1) { tp =>
+      journalOps.withCurrentEventsByPersistenceId()("my-1", 1, 1) { tp =>
         tp.request(Int.MaxValue)
           .expectNext(EventEnvelope(Sequence(1), "my-1", 1, EventRestored("1")))
           .expectComplete()
       }
 
-      withCurrentEventsByPersistenceId()("my-1", 2, 2) { tp =>
+      journalOps.withCurrentEventsByPersistenceId()("my-1", 2, 2) { tp =>
         tp.request(Int.MaxValue)
           .expectNext(EventEnvelope(Sequence(2), "my-1", 2, EventRestored("2")))
           .expectComplete()
       }
 
-      withCurrentEventsByPersistenceId()("my-1", 3, 3) { tp =>
+      journalOps.withCurrentEventsByPersistenceId()("my-1", 3, 3) { tp =>
         tp.request(Int.MaxValue)
           .expectNext(EventEnvelope(Sequence(3), "my-1", 3, EventRestored("3")))
           .expectComplete()
       }
 
-      withCurrentEventsByPersistenceId()("my-1", 2, 3) { tp =>
+      journalOps.withCurrentEventsByPersistenceId()("my-1", 2, 3) { tp =>
         tp.request(Int.MaxValue)
           .expectNext(EventEnvelope(Sequence(2), "my-1", 2, EventRestored("2")))
           .expectNext(EventEnvelope(Sequence(3), "my-1", 3, EventRestored("3")))
@@ -146,17 +149,18 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
     }
   }
 
-  it should "apply event adapters when querying all current events by tag" in {
+  it should "apply event adapters when querying all current events by tag" in withActorSystem { implicit system =>
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       (actor1 ? TaggedEvent(Event("1"), "event")).futureValue
       (actor2 ? TaggedEvent(Event("2"), "event")).futureValue
       (actor3 ? TaggedEvent(Event("3"), "event")).futureValue
 
       eventually {
-        countJournal.futureValue shouldBe 3
+        journalOps.countJournal.futureValue shouldBe 3
       }
 
-      withCurrentEventsByTag()("event", NoOffset) { tp =>
+      journalOps.withCurrentEventsByTag()("event", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNextPF { case EventEnvelope(Sequence(1), _, _, EventRestored("1")) => }
         tp.expectNextPF { case EventEnvelope(Sequence(2), _, _, EventRestored("2")) => }
@@ -164,7 +168,7 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("event", Sequence(0)) { tp =>
+      journalOps.withCurrentEventsByTag()("event", Sequence(0)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNextPF { case EventEnvelope(Sequence(1), _, _, EventRestored("1")) => }
         tp.expectNextPF { case EventEnvelope(Sequence(2), _, _, EventRestored("2")) => }
@@ -172,20 +176,20 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("event", Sequence(1)) { tp =>
+      journalOps.withCurrentEventsByTag()("event", Sequence(1)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNextPF { case EventEnvelope(Sequence(2), _, _, EventRestored("2")) => }
         tp.expectNextPF { case EventEnvelope(Sequence(3), _, _, EventRestored("3")) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("event", Sequence(2)) { tp =>
+      journalOps.withCurrentEventsByTag()("event", Sequence(2)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNextPF { case EventEnvelope(Sequence(3), _, _, EventRestored("3")) => }
         tp.expectComplete()
       }
 
-      withCurrentEventsByTag()("event", Sequence(3)) { tp =>
+      journalOps.withCurrentEventsByTag()("event", Sequence(3)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectComplete()
       }
@@ -194,10 +198,10 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
 
 }
 
-class PostgresScalaEventAdapterTest extends EventAdapterTest("postgres-application.conf") with ScalaJdbcReadJournalOperations with PostgresCleaner
+class PostgresScalaEventAdapterTest extends EventAdapterTest("postgres-application.conf") with PostgresCleaner
 
-class MySQLScalaEventAdapterTest extends EventAdapterTest("mysql-application.conf") with ScalaJdbcReadJournalOperations with MysqlCleaner
+class MySQLScalaEventAdapterTest extends EventAdapterTest("mysql-application.conf") with MysqlCleaner
 
-class OracleScalaEventAdapterTest extends EventAdapterTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
+class OracleScalaEventAdapterTest extends EventAdapterTest("oracle-application.conf") with OracleCleaner
 
-class H2ScalaEventAdapterTest extends EventAdapterTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner
+class H2ScalaEventAdapterTest extends EventAdapterTest("h2-application.conf") with H2Cleaner

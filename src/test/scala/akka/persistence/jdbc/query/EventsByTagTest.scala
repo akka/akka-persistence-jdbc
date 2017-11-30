@@ -41,17 +41,18 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
 
   final val NoMsgTime: FiniteDuration = 100.millis
 
-  it should "not find events for unknown tags" in {
+  it should "not find events for unknown tags" in withActorSystem { implicit system =>
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors() { (actor1, actor2, actor3) =>
       actor1 ! withTags(1, "one")
       actor2 ! withTags(2, "two")
       actor3 ! withTags(3, "three")
 
       eventually {
-        countJournal.futureValue shouldBe 3
+        journalOps.countJournal.futureValue shouldBe 3
       }
 
-      withEventsByTag()("unknown", NoOffset) { tp =>
+      journalOps.withEventsByTag()("unknown", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNoMessage(NoMsgTime)
         tp.cancel()
@@ -59,13 +60,14 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
     }
   }
 
-  it should "find all events by tag" in {
+  it should "find all events by tag" in withActorSystem { implicit system =>
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       (actor1 ? withTags(1, "number")).futureValue
       (actor2 ? withTags(2, "number")).futureValue
       (actor3 ? withTags(3, "number")).futureValue
 
-      withEventsByTag()("number", Sequence(Long.MinValue)) { tp =>
+      journalOps.withEventsByTag()("number", Sequence(Long.MinValue)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
         tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
@@ -73,7 +75,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.cancel()
       }
 
-      withEventsByTag()("number", NoOffset) { tp =>
+      journalOps.withEventsByTag()("number", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
         tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
@@ -81,7 +83,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.cancel()
       }
 
-      withEventsByTag()("number", Sequence(0)) { tp =>
+      journalOps.withEventsByTag()("number", Sequence(0)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
         tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
@@ -89,27 +91,27 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.cancel()
       }
 
-      withEventsByTag()("number", Sequence(1)) { tp =>
+      journalOps.withEventsByTag()("number", Sequence(1)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
         tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
         tp.cancel()
       }
 
-      withEventsByTag()("number", Sequence(2)) { tp =>
+      journalOps.withEventsByTag()("number", Sequence(2)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
         tp.cancel()
       }
 
-      withEventsByTag()("number", Sequence(3)) { tp =>
+      journalOps.withEventsByTag()("number", Sequence(3)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNoMessage(NoMsgTime)
         tp.cancel()
         tp.expectNoMessage(NoMsgTime)
       }
 
-      withEventsByTag()("number", NoOffset) { tp =>
+      journalOps.withEventsByTag()("number", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
         tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
@@ -130,7 +132,8 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
     }
   }
 
-  it should "find all events by tag even when lots of events are persisted concurrently" in {
+  it should "find all events by tag even when lots of events are persisted concurrently" in withActorSystem { implicit system =>
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
     val msgCountPerActor = 20
     val numberOfActors = 100
     val totalNumberOfMessages = msgCountPerActor * numberOfActors
@@ -141,7 +144,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         (actor, actorIdx) <- actorsWithIndexes
       } actor ! TaggedEvent(Event(s"$actorIdx-$messageNumber"), "myEvent")
 
-      withEventsByTag()("myEvent", NoOffset) { tp =>
+      journalOps.withEventsByTag()("myEvent", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         (1 to totalNumberOfMessages).foldLeft(Map.empty[Int, Int]) { (map, _) =>
           val mgsParts = tp.expectNext().event.asInstanceOf[EventRestored].value.split("-")
@@ -158,17 +161,18 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
     }
   }
 
-  it should "find events by tag from an offset" in {
+  it should "find events by tag from an offset" in withActorSystem { implicit system =>
+    val journalOps = new JavaDslJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       (actor1 ? withTags(1, "number")).futureValue
       (actor2 ? withTags(2, "number")).futureValue
       (actor3 ? withTags(3, "number")).futureValue
 
       eventually {
-        countJournal.futureValue shouldBe 3
+        journalOps.countJournal.futureValue shouldBe 3
       }
 
-      withEventsByTag()("number", Sequence(1)) { tp =>
+      journalOps.withEventsByTag()("number", Sequence(1)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
         tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
@@ -182,9 +186,10 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
     }
   }
 
-  it should "persist and find tagged event for one tag" in {
+  it should "persist and find tagged event for one tag" in withActorSystem { implicit system =>
+    val journalOps = new JavaDslJdbcReadJournalOperations(system)
     withTestActors() { (actor1, actor2, actor3) =>
-      withEventsByTag(10.seconds)("one", NoOffset) { tp =>
+      journalOps.withEventsByTag(10.seconds)("one", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNoMessage(NoMsgTime)
 
@@ -226,7 +231,8 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
     }
   }
 
-  it should "persist and find tagged events when stored with multiple tags" in {
+  it should "persist and find tagged events when stored with multiple tags" in withActorSystem { implicit system =>
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       (actor1 ? withTags(1, "one", "1", "prime")).futureValue
       (actor1 ? withTags(2, "two", "2", "prime")).futureValue
@@ -243,10 +249,10 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
       (actor1 ? 10).futureValue
 
       eventually {
-        countJournal.futureValue shouldBe 12
+        journalOps.countJournal.futureValue shouldBe 12
       }
 
-      withEventsByTag(10.seconds)("prime", NoOffset) { tp =>
+      journalOps.withEventsByTag(10.seconds)("prime", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
         tp.expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2))
@@ -258,7 +264,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.cancel()
       }
 
-      withEventsByTag(10.seconds)("three", NoOffset) { tp =>
+      journalOps.withEventsByTag(10.seconds)("three", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
         tp.expectNext(EventEnvelope(Sequence(6), "my-2", 1, 3))
@@ -267,7 +273,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.cancel()
       }
 
-      withEventsByTag(10.seconds)("3", NoOffset) { tp =>
+      journalOps.withEventsByTag(10.seconds)("3", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
         tp.expectNext(EventEnvelope(Sequence(6), "my-2", 1, 3))
@@ -276,21 +282,21 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.cancel()
       }
 
-      withEventsByTag(10.seconds)("one", NoOffset) { tp =>
+      journalOps.withEventsByTag(10.seconds)("one", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
         tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
 
-      withEventsByTag(10.seconds)("four", NoOffset) { tp =>
+      journalOps.withEventsByTag(10.seconds)("four", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNextPF { case EventEnvelope(Sequence(4), "my-1", 4, 4) => }
         tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
 
-      withEventsByTag(10.seconds)("five", NoOffset) { tp =>
+      journalOps.withEventsByTag(10.seconds)("five", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(5), "my-1", 5, 5))
         tp.expectNoMessage(NoMsgTime)
@@ -302,7 +308,9 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
 
   def timeoutMultiplier: Int = 1
 
-  it should "show the configured performance characteristics" in {
+  it should "show the configured performance characteristics" in withActorSystem { implicit system =>
+    import system.dispatcher
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       def sendMessagesWithTag(tag: String, numberOfMessagesPerActor: Int): Future[Done] = {
         val futures = for (actor <- Seq(actor1, actor2, actor3); i <- 1 to numberOfMessagesPerActor) yield {
@@ -317,7 +325,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
       sendMessagesWithTag(tag1, 50)
 
       // start the query before the future completes
-      withEventsByTag()(tag1, NoOffset) { tp =>
+      journalOps.withEventsByTag()(tag1, NoOffset) { tp =>
         tp.within(5.seconds) {
           tp.request(Int.MaxValue)
           tp.expectNextN(150)
@@ -345,12 +353,12 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
   }
 }
 
-class PostgresScalaEventsByTagTest extends EventsByTagTest("postgres-application.conf") with ScalaJdbcReadJournalOperations with PostgresCleaner
+class PostgresScalaEventsByTagTest extends EventsByTagTest("postgres-application.conf") with PostgresCleaner
 
-class MySQLScalaEventByTagTest extends EventsByTagTest("mysql-application.conf") with ScalaJdbcReadJournalOperations with MysqlCleaner
+class MySQLScalaEventByTagTest extends EventsByTagTest("mysql-application.conf") with MysqlCleaner
 
-class OracleScalaEventByTagTest extends EventsByTagTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner {
+class OracleScalaEventByTagTest extends EventsByTagTest("oracle-application.conf") with OracleCleaner {
   override def timeoutMultiplier: Int = 2
 }
 
-class H2ScalaEventsByTagTest extends EventsByTagTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner
+class H2ScalaEventsByTagTest extends EventsByTagTest("h2-application.conf") with H2Cleaner

@@ -22,8 +22,9 @@ import scala.concurrent.duration._
 
 abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(config) {
 
-  it should "not find any events for unknown pid" in {
-    withEventsByPersistenceId()("unkown-pid", 0L, Long.MaxValue) { tp =>
+  it should "not find any events for unknown pid" in withActorSystem { implicit system =>
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
+    journalOps.withEventsByPersistenceId()("unkown-pid", 0L, Long.MaxValue) { tp =>
       tp.request(1)
       tp.expectNoMessage(100.millis)
       tp.cancel()
@@ -31,7 +32,8 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
     }
   }
 
-  it should "find events from an offset" in {
+  it should "find events from an offset" in withActorSystem { implicit system =>
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors() { (actor1, actor2, actor3) =>
       actor1 ! withTags(1, "number")
       actor1 ! withTags(2, "number")
@@ -39,16 +41,16 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
       actor1 ! withTags(4, "number")
 
       eventually {
-        countJournal.futureValue shouldBe 4
+        journalOps.countJournal.futureValue shouldBe 4
       }
 
-      withEventsByPersistenceId()("my-1", 0, 0) { tp =>
+      journalOps.withEventsByPersistenceId()("my-1", 0, 0) { tp =>
         tp.request(1)
         tp.expectComplete()
         tp.cancel()
       }
 
-      withEventsByPersistenceId()("my-1", 0, 1) { tp =>
+      journalOps.withEventsByPersistenceId()("my-1", 0, 1) { tp =>
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
         tp.request(1)
@@ -56,7 +58,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         tp.cancel()
       }
 
-      withEventsByPersistenceId()("my-1", 1, 1) { tp =>
+      journalOps.withEventsByPersistenceId()("my-1", 1, 1) { tp =>
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
         tp.request(1)
@@ -64,7 +66,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         tp.cancel()
       }
 
-      withEventsByPersistenceId()("my-1", 1, 2) { tp =>
+      journalOps.withEventsByPersistenceId()("my-1", 1, 2) { tp =>
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
         tp.request(1)
@@ -74,7 +76,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         tp.cancel()
       }
 
-      withEventsByPersistenceId()("my-1", 2, 2) { tp =>
+      journalOps.withEventsByPersistenceId()("my-1", 2, 2) { tp =>
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, 2))
         tp.request(1)
@@ -82,27 +84,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         tp.cancel()
       }
 
-      withEventsByPersistenceId()("my-1", 2, 3) { tp =>
-        tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, 2))
-        tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(3), "my-1", 3, 3))
-        tp.request(1)
-        tp.expectComplete()
-        tp.cancel()
-      }
-
-      withEventsByPersistenceId()("my-1", 3, 3) { tp =>
-        tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(3), "my-1", 3, 3))
-        tp.request(1)
-        tp.expectComplete()
-        tp.cancel()
-      }
-
-      withEventsByPersistenceId()("my-1", 0, 3) { tp =>
-        tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
+      journalOps.withEventsByPersistenceId()("my-1", 2, 3) { tp =>
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, 2))
         tp.request(1)
@@ -112,7 +94,27 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         tp.cancel()
       }
 
-      withEventsByPersistenceId()("my-1", 1, 3) { tp =>
+      journalOps.withEventsByPersistenceId()("my-1", 3, 3) { tp =>
+        tp.request(1)
+        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(3), "my-1", 3, 3))
+        tp.request(1)
+        tp.expectComplete()
+        tp.cancel()
+      }
+
+      journalOps.withEventsByPersistenceId()("my-1", 0, 3) { tp =>
+        tp.request(1)
+        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.request(1)
+        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, 2))
+        tp.request(1)
+        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(3), "my-1", 3, 3))
+        tp.request(1)
+        tp.expectComplete()
+        tp.cancel()
+      }
+
+      journalOps.withEventsByPersistenceId()("my-1", 1, 3) { tp =>
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
         tp.request(1)
@@ -126,9 +128,10 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
     }
   }
 
-  it should "find events for actor with pid 'my-1'" in {
+  it should "find events for actor with pid 'my-1'" in withActorSystem { implicit system =>
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors() { (actor1, actor2, actor3) =>
-      withEventsByPersistenceId()("my-1", 0) { tp =>
+      journalOps.withEventsByPersistenceId()("my-1", 0) { tp =>
         tp.request(10)
         tp.expectNoMessage(100.millis)
 
@@ -144,9 +147,10 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
     }
   }
 
-  it should "find events for actor with pid 'my-1' and persisting messages to other actor" in {
+  it should "find events for actor with pid 'my-1' and persisting messages to other actor" in withActorSystem { implicit system =>
+    val journalOps = new JavaDslJdbcReadJournalOperations(system)
     withTestActors() { (actor1, actor2, actor3) =>
-      withEventsByPersistenceId()("my-1", 0, Long.MaxValue) { tp =>
+      journalOps.withEventsByPersistenceId()("my-1", 0, Long.MaxValue) { tp =>
         tp.request(10)
         tp.expectNoMessage(100.millis)
 
@@ -173,17 +177,18 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
     }
   }
 
-  it should "find events for actor with pid 'my-2'" in {
+  it should "find events for actor with pid 'my-2'" in withActorSystem { implicit system =>
+    val journalOps = new JavaDslJdbcReadJournalOperations(system)
     withTestActors() { (actor1, actor2, actor3) =>
       actor2 ! 1
       actor2 ! 2
       actor2 ! 3
 
       eventually {
-        countJournal.futureValue shouldBe 3
+        journalOps.countJournal.futureValue shouldBe 3
       }
 
-      withEventsByPersistenceId()("my-2", 0, Long.MaxValue) { tp =>
+      journalOps.withEventsByPersistenceId()("my-2", 0, Long.MaxValue) { tp =>
         tp.request(1)
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-2", 1, 1))
         tp.request(1)
@@ -197,7 +202,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         actor2 ! 7
 
         eventually {
-          countJournal.futureValue shouldBe 6
+          journalOps.countJournal.futureValue shouldBe 6
         }
 
         tp.request(3)
@@ -213,10 +218,10 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
   }
 }
 
-class PostgresScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("postgres-application.conf") with ScalaJdbcReadJournalOperations with PostgresCleaner
+class PostgresScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("postgres-application.conf") with PostgresCleaner
 
-class MySQLScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mysql-application.conf") with ScalaJdbcReadJournalOperations with MysqlCleaner
+class MySQLScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mysql-application.conf") with MysqlCleaner
 
-class OracleScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
+class OracleScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("oracle-application.conf") with OracleCleaner
 
-class H2ScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner
+class H2ScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("h2-application.conf") with H2Cleaner

@@ -17,12 +17,12 @@
 package akka.persistence.jdbc.journal.dao
 
 import akka.persistence.jdbc.util.TrySeq
-import akka.persistence.jdbc.{MaterializerSpec, SimpleSpec}
+import akka.persistence.jdbc.SimpleSpec
 
 import scala.collection.immutable._
 import scala.util.{Failure, Success}
 
-class TrySeqTest extends SimpleSpec with MaterializerSpec {
+class TrySeqTest extends SimpleSpec {
 
   def failure(text: String) = Failure(new RuntimeException(text))
 

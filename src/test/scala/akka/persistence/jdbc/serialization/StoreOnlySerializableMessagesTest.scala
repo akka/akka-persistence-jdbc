@@ -18,14 +18,14 @@ package akka.persistence.jdbc.serialization
 
 import akka.actor.{ActorRef, Props}
 import akka.event.LoggingReceive
-import akka.persistence.jdbc.TestSpec
+import akka.persistence.jdbc.SharedActorSystemTestSpec
 import akka.persistence.jdbc.util.Schema.{H2, MySQL, Oracle, Postgres, SchemaType}
 import akka.persistence.{PersistentActor, RecoveryCompleted}
 import akka.testkit.TestProbe
 
 import scala.concurrent.duration._
 
-abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: SchemaType) extends TestSpec(config) {
+abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: SchemaType) extends SharedActorSystemTestSpec(config) {
 
   case class PersistFailure(cause: Throwable, event: Any, seqNr: Long)
   case class PersistRejected(cause: Throwable, event: Any, seqNr: Long)

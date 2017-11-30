@@ -16,12 +16,12 @@
 
 package akka.persistence.jdbc.configuration
 
-import akka.persistence.jdbc.{MaterializerSpec, SimpleSpec}
+import akka.persistence.jdbc.SimpleSpec
 import akka.persistence.jdbc.util.ConfigOps
 import ConfigOps._
 import com.typesafe.config.ConfigFactory
 
-class ConfigOpsTest extends SimpleSpec with MaterializerSpec {
+class ConfigOpsTest extends SimpleSpec {
   it should "parse field values to Try[A]" in {
     val cfg = ConfigFactory.parseString(
       """

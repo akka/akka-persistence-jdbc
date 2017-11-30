@@ -18,34 +18,41 @@ package akka.persistence.jdbc
 
 import java.util.UUID
 
-import akka.event.{Logging, LoggingAdapter}
-import akka.persistence.jdbc.config.JournalConfig
-import akka.persistence.jdbc.util.{DropCreate, SlickDatabase}
+import akka.actor.ActorSystem
+import akka.persistence.jdbc.config.{JournalConfig, ReadJournalConfig}
+import akka.persistence.jdbc.query.javadsl.JdbcReadJournal
+import akka.persistence.jdbc.util.{DropCreate, SlickDatabase, SlickDriver}
 import akka.serialization.SerializationExtension
+import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory, ConfigValue}
 import org.scalatest.BeforeAndAfterAll
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
-abstract class TestSpec(override val config: Config) extends SimpleSpec with MaterializerSpec with DropCreate with BeforeAndAfterAll {
+abstract class SharedActorSystemTestSpec(val config: Config) extends SimpleSpec with DropCreate with BeforeAndAfterAll {
 
   def this(config: String = "postgres-application.conf", configOverrides: Map[String, ConfigValue] = Map.empty) =
     this(configOverrides.foldLeft(ConfigFactory.load(config)){
       case (conf, (path, configValue)) => conf.withValue(path, configValue)
     })
 
-  implicit val ec: ExecutionContextExecutor = system.dispatcher
-  val log: LoggingAdapter = Logging(system, this.getClass)
+  implicit lazy val system: ActorSystem = ActorSystem("test", config)
+  implicit lazy val mat: Materializer = ActorMaterializer()
+
+  implicit lazy val ec: ExecutionContext = system.dispatcher
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 1.minute)
   implicit val timeout = Timeout(1.minute)
-  val serialization = SerializationExtension(system)
 
-  val cfg = system.settings.config.getConfig("jdbc-journal")
+  lazy val serialization = SerializationExtension(system)
+
+  val cfg = config.getConfig("jdbc-journal")
   val journalConfig = new JournalConfig(cfg)
-  val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
+  lazy val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
+  val profile = SlickDriver.forDriverName(cfg)
+  val readJournalConfig = new ReadJournalConfig(config.getConfig(JdbcReadJournal.Identifier))
 
   def randomId = UUID.randomUUID.toString.take(5)
 

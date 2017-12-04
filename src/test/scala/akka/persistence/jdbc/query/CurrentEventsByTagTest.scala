@@ -37,7 +37,6 @@ object CurrentEventsByTagTest {
   )
 }
 
-
 abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config, configOverrides) {
 
   it should "not find an event by tag for unknown tag" in withActorSystem { implicit system =>
@@ -177,7 +176,6 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
     }
   }
 
-
   it should "complete without any gaps in case events are being persisted when the query is executed" in withActorSystem { implicit system =>
     val journalOps = new JavaDslJdbcReadJournalOperations(system)
     import system.dispatcher
@@ -188,7 +186,6 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         }
         Future.sequence(futures).map(_ => Done)
       }
-
 
       val tag = "someTag"
       // send a batch of 3 * 200

@@ -47,7 +47,6 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean) e
     }
   }
 
-
   it should s"recover ${if (isOracle) "one hundred thousand" else "one million"} events quickly if no ids are missing" in {
     withActorSystem { implicit system: ActorSystem =>
       withDatabase { db =>

@@ -319,7 +319,6 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         Future.sequence(futures).map(_ => Done)
       }
 
-
       val tag1 = "someTag"
       // send a batch of 3 * 50
       sendMessagesWithTag(tag1, 50)

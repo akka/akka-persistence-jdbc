@@ -46,8 +46,7 @@ trait ReadJournalOperations {
   def countJournal: Future[Long]
 }
 
-class ScalaJdbcReadJournalOperations(readJournal: JdbcReadJournal)
-                                    (implicit system: ActorSystem, mat: Materializer) extends ReadJournalOperations {
+class ScalaJdbcReadJournalOperations(readJournal: JdbcReadJournal)(implicit system: ActorSystem, mat: Materializer) extends ReadJournalOperations {
   def this(system: ActorSystem) =
     this(PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier))(system, ActorMaterializer()(system))
 
@@ -91,8 +90,7 @@ class ScalaJdbcReadJournalOperations(readJournal: JdbcReadJournal)
       }.runWith(Sink.seq).map(_.sum)
 }
 
-class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)
-                                      (implicit system: ActorSystem, mat: Materializer) extends ReadJournalOperations {
+class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)(implicit system: ActorSystem, mat: Materializer) extends ReadJournalOperations {
   def this(system: ActorSystem) =
     this(PersistenceQuery.get(system).getReadJournalFor(classOf[javadsl.JdbcReadJournal], JavaJdbcReadJournal.Identifier))(system, ActorMaterializer()(system))
 

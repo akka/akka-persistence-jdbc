@@ -34,7 +34,7 @@ import scala.util.Try
 abstract class SingleActorSystemPerTestSpec(val config: Config) extends SimpleSpec with DropCreate with BeforeAndAfterEach {
 
   def this(config: String = "postgres-application.conf", configOverrides: Map[String, ConfigValue] = Map.empty) =
-    this(configOverrides.foldLeft(ConfigFactory.load(config)){
+    this(configOverrides.foldLeft(ConfigFactory.load(config)) {
       case (conf, (path, configValue)) => conf.withValue(path, configValue)
     })
 

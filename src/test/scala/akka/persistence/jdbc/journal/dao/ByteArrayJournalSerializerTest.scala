@@ -22,9 +22,7 @@ import akka.serialization.SerializationExtension
 
 import scala.collection.immutable._
 
-class ByteArrayJournalSerializerTest extends SimpleSpec with MaterializerSpec {
-
-  val serialization = SerializationExtension(system)
+class ByteArrayJournalSerializerTest extends SharedActorSystemTestSpec() {
 
   it should "serialize a serializable message and indicate whether or not the serialization succeeded" in {
     val serializer = new ByteArrayJournalSerializer(serialization, ",")

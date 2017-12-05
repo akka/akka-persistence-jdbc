@@ -18,32 +18,36 @@ package akka.persistence.jdbc.query
 
 abstract class CurrentPersistenceIdsTest(config: String) extends QueryTestSpec(config) {
 
-  it should "not find any persistenceIds for empty journal" in
-    withCurrentPersistenceIds() { tp =>
+  it should "not find any persistenceIds for empty journal" in withActorSystem { implicit system =>
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
+    journalOps.withCurrentPersistenceIds() { tp =>
       tp.request(1)
       tp.expectComplete()
     }
+  }
 
-  it should "find persistenceIds for actors" in
+  it should "find persistenceIds for actors" in withActorSystem { implicit system =>
+    val journalOps = new JavaDslJdbcReadJournalOperations(system)
     withTestActors() { (actor1, actor2, actor3) =>
       actor1 ! 1
       actor2 ! 1
       actor3 ! 1
 
       eventually {
-        withCurrentPersistenceIds() { tp =>
+        journalOps.withCurrentPersistenceIds() { tp =>
           tp.request(3)
           tp.expectNextUnordered("my-1", "my-2", "my-3")
           tp.expectComplete()
         }
       }
     }
+  }
 }
 
-class PostgresScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("postgres-application.conf") with ScalaJdbcReadJournalOperations with PostgresCleaner
+class PostgresScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("postgres-application.conf") with PostgresCleaner
 
-class MySQLScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("mysql-application.conf") with ScalaJdbcReadJournalOperations with MysqlCleaner
+class MySQLScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("mysql-application.conf") with MysqlCleaner
 
-class OracleScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("oracle-application.conf") with ScalaJdbcReadJournalOperations with OracleCleaner
+class OracleScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("oracle-application.conf") with OracleCleaner
 
-class H2ScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("h2-application.conf") with ScalaJdbcReadJournalOperations with H2Cleaner
+class H2ScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("h2-application.conf") with H2Cleaner

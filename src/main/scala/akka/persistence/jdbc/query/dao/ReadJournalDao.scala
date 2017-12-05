@@ -32,10 +32,10 @@ trait ReadJournalDao {
   def allPersistenceIdsSource(max: Long): Source[String, NotUsed]
 
   /**
-    * Returns a Source of deserialized data for certain tag from an offset. The result is sorted by
-    * the global ordering of the events.
-    * Each element with be a try with a PersistentRepr, set of tags, and a Long representing the global ordering of events
-    */
+   * Returns a Source of deserialized data for certain tag from an offset. The result is sorted by
+   * the global ordering of the events.
+   * Each element with be a try with a PersistentRepr, set of tags, and a Long representing the global ordering of events
+   */
   def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed]
 
   /**

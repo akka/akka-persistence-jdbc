@@ -30,13 +30,13 @@ abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType) ext
 
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 10.seconds)
 
-  implicit val ec = system.dispatcher
+  implicit lazy val ec = system.dispatcher
 
-  val cfg = system.settings.config.getConfig("jdbc-journal")
+  lazy val cfg = system.settings.config.getConfig("jdbc-journal")
 
-  val journalConfig = new JournalConfig(cfg)
+  lazy val journalConfig = new JournalConfig(cfg)
 
-  val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
+  lazy val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
 
   override def beforeAll(): Unit = {
     dropCreate(schemaType)

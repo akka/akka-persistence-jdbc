@@ -39,7 +39,7 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
 
   override protected def supportsRejectingNonSerializableObjects: CapabilityFlag = true
 
-  implicit val ec = system.dispatcher
+  implicit lazy val ec = system.dispatcher
 
   implicit def pc: PatienceConfig = PatienceConfig(timeout = 10.minutes)
 
@@ -49,11 +49,11 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
 
   override def measurementIterations: Int = 1
 
-  val cfg = system.settings.config.getConfig("jdbc-journal")
+  lazy val cfg = system.settings.config.getConfig("jdbc-journal")
 
-  val journalConfig = new JournalConfig(cfg)
+  lazy val journalConfig = new JournalConfig(cfg)
 
-  val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
+  lazy val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
 
   override def beforeAll(): Unit = {
     dropCreate(schemaType)

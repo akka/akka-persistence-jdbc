@@ -1,4 +1,5 @@
-package akka.persistence.jdbc.query
+package akka.persistence.jdbc
+package query
 
 import akka.actor.{Actor, ActorLogging, Props, Status, Timers}
 import akka.persistence.jdbc.query.dao.ReadJournalDao
@@ -7,6 +8,7 @@ import akka.persistence.jdbc.config.JournalSequenceRetrievalConfig
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 
+import scala.collection.immutable.NumericRange
 import scala.concurrent.duration.FiniteDuration
 
 object JournalSequenceActor {
@@ -25,6 +27,26 @@ object JournalSequenceActor {
   private case object AssumeMaxOrderingIdTimerKey
 
   private type OrderingId = Long
+
+  /**
+    * Efficient representation of missing elements using NumericRanges.
+    * It can be seen as a collection of OrderingIds
+    */
+  private case class MissingElements(elements: Seq[NumericRange[OrderingId]]) {
+    def ++(range: NumericRange[OrderingId]) = MissingElements(elements :+ range)
+    def contains(id: OrderingId): Boolean = elements.exists(_.containsTyped(id))
+    def isEmpty: Boolean = elements.forall(_.isEmpty)
+
+    /**
+      * Preserve only the NumericRanges where the end (last value) is larger than the given id.
+      */
+    def filterLargerThan(id: OrderingId): MissingElements = {
+      MissingElements(elements.filter(_.end > id))
+    }
+  }
+  private object MissingElements {
+    def empty: MissingElements = MissingElements(Vector.empty)
+  }
 }
 
 /**
@@ -56,7 +78,7 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
    * @param moduloCounter A counter which is incremented every time a new query have been executed, modulo `maxTries`
    * @param previousDelay The last used delay (may change in case failures occur)
    */
-  def receive(currentMaxOrdering: OrderingId, missingByCounter: Map[Int, Set[OrderingId]], moduloCounter: Int, previousDelay: FiniteDuration = queryDelay): Receive = {
+  def receive(currentMaxOrdering: OrderingId, missingByCounter: Map[Int, MissingElements], moduloCounter: Int, previousDelay: FiniteDuration = queryDelay): Receive = {
 
     case ScheduleAssumeMaxOrderingId(max) =>
       // All elements smaller than max can be assumed missing after this delay
@@ -97,15 +119,15 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
   /**
    * This method that implements the "find gaps" algo. It's the meat and main purpose of this actor.
    */
-  def findGaps(elements: Seq[OrderingId], currentMaxOrdering: OrderingId, missingByCounter: Map[Int, Set[OrderingId]], moduloCounter: Int) = {
+  def findGaps(elements: Seq[OrderingId], currentMaxOrdering: OrderingId, missingByCounter: Map[Int, MissingElements], moduloCounter: Int): Unit = {
 
     // list of elements that will be considered as genuine gaps.
     // `givenUp` is either empty or is was filled on a previous iteration
-    val givenUp = missingByCounter.getOrElse(moduloCounter, Set.empty)
+    val givenUp = missingByCounter.getOrElse(moduloCounter, MissingElements.empty)
 
     val (nextMax, _, missingElems) =
       // using the ordering elements that were fetched, we verify if there are any gaps
-      elements.foldLeft[(OrderingId, OrderingId, Set[OrderingId])](currentMaxOrdering, currentMaxOrdering, Set.empty) {
+      elements.foldLeft[(OrderingId, OrderingId, MissingElements)](currentMaxOrdering, currentMaxOrdering, MissingElements.empty) {
 
         case ((currentMax, previousElement, missing), currentElement) =>
 
@@ -117,14 +139,12 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
 
             // if it's a gap and has been detected before on a previous iteration we give up
             // that means that we consider it a genuine gap that will never be filled
-            case e if givenUp(e)               => missing
+            case e if givenUp.contains(e)               => missing
 
             // any other case is a gap that we expect to be filled soon
             case _ =>
               val currentlyMissing = previousElement + 1 until currentElement
-              // we don't want to declare it as missing if it has been already declared on a previous iterations
-              def alreadyMissing(e: Long) = missingByCounter.values.exists(_.contains(e))
-              missing ++ currentlyMissing.filterNot(alreadyMissing)
+              missing ++ currentlyMissing
           }
 
           // we must decide if we move the cursor forward
@@ -143,7 +163,7 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
       (missingByCounter + (moduloCounter -> missingElems))
         .map {
           case (key, value) =>
-            key -> value.filter(missingId => missingId > nextMax)
+            key -> value.filterLargerThan(nextMax)
         }
 
     // did we detect gaps in the current batch?

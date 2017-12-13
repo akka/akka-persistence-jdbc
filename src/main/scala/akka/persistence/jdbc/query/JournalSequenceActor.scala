@@ -36,13 +36,6 @@ object JournalSequenceActor {
     def ++(range: NumericRange[OrderingId]) = MissingElements(elements :+ range)
     def contains(id: OrderingId): Boolean = elements.exists(_.containsTyped(id))
     def isEmpty: Boolean = elements.forall(_.isEmpty)
-
-    /**
-      * Preserve only the NumericRanges where the end (last value) is larger than the given id.
-      */
-    def filterLargerThan(id: OrderingId): MissingElements = {
-      MissingElements(elements.filter(_.end > id))
-    }
   }
   private object MissingElements {
     def empty: MissingElements = MissingElements(Vector.empty)
@@ -159,15 +152,10 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
           (newMax, currentElement, newMissing)
       }
 
-    val newMissingByCounter =
-      (missingByCounter + (moduloCounter -> missingElems))
-        .map {
-          case (key, value) =>
-            key -> value.filterLargerThan(nextMax)
-        }
+    val newMissingByCounter = missingByCounter + (moduloCounter -> missingElems)
 
     // did we detect gaps in the current batch?
-    val noGapsFound = newMissingByCounter.values.forall(_.isEmpty)
+    val noGapsFound = missingElems.isEmpty
 
     // full batch means that we retrieved as much elements as the batchSize
     // that happens when we are not yet at the end of the stream

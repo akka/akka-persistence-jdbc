@@ -132,7 +132,7 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
 
             // if it's a gap and has been detected before on a previous iteration we give up
             // that means that we consider it a genuine gap that will never be filled
-            case e if givenUp.contains(e)               => missing
+            case e if (previousElement + 1 until e).forall(givenUp.contains) => missing
 
             // any other case is a gap that we expect to be filled soon
             case _ =>

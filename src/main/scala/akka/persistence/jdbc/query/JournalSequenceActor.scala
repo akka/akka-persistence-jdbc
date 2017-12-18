@@ -33,7 +33,10 @@ object JournalSequenceActor {
     * It can be seen as a collection of OrderingIds
     */
   private case class MissingElements(elements: Seq[NumericRange[OrderingId]]) {
-    def ++(range: NumericRange[OrderingId]) = MissingElements(elements :+ range)
+    def addRange(from: OrderingId, until: OrderingId): MissingElements = {
+      val newRange = from.until(until)
+      MissingElements(elements :+ newRange)
+    }
     def contains(id: OrderingId): Boolean = elements.exists(_.containsTyped(id))
     def isEmpty: Boolean = elements.forall(_.isEmpty)
   }
@@ -124,22 +127,6 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
 
         case ((currentMax, previousElement, missing), currentElement) =>
 
-          // we accumulate in newMissing the gaps we detect on each iteration
-          val newMissing = currentElement match {
-
-            // if current element is contiguous to previous, there is no gap
-            case e if e == previousElement + 1 => missing
-
-            // if it's a gap and has been detected before on a previous iteration we give up
-            // that means that we consider it a genuine gap that will never be filled
-            case e if (previousElement + 1 until e).forall(givenUp.contains) => missing
-
-            // any other case is a gap that we expect to be filled soon
-            case _ =>
-              val currentlyMissing = previousElement + 1 until currentElement
-              missing ++ currentlyMissing
-          }
-
           // we must decide if we move the cursor forward
           val newMax =
             if ((currentMax + 1).until(currentElement).forall(givenUp.contains)) {
@@ -148,6 +135,11 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
               // 2) current + 1 == currentElement (meaning no gap). Note that `forall` on an empty range always returns true
               currentElement
             } else currentMax
+
+          // we accumulate in newMissing the gaps we detect on each iteration
+          val newMissing =
+            if (previousElement + 1 == currentElement || newMax == currentElement) missing
+            else missing.addRange(previousElement + 1, currentElement)
 
           (newMax, currentElement, newMissing)
       }

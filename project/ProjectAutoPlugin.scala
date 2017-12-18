@@ -8,7 +8,7 @@ import sbt._
 import scalariform.formatter.preferences.FormattingPreferences
 
 object ProjectAutoPlugin extends AutoPlugin {
-  final val AkkaVersion = "2.5.6"
+  final val AkkaVersion = "2.5.8"
   final val SlickVersion = "3.2.1"
   final val ScalaTestVersion = "3.0.3"
 
@@ -38,7 +38,7 @@ object ProjectAutoPlugin extends AutoPlugin {
 
     scalaVersion := "2.12.4",
 
-    crossScalaVersions := Seq("2.11.11", "2.12.4"),
+    crossScalaVersions := Seq("2.11.12", "2.12.4"),
 
     fork in Test := true,
 

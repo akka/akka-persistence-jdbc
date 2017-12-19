@@ -18,7 +18,7 @@ Add the following to your `build.sbt`:
 resolvers += Resolver.jcenterRepo
 
 // akka 2.5.x
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.0.1"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.1.0"
 
 // akka 2.4.x
 libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.8.0"
@@ -37,7 +37,7 @@ If you want to take action, feel free to contact Dennis Vriend <dnvriend@gmail.c
 This source code is made available under the [Apache 2.0 License][apache]. The [quick summary of what this license means is available here](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0))
 
 ## Configuration
-The plugin relies on Slick 3.2.0 to do create the SQL dialect for the database in use, therefore the following must be configured in `application.conf`
+The plugin relies on Slick 3.2.1 to do create the SQL dialect for the database in use, therefore the following must be configured in `application.conf`
 
 Configure `akka-persistence`:
 - instruct akka persistence to use the `jdbc-journal` plugin,
@@ -277,6 +277,20 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## Changelog  
+
+### 3.1.0 (2017-12-20)
+For use with Akka 2.5.x only, please use the 2.8.0 release for Akka 2.4 
+
+Changes since v3.0.1
+  - The internal events by tag implementation could perform poorly in some special cases, this has been resolved. (see #155)
+  - EventsByTag queries are now executed more efficiently by avoiding re-querying data (see #149)
+  - The eventsByTag and currentEventsByTag queries are now documented (in scaladoc) to explain the guarantees offered by this plugin (and its caveats).
+  - Removed dependency on JournalRow in ReadJournalDao.
+    This is a breaking change for everyone who implements a custom ReadJournalDao.
+  - Updated Scala versions to 2.12.4 / 2.11.12
+  - Akka 2.5.6 -> 2.5.8
+  - Merged #139, #140, #141, #143, #145, #146, #148, #14, #152, #153, #154, #157, #158. Thanks to
+    [Renato Cavalcanti][renatocaval], [Ruud Welling][WellingR], [Sean Sullivan][sullis].
 
 ### 3.0.1 (2017-10-27)
 For use with Akka 2.5.x only, please use the 2.8.0 release for Akka 2.4 

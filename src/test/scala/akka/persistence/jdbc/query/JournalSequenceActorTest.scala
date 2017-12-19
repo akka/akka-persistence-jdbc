@@ -74,6 +74,37 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean) e
     }
   }
 
+  if (!isOracle) {
+    // Note this test case cannot be executed for oracle, because forceInsertAll is not supported in the oracle driver.
+    it should "recover after the specified max number if tries if the first event has a very high sequence number and lots of large gaps exist" in {
+      withActorSystem { implicit system: ActorSystem =>
+        withDatabase { db =>
+          implicit val materializer: ActorMaterializer = ActorMaterializer()
+          val numElements = 1000
+          val gapSize = 10000
+          val firstElement = 100000000
+          val lastElement = firstElement + (numElements * gapSize)
+          Source.fromIterator(() => (firstElement to lastElement by gapSize).iterator)
+            .map(id => JournalRow(id, deleted = false, "id", id, Array(0.toByte)))
+            .grouped(10000)
+            .mapAsync(4) { rows =>
+              db.run(JournalTable.forceInsertAll(rows))
+            }
+            .runWith(Sink.ignore).futureValue
+
+          withJournalSequenceActor(db, maxTries = 2) { actor =>
+            // Should normally recover after `maxTries` seconds
+            val patienceConfig = PatienceConfig(10.seconds)
+            eventually {
+              val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
+              currentMax shouldBe lastElement
+            }(patienceConfig, implicitly)
+          }
+        }
+      }
+    }
+  }
+
   it should s"assume that the max ordering id in the database on startup is the max after (queryDelay * maxTries)" in {
     withActorSystem { implicit system: ActorSystem =>
       withDatabase { db =>

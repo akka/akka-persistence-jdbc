@@ -24,7 +24,7 @@ import akka.persistence.jdbc.util.{ClasspathResources, DropCreate, SlickDatabase
 import akka.persistence.journal.JournalPerfSpec
 import akka.persistence.journal.JournalPerfSpec.{BenchActor, Cmd, ResetCounter}
 import akka.testkit.TestProbe
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
@@ -123,6 +123,10 @@ class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("po
   override def measurementIterations: Int = 1
 }
 
+class PostgresJournalPerfSpecPhysicalDelete extends PostgresJournalPerfSpec {
+  this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
+}
+
 class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-application.conf"), MySQL()) {
   override implicit def pc: PatienceConfig = PatienceConfig(timeout = 10.minutes)
 
@@ -131,6 +135,10 @@ class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql
   override def awaitDurationMillis: Long = 10.minutes.toMillis
 
   override def measurementIterations: Int = 1
+}
+
+class MySQLJournalPerfSpecPhysicalDelete extends MySQLJournalPerfSpec {
+  this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
 }
 
 class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-application.conf"), Oracle()) {
@@ -143,4 +151,12 @@ class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("orac
   override def measurementIterations: Int = 1
 }
 
+class OracleJournalPerfSpecPhysicalDelete extends OracleJournalPerfSpec {
+  this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
+}
+
 class H2JournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("h2-application.conf"), H2())
+
+class H2JournalPerfSpecPhysicalDelete extends H2JournalPerfSpec {
+  this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
+}

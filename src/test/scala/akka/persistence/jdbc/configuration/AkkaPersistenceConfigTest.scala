@@ -47,6 +47,8 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |
       |  dao = "akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao"
       |
+      |  logicalDelete = true
+      |
       |  slick {
       |    profile = "slick.jdbc.PostgresProfile$"
       |    db {
@@ -232,6 +234,8 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
     cfg.journalTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
     cfg.journalTableConfiguration.columnNames.sequenceNumber shouldBe "sequence_number"
     cfg.journalTableConfiguration.columnNames.tags shouldBe "tags"
+
+    cfg.daoConfig.logicalDelete shouldBe true
   }
 
   it should "parse SnapshotConfig" in {

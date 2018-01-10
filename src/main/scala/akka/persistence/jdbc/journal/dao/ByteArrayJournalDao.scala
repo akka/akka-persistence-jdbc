@@ -22,10 +22,10 @@ import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.persistence.{AtomicWrite, PersistentRepr}
 import akka.serialization.Serialization
-import akka.stream.{Materializer, OverflowStrategy, QueueOfferResult}
 import akka.stream.scaladsl.{Keep, Sink, Source}
-import slick.jdbc.JdbcProfile
+import akka.stream.{Materializer, OverflowStrategy, QueueOfferResult}
 import slick.jdbc.JdbcBackend._
+import slick.jdbc.JdbcProfile
 
 import scala.collection.immutable._
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -44,8 +44,8 @@ trait BaseByteArrayJournalDao extends JournalDao {
   implicit val ec: ExecutionContext
   implicit val mat: Materializer
 
+  import journalConfig.daoConfig.{batchSize, bufferSize, logicalDelete, parallelism}
   import profile.api._
-  import journalConfig.daoConfig.{batchSize, bufferSize, parallelism}
 
   private val writeQueue = Source.queue[(Promise[Unit], Seq[JournalRow])](bufferSize, OverflowStrategy.dropNew)
     .batchWeighted[(Seq[Promise[Unit]], Seq[JournalRow])](batchSize, _._2.size, tup => Vector(tup._1) -> tup._2) {
@@ -92,9 +92,23 @@ trait BaseByteArrayJournalDao extends JournalDao {
     queueWriteJournalRows(rowsToWrite).map(_ => resultWhenWriteComplete)
   }
 
-  override def delete(persistenceId: String, maxSequenceNr: Long): Future[Unit] = for {
-    _ <- db.run(queries.markJournalMessagesAsDeleted(persistenceId, maxSequenceNr))
-  } yield ()
+  override def delete(persistenceId: String, maxSequenceNr: Long): Future[Unit] =
+    if (logicalDelete) {
+      db.run(queries.markJournalMessagesAsDeleted(persistenceId, maxSequenceNr)).map(_ => ())
+    } else {
+      // We should keep journal record with highest sequence number in order to be compliant
+      // with @see [[akka.persistence.journal.JournalSpec]]
+      val actions = for {
+        _ <- queries.markJournalMessagesAsDeleted(persistenceId, maxSequenceNr)
+        highestMarkedSequenceNr <- highestMarkedSequenceNr(persistenceId)
+        _ <- queries.delete(persistenceId, highestMarkedSequenceNr.getOrElse(0L) - 1)
+      } yield ()
+
+      db.run(actions.transactionally)
+    }
+
+  private def highestMarkedSequenceNr(persistenceId: String) =
+    queries.highestMarkedSequenceNrForPersistenceId(persistenceId).result.headOption
 
   override def highestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] = for {
     maybeHighestSeqNo <- db.run(queries.highestSequenceNrForPersistenceId(persistenceId).result.headOption)

@@ -39,6 +39,7 @@ class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg:
       .filter(_.persistenceId === persistenceId)
       .filter(_.sequenceNumber >= fromSequenceNr)
       .filter(_.sequenceNumber <= toSequenceNr)
+      .filter(_.deleted === false)
       .sortBy(_.sequenceNumber.asc)
       .take(max)
   val messagesQuery = Compiled(_messagesQuery _)

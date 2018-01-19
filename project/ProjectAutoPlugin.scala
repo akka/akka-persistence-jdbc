@@ -8,8 +8,9 @@ import sbt._
 import scalariform.formatter.preferences.FormattingPreferences
 
 object ProjectAutoPlugin extends AutoPlugin {
-  final val AkkaVersion = "2.5.8"
+  final val AkkaVersion = "2.5.9"
   final val SlickVersion = "3.2.1"
+  final val HikariCPVersion = "2.7.5"
   final val ScalaTestVersion = "3.0.3"
 
   final val formattingPreferences: FormattingPreferences = {

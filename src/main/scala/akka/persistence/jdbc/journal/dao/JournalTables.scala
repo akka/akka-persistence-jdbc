@@ -27,6 +27,7 @@ trait JournalTables {
   def journalTableCfg: JournalTableConfiguration
 
   class Journal(_tableTag: Tag) extends Table[JournalRow](_tableTag, _schemaName = journalTableCfg.schemaName, _tableName = journalTableCfg.tableName) {
+
     def * = (ordering, deleted, persistenceId, sequenceNumber, message, tags) <> (JournalRow.tupled, JournalRow.unapply)
 
     val ordering: Rep[Long] = column[Long](journalTableCfg.columnNames.ordering, O.AutoInc)

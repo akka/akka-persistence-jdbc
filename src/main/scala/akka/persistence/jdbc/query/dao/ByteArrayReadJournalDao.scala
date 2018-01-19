@@ -82,8 +82,15 @@ trait OracleReadJournalDao extends ReadJournalDao {
 
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] = {
     if (isOracleDriver(profile)) {
-      Source.fromPublisher(
-        db.stream(sql"""SELECT DISTINCT "#$persistenceId" FROM #$theTableName WHERE rownum <= $max""".as[String]))
+      val selectStatement =
+        if (readJournalConfig.includeDelete)
+          sql"""SELECT DISTINCT "#$persistenceId" FROM #$theTableName WHERE rownum <= $max""".as[String]
+        else
+          sql"""SELECT DISTINCT "#$persistenceId"
+                 FROM #$theTableName
+                 WHERE rownum <= $max AND deleted = false""".as[String]
+
+      Source.fromPublisher(db.stream(selectStatement))
     } else {
       super.allPersistenceIdsSource(max)
     }
@@ -96,8 +103,8 @@ trait OracleReadJournalDao extends ReadJournalDao {
       val theOffset = Math.max(0, offset)
       val theTag = s"%$tag%"
 
-      Source.fromPublisher {
-        db.stream(
+      val selectStatement =
+        if (readJournalConfig.includeDelete)
           sql"""
             SELECT "#$ordering", "#$deleted", "#$persistenceId", "#$sequenceNumber", "#$message", "#$tags"
             FROM (
@@ -107,13 +114,30 @@ trait OracleReadJournalDao extends ReadJournalDao {
               AND "#$ordering" <= $maxOffset
               ORDER BY "#$ordering"
             )
-            WHERE rownum <= $max""".as[JournalRow])
-      }.via(serializer.deserializeFlow)
+            WHERE rownum <= $max""".as[JournalRow]
+        else
+          sql"""
+            SELECT "#$ordering", "#$deleted", "#$persistenceId", "#$sequenceNumber", "#$message", "#$tags"
+            FROM (
+              SELECT * FROM #$theTableName
+              WHERE "#$tags" LIKE $theTag
+              AND "#$ordering" > $theOffset
+              AND "#$ordering" <= $maxOffset
+              AND deleted = false
+              ORDER BY "#$ordering"
+            )
+            WHERE rownum <= $max""".as[JournalRow]
+
+      Source
+        .fromPublisher(db.stream(selectStatement))
+        .via(serializer.deserializeFlow)
+
     } else {
       super.eventsByTag(tag, offset, maxOffset, max)
     }
   }
 }
+
 trait H2ReadJournalDao extends ReadJournalDao {
   val profile: JdbcProfile
 
@@ -140,7 +164,13 @@ trait H2ReadJournalDao extends ReadJournalDao {
   }
 }
 
-class ByteArrayReadJournalDao(val db: Database, val profile: JdbcProfile, val readJournalConfig: ReadJournalConfig, serialization: Serialization)(implicit ec: ExecutionContext, mat: Materializer) extends BaseByteArrayReadJournalDao with OracleReadJournalDao with H2ReadJournalDao {
-  val queries = new ReadJournalQueries(profile, readJournalConfig.journalTableConfiguration)
+class ByteArrayReadJournalDao(
+    val db: Database,
+    val profile: JdbcProfile,
+    val readJournalConfig: ReadJournalConfig,
+    serialization: Serialization)(implicit ec: ExecutionContext, mat: Materializer) extends BaseByteArrayReadJournalDao with OracleReadJournalDao with H2ReadJournalDao {
+
+  val queries = new ReadJournalQueries(profile, readJournalConfig)
   val serializer = new ByteArrayJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator)
+
 }

@@ -17,11 +17,14 @@
 package akka.persistence.jdbc
 package query.dao
 
-import akka.persistence.jdbc.config.JournalTableConfiguration
+import akka.persistence.jdbc.config.{ JournalTableConfiguration, ReadJournalConfig }
 import akka.persistence.jdbc.journal.dao.JournalTables
 import slick.jdbc.JdbcProfile
 
-class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration) extends JournalTables {
+class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJournalConfig) extends JournalTables {
+
+  override val journalTableCfg: JournalTableConfiguration = readJournalConfig.journalTableConfiguration
+
   import profile.api._
 
   def journalRowByPersistenceIds(persistenceIds: Iterable[String]) =
@@ -31,24 +34,31 @@ class ReadJournalQueries(val profile: JdbcProfile, override val journalTableCfg:
     } yield query
 
   private def _allPersistenceIdsDistinct(max: ConstColumn[Long]): Query[Rep[String], String, Seq] =
-    JournalTable.map(_.persistenceId).distinct.take(max)
+    baseTableQuery().map(_.persistenceId).distinct.take(max)
+
+  private def baseTableQuery() =
+    if (readJournalConfig.includeDelete) JournalTable
+    else JournalTable.filter(_.deleted === false)
+
   val allPersistenceIdsDistinct = Compiled(_allPersistenceIdsDistinct _)
 
   private def _messagesQuery(persistenceId: Rep[String], fromSequenceNr: Rep[Long], toSequenceNr: Rep[Long], max: ConstColumn[Long]) =
-    JournalTable
+    baseTableQuery()
       .filter(_.persistenceId === persistenceId)
       .filter(_.sequenceNumber >= fromSequenceNr)
       .filter(_.sequenceNumber <= toSequenceNr)
       .sortBy(_.sequenceNumber.asc)
       .take(max)
+
   val messagesQuery = Compiled(_messagesQuery _)
 
   private def _eventsByTag(tag: Rep[String], offset: ConstColumn[Long], maxOffset: ConstColumn[Long], max: ConstColumn[Long]) =
-    JournalTable
+    baseTableQuery()
       .filter(_.tags like tag)
       .sortBy(_.ordering.asc)
       .filter(row => row.ordering > offset && row.ordering <= maxOffset)
       .take(max)
+
   val eventsByTag = Compiled(_eventsByTag _)
 
   def writeJournalRows(xs: Seq[JournalRow]) = JournalTable ++= xs.sortBy(_.sequenceNumber)

@@ -30,7 +30,7 @@ import slick.jdbc.GetResult
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
 trait BaseByteArrayReadJournalDao extends ReadJournalDao {
@@ -83,8 +83,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] = {
     if (isOracleDriver(profile)) {
       Source.fromPublisher(
-        db.stream(sql"""SELECT DISTINCT "#$persistenceId" FROM #$theTableName WHERE rownum <= $max""".as[String])
-      )
+        db.stream(sql"""SELECT DISTINCT "#$persistenceId" FROM #$theTableName WHERE rownum <= $max""".as[String]))
     } else {
       super.allPersistenceIdsSource(max)
     }
@@ -108,8 +107,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
               AND "#$ordering" <= $maxOffset
               ORDER BY "#$ordering"
             )
-            WHERE rownum <= $max""".as[JournalRow]
-        )
+            WHERE rownum <= $max""".as[JournalRow])
       }.via(serializer.deserializeFlow)
     } else {
       super.eventsByTag(tag, offset, maxOffset, max)

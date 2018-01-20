@@ -17,8 +17,8 @@
 package akka.persistence.jdbc.configuration
 
 import akka.persistence.jdbc.config._
-import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest.{FlatSpec, Matchers}
+import com.typesafe.config.{ Config, ConfigFactory }
+import org.scalatest.{ FlatSpec, Matchers }
 
 import scala.concurrent.duration._
 
@@ -214,8 +214,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |    }
       |  }
       |}
-    """.stripMargin
-  )
+    """.stripMargin)
 
   "empty config" should "parse JournalConfig" in {
     val cfg = new JournalConfig(ConfigFactory.empty)

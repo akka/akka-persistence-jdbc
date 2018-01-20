@@ -16,11 +16,11 @@
 
 package akka.persistence.jdbc.serialization
 
-import akka.actor.{ActorRef, Props}
+import akka.actor.{ ActorRef, Props }
 import akka.event.LoggingReceive
 import akka.persistence.jdbc.SharedActorSystemTestSpec
-import akka.persistence.jdbc.util.Schema.{H2, MySQL, Oracle, Postgres, SchemaType}
-import akka.persistence.{PersistentActor, RecoveryCompleted}
+import akka.persistence.jdbc.util.Schema.{ H2, MySQL, Oracle, Postgres, SchemaType }
+import akka.persistence.{ PersistentActor, RecoveryCompleted }
 import akka.testkit.TestProbe
 
 import scala.concurrent.duration._

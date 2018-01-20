@@ -5,6 +5,7 @@ import de.heikoseeberger.sbtheader.license.Apache2_0
 import sbt.Keys._
 import sbt._
 
+import SbtScalariform.autoImport._
 import scalariform.formatter.preferences.FormattingPreferences
 
 object ProjectAutoPlugin extends AutoPlugin {
@@ -17,7 +18,7 @@ object ProjectAutoPlugin extends AutoPlugin {
     FormattingPreferences()
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 100)
-      .setPreference(DoubleIndentClassDeclaration, true)
+      .setPreference(DoubleIndentConstructorArguments, true)
   }
 
   override val requires = com.typesafe.sbt.SbtScalariform
@@ -27,7 +28,7 @@ object ProjectAutoPlugin extends AutoPlugin {
   object autoImport {
   }
 
-  override val projectSettings: Seq[Setting[_]] = SbtScalariform.scalariformSettings ++ Seq(
+  override val projectSettings: Seq[Setting[_]] = SbtScalariform.projectSettings ++ Seq(
     name := "akka-persistence-jdbc",
     organization := "com.github.dnvriend",
     organizationName := "Dennis Vriend",
@@ -41,6 +42,8 @@ object ProjectAutoPlugin extends AutoPlugin {
     crossScalaVersions := Seq("2.11.12", "2.12.4"),
 
     fork in Test := true,
+
+    scalariformAutoformat := true,
 
     logBuffered in Test := false,
 

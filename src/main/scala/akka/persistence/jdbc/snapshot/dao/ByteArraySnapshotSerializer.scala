@@ -39,8 +39,7 @@ class ByteArraySnapshotSerializer(serialization: Serialization) extends Snapshot
         val snapshotMetadata = SnapshotMetadata(
           snapshotRow.persistenceId,
           snapshotRow.sequenceNumber,
-          snapshotRow.created
-        )
+          snapshotRow.created)
         (snapshotMetadata, snapshot.data)
       })
   }

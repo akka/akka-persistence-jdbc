@@ -17,10 +17,10 @@
 package akka.persistence.jdbc.query
 
 import akka.Done
-import akka.persistence.query.{EventEnvelope, NoOffset, Sequence}
+import akka.persistence.query.{ EventEnvelope, NoOffset, Sequence }
 import akka.pattern.ask
-import akka.persistence.jdbc.query.EventAdapterTest.{Event, EventRestored, TaggedAsyncEvent, TaggedEvent}
-import com.typesafe.config.{ConfigValue, ConfigValueFactory}
+import akka.persistence.jdbc.query.EventAdapterTest.{ Event, EventRestored, TaggedAsyncEvent, TaggedEvent }
+import com.typesafe.config.{ ConfigValue, ConfigValueFactory }
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -33,8 +33,7 @@ object EventsByTagTest {
 
   val configOverrides: Map[String, ConfigValue] = Map(
     "jdbc-read-journal.max-buffer-size" -> ConfigValueFactory.fromAnyRef(maxBufferSize.toString),
-    "jdbc-read-journal.refresh-interval" -> ConfigValueFactory.fromAnyRef(refreshInterval.toString())
-  )
+    "jdbc-read-journal.refresh-interval" -> ConfigValueFactory.fromAnyRef(refreshInterval.toString()))
 }
 
 abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, configOverrides) {

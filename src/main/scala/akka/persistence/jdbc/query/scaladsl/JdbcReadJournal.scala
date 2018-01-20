@@ -20,15 +20,15 @@ package scaladsl
 import akka.NotUsed
 import akka.actor.ExtendedActorSystem
 import akka.persistence.jdbc.config.ReadJournalConfig
-import akka.persistence.jdbc.query.JournalSequenceActor.{GetMaxOrderingId, MaxOrderingId}
+import akka.persistence.jdbc.query.JournalSequenceActor.{ GetMaxOrderingId, MaxOrderingId }
 import akka.persistence.jdbc.query.dao.ReadJournalDao
-import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
+import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
 import akka.persistence.query.scaladsl._
-import akka.persistence.query.{EventEnvelope, Offset, Sequence}
-import akka.persistence.{Persistence, PersistentRepr}
-import akka.serialization.{Serialization, SerializationExtension}
-import akka.stream.scaladsl.{Sink, Source}
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.persistence.query.{ EventEnvelope, Offset, Sequence }
+import akka.persistence.{ Persistence, PersistentRepr }
+import akka.serialization.{ Serialization, SerializationExtension }
+import akka.stream.scaladsl.{ Sink, Source }
+import akka.stream.{ ActorMaterializer, Materializer }
 import akka.util.Timeout
 import com.typesafe.config.Config
 import slick.jdbc.JdbcBackend._
@@ -36,8 +36,8 @@ import slick.jdbc.JdbcProfile
 
 import scala.collection.immutable._
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
 object JdbcReadJournal {
   final val Identifier = "jdbc-read-journal"
@@ -58,12 +58,12 @@ object JdbcReadJournal {
 }
 
 class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) extends ReadJournal
-    with CurrentPersistenceIdsQuery
-    with PersistenceIdsQuery
-    with CurrentEventsByPersistenceIdQuery
-    with EventsByPersistenceIdQuery
-    with CurrentEventsByTagQuery
-    with EventsByTagQuery {
+  with CurrentPersistenceIdsQuery
+  with PersistenceIdsQuery
+  with CurrentEventsByPersistenceIdQuery
+  with EventsByPersistenceIdQuery
+  with CurrentEventsByTagQuery
+  with EventsByTagQuery {
 
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val mat: Materializer = ActorMaterializer()
@@ -83,8 +83,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
       (classOf[ReadJournalConfig], readJournalConfig),
       (classOf[Serialization], SerializationExtension(system)),
       (classOf[ExecutionContext], ec),
-      (classOf[Materializer], mat)
-    )
+      (classOf[Materializer], mat))
     system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[ReadJournalDao](fqcn, args) match {
       case Success(dao)   => dao
       case Failure(cause) => throw cause
@@ -94,8 +93,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   // Started lazily to prevent the actor for querying the db if no eventsByTag queries are used
   private[query] lazy val journalSequenceActor = system.actorOf(
     JournalSequenceActor.props(readJournalDao, readJournalConfig.journalSequenceRetrievalConfiguration),
-    "akka-persistence-jdbc-journal-sequence-actor"
-  )
+    "akka-persistence-jdbc-journal-sequence-actor")
   private val delaySource =
     Source.tick(readJournalConfig.refreshInterval, 0.seconds, 0).take(1)
 
@@ -151,16 +149,16 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
     }.mapConcat(identity)
 
   /**
-    * Same type of query as [[EventsByTagQuery#eventsByTag]] but the event stream
-    * is completed immediately when it reaches the end of the "result set". Events that are
-    * stored after the query is completed are not included in the event stream.
-    *
-    * akka-persistence-jdbc has implemented this feature by using a LIKE %tag% query on the tags column.
-    * A consequence of this is that tag names must be chosen wisely: for example when querying the tag `User`,
-    * events with the tag `UserEmail` will also be returned (since User is a substring of UserEmail).
-    *
-    * The returned event stream is ordered by `offset`.
-    */
+   * Same type of query as [[EventsByTagQuery#eventsByTag]] but the event stream
+   * is completed immediately when it reaches the end of the "result set". Events that are
+   * stored after the query is completed are not included in the event stream.
+   *
+   * akka-persistence-jdbc has implemented this feature by using a LIKE %tag% query on the tags column.
+   * A consequence of this is that tag names must be chosen wisely: for example when querying the tag `User`,
+   * events with the tag `UserEmail` will also be returned (since User is a substring of UserEmail).
+   *
+   * The returned event stream is ordered by `offset`.
+   */
   override def currentEventsByTag(tag: String, offset: Offset): Source[EventEnvelope, NotUsed] =
     currentEventsByTag(tag, offset.value)
 
@@ -240,26 +238,26 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
       }
 
   /**
-    * Query events that have a specific tag.
-    *
-    * akka-persistence-jdbc has implemented this feature by using a LIKE %tag% query on the tags column.
-    * A consequence of this is that tag names must be chosen wisely: for example when querying the tag `User`,
-    * events with the tag `UserEmail` will also be returned (since User is a substring of UserEmail).
-    *
-    * The consumer can keep track of its current position in the event stream by storing the
-    * `offset` and restart the query from a given `offset` after a crash/restart.
-    *
-    * For akka-persistence-jdbc the `offset` corresponds to the `ordering` column in the Journal table.
-    * The `ordering` is a sequential id number that uniquely identifies the position of each event within
-    * the event stream.
-    *
-    * The returned event stream is ordered by `offset`.
-    *
-    * The stream is not completed when it reaches the end of the currently stored events,
-    * but it continues to push new events when new events are persisted.
-    * Corresponding query that is completed when it reaches the end of the currently
-    * stored events is provided by [[CurrentEventsByTagQuery#currentEventsByTag]].
-    */
+   * Query events that have a specific tag.
+   *
+   * akka-persistence-jdbc has implemented this feature by using a LIKE %tag% query on the tags column.
+   * A consequence of this is that tag names must be chosen wisely: for example when querying the tag `User`,
+   * events with the tag `UserEmail` will also be returned (since User is a substring of UserEmail).
+   *
+   * The consumer can keep track of its current position in the event stream by storing the
+   * `offset` and restart the query from a given `offset` after a crash/restart.
+   *
+   * For akka-persistence-jdbc the `offset` corresponds to the `ordering` column in the Journal table.
+   * The `ordering` is a sequential id number that uniquely identifies the position of each event within
+   * the event stream.
+   *
+   * The returned event stream is ordered by `offset`.
+   *
+   * The stream is not completed when it reaches the end of the currently stored events,
+   * but it continues to push new events when new events are persisted.
+   * Corresponding query that is completed when it reaches the end of the currently
+   * stored events is provided by [[CurrentEventsByTagQuery#currentEventsByTag]].
+   */
   override def eventsByTag(tag: String, offset: Offset): Source[EventEnvelope, NotUsed] =
     eventsByTag(tag, offset.value)
 

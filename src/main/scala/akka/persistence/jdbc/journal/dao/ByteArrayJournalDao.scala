@@ -20,15 +20,15 @@ package journal.dao
 import akka.NotUsed
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
-import akka.persistence.{AtomicWrite, PersistentRepr}
+import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.serialization.Serialization
-import akka.stream.scaladsl.{Keep, Sink, Source}
-import akka.stream.{Materializer, OverflowStrategy, QueueOfferResult}
+import akka.stream.scaladsl.{ Keep, Sink, Source }
+import akka.stream.{ Materializer, OverflowStrategy, QueueOfferResult }
 import slick.jdbc.JdbcBackend._
 import slick.jdbc.JdbcProfile
 
 import scala.collection.immutable._
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{ ExecutionContext, Future, Promise }
 import scala.util.Try
 
 /**
@@ -44,7 +44,7 @@ trait BaseByteArrayJournalDao extends JournalDao {
   implicit val ec: ExecutionContext
   implicit val mat: Materializer
 
-  import journalConfig.daoConfig.{batchSize, bufferSize, logicalDelete, parallelism}
+  import journalConfig.daoConfig.{ batchSize, bufferSize, logicalDelete, parallelism }
   import profile.api._
 
   private val writeQueue = Source.queue[(Promise[Unit], Seq[JournalRow])](bufferSize, OverflowStrategy.dropNew)

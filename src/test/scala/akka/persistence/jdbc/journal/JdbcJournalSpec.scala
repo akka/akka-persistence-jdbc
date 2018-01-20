@@ -19,20 +19,20 @@ package akka.persistence.jdbc.journal
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ClasspathResources, DropCreate, SlickDatabase}
+import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDatabase }
 import akka.persistence.journal.JournalSpec
-import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
+import com.typesafe.config.{ Config, ConfigFactory, ConfigValueFactory }
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 
 import scala.concurrent.duration._
 
 abstract class JdbcJournalSpec(config: Config, schemaType: SchemaType) extends JournalSpec(config)
-    with BeforeAndAfterAll
-    with BeforeAndAfterEach
-    with ScalaFutures
-    with ClasspathResources
-    with DropCreate {
+  with BeforeAndAfterAll
+  with BeforeAndAfterEach
+  with ScalaFutures
+  with ClasspathResources
+  with DropCreate {
 
   override protected def supportsRejectingNonSerializableObjects: CapabilityFlag = true
 

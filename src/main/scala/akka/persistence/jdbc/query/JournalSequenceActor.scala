@@ -1,7 +1,7 @@
 package akka.persistence.jdbc
 package query
 
-import akka.actor.{Actor, ActorLogging, Props, Status, Timers}
+import akka.actor.{ Actor, ActorLogging, Props, Status, Timers }
 import akka.persistence.jdbc.query.dao.ReadJournalDao
 import akka.pattern.pipe
 import akka.persistence.jdbc.config.JournalSequenceRetrievalConfig
@@ -29,9 +29,9 @@ object JournalSequenceActor {
   private type OrderingId = Long
 
   /**
-    * Efficient representation of missing elements using NumericRanges.
-    * It can be seen as a collection of OrderingIds
-    */
+   * Efficient representation of missing elements using NumericRanges.
+   * It can be seen as a collection of OrderingIds
+   */
   private case class MissingElements(elements: Seq[NumericRange[OrderingId]]) {
     def addRange(from: OrderingId, until: OrderingId): MissingElements = {
       val newRange = from.until(until)
@@ -53,7 +53,7 @@ object JournalSequenceActor {
 class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequenceRetrievalConfig)(implicit materializer: Materializer) extends Actor with ActorLogging with Timers {
   import JournalSequenceActor._
   import context.dispatcher
-  import config.{maxTries, maxBackoffQueryDelay, queryDelay, batchSize}
+  import config.{ maxTries, maxBackoffQueryDelay, queryDelay, batchSize }
 
   override def receive: Receive = receive(0L, Map.empty, 0)
 

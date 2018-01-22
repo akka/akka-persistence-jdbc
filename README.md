@@ -18,7 +18,7 @@ Add the following to your `build.sbt`:
 resolvers += Resolver.jcenterRepo
 
 // akka 2.5.x
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.1.0"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.2.0"
 
 // akka 2.4.x
 libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.8.0"
@@ -277,6 +277,15 @@ sys.addShutdownHook(system.terminate())
 ```
 
 ## Changelog  
+
+### 3.2.0 (2018-01-22)
+For use with Akka 2.5.x only, please use the 2.8.0 release for Akka 2.4 
+
+Changes since v3.1.0
+  - Added possibility for physical deletion of marked journal messages.
+    To enable this the `jdbc-journal.logicalDelete` setting should be set to `true`.
+  - Akka 2.5.8 -> 2.5.9
+  - Merged #139. Thanks to [Dmitriy Zakomirnyi][dmi3zkm].
 
 ### 3.1.0 (2017-12-20)
 For use with Akka 2.5.x only, please use the 2.8.0 release for Akka 2.4 
@@ -805,6 +814,7 @@ Changes since v2.4.18.2
 [wellingr]: http://github.com/wellingr
 [sarahgerweck]: http://github.com/sarahgerweck
 [acchaulk]: https://github.com/acchaulk
+[dmi3zkm]: https://github.com/dmi3zkm
 
 [scalikejdbc]: http://scalikejdbc.org/
 [slick]: http://slick.typesafe.com/

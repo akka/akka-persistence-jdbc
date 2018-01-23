@@ -283,7 +283,7 @@ For use with Akka 2.5.x only, please use the 2.8.0 release for Akka 2.4
 
 Changes since v3.1.0
   - Added possibility for physical deletion of marked journal messages.
-    To enable this the `jdbc-journal.logicalDelete` setting should be set to `true`.
+    To physically delete events `jdbc-journal.logicalDelete` setting should be set to `false`.
   - Akka 2.5.8 -> 2.5.9
   - Merged #139. Thanks to [Dmitriy Zakomirnyi][dmi3zkm].
 

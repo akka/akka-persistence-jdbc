@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 #!/bin/bash
-export VM_HOST="${VM_HOST:-boot2docker}"
+export VM_HOST="${VM_HOST:-localhost}"
 export CODACY_PROJECT_TOKEN=$JDBC_CODACY_TOKEN
 
 # Wait for a certain service to become available

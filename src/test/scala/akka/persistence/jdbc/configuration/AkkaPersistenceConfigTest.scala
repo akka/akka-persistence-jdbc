@@ -52,7 +52,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |  slick {
       |    profile = "slick.jdbc.PostgresProfile$"
       |    db {
-      |      host = "boot2docker"
+      |      host = "localhost"
       |      host = ${?POSTGRES_HOST}
       |      port = "5432"
       |      port = ${?POSTGRES_PORT}
@@ -110,7 +110,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |  slick {
       |    profile = "slick.jdbc.MySQLProfile$"
       |    db {
-      |      host = "boot2docker"
+      |      host = "localhost"
       |      host = ${?POSTGRES_HOST}
       |      port = "5432"
       |      port = ${?POSTGRES_PORT}
@@ -179,7 +179,7 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
       |  slick {
       |    profile = "slick.jdbc.OracleProfile$"
       |    db {
-      |      host = "boot2docker"
+      |      host = "localhost"
       |      host = ${?POSTGRES_HOST}
       |      port = "5432"
       |      port = ${?POSTGRES_PORT}

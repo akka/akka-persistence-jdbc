@@ -65,8 +65,8 @@ object ProjectAutoPlugin extends AutoPlugin {
     testOptions in Test += Tests.Argument("-oDF"),
 
     headers := headers.value ++ Map(
-      "scala" -> Apache2_0("2017", "Dennis Vriend"),
-      "conf" -> Apache2_0("2017", "Dennis Vriend", "#")
+      "scala" -> Apache2_0("2018", "Dennis Vriend"),
+      "conf" -> Apache2_0("2018", "Dennis Vriend", "#")
     ),
 
     resolvers += Resolver.typesafeRepo("releases"),

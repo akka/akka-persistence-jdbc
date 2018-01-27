@@ -18,9 +18,9 @@ package akka.persistence.jdbc.snapshot
 
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ClasspathResources, DropCreate, SlickDatabase}
+import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDatabase }
 import akka.persistence.snapshot.SnapshotStoreSpec
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 

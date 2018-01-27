@@ -53,8 +53,7 @@ trait SnapshotTables {
 
     private val columnType = MappedColumnType.base[Array[Byte], Blob](
       bytes => new SerialBlob(bytes),
-      blob => blob.getBinaryStream.toArray
-    )
+      blob => blob.getBinaryStream.toArray)
     override val snapshot: Rep[Array[Byte]] = column[Array[Byte]](snapshotTableCfg.columnNames.snapshot)(columnType)
   }
 

@@ -18,7 +18,7 @@ package akka.persistence.jdbc
 
 import akka.persistence.jdbc.config._
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
 
 abstract class TablesTestSpec extends FlatSpec with Matchers {
 
@@ -226,8 +226,7 @@ abstract class TablesTestSpec extends FlatSpec with Matchers {
       |    }
       |  }
       |}
-    """.stripMargin
-  )
+    """.stripMargin)
 
   val journalConfig = new JournalConfig(config.getConfig("jdbc-journal"))
   val snapshotConfig = new SnapshotConfig(config.getConfig("jdbc-snapshot-store"))

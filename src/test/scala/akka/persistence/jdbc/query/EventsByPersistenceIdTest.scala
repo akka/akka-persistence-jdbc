@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.query.{EventEnvelope, Sequence}
+import akka.persistence.query.{ EventEnvelope, Sequence }
 
 import scala.concurrent.duration._
 

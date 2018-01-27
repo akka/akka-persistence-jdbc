@@ -20,7 +20,7 @@ import akka.persistence.jdbc.util.TrySeq
 import akka.persistence.jdbc.SimpleSpec
 
 import scala.collection.immutable._
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 class TrySeqTest extends SimpleSpec {
 

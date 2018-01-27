@@ -16,25 +16,25 @@
 
 package akka.persistence.jdbc.query
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.event.LoggingReceive
 import akka.persistence.PersistentActor
 import akka.persistence.jdbc.SingleActorSystemPerTestSpec
-import akka.persistence.jdbc.query.EventAdapterTest.{Event, TaggedAsyncEvent, TaggedEvent}
-import akka.persistence.jdbc.query.javadsl.{JdbcReadJournal => JavaJdbcReadJournal}
+import akka.persistence.jdbc.query.EventAdapterTest.{ Event, TaggedAsyncEvent, TaggedEvent }
+import akka.persistence.jdbc.query.javadsl.{ JdbcReadJournal => JavaJdbcReadJournal }
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 import akka.persistence.journal.Tagged
-import akka.persistence.query.{EventEnvelope, Offset, PersistenceQuery}
+import akka.persistence.query.{ EventEnvelope, Offset, PersistenceQuery }
 import akka.stream.scaladsl.Sink
 import akka.stream.testkit.TestSubscriber
-import akka.stream.testkit.javadsl.{TestSink => JavaSink}
+import akka.stream.testkit.javadsl.{ TestSink => JavaSink }
 import akka.stream.testkit.scaladsl.TestSink
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.{ ActorMaterializer, Materializer }
 import com.typesafe.config.ConfigValue
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.Future
-import scala.concurrent.duration.{FiniteDuration, _}
+import scala.concurrent.duration.{ FiniteDuration, _ }
 
 trait ReadJournalOperations {
   def withCurrentPersistenceIds(within: FiniteDuration = 60.second)(f: TestSubscriber.Probe[String] => Unit): Unit
@@ -212,8 +212,7 @@ trait PostgresCleaner extends QueryTestSpec {
   val actionsClearPostgres =
     DBIO.seq(
       sqlu"""TRUNCATE journal""",
-      sqlu"""TRUNCATE snapshot"""
-    ).transactionally
+      sqlu"""TRUNCATE snapshot""").transactionally
 
   def clearPostgres(): Unit =
     withDatabase(_.run(actionsClearPostgres).toTry) should be a 'success
@@ -235,8 +234,7 @@ trait MysqlCleaner extends QueryTestSpec {
   val actionsClearMySQL =
     DBIO.seq(
       sqlu"""TRUNCATE journal""",
-      sqlu"""TRUNCATE snapshot"""
-    ).transactionally
+      sqlu"""TRUNCATE snapshot""").transactionally
 
   def clearMySQL(): Unit =
     withDatabase(_.run(actionsClearMySQL).toTry) should be a 'success
@@ -259,8 +257,7 @@ trait OracleCleaner extends QueryTestSpec {
     DBIO.seq(
       sqlu"""DELETE FROM "journal"""",
       sqlu"""DELETE FROM "snapshot"""",
-      sqlu"""BEGIN "reset_sequence"; END; """
-    ).transactionally
+      sqlu"""BEGIN "reset_sequence"; END; """).transactionally
 
   def clearOracle(): Unit =
     withDatabase(_.run(actionsClearOracle).toTry) should be a 'success
@@ -282,8 +279,7 @@ trait H2Cleaner extends QueryTestSpec {
   val actionsClearH2 =
     DBIO.seq(
       sqlu"""TRUNCATE TABLE journal""",
-      sqlu"""TRUNCATE TABLE snapshot"""
-    ).transactionally
+      sqlu"""TRUNCATE TABLE snapshot""").transactionally
 
   def clearH2(): Unit =
     withDatabase(_.run(actionsClearH2).toTry) should be a 'success

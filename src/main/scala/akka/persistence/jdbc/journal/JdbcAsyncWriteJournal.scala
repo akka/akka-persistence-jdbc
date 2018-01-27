@@ -16,24 +16,24 @@
 
 package akka.persistence.jdbc.journal
 
-import java.util.{HashMap => JHMap, Map => JMap}
+import java.util.{ HashMap => JHMap, Map => JMap }
 
-import akka.actor.{ActorSystem, ExtendedActorSystem}
+import akka.actor.{ ActorSystem, ExtendedActorSystem }
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.journal.JdbcAsyncWriteJournal.WriteFinished
 import akka.persistence.jdbc.journal.dao.JournalDao
-import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
+import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
 import akka.persistence.journal.AsyncWriteJournal
-import akka.persistence.{AtomicWrite, PersistentRepr}
-import akka.serialization.{Serialization, SerializationExtension}
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.persistence.{ AtomicWrite, PersistentRepr }
+import akka.serialization.{ Serialization, SerializationExtension }
+import akka.stream.{ ActorMaterializer, Materializer }
 import com.typesafe.config.Config
 import slick.jdbc.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable._
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success, Try }
 
 object JdbcAsyncWriteJournal {
   private case class WriteFinished(pid: String, f: Future[_])
@@ -56,8 +56,7 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
       (classOf[JournalConfig], journalConfig),
       (classOf[Serialization], SerializationExtension(system)),
       (classOf[ExecutionContext], ec),
-      (classOf[Materializer], mat)
-    )
+      (classOf[Materializer], mat))
     system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[JournalDao](fqcn, args) match {
       case Success(dao)   => dao
       case Failure(cause) => throw cause

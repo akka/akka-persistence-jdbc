@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.query.{EventEnvelope, Sequence}
+import akka.persistence.query.{ EventEnvelope, Sequence }
 
 abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTestSpec(config) {
 

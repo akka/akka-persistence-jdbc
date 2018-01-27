@@ -19,7 +19,7 @@ package akka.persistence.jdbc.serialization
 import akka.NotUsed
 import akka.persistence.jdbc.util.TrySeq
 import akka.persistence.journal.Tagged
-import akka.persistence.{AtomicWrite, PersistentRepr}
+import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.stream.scaladsl.Flow
 import scala.collection.immutable._
 

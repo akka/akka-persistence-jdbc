@@ -34,8 +34,7 @@ class ByteArrayJournalSerializer(serialization: Serialization, separator: String
         persistentRepr.persistenceId,
         persistentRepr.sequenceNr,
         _,
-        encodeTags(tags, separator)
-      ))
+        encodeTags(tags, separator)))
   }
 
   override def deserialize(journalRow: JournalRow): Try[(PersistentRepr, Set[String], Long)] = {

@@ -19,17 +19,17 @@ package akka.persistence.jdbc
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.persistence.jdbc.config.{JournalConfig, ReadJournalConfig}
+import akka.persistence.jdbc.config.{ JournalConfig, ReadJournalConfig }
 import akka.persistence.jdbc.query.javadsl.JdbcReadJournal
-import akka.persistence.jdbc.util.{DropCreate, SlickDatabase, SlickDriver}
+import akka.persistence.jdbc.util.{ DropCreate, SlickDatabase, SlickDriver }
 import akka.serialization.SerializationExtension
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.{ ActorMaterializer, Materializer }
 import akka.util.Timeout
-import com.typesafe.config.{Config, ConfigFactory, ConfigValue}
+import com.typesafe.config.{ Config, ConfigFactory, ConfigValue }
 import org.scalatest.BeforeAndAfterAll
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
 abstract class SharedActorSystemTestSpec(val config: Config) extends SimpleSpec with DropCreate with BeforeAndAfterAll {

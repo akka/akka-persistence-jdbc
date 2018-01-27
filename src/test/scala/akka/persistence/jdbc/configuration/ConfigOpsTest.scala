@@ -32,8 +32,7 @@ class ConfigOpsTest extends SimpleSpec {
         |   hasCar = true
         |   hasGirlfriend = false
         | }
-      """.stripMargin
-    )
+      """.stripMargin)
 
     cfg.as[String]("person.firstName").success.value shouldBe "foo"
     cfg.as[String]("person.lastName").success.value shouldBe "bar"
@@ -61,8 +60,7 @@ class ConfigOpsTest extends SimpleSpec {
         |   hasSpaceship = true
         |   hasGirlfriend = true
         | }
-      """.stripMargin
-    )
+      """.stripMargin)
 
     cfg.as[String]("person.firstName", "john") shouldBe "john"
     cfg.as[String]("person.lastName", "doe") shouldBe "doe"
@@ -78,8 +76,7 @@ class ConfigOpsTest extends SimpleSpec {
         |   age = 25
         |   hasGirlfriend = true
         | }
-      """.stripMargin
-    )
+      """.stripMargin)
 
     cfg.as[String]("person.firstName", "john") shouldBe "john"
     cfg.as[String]("person.lastName", "doe") shouldBe "doe"

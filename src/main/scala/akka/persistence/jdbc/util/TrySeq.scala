@@ -17,7 +17,7 @@
 package akka.persistence.jdbc.util
 
 import scala.collection.immutable._
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 object TrySeq {
   def sequence[A](seq: Seq[Try[A]]): Try[Seq[A]] = {

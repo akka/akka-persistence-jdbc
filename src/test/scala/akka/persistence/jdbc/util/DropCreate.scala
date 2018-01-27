@@ -18,8 +18,8 @@ package akka.persistence.jdbc.util
 
 import java.sql.Statement
 
-import akka.persistence.jdbc.util.Schema.{Oracle, SchemaType}
-import slick.jdbc.JdbcBackend.{Database, Session}
+import akka.persistence.jdbc.util.Schema.{ Oracle, SchemaType }
+import slick.jdbc.JdbcBackend.{ Database, Session }
 
 object Schema {
 
@@ -41,8 +41,7 @@ trait DropCreate extends ClasspathResources {
     """DROP TABLE "deleted_to" CASCADE CONSTRAINT""",
     """DROP TRIGGER "ordering_seq_trigger"""",
     """DROP PROCEDURE "reset_sequence"""",
-    """DROP SEQUENCE "ordering_seq""""
-  )
+    """DROP SEQUENCE "ordering_seq"""")
 
   def dropOracle(): Unit = withStatement { stmt =>
     listOfOracleDropQueries.foreach { ddl =>

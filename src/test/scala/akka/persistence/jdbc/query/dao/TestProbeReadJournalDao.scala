@@ -2,7 +2,7 @@ package akka.persistence.jdbc.query.dao
 
 import akka.NotUsed
 import akka.persistence.jdbc.query.dao.TestProbeReadJournalDao.JournalSequence
-import akka.persistence.{PersistentRepr, jdbc}
+import akka.persistence.{ PersistentRepr, jdbc }
 import akka.stream.scaladsl.Source
 import akka.testkit.TestProbe
 import akka.util.Timeout

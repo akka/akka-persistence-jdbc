@@ -19,9 +19,9 @@ package akka.persistence.jdbc.util
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.duration.{ Duration, FiniteDuration }
 import scala.language.implicitConversions
 import scala.util.Try
 

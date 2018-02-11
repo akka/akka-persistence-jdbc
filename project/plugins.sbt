@@ -15,14 +15,14 @@
  */
 
 // to deploy to bintray
-addSbtPlugin("me.lessis" % "bintray-sbt" % "0.3.0")
+addSbtPlugin("org.foundweekends" % "sbt-bintray" % "0.5.3")
 
 // to format scala source code
 addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.8.2")
 
 // enable updating file headers eg. for copyright
-addSbtPlugin("de.heikoseeberger" % "sbt-header" % "1.8.0")
+addSbtPlugin("de.heikoseeberger" % "sbt-header" % "4.1.0")
 
 // enable release process
 // https://github.com/sbt/sbt-release
-addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.6")
+addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.7")

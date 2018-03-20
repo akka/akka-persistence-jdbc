@@ -124,5 +124,6 @@ class ReadJournalConfig(config: Config) {
   val pluginConfig = new ReadJournalPluginConfig(config)
   val refreshInterval: FiniteDuration = config.asFiniteDuration("refresh-interval", 1.second)
   val maxBufferSize: Int = config.as[String]("max-buffer-size", "500").toInt
-  override def toString: String = s"ReadJournalConfig($slickConfiguration,$journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize)"
+  val addShutdownHook: Boolean = config.as[Boolean]("add-shutdown-hook", true)
+  override def toString: String = s"ReadJournalConfig($slickConfiguration,$journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook)"
 }

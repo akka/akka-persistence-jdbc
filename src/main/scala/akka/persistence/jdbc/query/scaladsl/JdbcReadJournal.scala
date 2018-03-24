@@ -57,7 +57,7 @@ object JdbcReadJournal {
   private case object Stop extends FlowControl
 }
 
-class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) extends ReadJournal
+class JdbcReadJournal(config: Config, configPath: String)(implicit val system: ExtendedActorSystem) extends ReadJournal
   with CurrentPersistenceIdsQuery
   with PersistenceIdsQuery
   with CurrentEventsByPersistenceIdQuery
@@ -94,7 +94,7 @@ class JdbcReadJournal(config: Config)(implicit val system: ExtendedActorSystem) 
   // Started lazily to prevent the actor for querying the db if no eventsByTag queries are used
   private[query] lazy val journalSequenceActor = system.actorOf(
     JournalSequenceActor.props(readJournalDao, readJournalConfig.journalSequenceRetrievalConfiguration),
-    "akka-persistence-jdbc-journal-sequence-actor")
+    s"$configPath.akka-persistence-jdbc-journal-sequence-actor")
   private val delaySource =
     Source.tick(readJournalConfig.refreshInterval, 0.seconds, 0).take(1)
 

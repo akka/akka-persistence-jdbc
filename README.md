@@ -26,10 +26,9 @@ libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.8.0
 
 ## Release notes
 
-Latest release notes can be found [here](https://github.com/dnvriend/akka-persistence-jdbc/releases/latest).
+The release notes can be found [here](https://github.com/dnvriend/akka-persistence-jdbc/releases).
 
-For previous release notes, please visit [Releases Page](https://github.com/dnvriend/akka-persistence-jdbc/releases) and 
-[Version History Page (wiki, prior to v3.2.0)](https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
+For change log prior to v3.2.0, visit [Version History Page (wiki)](https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
 
 ## Contribution policy
 

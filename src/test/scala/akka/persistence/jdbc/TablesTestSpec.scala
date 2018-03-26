@@ -91,7 +91,7 @@ abstract class TablesTestSpec extends FlatSpec with Matchers {
       |      keepAliveConnection = on // ensures that the database does not get dropped while we are using it
       |
       |      numThreads = 4 // number of cores
-      |      maxConnections = 10 // 2 * numThreads + 1 (if running on an SSD)
+      |      maxConnections = 4  // same as numThreads
       |      minConnections = 4  // same as numThreads
       |    }
       |  }
@@ -151,7 +151,7 @@ abstract class TablesTestSpec extends FlatSpec with Matchers {
       |      keepAliveConnection = on // ensures that the database does not get dropped while we are using it
       |
       |      numThreads = 4 // number of cores
-      |      maxConnections = 10 // 2 * numThreads + 1 (if running on an SSD)
+      |      maxConnections = 4  // same as numThreads
       |      minConnections = 4  // same as numThreads
       |    }
       |  }
@@ -221,7 +221,7 @@ abstract class TablesTestSpec extends FlatSpec with Matchers {
       |      keepAliveConnection = on // ensures that the database does not get dropped while we are using it
       |
       |      numThreads = 4 // number of cores
-      |      maxConnections = 10 // 2 * numThreads + 1 (if running on an SSD)
+      |      maxConnections = 4  // same as numThreads
       |      minConnections = 4  // same as numThreads
       |    }
       |  }

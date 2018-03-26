@@ -283,60 +283,10 @@ It is advisable to register a shutdown hook to be run when the VM exits that ter
 sys.addShutdownHook(system.terminate())
 ```
 
-
-[aenevala]: https://github.com/aenevala
-[dispalt]: https://github.com/dispalt
-[monktastic]: https://github.com/monktastic
-[fcristovao]: https://github.com/fcristovao
-[ellawala]: https://github.com/charithe
-[turner]: https://github.com/wwwiiilll
-[kouznetsov]: https://github.com/prettynatty
-[boldyrev]: https://github.com/bpg
-[roman]: https://github.com/romusz
-[vila]: https://github.com/miguel-vila
-[mwkohout]: https://github.com/mwkohout
-[krasser]: https://github.com/krasserm
-[shah]: https://github.com/gopalsaob
-[rockjam]: https://github.com/rockjam
-[jtysper]: https://github.com/jtysper
-[jroper]: https://github.com/jroper
-[skisel]: https://github.com/skisel
-[joseblas]: https://github.com/joseblas
-[timothyklim]: https://github.com/TimothyKlim
-[jiminhsieh]: http://github.com/jiminhsieh
-[renatocaval]: http://github.com/renatocaval
-[frederic-gendebien]: http://github.com/frederic-gendebien
-[sullis]: http://github.com/sullis
-[wellingr]: http://github.com/wellingr
-[sarahgerweck]: http://github.com/sarahgerweck
-[acchaulk]: https://github.com/acchaulk
-[dmi3zkm]: https://github.com/dmi3zkm
-
-[scalikejdbc]: http://scalikejdbc.org/
-[slick]: http://slick.typesafe.com/
+[slick]: http://slick.lightbend.com/
 [slick-jndi]: http://slick.typesafe.com/doc/3.1.1/database.html#using-a-jndi-name
-[slick-ex]: http://slick.typesafe.com/doc/3.1.1/extensions.html
-[slick-ex-lic]: http://slick.typesafe.com/news/2016/02/01/slick-extensions-licensing-change.html
-
 [apache]: http://www.apache.org/licenses/LICENSE-2.0
 [w3c-cond]: http://www.w3.org/Consortium/cepc/
 [w3c-proc]: http://www.w3.org/Consortium/pwe/#Procedures
-[lightbend]: http://www.lightbend.com/
-
-[postgres]: http://www.postgresql.org/
-[ap-testkit]: https://github.com/krasserm/akka-persistence-testkit
 [ds]: http://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html
-
-[ser]: http://doc.akka.io/docs/akka/current/scala/serialization.html
 [event-adapter]: http://doc.akka.io/docs/akka/current/scala/persistence.html#event-adapters-scala
-
-[inmemory]: https://github.com/dnvriend/akka-persistence-inmemory
-[postgres-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/postgres-application.conf
-[mysql-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/mysql-application.conf
-[h2-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/h2-application.conf
-[oracle-application.conf]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/oracle-application.conf
-
-[postgres-schema]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/schema/postgres/postgres-schema.sql
-[mysql-schema]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/schema/mysql/mysql-schema.sql
-[h2-schema]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/schema/h2/h2-schema.sql
-[oracle-schema]: https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/schema/oracle/oracle-schema.sql

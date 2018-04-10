@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS snapshot (
   sequence_number BIGINT NOT NULL,
   created BIGINT NOT NULL,
   snapshot BLOB DEFAULT NULL,
-  snasphot_data BLOB NOT NULL,
+  snapshot_data BLOB NOT NULL,
   ser_id INTEGER NOT NULL,
   ser_manifest VARCHAR(255) NOT NULL,
   PRIMARY KEY (persistence_id, sequence_number)

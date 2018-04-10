@@ -8,11 +8,11 @@ CREATE TABLE "journal" (
   "sequence_number" NUMERIC NOT NULL,
   "tags" VARCHAR(255) DEFAULT NULL,
   "message" BLOB DEFAULT NULL,
-  "event" BLOB NOT NULL,
-  "event_manifest" VARCHAR(255) NOT NULL,
+  "event" BLOB,
+  "event_manifest" VARCHAR(255),
   "ser_id" INTEGER NOT NULL,
-  "ser_manifest" VARCHAR(255) NOT NULL,
-  "writer_uuid" VARCHAR(36) NOT NULL,
+  "ser_manifest" VARCHAR(255),
+  "writer_uuid" VARCHAR(36),
   PRIMARY KEY("persistence_id", "sequence_number")
 )
 /
@@ -44,9 +44,9 @@ CREATE TABLE "snapshot" (
   "sequence_number" NUMERIC NOT NULL,
   "created" NUMERIC NOT NULL,
   "snapshot" BLOB DEFAULT NULL,
-  "snapshot_data" BLOB NOT NULL,
+  "snapshot_data" BLOB,
   "ser_id" INTEGER NOT NULL,
-  "ser_manifest" VARCHAR(255) NOT NULL,
+  "ser_manifest" VARCHAR(255),
   PRIMARY KEY ("persistence_id", "sequence_number")
 )
 /

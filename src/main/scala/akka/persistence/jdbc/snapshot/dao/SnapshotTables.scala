@@ -43,7 +43,7 @@ trait SnapshotTables {
     val sequenceNumber: Rep[Long] = column[Long](snapshotTableCfg.columnNames.sequenceNumber)
     val created: Rep[Long] = column[Long](snapshotTableCfg.columnNames.created)
     val snapshot: Rep[Array[Byte]] = column[Array[Byte]](snapshotTableCfg.columnNames.snapshot)
-    val pk = primaryKey("snapshot_pk", (persistenceId, sequenceNumber))
+    val pk = primaryKey(s"${tableName}_pk", (persistenceId, sequenceNumber))
   }
 
   case class OracleSnapshot(_tableTag: Tag) extends Snapshot(_tableTag) {

@@ -27,14 +27,32 @@ trait JournalTables {
   def journalTableCfg: JournalTableConfiguration
 
   class Journal(_tableTag: Tag) extends Table[JournalRow](_tableTag, _schemaName = journalTableCfg.schemaName, _tableName = journalTableCfg.tableName) {
-    def * = (ordering, deleted, persistenceId, sequenceNumber, message, tags) <> (JournalRow.tupled, JournalRow.unapply)
+    def * = if (journalTableCfg.hasMessageColumn) {
+      (ordering, deleted, persistenceId, sequenceNumber, message, tags, event, eventManifest, serId, serManifest, writerUuid) <> (JournalRow.tupled, JournalRow.unapply)
+    } else {
+      (ordering, deleted, persistenceId, sequenceNumber, tags, event, eventManifest, serId, serManifest, writerUuid) <> ({
+        case (ordering, deleted, persistenceId, sequenceNumber, tags, event, eventManifest, serId, serManifest, writerUuid) =>
+          JournalRow(ordering, deleted, persistenceId, sequenceNumber, None, tags, event, eventManifest, serId, serManifest, writerUuid)
+      },
+        (row: JournalRow) => {
+          Some((row.ordering, row.deleted, row.persistenceId, row.sequenceNumber, row.tags, row.event, row.eventManifest, row.serId, row.serManifest, row.writerUuid))
+        })
+    }
 
     val ordering: Rep[Long] = column[Long](journalTableCfg.columnNames.ordering, O.AutoInc)
     val persistenceId: Rep[String] = column[String](journalTableCfg.columnNames.persistenceId, O.Length(255, varying = true))
     val sequenceNumber: Rep[Long] = column[Long](journalTableCfg.columnNames.sequenceNumber)
     val deleted: Rep[Boolean] = column[Boolean](journalTableCfg.columnNames.deleted, O.Default(false))
     val tags: Rep[Option[String]] = column[Option[String]](journalTableCfg.columnNames.tags, O.Length(255, varying = true))
-    val message: Rep[Array[Byte]] = column[Array[Byte]](journalTableCfg.columnNames.message)
+    @deprecated("This was used to store the the PersistentRepr serialized as is, but no longer.", "4.0.0")
+    private val message: Rep[Option[Array[Byte]]] = column[Array[Byte]](journalTableCfg.columnNames.message)
+
+    val event: Rep[Option[Array[Byte]]] = column[Option[Array[Byte]]](journalTableCfg.columnNames.event)
+    val eventManifest: Rep[Option[String]] = column[Option[String]](journalTableCfg.columnNames.eventManifest, O.Length(255, varying = true))
+    val serId: Rep[Option[Int]] = column[Option[Int]](journalTableCfg.columnNames.serId)
+    val serManifest: Rep[Option[String]] = column[Option[String]](journalTableCfg.columnNames.serManifest, O.Length(255, varying = true))
+    val writerUuid: Rep[Option[String]] = column[Option[String]](journalTableCfg.columnNames.writerUuid, O.Length(36, varying = true))
+
     val pk = primaryKey("journal_pk", (persistenceId, sequenceNumber))
     val orderingIdx = index("journal_ordering_idx", ordering, unique = true)
   }

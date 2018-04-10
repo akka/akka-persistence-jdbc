@@ -89,17 +89,20 @@ trait OracleReadJournalDao extends ReadJournalDao {
     }
   }
 
-  implicit val getJournalRow = GetResult(r => JournalRow(r.<<, r.<<, r.<<, r.<<, r.nextBytes(), r.<<))
+  implicit val getJournalRow = if (hasMessageColumn) {
+    GetResult(r => JournalRow(r.<<, r.<<, r.<<, r.<<, r.nextBytesOption(), r.<<, r.nextBytesOption(), r.<<, r.<<, r.<<, r.<<))
+  } else {
+    GetResult(r => JournalRow(r.<<, r.<<, r.<<, r.<<, None, r.<<, r.nextBytesOption(), r.<<, r.<<, r.<<, r.<<))
+  }
 
   abstract override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed] = {
     if (isOracleDriver(profile)) {
       val theOffset = Math.max(0, offset)
       val theTag = s"%$tag%"
 
-      Source.fromPublisher {
-        db.stream(
-          sql"""
-            SELECT "#$ordering", "#$deleted", "#$persistenceId", "#$sequenceNumber", "#$message", "#$tags"
+      val statement = if (hasMessageColumn) {
+        sql"""
+            SELECT "#$ordering", "#$deleted", "#$persistenceId", "#$sequenceNumber", "#$message", "#$tags", "#$event", "#$eventManifest", "#$serId", "#$serManifest", "#$writerUuid"
             FROM (
               SELECT * FROM #$theTableName
               WHERE "#$tags" LIKE $theTag
@@ -107,7 +110,22 @@ trait OracleReadJournalDao extends ReadJournalDao {
               AND "#$ordering" <= $maxOffset
               ORDER BY "#$ordering"
             )
-            WHERE rownum <= $max""".as[JournalRow])
+            WHERE rownum <= $max"""
+      } else {
+        sql"""
+            SELECT "#$ordering", "#$deleted", "#$persistenceId", "#$sequenceNumber", "#$tags", "#$event", "#$eventManifest", "#$serId", "#$serManifest", "#$writerUuid"
+            FROM (
+              SELECT * FROM #$theTableName
+              WHERE "#$tags" LIKE $theTag
+              AND "#$ordering" > $theOffset
+              AND "#$ordering" <= $maxOffset
+              ORDER BY "#$ordering"
+            )
+            WHERE rownum <= $max"""
+      }
+
+      Source.fromPublisher {
+        db.stream(statement.as[JournalRow])
       }.via(serializer.deserializeFlow)
     } else {
       super.eventsByTag(tag, offset, maxOffset, max)
@@ -142,5 +160,5 @@ trait H2ReadJournalDao extends ReadJournalDao {
 
 class ByteArrayReadJournalDao(val db: Database, val profile: JdbcProfile, val readJournalConfig: ReadJournalConfig, serialization: Serialization)(implicit ec: ExecutionContext, mat: Materializer) extends BaseByteArrayReadJournalDao with OracleReadJournalDao with H2ReadJournalDao {
   val queries = new ReadJournalQueries(profile, readJournalConfig.journalTableConfiguration)
-  val serializer = new ByteArrayJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator)
+  val serializer = new ByteArrayJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator, readJournalConfig.journalTableConfiguration.writeMessageColumn)
 }

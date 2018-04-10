@@ -32,7 +32,7 @@ class ByteArraySnapshotDao(db: JdbcBackend#Database, profile: JdbcProfile, snaps
 
   val queries = new SnapshotQueries(profile, snapshotConfig.snapshotTableConfiguration)
 
-  val serializer = new ByteArraySnapshotSerializer(serialization)
+  val serializer = new ByteArraySnapshotSerializer(serialization, snapshotConfig.snapshotTableConfiguration.writeSnapshotColumn)
 
   def toSnapshotData(row: SnapshotRow): (SnapshotMetadata, Any) =
     serializer.deserialize(row) match {

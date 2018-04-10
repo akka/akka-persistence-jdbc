@@ -1,5 +1,7 @@
 package akka.persistence.jdbc.query
 
+import java.util.UUID
+
 import akka.actor.{ ActorRef, ActorSystem }
 import akka.pattern.ask
 import akka.persistence.jdbc.config.JournalSequenceRetrievalConfig
@@ -30,13 +32,18 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean) e
 
   def generateId: Int = 0
 
+  private def createJournalRow(ordering: Long, sequnceNumber: Long) = JournalRow(
+    ordering, deleted = false, "id", sequnceNumber, message = None, tags = None,
+    event = Some(Array.empty), eventManifest = Some(""), serId = Some(4 /* byte array serializer id */ ),
+    serManifest = Some(""), Some(UUID.randomUUID().toString))
+
   behavior of "JournalSequenceActor"
 
   it should "recover normally" in {
     withActorSystem { implicit system: ActorSystem =>
       withDatabase { db =>
         val numberOfRows = 15000
-        val rows = for (i <- 1 to numberOfRows) yield JournalRow(generateId, deleted = false, "id", i, Array(0.toByte))
+        val rows = for (i <- 1 to numberOfRows) yield createJournalRow(generateId, i)
         db.run(JournalTable ++= rows).futureValue
         withJournalSequenceActor(db, maxTries = 100) { actor =>
           eventually {
@@ -53,7 +60,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean) e
         implicit val materializer: ActorMaterializer = ActorMaterializer()
         val elements = if (isOracle) 100000 else 1000000
         Source.fromIterator(() => (1 to elements).iterator)
-          .map(id => JournalRow(id, deleted = false, "id", id, Array(0.toByte)))
+          .map(id => createJournalRow(id, id))
           .grouped(10000)
           .mapAsync(4) { rows =>
             db.run(JournalTable.forceInsertAll(rows))
@@ -85,7 +92,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean) e
           val firstElement = 100000000
           val lastElement = firstElement + (numElements * gapSize)
           Source.fromIterator(() => (firstElement to lastElement by gapSize).iterator)
-            .map(id => JournalRow(id, deleted = false, "id", id, Array(0.toByte)))
+            .map(id => createJournalRow(id, id))
             .grouped(10000)
             .mapAsync(4) { rows =>
               db.run(JournalTable.forceInsertAll(rows))
@@ -113,7 +120,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean) e
         // only even numbers, odd numbers are missing
         val idSeq = 2 to maxElement by 2
         Source.fromIterator(() => idSeq.iterator)
-          .map(id => JournalRow(id, deleted = false, "id", id, Array(0.toByte)))
+          .map(id => createJournalRow(id, id))
           .grouped(10000)
           .mapAsync(4) { rows =>
             db.run(JournalTable.forceInsertAll(rows))

@@ -1,0 +1,17 @@
+ALTER TABLE PUBLIC."journal" ALTER COLUMN "message" SET NULL;
+ALTER TABLE PUBLIC."journal" ALTER COLUMN "message" SET DEFAULT NULL;
+ALTER TABLE PUBLIC."journal" ADD (
+  "event" BYTEA DEFAULT NULL,
+  "event_manifest" VARCHAR(255) DEFAULT NULL,
+  "ser_id" INTEGER DEFAULT NULL,
+  "ser_manifest" VARCHAR(255) DEFAULT NULL,
+  "writer_uuid" VARCHAR(36) DEFAULT NULL
+);
+
+ALTER TABLE PUBLIC."snapshot" ALTER COLUMN "snapshot" SET NULL;
+ALTER TABLE PUBLIC."snapshot" ALTER COLUMN "snapshot" SET DEFAULT NULL;
+ALTER TABLE PUBLIC."snapshot" ADD (
+  "snapshot_data" BYTEA DEFAULT NULL,
+  "ser_id" INTEGER DEFAULT NULL,
+  "ser_manifest" VARCHAR(255) DEFAULT NULL
+);

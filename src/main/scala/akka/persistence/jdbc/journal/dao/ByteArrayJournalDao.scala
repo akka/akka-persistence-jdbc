@@ -142,6 +142,6 @@ trait H2JournalDao extends JournalDao {
 
 class ByteArrayJournalDao(val db: Database, val profile: JdbcProfile, val journalConfig: JournalConfig, serialization: Serialization)(implicit val ec: ExecutionContext, val mat: Materializer) extends BaseByteArrayJournalDao with H2JournalDao {
   val queries = new JournalQueries(profile, journalConfig.journalTableConfiguration)
-  val serializer = new ByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator)
+  val serializer = new ByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator, journalConfig.journalTableConfiguration.writeMessageColumn)
 }
 

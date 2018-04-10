@@ -20,28 +20,55 @@ import akka.persistence.SnapshotMetadata
 import akka.persistence.jdbc.serialization.SnapshotSerializer
 import akka.persistence.jdbc.snapshot.dao.SnapshotTables.SnapshotRow
 import akka.persistence.serialization.Snapshot
-import akka.serialization.Serialization
+import akka.serialization.{ Serialization, SerializerWithStringManifest }
 
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
-class ByteArraySnapshotSerializer(serialization: Serialization) extends SnapshotSerializer[SnapshotRow] {
+class ByteArraySnapshotSerializer(serialization: Serialization, writeSnapshotColumn: Boolean) extends SnapshotSerializer[SnapshotRow] {
 
   def serialize(metadata: SnapshotMetadata, snapshot: Any): Try[SnapshotRow] = {
-    serialization
-      .serialize(Snapshot(snapshot))
-      .map(SnapshotRow(metadata.persistenceId, metadata.sequenceNr, metadata.timestamp, _))
+    val trySnapshotColumn = if (writeSnapshotColumn) {
+      serialization.serialize(Snapshot(snapshot)).map(Some.apply)
+    } else {
+      Success(None)
+    }
+
+    trySnapshotColumn.map { maybeSnapshot =>
+      val snapshotRef = snapshot.asInstanceOf[AnyRef]
+      val serializer = serialization.findSerializerFor(snapshotRef)
+      val snapshotData = Some(serializer.toBinary(snapshotRef))
+      val serManifest = serializer match {
+        case stringManifest: SerializerWithStringManifest =>
+          stringManifest.manifest(snapshotRef)
+        case _ if serializer.includeManifest =>
+          snapshotRef.getClass.getName
+        case _ => ""
+      }
+      SnapshotRow(
+        metadata.persistenceId,
+        metadata.sequenceNr,
+        metadata.timestamp,
+        maybeSnapshot,
+        snapshotData,
+        Some(serializer.identifier),
+        Some(serManifest))
+    }
   }
 
   def deserialize(snapshotRow: SnapshotRow): Try[(SnapshotMetadata, Any)] = {
-    serialization
-      .deserialize(snapshotRow.snapshot, classOf[Snapshot])
-      .map(snapshot => {
-        val snapshotMetadata = SnapshotMetadata(
-          snapshotRow.persistenceId,
-          snapshotRow.sequenceNumber,
-          snapshotRow.created)
-        (snapshotMetadata, snapshot.data)
-      })
+    val metadata = SnapshotMetadata(snapshotRow.persistenceId, snapshotRow.sequenceNumber, snapshotRow.created)
+    if (snapshotRow.snapshotData.isDefined && snapshotRow.serId.isDefined) {
+      serialization.deserialize(
+        snapshotRow.snapshotData.get,
+        snapshotRow.serId.get,
+        snapshotRow.serManifest.getOrElse("")).map(snapshot => (metadata, snapshot))
+    } else if (snapshotRow.snapshot.isDefined) {
+      serialization
+        .deserialize(snapshotRow.snapshot.get, classOf[Snapshot])
+        .map(snapshot => (metadata, snapshot.data))
+    } else {
+      Failure(new RuntimeException("Row does not define an event or message"))
+    }
   }
 
 }

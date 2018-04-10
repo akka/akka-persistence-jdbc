@@ -37,7 +37,12 @@ class JournalTableColumnNames(config: Config) {
   val created: String = cfg.as[String]("created", "created")
   val tags: String = cfg.as[String]("tags", "tags")
   val message: String = cfg.as[String]("message", "message")
-  override def toString: String = s"JournalTableColumnNames($persistenceId,$sequenceNumber,$created,$tags,$message)"
+  val event: String = cfg.as[String]("event", "event")
+  val eventManifest: String = cfg.as[String]("eventManifest", "event_manifest")
+  val serId: String = cfg.as[String]("serId", "ser_id")
+  val serManifest: String = cfg.as[String]("serManifest", "ser_manifest")
+  val writerUuid: String = cfg.as[String]("writerUuid", "writer_uuid")
+  override def toString: String = s"JournalTableColumnNames($persistenceId,$sequenceNumber,$created,$tags,$message,$event,$eventManifest,$serId,$serManifest,$writerUuid)"
 }
 
 class JournalTableConfiguration(config: Config) {
@@ -45,7 +50,9 @@ class JournalTableConfiguration(config: Config) {
   val tableName: String = cfg.as[String]("tableName", "journal")
   val schemaName: Option[String] = cfg.as[String]("schemaName").trim
   val columnNames: JournalTableColumnNames = new JournalTableColumnNames(config)
-  override def toString: String = s"JournalTableConfiguration($tableName,$schemaName,$columnNames)"
+  val hasMessageColumn: Boolean = cfg.as[Boolean]("hasMessageColumn", true)
+  val writeMessageColumn: Boolean = cfg.as[Boolean]("writeMessageColumn", true)
+  override def toString: String = s"JournalTableConfiguration($tableName,$schemaName,$columnNames,$hasMessageColumn,$writeMessageColumn)"
 }
 
 class SnapshotTableColumnNames(config: Config) {
@@ -54,7 +61,10 @@ class SnapshotTableColumnNames(config: Config) {
   val sequenceNumber: String = cfg.as[String]("sequenceNumber", "sequence_number")
   val created: String = cfg.as[String]("created", "created")
   val snapshot: String = cfg.as[String]("snapshot", "snapshot")
-  override def toString: String = s"SnapshotTableColumnNames($persistenceId,$sequenceNumber,$created,$snapshot)"
+  val snapshotData: String = cfg.as[String]("snapshotData", "snapshot_data")
+  val serId: String = cfg.as[String]("serId", "ser_id")
+  val serManifest: String = cfg.as[String]("serManifest", "ser_manifest")
+  override def toString: String = s"SnapshotTableColumnNames($persistenceId,$sequenceNumber,$created,$snapshot,$snapshotData,$serId,$serManifest)"
 }
 
 class SnapshotTableConfiguration(config: Config) {
@@ -62,7 +72,9 @@ class SnapshotTableConfiguration(config: Config) {
   val tableName: String = cfg.as[String]("tableName", "snapshot")
   val schemaName: Option[String] = cfg.as[String]("schemaName").trim
   val columnNames: SnapshotTableColumnNames = new SnapshotTableColumnNames(config)
-  override def toString: String = s"SnapshotTableConfiguration($tableName,$schemaName,$columnNames)"
+  val hasSnapshotColumn: Boolean = cfg.as[Boolean]("hasSnapshotColumn", true)
+  val writeSnapshotColumn: Boolean = cfg.as[Boolean]("writeSnapshotColumn", true)
+  override def toString: String = s"SnapshotTableConfiguration($tableName,$schemaName,$columnNames,$hasSnapshotColumn,$writeSnapshotColumn)"
 }
 
 class JournalPluginConfig(config: Config) {

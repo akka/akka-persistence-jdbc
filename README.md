@@ -30,13 +30,20 @@ The release notes can be found [here](https://github.com/dnvriend/akka-persisten
 
 For change log prior to v3.2.0, visit [Version History Page (wiki)](https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
 
-To migrate from v3.x to v4.x, the database schema needs to be updated. To migrate, see the `<database-name>-migration-v4.sql` files in your corresponding databases [schema directory](https://github.com/dnvriend/akka-persistence-jdbc/tree/master/src/test/resources/schema/). The schema update is both backwards and forwards compatible. If you wish to perform rolling upgrades, canary upgrades, or want to be able to rollback, you will need to enable forwards compatibility, which can be done by setting the following configuration:
+### Migrating to v4.x
+
+To migrate from v3.x to v4.x, the database schema needs to be updated. To migrate, see the `<database-name>-migration-v4.sql` files in your corresponding databases [schema directory](https://github.com/dnvriend/akka-persistence-jdbc/tree/master/src/test/resources/schema/). The schema update is both backwards and forwards compatible, however, by default, `akka-persistence-jdbc` won't read the old data. To enable this, you have to enable backwards compatibility. Additionally, if you wish to perform rolling upgrades, canary upgrades, or want to be able to rollback, you will need to enable forwards compatibility. Backwards and forwards compatibility can be enabled with the following configuration:
 
 ```
-akka-persistence-jdbc.migration.v4.forwards-compatibility = true
+akka-persistence-jdbc.migration.v4 {
+    backwards-compatibility = true
+    forwards-compatibility = true
+}
 ```
 
-There is an overhead to enabling this, as it means all events and snapshots will be doubley serialized and persisted. Once you have upgraded all nodes to v4.x this should be set back to `false`.
+There is an overhead to enabling forwards compatibility, as it means all events and snapshots will be doubley serialized and persisted. Once you have upgraded all nodes to v4.x this should be set back to `false`.
+
+Additionally, a migration task has been provided to allow events to be migrated from the old format to the new format - while this is not absolutely necessary, it is recommended since the old format could break with future versions of Akka persistence. This task can be run in the background after all nodes have been upgraded to the new version. To run the migration task, run `akka.persistence.jdbc.migration.V4Migration` with your applications classpath set, and all the database configuration configured correctly. Before you do this, it is recommended that you configure Akka serializers for each event type, so that they are stored in a format suitable for future migrations, eg, json or protobuf.
 
 ## Contribution policy
 

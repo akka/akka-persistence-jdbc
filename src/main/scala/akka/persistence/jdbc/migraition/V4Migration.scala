@@ -12,11 +12,11 @@ import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success }
 
-private class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTables {
+class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTables {
 
   private val journalConfig = new JournalConfig(config)
 
-  if (journalConfig.journalTableConfiguration.hasMessageColumn) {
+  if (!journalConfig.journalTableConfiguration.hasMessageColumn) {
     throw new IllegalArgumentException("Journal table configuration does not have message column, cannot perform migration.")
   }
 
@@ -87,11 +87,11 @@ private class V4JournalMigration(config: Config, system: ActorSystem) extends Jo
   }
 }
 
-private class V4SnapshotMigration(config: Config, system: ActorSystem) extends SnapshotTables {
+class V4SnapshotMigration(config: Config, system: ActorSystem) extends SnapshotTables {
 
   private val snapshotConfig = new SnapshotConfig(config)
 
-  if (snapshotConfig.snapshotTableConfiguration.hasSnapshotColumn) {
+  if (!snapshotConfig.snapshotTableConfiguration.hasSnapshotColumn) {
     throw new IllegalArgumentException("Snapshot table configuration does not have snapshot column, cannot perform migration.")
   }
 

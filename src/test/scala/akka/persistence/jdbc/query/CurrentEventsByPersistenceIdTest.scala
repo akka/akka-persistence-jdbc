@@ -16,7 +16,11 @@
 
 package akka.persistence.jdbc.query
 
+import akka.Done
+import akka.persistence.Persistence
+import akka.persistence.jdbc.journal.JdbcAsyncWriteJournal
 import akka.persistence.query.{ EventEnvelope, Sequence }
+import akka.testkit.TestProbe
 
 abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTestSpec(config) {
 
@@ -129,6 +133,43 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
         tp.request(Int.MaxValue)
           .expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2))
           .expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
+          .expectComplete()
+      }
+    }
+  }
+
+  it should "allow updating events (for data migrations)" in withActorSystem { implicit system =>
+    val journalOps = new JavaDslJdbcReadJournalOperations(system)
+    val journal = Persistence(system).journalFor("")
+
+    withTestActors() { (actor1, _, _) =>
+      actor1 ! 1
+      actor1 ! 2
+      actor1 ! 3
+
+      eventually {
+        journalOps.countJournal.futureValue shouldBe 3
+      }
+
+      val pid = "my-1"
+      journalOps.withCurrentEventsByPersistenceId()(pid, 1, 3) { tp =>
+        tp.request(Int.MaxValue)
+          .expectNext(EventEnvelope(Sequence(1), pid, 1, 1))
+          .expectNext(EventEnvelope(Sequence(2), pid, 2, 2))
+          .expectNext(EventEnvelope(Sequence(3), pid, 3, 3))
+          .expectComplete()
+      }
+
+      // perform in-place update
+      val journalP = TestProbe()
+      journal.tell(JdbcAsyncWriteJournal.InPlaceUpdateEvent(pid, 1, Integer.valueOf(111)), journalP.ref)
+      journalP.expectMsg(Done)
+
+      journalOps.withCurrentEventsByPersistenceId()(pid, 1, 3) { tp =>
+        tp.request(Int.MaxValue)
+          .expectNext(EventEnvelope(Sequence(1), pid, 1, Integer.valueOf(111)))
+          .expectNext(EventEnvelope(Sequence(2), pid, 2, 2))
+          .expectNext(EventEnvelope(Sequence(3), pid, 3, 3))
           .expectComplete()
       }
     }

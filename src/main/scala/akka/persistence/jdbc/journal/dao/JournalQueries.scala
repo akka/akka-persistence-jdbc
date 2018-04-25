@@ -39,6 +39,18 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
       .delete
   }
 
+  /**
+   * Updates (!) a payload stored in a specific events row.
+   * Intended to be used sparingly, e.g. moving all events to their encrypted counterparts.
+   */
+  def update(persistenceId: String, seqNr: Long, replacement: Array[Byte]) = {
+    val baseQuery = JournalTable
+      .filter(_.persistenceId === persistenceId)
+      .filter(_.sequenceNumber === seqNr)
+
+    baseQuery.map(_.message).update(replacement)
+  }
+
   def markJournalMessagesAsDeleted(persistenceId: String, maxSequenceNr: Long) =
     JournalTable
       .filter(_.persistenceId === persistenceId)
@@ -81,4 +93,5 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
       .take(max)
 
   val messagesQuery = Compiled(_messagesQuery _)
+
 }

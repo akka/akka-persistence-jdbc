@@ -34,7 +34,7 @@ import scala.util.Try
 /**
  * The DefaultJournalDao contains all the knowledge to persist and load serialized journal entries
  */
-trait BaseByteArrayJournalDao extends JournalDao {
+trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
 
   val db: Database
   val profile: JdbcProfile
@@ -106,6 +106,12 @@ trait BaseByteArrayJournalDao extends JournalDao {
 
       db.run(actions.transactionally)
     }
+
+  def update(persistenceId: String, sequenceNr: Long, payload: AnyRef): Future[Unit] = {
+    val write = PersistentRepr(payload, sequenceNr, persistenceId)
+    val serializedRow = serializer.serialize(write).get
+    db.run(queries.update(persistenceId, sequenceNr, serializedRow.message)).map(_ ⇒ ())
+  }
 
   private def highestMarkedSequenceNr(persistenceId: String) =
     queries.highestMarkedSequenceNrForPersistenceId(persistenceId).result.headOption

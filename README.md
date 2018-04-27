@@ -198,13 +198,13 @@ class TaggingEventAdapter extends WriteEventAdapter {
   def withTag(event: Any, tag: String) = Tagged(event, Set(tag))
 
   override def toJournal(event: Any): Any = event match {
-    case _: PersonCreated ⇒
+    case _: PersonCreated =>
       withTag(event, "person-created")
-    case _: FirstNameChanged ⇒
+    case _: FirstNameChanged =>
       withTag(event, "first-name-changed")
-    case _: LastNameChanged ⇒
+    case _: LastNameChanged =>
       withTag(event, "last-name-changed")
-    case _ ⇒ event
+    case _ => event
   }
 }
 ```

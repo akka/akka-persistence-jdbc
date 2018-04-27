@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc.journal
 
-import java.util.{ HashMap ⇒ JHMap, Map ⇒ JMap }
+import java.util.{ HashMap => JHMap, Map => JMap }
 
 import akka.Done
 import akka.actor.{ ActorSystem, ExtendedActorSystem }
@@ -73,10 +73,10 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
     }
   }
   // only accessed if we need to perform Updates -- which is very rarely
-  lazy val journalDaoWithUpdates: JournalDaoWithUpdates =
+  def journalDaoWithUpdates: JournalDaoWithUpdates =
     journalDao match {
-      case upgraded: JournalDaoWithUpdates ⇒ upgraded
-      case _ ⇒ throw new IllegalStateException(s"The ${journalDao.getClass} does NOT implement [JournalDaoWithUpdates], " +
+      case upgraded: JournalDaoWithUpdates => upgraded
+      case _ => throw new IllegalStateException(s"The ${journalDao.getClass} does NOT implement [JournalDaoWithUpdates], " +
         s"which is required to perform updates of events! Please configure a valid update capable DAO (e.g. the default [ByteArrayJournalDao].")
     }
 
@@ -107,7 +107,6 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   }
 
   private def asyncUpdateEvent(persistenceId: String, sequenceNr: Long, message: AnyRef): Future[Unit] = {
-    system.log.info("Updating {}@{}, to: [{}]", persistenceId, sequenceNr, message)
     journalDaoWithUpdates.update(persistenceId, sequenceNr, message)
   }
 
@@ -125,9 +124,9 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   override def receivePluginInternal: Receive = {
     case WriteFinished(persistenceId, future) =>
       writeInProgress.remove(persistenceId, future)
-    case InPlaceUpdateEvent(pid, seq, write) ⇒
+    case InPlaceUpdateEvent(pid, seq, write) =>
       asyncUpdateEvent(pid, seq, write)
-        .map(_ ⇒ Done) // TODO or some proper API for it?
+        .map(_ => Done) // TODO or some proper API for it?
         .pipeTo(sender())
   }
 }

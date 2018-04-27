@@ -76,7 +76,7 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
       def createBenchActor(actorNumber: Int) = system.actorOf(Props(classOf[BenchActor], s"$pid--$actorNumber", testProbe.ref, replyAfter))
       val actors = 1.to(actorCount).map(createBenchActor)
 
-      measure(d ⇒ s"Persist()-ing $eventsCount * $actorCount took ${d.toMillis} ms") {
+      measure(d => s"Persist()-ing $eventsCount * $actorCount took ${d.toMillis} ms") {
         for (cmd <- commands; actor <- actors) {
           actor ! Cmd("p", cmd)
         }
@@ -97,7 +97,7 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
       def createBenchActor(actorNumber: Int) = system.actorOf(Props(classOf[BenchActor], s"$pid--$actorNumber", testProbe.ref, replyAfter))
       val actors = 1.to(actorCount).map(createBenchActor)
 
-      measure(d ⇒ s"persistAsync()-ing $eventsCount * $actorCount took ${d.toMillis} ms") {
+      measure(d => s"persistAsync()-ing $eventsCount * $actorCount took ${d.toMillis} ms") {
         for (cmd <- commands; actor <- actors) {
           actor ! Cmd("pa", cmd)
         }

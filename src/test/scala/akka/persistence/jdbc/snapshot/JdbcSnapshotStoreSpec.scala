@@ -42,6 +42,10 @@ abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType) ext
     dropCreate(schemaType)
     super.beforeAll()
   }
+
+  override def afterAll(): Unit = {
+    db.close()
+  }
 }
 
 class PostgresSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("postgres-application.conf"), Postgres())

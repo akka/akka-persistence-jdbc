@@ -46,7 +46,7 @@ object JdbcAsyncWriteJournal {
    * The write payload may be wrapped in a [[akka.persistence.journal.Tagged]],
    * in which case the new tags will overwrite the existing tags of the event.
    */
-  final case class InPlaceUpdateEvent(pid: String, seqNr: Long, write: AnyRef)
+  final case class InPlaceUpdateEvent(persistenceId: String, seqNr: Long, write: AnyRef)
 }
 
 class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {

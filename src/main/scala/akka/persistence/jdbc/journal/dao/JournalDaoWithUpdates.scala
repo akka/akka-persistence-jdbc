@@ -16,6 +16,8 @@
 
 package akka.persistence.jdbc.journal.dao
 
+import akka.Done
+
 import scala.concurrent.Future
 
 /**
@@ -26,5 +28,5 @@ trait JournalDaoWithUpdates extends JournalDao {
   /**
    * Update (!) an existing event with the passed in data.
    */
-  def update(persistenceId: String, sequenceNr: Long, payload: AnyRef): Future[Unit]
+  def update(persistenceId: String, sequenceNr: Long, payload: AnyRef): Future[Done]
 }

@@ -106,7 +106,7 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
     }
   }
 
-  private def asyncUpdateEvent(persistenceId: String, sequenceNr: Long, message: AnyRef): Future[Unit] = {
+  private def asyncUpdateEvent(persistenceId: String, sequenceNr: Long, message: AnyRef): Future[Done] = {
     journalDaoWithUpdates.update(persistenceId, sequenceNr, message)
   }
 
@@ -126,7 +126,6 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
       writeInProgress.remove(persistenceId, future)
     case InPlaceUpdateEvent(pid, seq, write) =>
       asyncUpdateEvent(pid, seq, write)
-        .map(_ => Done) // TODO or some proper API for it?
         .pipeTo(sender())
   }
 }

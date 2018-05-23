@@ -19,7 +19,7 @@ package journal.dao
 
 import java.io.NotSerializableException
 
-import akka.NotUsed
+import akka.{ Done, NotUsed }
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.persistence.{ AtomicWrite, PersistentRepr }
@@ -109,13 +109,13 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
       db.run(actions.transactionally)
     }
 
-  def update(persistenceId: String, sequenceNr: Long, payload: AnyRef): Future[Unit] = {
+  def update(persistenceId: String, sequenceNr: Long, payload: AnyRef): Future[Done] = {
     val write = PersistentRepr(payload, sequenceNr, persistenceId)
     val serializedRow = serializer.serialize(write) match {
       case Success(t)  => t
       case Failure(ex) => throw new IllegalArgumentException(s"Failed to serialize ${write.getClass} for update of [$persistenceId] @ [$sequenceNr]")
     }
-    db.run(queries.update(persistenceId, sequenceNr, serializedRow.message)).map(_ => ())
+    db.run(queries.update(persistenceId, sequenceNr, serializedRow.message).map(_ ⇒ Done))
   }
 
   private def highestMarkedSequenceNr(persistenceId: String) =

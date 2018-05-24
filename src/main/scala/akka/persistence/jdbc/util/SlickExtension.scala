@@ -17,16 +17,16 @@
 package akka.persistence.jdbc.util
 
 import akka.Done
-import akka.actor.{ActorSystem, CoordinatedShutdown, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
-import akka.persistence.jdbc.config.{ConfigKeys, SlickConfiguration}
+import akka.actor.{ ActorSystem, CoordinatedShutdown, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider }
+import akka.persistence.jdbc.config.{ ConfigKeys, SlickConfiguration }
 import akka.persistence.jdbc.util.ConfigOps._
-import com.typesafe.config.{Config, ConfigObject}
+import com.typesafe.config.{ Config, ConfigObject }
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.JdbcProfile
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
 object SlickExtension extends ExtensionId[SlickExtensionImpl] with ExtensionIdProvider {
   override def lookup: SlickExtension.type = SlickExtension
@@ -92,8 +92,7 @@ class DefaultSlickDatabaseProvider(system: ActorSystem) extends SlickDatabasePro
   private def getDbHolderOrThrow(sharedDbName: String): DbHolder =
     sharedDatabases.getOrElse(
       sharedDbName,
-      throw new RuntimeException(s"No shared database is configured under akka-persistence-jdbc.shared-databases.$sharedDbName")
-    )
+      throw new RuntimeException(s"No shared database is configured under akka-persistence-jdbc.shared-databases.$sharedDbName"))
 
   def database(config: Config): Database = {
     config.asOptionalNonEmptyString(ConfigKeys.useSharedDb) match {
@@ -113,11 +112,11 @@ class DefaultSlickDatabaseProvider(system: ActorSystem) extends SlickDatabasePro
 }
 
 /**
-  * A DbHolder lazily initializes a database
-  * @param sharedDbName Name of the shared database (used as name of coordinated shutdown task)
-  * @param config The configuration used to create the database
-  * @param coordinatedShutdownPhaseOpt If defined, the database will be shutdown in this coordinated shutdown phase
-  */
+ * A DbHolder lazily initializes a database
+ * @param sharedDbName Name of the shared database (used as name of coordinated shutdown task)
+ * @param config The configuration used to create the database
+ * @param coordinatedShutdownPhaseOpt If defined, the database will be shutdown in this coordinated shutdown phase
+ */
 class DbHolder(sharedDbName: String, config: Config, coordinatedShutdownPhaseOpt: Option[String], system: ActorSystem) {
   val profile: JdbcProfile = SlickDriver.forDriverName(config, path = "")
 

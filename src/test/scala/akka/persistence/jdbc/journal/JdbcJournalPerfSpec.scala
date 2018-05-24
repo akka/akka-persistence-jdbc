@@ -20,13 +20,13 @@ import akka.actor.Props
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ClasspathResources, DropCreate, SlickExtension}
+import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickExtension }
 import akka.persistence.journal.JournalPerfSpec
-import akka.persistence.journal.JournalPerfSpec.{BenchActor, Cmd, ResetCounter}
+import akka.persistence.journal.JournalPerfSpec.{ BenchActor, Cmd, ResetCounter }
 import akka.testkit.TestProbe
-import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
+import com.typesafe.config.{ Config, ConfigFactory, ConfigValueFactory }
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 
 import scala.concurrent.duration._
 

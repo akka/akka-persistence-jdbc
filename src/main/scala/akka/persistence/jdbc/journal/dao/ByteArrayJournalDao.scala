@@ -115,7 +115,7 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
       case Success(t)  => t
       case Failure(ex) => throw new IllegalArgumentException(s"Failed to serialize ${write.getClass} for update of [$persistenceId] @ [$sequenceNr]")
     }
-    db.run(queries.update(persistenceId, sequenceNr, serializedRow.message).map(_ ⇒ Done))
+    db.run(queries.update(persistenceId, sequenceNr, serializedRow.message).map(_ => Done))
   }
 
   private def highestMarkedSequenceNr(persistenceId: String) =

@@ -18,12 +18,13 @@ package akka.persistence.jdbc.journal
 
 import java.util.{ HashMap => JHMap, Map => JMap }
 
+import akka.Done
 import akka.actor.{ ActorSystem, ExtendedActorSystem }
 import akka.persistence.jdbc.config.JournalConfig
-import akka.persistence.jdbc.journal.JdbcAsyncWriteJournal.WriteFinished
-import akka.persistence.jdbc.journal.dao.JournalDao
+import akka.persistence.jdbc.journal.JdbcAsyncWriteJournal.{ InPlaceUpdateEvent, WriteFinished }
+import akka.persistence.jdbc.journal.dao.{ JournalDao, JournalDaoWithUpdates }
 import akka.persistence.jdbc.util.SlickExtension
-import akka.persistence.journal.AsyncWriteJournal
+import akka.persistence.journal.{ AsyncWriteJournal, Tagged }
 import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.{ ActorMaterializer, Materializer }
@@ -34,9 +35,18 @@ import slick.jdbc.JdbcBackend._
 import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
+import akka.pattern.pipe
 
 object JdbcAsyncWriteJournal {
   private case class WriteFinished(pid: String, f: Future[_])
+  /**
+   * Extra Plugin API: May be used to issue in-place updates for events.
+   * To be used only for data migrations such as "encrypt all events" and similar operations.
+   *
+   * The write payload may be wrapped in a [[akka.persistence.journal.Tagged]],
+   * in which case the new tags will overwrite the existing tags of the event.
+   */
+  final case class InPlaceUpdateEvent(persistenceId: String, seqNr: Long, write: AnyRef)
 }
 
 class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
@@ -63,6 +73,13 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
       case Failure(cause) => throw cause
     }
   }
+  // only accessed if we need to perform Updates -- which is very rarely
+  def journalDaoWithUpdates: JournalDaoWithUpdates =
+    journalDao match {
+      case upgraded: JournalDaoWithUpdates => upgraded
+      case _ => throw new IllegalStateException(s"The ${journalDao.getClass} does NOT implement [JournalDaoWithUpdates], " +
+        s"which is required to perform updates of events! Please configure a valid update capable DAO (e.g. the default [ByteArrayJournalDao].")
+    }
 
   // readHighestSequence must be performed after pending write for a persistenceId
   // when the persistent actor is restarted.
@@ -88,7 +105,10 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
         // If the previous write failed then we can ignore this
         f.recover { case _ => () }.flatMap(_ => fetchHighestSeqNr())
     }
+  }
 
+  private def asyncUpdateEvent(persistenceId: String, sequenceNr: Long, message: AnyRef): Future[Done] = {
+    journalDaoWithUpdates.update(persistenceId, sequenceNr, message)
   }
 
   override def asyncReplayMessages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(recoveryCallback: (PersistentRepr) => Unit): Future[Unit] =
@@ -108,5 +128,8 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   override def receivePluginInternal: Receive = {
     case WriteFinished(persistenceId, future) =>
       writeInProgress.remove(persistenceId, future)
+    case InPlaceUpdateEvent(pid, seq, write) =>
+      asyncUpdateEvent(pid, seq, write)
+        .pipeTo(sender())
   }
 }

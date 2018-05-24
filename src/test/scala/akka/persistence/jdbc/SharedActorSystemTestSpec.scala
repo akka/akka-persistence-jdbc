@@ -17,13 +17,13 @@
 package akka.persistence.jdbc
 
 import akka.actor.ActorSystem
-import akka.persistence.jdbc.config.{JournalConfig, ReadJournalConfig}
+import akka.persistence.jdbc.config.{ JournalConfig, ReadJournalConfig }
 import akka.persistence.jdbc.query.javadsl.JdbcReadJournal
-import akka.persistence.jdbc.util.{DropCreate, SlickExtension}
+import akka.persistence.jdbc.util.{ DropCreate, SlickExtension }
 import akka.serialization.SerializationExtension
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.{ ActorMaterializer, Materializer }
 import akka.util.Timeout
-import com.typesafe.config.{Config, ConfigFactory, ConfigValue}
+import com.typesafe.config.{ Config, ConfigFactory, ConfigValue }
 import org.scalatest.BeforeAndAfterAll
 
 import scala.concurrent.ExecutionContext

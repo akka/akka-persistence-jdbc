@@ -20,13 +20,13 @@ import akka.actor.Props
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ClasspathResources, DropCreate, SlickExtension}
+import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickExtension }
 import akka.persistence.journal.JournalPerfSpec
-import akka.persistence.journal.JournalPerfSpec.{BenchActor, Cmd, ResetCounter}
+import akka.persistence.journal.JournalPerfSpec.{ BenchActor, Cmd, ResetCounter }
 import akka.testkit.TestProbe
-import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
+import com.typesafe.config.{ Config, ConfigFactory, ConfigValueFactory }
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 
 import scala.concurrent.duration._
 
@@ -76,7 +76,7 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
       def createBenchActor(actorNumber: Int) = system.actorOf(Props(classOf[BenchActor], s"$pid--$actorNumber", testProbe.ref, replyAfter))
       val actors = 1.to(actorCount).map(createBenchActor)
 
-      measure(d ⇒ s"Persist()-ing $eventsCount * $actorCount took ${d.toMillis} ms") {
+      measure(d => s"Persist()-ing $eventsCount * $actorCount took ${d.toMillis} ms") {
         for (cmd <- commands; actor <- actors) {
           actor ! Cmd("p", cmd)
         }
@@ -97,7 +97,7 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
       def createBenchActor(actorNumber: Int) = system.actorOf(Props(classOf[BenchActor], s"$pid--$actorNumber", testProbe.ref, replyAfter))
       val actors = 1.to(actorCount).map(createBenchActor)
 
-      measure(d ⇒ s"persistAsync()-ing $eventsCount * $actorCount took ${d.toMillis} ms") {
+      measure(d => s"persistAsync()-ing $eventsCount * $actorCount took ${d.toMillis} ms") {
         for (cmd <- commands; actor <- actors) {
           actor ! Cmd("pa", cmd)
         }

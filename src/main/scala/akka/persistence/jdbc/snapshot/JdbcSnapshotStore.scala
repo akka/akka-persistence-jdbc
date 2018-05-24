@@ -19,7 +19,7 @@ package akka.persistence.jdbc.snapshot
 import akka.actor.{ ActorSystem, ExtendedActorSystem }
 import akka.persistence.jdbc.config.SnapshotConfig
 import akka.persistence.jdbc.snapshot.dao.SnapshotDao
-import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
+import akka.persistence.jdbc.util.SlickExtension
 import akka.persistence.snapshot.SnapshotStore
 import akka.persistence.{ SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria }
 import akka.serialization.{ Serialization, SerializationExtension }
@@ -47,11 +47,12 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
   implicit val mat: Materializer = ActorMaterializer()
   val snapshotConfig = new SnapshotConfig(config)
 
-  val db: Database = SlickDatabase.forConfig(config, snapshotConfig.slickConfiguration)
+  val slickExtension = SlickExtension(system)
+  val db: Database = slickExtension.database(config)
 
   val snapshotDao: SnapshotDao = {
     val fqcn = snapshotConfig.pluginConfig.dao
-    val profile: JdbcProfile = SlickDriver.forDriverName(config)
+    val profile: JdbcProfile = slickExtension.profile(config)
     val args = Seq(
       (classOf[Database], db),
       (classOf[JdbcProfile], profile),
@@ -103,7 +104,10 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
   }
 
   override def postStop(): Unit = {
-    db.close()
+    if (snapshotConfig.useSharedDb.isEmpty) {
+      // Since a (new) db is created when this actor (re)starts, we must close it when the actor stops
+      db.close()
+    }
     super.postStop()
   }
 }

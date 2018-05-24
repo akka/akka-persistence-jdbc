@@ -16,21 +16,18 @@
 
 package akka.persistence.jdbc
 
-import java.util.UUID
-
 import akka.actor.ActorSystem
-import akka.persistence.jdbc.config.{ JournalConfig, ReadJournalConfig }
+import akka.persistence.jdbc.config.{JournalConfig, ReadJournalConfig}
 import akka.persistence.jdbc.query.javadsl.JdbcReadJournal
-import akka.persistence.jdbc.util.{ DropCreate, SlickDatabase, SlickDriver }
+import akka.persistence.jdbc.util.{DropCreate, SlickExtension}
 import akka.serialization.SerializationExtension
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.Timeout
-import com.typesafe.config.{ Config, ConfigFactory, ConfigValue }
+import com.typesafe.config.{Config, ConfigFactory, ConfigValue}
 import org.scalatest.BeforeAndAfterAll
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.Try
 
 abstract class SharedActorSystemTestSpec(val config: Config) extends SimpleSpec with DropCreate with BeforeAndAfterAll {
 
@@ -50,18 +47,11 @@ abstract class SharedActorSystemTestSpec(val config: Config) extends SimpleSpec 
 
   val cfg = config.getConfig("jdbc-journal")
   val journalConfig = new JournalConfig(cfg)
-  lazy val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
-  val profile = SlickDriver.forDriverName(cfg)
+  lazy val db = SlickExtension(system).database(cfg)
   val readJournalConfig = new ReadJournalConfig(config.getConfig(JdbcReadJournal.Identifier))
-
-  def randomId = UUID.randomUUID.toString.take(5)
-
-  implicit class PimpedFuture[T](self: Future[T]) {
-    def toTry: Try[T] = Try(self.futureValue)
-  }
 
   override protected def afterAll(): Unit = {
     db.close()
-    system.terminate().toTry should be a 'success
+    system.terminate().futureValue
   }
 }

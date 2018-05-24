@@ -16,20 +16,16 @@
 
 package akka.persistence.jdbc
 
-import java.util.UUID
-
 import akka.actor.ActorSystem
-import akka.persistence.jdbc.config.{ JournalConfig, ReadJournalConfig }
+import akka.persistence.jdbc.config.{JournalConfig, ReadJournalConfig}
 import akka.persistence.jdbc.query.javadsl.JdbcReadJournal
-import akka.persistence.jdbc.util.{ DropCreate, SlickDatabase, SlickDriver }
+import akka.persistence.jdbc.util.{DropCreate, SlickDatabase, SlickDriver}
 import akka.util.Timeout
-import com.typesafe.config.{ Config, ConfigFactory, ConfigValue }
+import com.typesafe.config.{Config, ConfigFactory, ConfigValue}
 import org.scalatest.BeforeAndAfterEach
 import slick.jdbc.JdbcBackend.Database
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.Try
 
 abstract class SingleActorSystemPerTestSpec(val config: Config) extends SimpleSpec with DropCreate with BeforeAndAfterEach {
 
@@ -39,18 +35,23 @@ abstract class SingleActorSystemPerTestSpec(val config: Config) extends SimpleSp
     })
 
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 1.minute)
-  implicit val timeout = Timeout(1.minute)
+  implicit val timeout: Timeout = Timeout(1.minute)
 
   val cfg = config.getConfig("jdbc-journal")
   val journalConfig = new JournalConfig(cfg)
-  val profile = SlickDriver.forDriverName(cfg)
+  val profile = if (cfg.hasPath("slick.profile")) {
+    SlickDriver.forDriverName(cfg, "slick")
+  } else SlickDriver.forDriverName(config, "akka-persistence-jdbc.shared-databases.slick")
   val readJournalConfig = new ReadJournalConfig(config.getConfig(JdbcReadJournal.Identifier))
 
   // The db is initialized in the before and after each bocks
   var dbOpt: Option[Database] = None
   def db: Database = {
     dbOpt.getOrElse {
-      val newDb = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
+      val newDb = if (cfg.hasPath("slick.profile")) {
+        SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration, "slick.db")
+      } else SlickDatabase.forConfig(config, journalConfig.slickConfiguration, "akka-persistence-jdbc.shared-databases.slick.db")
+
       dbOpt = Some(newDb)
       newDb
     }
@@ -71,15 +72,9 @@ abstract class SingleActorSystemPerTestSpec(val config: Config) extends SimpleSp
     closeDb()
   }
 
-  def randomId = UUID.randomUUID.toString.take(5)
-
   def withActorSystem(f: ActorSystem => Unit): Unit = {
     implicit val system: ActorSystem = ActorSystem("test", config)
     f(system)
     system.terminate().futureValue
-  }
-
-  implicit class PimpedFuture[T](self: Future[T]) {
-    def toTry: Try[T] = Try(self.futureValue)
   }
 }

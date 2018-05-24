@@ -16,10 +16,15 @@
 
 package akka.persistence.jdbc.config
 
+import akka.actor.CoordinatedShutdown
 import akka.persistence.jdbc.util.ConfigOps._
 import com.typesafe.config.Config
 
-import scala.concurrent.duration.{ FiniteDuration, _ }
+import scala.concurrent.duration._
+
+object ConfigKeys {
+  val useSharedDb = "use-shared-db"
+}
 
 class SlickConfiguration(config: Config) {
   private val cfg = config.asConfig("slick")
@@ -97,14 +102,16 @@ class JournalConfig(config: Config) {
   val journalTableConfiguration = new JournalTableConfiguration(config)
   val pluginConfig = new JournalPluginConfig(config)
   val daoConfig = new BaseByteArrayJournalDaoConfig(config)
-  override def toString: String = s"JournalConfig($slickConfiguration,$journalTableConfiguration,$pluginConfig)"
+  val useSharedDb: Option[String] = config.asOptionalNonEmptyString(ConfigKeys.useSharedDb)
+  override def toString: String = s"JournalConfig($slickConfiguration,$journalTableConfiguration,$pluginConfig,$useSharedDb)"
 }
 
 class SnapshotConfig(config: Config) {
   val slickConfiguration = new SlickConfiguration(config)
   val snapshotTableConfiguration = new SnapshotTableConfiguration(config)
   val pluginConfig = new SnapshotPluginConfig(config)
-  override def toString: String = s"SnapshotConfig($slickConfiguration,$snapshotTableConfiguration,$pluginConfig)"
+  val useSharedDb: Option[String] = config.asOptionalNonEmptyString(ConfigKeys.useSharedDb)
+  override def toString: String = s"SnapshotConfig($slickConfiguration,$snapshotTableConfiguration,$pluginConfig,$useSharedDb)"
 }
 
 object JournalSequenceRetrievalConfig {
@@ -124,6 +131,7 @@ class ReadJournalConfig(config: Config) {
   val pluginConfig = new ReadJournalPluginConfig(config)
   val refreshInterval: FiniteDuration = config.asFiniteDuration("refresh-interval", 1.second)
   val maxBufferSize: Int = config.as[String]("max-buffer-size", "500").toInt
-  val addShutdownHook: Boolean = config.as[Boolean]("add-shutdown-hook", true)
-  override def toString: String = s"ReadJournalConfig($slickConfiguration,$journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook)"
+  val addShutdownHook: Boolean = config.asBoolean("add-shutdown-hook", true)
+  val coordinatedShutdownPhase: String = config.asString("coordinated-shutdown-phase", CoordinatedShutdown.PhaseBeforeActorSystemTerminate)
+  override def toString: String = s"ReadJournalConfig($slickConfiguration,$journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook,$coordinatedShutdownPhase)"
 }

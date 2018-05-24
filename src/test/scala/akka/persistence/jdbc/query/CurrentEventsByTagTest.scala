@@ -211,10 +211,12 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
   }
 }
 
-class PostgresScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-application.conf") with PostgresCleaner
+// Note: these tests use the shared-db configs, the test for all (so not only current) events use the regular db config
 
-class MySQLScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-application.conf") with MysqlCleaner
+class PostgresScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-shared-db-application.conf") with PostgresCleaner
 
-class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-application.conf") with OracleCleaner
+class MySQLScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-shared-db-application.conf") with MysqlCleaner
 
-class H2ScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("h2-application.conf") with H2Cleaner
+class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-shared-db-application.conf") with OracleCleaner
+
+class H2ScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("h2-shared-db-application.conf") with H2Cleaner

@@ -44,10 +44,12 @@ abstract class CurrentPersistenceIdsTest(config: String) extends QueryTestSpec(c
   }
 }
 
-class PostgresScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("postgres-application.conf") with PostgresCleaner
+// Note: these tests use the shared-db configs, the test for all persistence ids use the regular db config
 
-class MySQLScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("mysql-application.conf") with MysqlCleaner
+class PostgresScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("postgres-shared-db-application.conf") with PostgresCleaner
 
-class OracleScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("oracle-application.conf") with OracleCleaner
+class MySQLScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("mysql-shared-db-application.conf") with MysqlCleaner
 
-class H2ScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("h2-application.conf") with H2Cleaner
+class OracleScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("oracle-shared-db-application.conf") with OracleCleaner
+
+class H2ScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("h2-shared-db-application.conf") with H2Cleaner

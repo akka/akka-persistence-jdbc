@@ -25,14 +25,14 @@ import slick.jdbc.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
 object SlickDriver {
-  def forDriverName(config: Config): JdbcProfile =
-    DatabaseConfig.forConfig[JdbcProfile]("slick", config).profile
+  def forDriverName(config: Config, path: String): JdbcProfile =
+    DatabaseConfig.forConfig[JdbcProfile](path, config).profile
 }
 
 object SlickDatabase {
-  def forConfig(config: Config, slickConfiguration: SlickConfiguration): Database = {
+  def forConfig(config: Config, slickConfiguration: SlickConfiguration, path: String): Database = {
     val jndiName = slickConfiguration.jndiName.map(Database.forName(_, None))
     val jndiDbName = slickConfiguration.jndiDbName.map(new InitialContext().lookup(_).asInstanceOf[Database])
-    jndiName.orElse(jndiDbName).getOrElse(Database.forConfig("slick.db", config))
+    jndiName.orElse(jndiDbName).getOrElse(Database.forConfig(path, config))
   }
 }

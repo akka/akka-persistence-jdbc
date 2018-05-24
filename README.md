@@ -65,14 +65,54 @@ Configure `slick`:
 
 ## Configuration
 
-- [Default](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/reference.conf)
+akka-persistence-jdbc provides the defaults as part of the [reference.conf](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/reference.conf)
+this file documents all the values which can be configured.
+
+There are several possible ways to configure loading your database connections. Options will be explained below.
+
+### One database connection pool per journal type
+ 
+There is the possibility to create a separate database connection pool per journal-type (one pool for the write-journal,
+one pool for the snapshot-journal, and one pool for the read-journal). This is the default and the following example
+configuration shows how this is configured:
+
 - [Postgres](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/postgres-application.conf)
 - [MySQL](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/mysql-application.conf)
 - [H2](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/h2-application.conf)
 - [Oracle](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/oracle-application.conf)
 
-## DataSource lookup by JNDI name
-The plugin uses `slick` as the database access library. Slick [supports jndi][slick-jndi] for looking up [DataSource][ds]s.
+### Sharing the database connection pool between the journals
+
+In order to create only one connection pool which is shared between all journals the following configuration can be used:
+
+- [Postgres](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/postgres-shared-db-application.conf)
+- [MySQL](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/mysql-shared-db-application.conf)
+- [H2](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/h2-shared-db-application.conf)
+- [Oracle](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/oracle-shared-db-application.conf)
+
+### Customized loading of the db connection
+
+It is also possible to load a custom database connection. 
+In order to do so a custom implementation of [SlickDatabaseProvider](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/scala/akka/persistence/jdbc/util/SlickExtension.scala)
+needs to be created. The methods that need to be implemented supply the Slick `Database` and `Profile` to the journals.
+
+To enable your custom `SlickDatabaseProvider`, the fully qualified class name of the `SlickDatabaseProvider`
+needs to be configured in the application.conf. In addition, you might want to consider whether you want
+the database to be closed automatically:
+
+```
+jdbc-journal {
+  use-shared-db = "enabled" // setting this to any non-empty string prevents the journal from closing the database on shutdown
+  database-provider-fqcn = "com.mypackage.CustomSlickDatabaseProvider"
+}
+jdbc-snapshot-store {
+  use-shared-db = "enabled" // setting this to any non-empty string prevents the snapshot-journal from closing the database on shutdown
+}
+```
+
+
+### DataSource lookup by JNDI name
+The plugin uses `Slick` as the database access library. Slick [supports jndi][slick-jndi] for looking up [DataSource][ds]s.
 
 To enable the JNDI lookup, you must add the following to your application.conf:
 
@@ -275,12 +315,8 @@ You should register the Fully Qualified Class Name in `application.conf` so that
 For more information please review the two default implementations `akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao` and `akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao` or the demo custom DAO example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc) site.
 
 ## Explicitly shutting down the database connections
-The plugin automatically shuts down the HikariCP connection pool only when the ActorSystem is explicitly terminated.
-It is advisable to register a shutdown hook to be run when the VM exits that terminates the ActorSystem:
-
-```scala
-sys.addShutdownHook(system.terminate())
-```
+The plugin automatically shuts down the HikariCP connection pool when the ActorSystem is terminated.
+This is done using [Coordinated Shutdown](https://doc.akka.io/docs/akka/current/actors.html#coordinated-shutdown).
 
 [slick]: http://slick.lightbend.com/
 [slick-jndi]: http://slick.typesafe.com/doc/3.1.1/database.html#using-a-jndi-name

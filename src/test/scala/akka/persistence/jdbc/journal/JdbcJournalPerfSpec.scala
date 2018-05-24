@@ -20,13 +20,13 @@ import akka.actor.Props
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDatabase }
+import akka.persistence.jdbc.util.{ClasspathResources, DropCreate, SlickExtension}
 import akka.persistence.journal.JournalPerfSpec
-import akka.persistence.journal.JournalPerfSpec.{ BenchActor, Cmd, ResetCounter }
+import akka.persistence.journal.JournalPerfSpec.{BenchActor, Cmd, ResetCounter}
 import akka.testkit.TestProbe
-import com.typesafe.config.{ Config, ConfigFactory, ConfigValueFactory }
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
 import scala.concurrent.duration._
 
@@ -53,7 +53,7 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
 
   lazy val journalConfig = new JournalConfig(cfg)
 
-  lazy val db = SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration)
+  lazy val db = SlickExtension(system).database(cfg)
 
   override def beforeAll(): Unit = {
     dropCreate(schemaType)
@@ -113,14 +113,11 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
 }
 
 class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-application.conf"), Postgres()) {
-
-  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 10.minutes)
-
   override def eventsCount: Int = 100
+}
 
-  override def awaitDurationMillis: Long = 10.minutes.toMillis
-
-  override def measurementIterations: Int = 1
+class PostgresJournalPerfSpecSharedDb extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-shared-db-application.conf"), Postgres()) {
+  override def eventsCount: Int = 100
 }
 
 class PostgresJournalPerfSpecPhysicalDelete extends PostgresJournalPerfSpec {
@@ -128,13 +125,11 @@ class PostgresJournalPerfSpecPhysicalDelete extends PostgresJournalPerfSpec {
 }
 
 class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-application.conf"), MySQL()) {
-  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 10.minutes)
-
   override def eventsCount: Int = 100
+}
 
-  override def awaitDurationMillis: Long = 10.minutes.toMillis
-
-  override def measurementIterations: Int = 1
+class MySQLJournalPerfSpecSharedDb extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-shared-db-application.conf"), MySQL()) {
+  override def eventsCount: Int = 100
 }
 
 class MySQLJournalPerfSpecPhysicalDelete extends MySQLJournalPerfSpec {
@@ -142,13 +137,11 @@ class MySQLJournalPerfSpecPhysicalDelete extends MySQLJournalPerfSpec {
 }
 
 class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-application.conf"), Oracle()) {
-  override implicit def pc: PatienceConfig = PatienceConfig(timeout = 10.minutes)
-
   override def eventsCount: Int = 100
+}
 
-  override def awaitDurationMillis: Long = 10.minutes.toMillis
-
-  override def measurementIterations: Int = 1
+class OracleJournalPerfSpecSharedDb extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-shared-db-application.conf"), Oracle()) {
+  override def eventsCount: Int = 100
 }
 
 class OracleJournalPerfSpecPhysicalDelete extends OracleJournalPerfSpec {
@@ -156,6 +149,7 @@ class OracleJournalPerfSpecPhysicalDelete extends OracleJournalPerfSpec {
 }
 
 class H2JournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("h2-application.conf"), H2())
+class H2JournalPerfSpecSharedDb extends JdbcJournalPerfSpec(ConfigFactory.load("h2-shared-db-application.conf"), H2())
 
 class H2JournalPerfSpecPhysicalDelete extends H2JournalPerfSpec {
   this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))

@@ -215,7 +215,7 @@ trait PostgresCleaner extends QueryTestSpec {
       sqlu"""TRUNCATE snapshot""").transactionally
 
   def clearPostgres(): Unit =
-    withDatabase(_.run(actionsClearPostgres).toTry) should be a 'success
+    withDatabase(_.run(actionsClearPostgres).futureValue)
 
   override def beforeAll(): Unit = {
     dropCreate(Postgres())
@@ -237,7 +237,7 @@ trait MysqlCleaner extends QueryTestSpec {
       sqlu"""TRUNCATE snapshot""").transactionally
 
   def clearMySQL(): Unit =
-    withDatabase(_.run(actionsClearMySQL).toTry) should be a 'success
+    withDatabase(_.run(actionsClearMySQL).futureValue)
 
   override def beforeAll(): Unit = {
     dropCreate(MySQL())
@@ -260,7 +260,7 @@ trait OracleCleaner extends QueryTestSpec {
       sqlu"""BEGIN "reset_sequence"; END; """).transactionally
 
   def clearOracle(): Unit =
-    withDatabase(_.run(actionsClearOracle).toTry) should be a 'success
+    withDatabase(_.run(actionsClearOracle).futureValue)
 
   override def beforeAll(): Unit = {
     dropCreate(Oracle())
@@ -282,7 +282,7 @@ trait H2Cleaner extends QueryTestSpec {
       sqlu"""TRUNCATE TABLE snapshot""").transactionally
 
   def clearH2(): Unit =
-    withDatabase(_.run(actionsClearH2).toTry) should be a 'success
+    withDatabase(_.run(actionsClearH2).futureValue)
 
   override def beforeEach(): Unit = {
     dropCreate(H2())

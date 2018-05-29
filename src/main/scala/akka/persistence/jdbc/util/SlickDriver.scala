@@ -16,23 +16,56 @@
 
 package akka.persistence.jdbc.util
 
+import akka.annotation.InternalApi
 import javax.naming.InitialContext
-
 import akka.persistence.jdbc.config.SlickConfiguration
 import com.typesafe.config.Config
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
+/**
+ * INTERNAL API
+ */
 object SlickDriver {
-  def forDriverName(config: Config, path: String): JdbcProfile =
+
+  /**
+   * INTERNAL API
+   */
+  @deprecated(message = "Internal API, will be removed in 4.0.0", since = "3.4.0")
+  def forDriverName(config: Config): JdbcProfile =
+    forDriverName(config, "slick")
+
+  /**
+   * INTERNAL API
+   */
+  private[jdbc] def forDriverName(config: Config, path: String): JdbcProfile =
     DatabaseConfig.forConfig[JdbcProfile](path, config).profile
 }
 
+/**
+ * INTERNAL API
+ */
 object SlickDatabase {
-  def forConfig(config: Config, slickConfiguration: SlickConfiguration, path: String): Database = {
-    val jndiName = slickConfiguration.jndiName.map(Database.forName(_, None))
-    val jndiDbName = slickConfiguration.jndiDbName.map(new InitialContext().lookup(_).asInstanceOf[Database])
-    jndiName.orElse(jndiDbName).getOrElse(Database.forConfig(path, config))
+
+  /**
+   * INTERNAL API
+   */
+  @deprecated(message = "Internal API, will be removed in 4.0.0", since = "3.4.0")
+  def forConfig(config: Config, slickConfiguration: SlickConfiguration): Database = {
+    forConfig(config, slickConfiguration, "slick.db")
+  }
+
+  /**
+   * INTERNAL API
+   */
+  private[jdbc] def forConfig(config: Config, slickConfiguration: SlickConfiguration, path: String): Database = {
+    slickConfiguration.jndiName
+      .map(Database.forName(_, None))
+      .orElse {
+        slickConfiguration.jndiDbName.map(
+          new InitialContext().lookup(_).asInstanceOf[Database])
+      }
+      .getOrElse(Database.forConfig(path, config))
   }
 }

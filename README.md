@@ -18,7 +18,7 @@ Add the following to your `build.sbt`:
 resolvers += Resolver.jcenterRepo
 
 // akka 2.5.x
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.3.0"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.4.0"
 
 // akka 2.4.x
 libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.8.0"

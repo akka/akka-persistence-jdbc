@@ -83,7 +83,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] = {
     if (isOracleDriver(profile)) {
       val selectStatement =
-        if (readJournalConfig.includeDelete)
+        if (readJournalConfig.includeDeleted)
           sql"""SELECT DISTINCT "#$persistenceId" FROM #$theTableName WHERE rownum <= $max""".as[String]
         else
           sql"""SELECT DISTINCT "#$persistenceId"
@@ -104,7 +104,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
       val theTag = s"%$tag%"
 
       val selectStatement =
-        if (readJournalConfig.includeDelete)
+        if (readJournalConfig.includeDeleted)
           sql"""
             SELECT "#$ordering", "#$deleted", "#$persistenceId", "#$sequenceNumber", "#$message", "#$tags"
             FROM (

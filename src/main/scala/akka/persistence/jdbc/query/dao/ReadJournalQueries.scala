@@ -17,7 +17,7 @@
 package akka.persistence.jdbc
 package query.dao
 
-import akka.persistence.jdbc.config.{JournalTableConfiguration, ReadJournalConfig}
+import akka.persistence.jdbc.config.{ JournalTableConfiguration, ReadJournalConfig }
 import akka.persistence.jdbc.journal.dao.JournalTables
 import slick.jdbc.JdbcProfile
 
@@ -37,7 +37,7 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
     baseTableQuery().map(_.persistenceId).distinct.take(max)
 
   private def baseTableQuery() =
-    if (readJournalConfig.includeDelete) JournalTable
+    if (readJournalConfig.includeDeleted) JournalTable
     else JournalTable.filter(_.deleted === false)
 
   val allPersistenceIdsDistinct = Compiled(_allPersistenceIdsDistinct _)
@@ -52,12 +52,22 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
 
   val messagesQuery = Compiled(_messagesQuery _)
 
-  private def _eventsByTag(tag: Rep[String], offset: ConstColumn[Long], maxOffset: ConstColumn[Long], max: ConstColumn[Long]) =
-    baseTableQuery()
-      .filter(_.tags like tag)
-      .sortBy(_.ordering.asc)
-      .filter(row => row.ordering > offset && row.ordering <= maxOffset)
-      .take(max)
+  private def _eventsByTag(tag: Rep[String], offset: ConstColumn[Long], maxOffset: ConstColumn[Long], max: ConstColumn[Long]) = {
+    if (readJournalConfig.includeDeleted) {
+      baseTableQuery()
+        .filter(_.tags like tag)
+        .sortBy(_.ordering.asc)
+        .filter(row => row.ordering > offset && row.ordering <= maxOffset)
+        .take(max)
+    } else {
+      baseTableQuery()
+        .filter(_.tags like tag)
+        .sortBy(_.ordering.asc)
+        .filter(row => row.ordering > offset && row.ordering <= maxOffset)
+        .filter(_.deleted === false)
+        .take(max)
+    }
+  }
 
   val eventsByTag = Compiled(_eventsByTag _)
 

@@ -83,7 +83,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] = {
     if (isOracleDriver(profile)) {
       val selectStatement =
-        if (readJournalConfig.includeDelete)
+        if (readJournalConfig.includeDeleted)
           sql"""SELECT DISTINCT "#$persistenceId" FROM #$theTableName WHERE rownum <= $max""".as[String]
         else
           sql"""SELECT DISTINCT "#$persistenceId"
@@ -104,7 +104,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
       val theTag = s"%$tag%"
 
       val selectStatement =
-        if (readJournalConfig.includeDelete)
+        if (readJournalConfig.includeDeleted)
           sql"""
             SELECT "#$ordering", "#$deleted", "#$persistenceId", "#$sequenceNumber", "#$message", "#$tags"
             FROM (
@@ -131,7 +131,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
       Source
         .fromPublisher(db.stream(selectStatement))
         .via(serializer.deserializeFlow)
-        
+
     } else {
       super.eventsByTag(tag, offset, maxOffset, max)
     }
@@ -168,8 +168,7 @@ class ByteArrayReadJournalDao(
     val db: Database,
     val profile: JdbcProfile,
     val readJournalConfig: ReadJournalConfig,
-    serialization: Serialization
-)(implicit ec: ExecutionContext, mat: Materializer) extends BaseByteArrayReadJournalDao with OracleReadJournalDao with H2ReadJournalDao {
+    serialization: Serialization)(implicit ec: ExecutionContext, mat: Materializer) extends BaseByteArrayReadJournalDao with OracleReadJournalDao with H2ReadJournalDao {
 
   val queries = new ReadJournalQueries(profile, readJournalConfig)
   val serializer = new ByteArrayJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator)

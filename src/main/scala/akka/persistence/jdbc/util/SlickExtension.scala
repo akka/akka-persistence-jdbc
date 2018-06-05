@@ -16,8 +16,7 @@
 
 package akka.persistence.jdbc.util
 
-import akka.Done
-import akka.actor.{ ActorSystem, CoordinatedShutdown, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider }
+import akka.actor.{ ActorSystem, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider }
 import akka.persistence.jdbc.config.{ ConfigKeys, SlickConfiguration }
 import akka.persistence.jdbc.util.ConfigOps._
 import com.typesafe.config.{ Config, ConfigObject }
@@ -25,7 +24,7 @@ import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.JdbcProfile
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.ExecutionContext
 import scala.util.{ Failure, Success }
 
 object SlickExtension extends ExtensionId[SlickExtensionImpl] with ExtensionIdProvider {
@@ -75,16 +74,14 @@ trait SlickDatabaseProvider {
 
 class DefaultSlickDatabaseProvider(system: ActorSystem) extends SlickDatabaseProvider {
 
-  val coordinatedShutdownPhaseOpt: Option[String] = if (system.settings.config.getBoolean("akka-persistence-jdbc.shared-db-add-shutdown-hook")) {
-    Some(system.settings.config.getString("akka-persistence-jdbc.shared-db-coordinated-shutdown-phase"))
-  } else None
+  val addShutDownHook: Boolean = system.settings.config.getBoolean("akka-persistence-jdbc.shared-db-add-shutdown-hook")
 
   val sharedDatabases: Map[String, DbHolder] = system.settings.config.getObject("akka-persistence-jdbc.shared-databases").asScala.flatMap {
     case (key, confObj: ConfigObject) =>
       val conf = confObj.toConfig
       if (conf.hasPath("profile")) {
         // Only create the DbHolder if a profile has actually been configured, this ensures that the example in the reference conf is ignored
-        Some(key -> new DbHolder(key, conf, coordinatedShutdownPhaseOpt, system))
+        Some(key -> new DbHolder(conf, addShutDownHook, system))
       } else None
     case (key, notAnObject) => throw new RuntimeException(s"""Expected "akka-persistence-jdbc.shared-databases.$key" to be a config ConfigObject, but got ${notAnObject.valueType()} (${notAnObject.getClass})""")
   }.toMap
@@ -113,23 +110,19 @@ class DefaultSlickDatabaseProvider(system: ActorSystem) extends SlickDatabasePro
 
 /**
  * A DbHolder lazily initializes a database
- * @param sharedDbName Name of the shared database (used as name of coordinated shutdown task)
  * @param config The configuration used to create the database
- * @param coordinatedShutdownPhaseOpt If defined, the database will be shutdown in this coordinated shutdown phase
+ * @param addShutDownHook If true a `system.registerOnTermination` will be used to register a callback which
+ *                        closes the database when the actor system terminates
  */
-class DbHolder(sharedDbName: String, config: Config, coordinatedShutdownPhaseOpt: Option[String], system: ActorSystem) {
+class DbHolder(config: Config, addShutDownHook: Boolean, system: ActorSystem) {
   val profile: JdbcProfile = SlickDriver.forDriverName(config, path = "")
 
   lazy val db: Database = {
     implicit val ec: ExecutionContext = system.dispatcher
     val db = SlickDatabase.forConfig(config, new SlickConfiguration(config), path = "db")
-    coordinatedShutdownPhaseOpt.foreach { phase =>
-      CoordinatedShutdown(system).addTask(phase, s"close-akka-persistence-jdbc-shared-db-$sharedDbName") { () =>
-        Future {
-          db.close()
-          Done
-        }
-      }
+    system.registerOnTermination {
+      db.close()
+
     }
     db
   }

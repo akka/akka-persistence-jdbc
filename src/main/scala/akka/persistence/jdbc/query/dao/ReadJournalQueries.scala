@@ -53,20 +53,11 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
   val messagesQuery = Compiled(_messagesQuery _)
 
   private def _eventsByTag(tag: Rep[String], offset: ConstColumn[Long], maxOffset: ConstColumn[Long], max: ConstColumn[Long]) = {
-    if (readJournalConfig.includeDeleted) {
-      baseTableQuery()
-        .filter(_.tags like tag)
-        .sortBy(_.ordering.asc)
-        .filter(row => row.ordering > offset && row.ordering <= maxOffset)
-        .take(max)
-    } else {
-      baseTableQuery()
-        .filter(_.tags like tag)
-        .sortBy(_.ordering.asc)
-        .filter(row => row.ordering > offset && row.ordering <= maxOffset)
-        .filter(_.deleted === false)
-        .take(max)
-    }
+    baseTableQuery()
+      .filter(_.tags like tag)
+      .sortBy(_.ordering.asc)
+      .filter(row => row.ordering > offset && row.ordering <= maxOffset)
+      .take(max)
   }
 
   val eventsByTag = Compiled(_eventsByTag _)

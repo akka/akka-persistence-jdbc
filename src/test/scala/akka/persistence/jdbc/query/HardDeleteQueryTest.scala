@@ -19,13 +19,14 @@ abstract class HardDeleteQueryTest(config: String) extends QueryTestSpec(config)
       (actor1 ? withTags(2, "number")).futureValue
       (actor1 ? withTags(3, "number")).futureValue
 
-      // delete and wait for confirmation
+      // delete all three events and wait for confirmations
       (actor1 ? DeleteCmd(1)).futureValue shouldBe "deleted-1"
+      (actor1 ? DeleteCmd(2)).futureValue shouldBe "deleted-2"
+      (actor1 ? DeleteCmd(3)).futureValue shouldBe "deleted-3"
 
+      // check that nothing gets delivered
       journalOps.withCurrentEventsByTag()("number", NoOffset) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(Sequence(2), _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(Sequence(3), _, _, _) => }
         tp.expectComplete()
       }
 
@@ -39,13 +40,14 @@ abstract class HardDeleteQueryTest(config: String) extends QueryTestSpec(config)
       (actor1 ? withTags(2, "number")).futureValue
       (actor1 ? withTags(3, "number")).futureValue
 
-      // delete and wait for confirmation
+      // delete all three events and wait for confirmations
       (actor1 ? DeleteCmd(1)).futureValue shouldBe "deleted-1"
+      (actor1 ? DeleteCmd(2)).futureValue shouldBe "deleted-2"
+      (actor1 ? DeleteCmd(3)).futureValue shouldBe "deleted-3"
 
+      // check that nothing gets delivered
       journalOps.withEventsByTag()("number", NoOffset) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(Sequence(2), _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(Sequence(3), _, _, _) => }
         tp.cancel()
       }
 
@@ -59,13 +61,14 @@ abstract class HardDeleteQueryTest(config: String) extends QueryTestSpec(config)
       (actor1 ? withTags(2, "number")).futureValue
       (actor1 ? withTags(3, "number")).futureValue
 
-      // delete and wait for confirmation
+      // delete all three events and wait for confirmations
       (actor1 ? DeleteCmd(1)).futureValue shouldBe "deleted-1"
+      (actor1 ? DeleteCmd(2)).futureValue shouldBe "deleted-2"
+      (actor1 ? DeleteCmd(3)).futureValue shouldBe "deleted-3"
 
+      // check that nothing gets delivered
       journalOps.withCurrentEventsByPersistenceId()("my-1") { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(Sequence(2), _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(Sequence(3), _, _, _) => }
         tp.expectComplete()
       }
 
@@ -79,13 +82,14 @@ abstract class HardDeleteQueryTest(config: String) extends QueryTestSpec(config)
       (actor1 ? withTags(2, "number")).futureValue
       (actor1 ? withTags(3, "number")).futureValue
 
-      // delete and wait for confirmation
+      // delete all three events and wait for confirmations
       (actor1 ? DeleteCmd(1)).futureValue shouldBe "deleted-1"
+      (actor1 ? DeleteCmd(2)).futureValue shouldBe "deleted-2"
+      (actor1 ? DeleteCmd(3)).futureValue shouldBe "deleted-3"
 
+      // check that nothing gets delivered
       journalOps.withEventsByPersistenceId()("my-1") { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF { case EventEnvelope(Sequence(2), _, _, _) => }
-        tp.expectNextPF { case EventEnvelope(Sequence(3), _, _, _) => }
         tp.cancel()
       }
 

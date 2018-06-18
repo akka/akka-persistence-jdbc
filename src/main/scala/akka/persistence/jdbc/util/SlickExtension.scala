@@ -20,11 +20,8 @@ import akka.actor.{ ActorSystem, ExtendedActorSystem, Extension, ExtensionId, Ex
 import akka.persistence.jdbc.config.{ ConfigKeys, SlickConfiguration }
 import akka.persistence.jdbc.util.ConfigOps._
 import com.typesafe.config.{ Config, ConfigObject }
-import slick.jdbc.JdbcBackend.Database
-import slick.jdbc.JdbcProfile
 
 import scala.collection.JavaConverters._
-import scala.concurrent.ExecutionContext
 import scala.util.{ Failure, Success }
 
 object SlickExtension extends ExtensionId[SlickExtensionImpl] with ExtensionIdProvider {
@@ -43,8 +40,7 @@ class SlickExtensionImpl(system: ExtendedActorSystem) extends Extension {
     }
   }
 
-  def database(config: Config): Database = dbProvider.database(config)
-  def profile(config: Config): JdbcProfile = dbProvider.profile(config)
+  def database(config: Config): SlickDatabase = dbProvider.database(config)
 }
 
 /**
@@ -61,69 +57,33 @@ trait SlickDatabaseProvider {
   /**
    * Create or retrieve the database
    * @param config The configuration which may be used to create the database. If the database is shared
-   *               then this parameter can be ignored.
+   *               then the SlickDatabaseProvider implementation may choose to ignore this parameter.
    */
-  def database(config: Config): Database
-  /**
-   * Create or retrieve the profile
-   * @param config The configuration which may be used to create the profile. If the database/profile is shared
-   *               then this parameter can be ignored.
-   */
-  def profile(config: Config): JdbcProfile
+  def database(config: Config): SlickDatabase
 }
 
 class DefaultSlickDatabaseProvider(system: ActorSystem) extends SlickDatabaseProvider {
 
-  val addShutDownHook: Boolean = system.settings.config.getBoolean("akka-persistence-jdbc.shared-db-add-shutdown-hook")
-
-  val sharedDatabases: Map[String, DbHolder] = system.settings.config.getObject("akka-persistence-jdbc.shared-databases").asScala.flatMap {
+  val sharedDatabases: Map[String, LazySlickDatabase] = system.settings.config.getObject("akka-persistence-jdbc.shared-databases").asScala.flatMap {
     case (key, confObj: ConfigObject) =>
       val conf = confObj.toConfig
       if (conf.hasPath("profile")) {
-        // Only create the DbHolder if a profile has actually been configured, this ensures that the example in the reference conf is ignored
-        Some(key -> new DbHolder(conf, addShutDownHook, system))
+        // Only create the LazySlickDatabase if a profile has actually been configured, this ensures that the example in the reference conf is ignored
+        Some(key -> new LazySlickDatabase(conf, system))
       } else None
     case (key, notAnObject) => throw new RuntimeException(s"""Expected "akka-persistence-jdbc.shared-databases.$key" to be a config ConfigObject, but got ${notAnObject.valueType()} (${notAnObject.getClass})""")
   }.toMap
 
-  private def getDbHolderOrThrow(sharedDbName: String): DbHolder =
+  private def getSharedDbOrThrow(sharedDbName: String): LazySlickDatabase =
     sharedDatabases.getOrElse(
       sharedDbName,
       throw new RuntimeException(s"No shared database is configured under akka-persistence-jdbc.shared-databases.$sharedDbName"))
 
-  def database(config: Config): Database = {
+  def database(config: Config): SlickDatabase = {
     config.asOptionalNonEmptyString(ConfigKeys.useSharedDb) match {
-      case None => SlickDatabase.forConfig(config, new SlickConfiguration(config), "slick.db")
+      case None => SlickDatabase.strict(config, new SlickConfiguration(config), "slick")
       case Some(sharedDbName) =>
-        getDbHolderOrThrow(sharedDbName).db
+        getSharedDbOrThrow(sharedDbName)
     }
-  }
-
-  def profile(config: Config): JdbcProfile = {
-    config.asOptionalNonEmptyString(ConfigKeys.useSharedDb) match {
-      case None => SlickDriver.forDriverName(config, "slick")
-      case Some(sharedDbName) =>
-        getDbHolderOrThrow(sharedDbName).profile
-    }
-  }
-}
-
-/**
- * A DbHolder lazily initializes a database
- * @param config The configuration used to create the database
- * @param addShutDownHook If true a `system.registerOnTermination` will be used to register a callback which
- *                        closes the database when the actor system terminates
- */
-class DbHolder(config: Config, addShutDownHook: Boolean, system: ActorSystem) {
-  val profile: JdbcProfile = SlickDriver.forDriverName(config, path = "")
-
-  lazy val db: Database = {
-    implicit val ec: ExecutionContext = system.dispatcher
-    val db = SlickDatabase.forConfig(config, new SlickConfiguration(config), path = "db")
-    system.registerOnTermination {
-      db.close()
-
-    }
-    db
   }
 }

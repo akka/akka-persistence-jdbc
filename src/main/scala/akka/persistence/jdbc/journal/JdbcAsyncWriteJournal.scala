@@ -23,8 +23,8 @@ import akka.actor.{ ActorSystem, ExtendedActorSystem }
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.journal.JdbcAsyncWriteJournal.{ InPlaceUpdateEvent, WriteFinished }
 import akka.persistence.jdbc.journal.dao.{ JournalDao, JournalDaoWithUpdates }
-import akka.persistence.jdbc.util.SlickExtension
-import akka.persistence.journal.{ AsyncWriteJournal, Tagged }
+import akka.persistence.jdbc.util.{ SlickDatabase, SlickExtension }
+import akka.persistence.journal.AsyncWriteJournal
 import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.{ ActorMaterializer, Materializer }
@@ -55,12 +55,12 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   implicit val mat: Materializer = ActorMaterializer()
   val journalConfig = new JournalConfig(config)
 
-  val slickExtension = SlickExtension(system)
-  val db: Database = slickExtension.database(config)
+  val slickDb: SlickDatabase = SlickExtension(system).database(config)
+  def db: Database = slickDb.database
 
   val journalDao: JournalDao = {
     val fqcn = journalConfig.pluginConfig.dao
-    val profile: JdbcProfile = slickExtension.profile(config)
+    val profile: JdbcProfile = slickDb.profile
     val args = Seq(
       (classOf[Database], db),
       (classOf[JdbcProfile], profile),
@@ -118,7 +118,7 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
       .map(_ => ())
 
   override def postStop(): Unit = {
-    if (journalConfig.useSharedDb.isEmpty) {
+    if (slickDb.allowShutdown) {
       // Since a (new) db is created when this actor (re)starts, we must close it when the actor stops
       db.close()
     }

@@ -40,8 +40,8 @@ abstract class SingleActorSystemPerTestSpec(val config: Config) extends SimpleSp
   val cfg = config.getConfig("jdbc-journal")
   val journalConfig = new JournalConfig(cfg)
   val profile = if (cfg.hasPath("slick.profile")) {
-    SlickDriver.forDriverName(cfg, "slick")
-  } else SlickDriver.forDriverName(config, "akka-persistence-jdbc.shared-databases.slick")
+    SlickDatabase.profile(cfg, "slick")
+  } else SlickDatabase.profile(config, "akka-persistence-jdbc.shared-databases.slick")
   val readJournalConfig = new ReadJournalConfig(config.getConfig(JdbcReadJournal.Identifier))
 
   // The db is initialized in the before and after each bocks
@@ -49,8 +49,8 @@ abstract class SingleActorSystemPerTestSpec(val config: Config) extends SimpleSp
   def db: Database = {
     dbOpt.getOrElse {
       val newDb = if (cfg.hasPath("slick.profile")) {
-        SlickDatabase.forConfig(cfg, journalConfig.slickConfiguration, "slick.db")
-      } else SlickDatabase.forConfig(config, journalConfig.slickConfiguration, "akka-persistence-jdbc.shared-databases.slick.db")
+        SlickDatabase.database(cfg, journalConfig.slickConfiguration, "slick.db")
+      } else SlickDatabase.database(config, journalConfig.slickConfiguration, "akka-persistence-jdbc.shared-databases.slick.db")
 
       dbOpt = Some(newDb)
       newDb

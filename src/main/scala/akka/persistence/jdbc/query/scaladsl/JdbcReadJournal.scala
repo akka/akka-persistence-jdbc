@@ -73,16 +73,16 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
   private val eventAdapters = Persistence(system).adaptersFor(writePluginId)
 
   val readJournalDao: ReadJournalDao = {
-    val slickExtension = SlickExtension(system)
-    val db = slickExtension.database(config)
-    if (readJournalConfig.addShutdownHook) {
+    val slickDb = SlickExtension(system).database(config)
+    val db = slickDb.database
+    if (readJournalConfig.addShutdownHook && slickDb.allowShutdown) {
       system.registerOnTermination {
         db.close()
 
       }
     }
     val fqcn = readJournalConfig.pluginConfig.dao
-    val profile: JdbcProfile = slickExtension.profile(config)
+    val profile: JdbcProfile = slickDb.profile
     val args = Seq(
       (classOf[Database], db),
       (classOf[JdbcProfile], profile),

@@ -36,6 +36,7 @@ trait DropCreate extends ClasspathResources {
 
   val listOfOracleDropQueries = List(
     """ALTER SESSION SET ddl_lock_timeout = 15""", // (ddl lock timeout in seconds) this allows tests which are still writing to the db to finish gracefully
+    """DROP TABLE "journal_tag" CASCADE CONSTRAINT""",
     """DROP TABLE "journal" CASCADE CONSTRAINT""",
     """DROP TABLE "snapshot" CASCADE CONSTRAINT""",
     """DROP TABLE "deleted_to" CASCADE CONSTRAINT""",

@@ -27,6 +27,7 @@ class ReadJournalTablesTest extends TablesTestSpec {
   object TestByteAReadJournalTables extends JournalTables {
     override val profile: JdbcProfile = slick.jdbc.PostgresProfile
     override val journalTableCfg = readJournalTableConfiguration
+    override val journalTagTableCfg = readJournalConfig.journalTagTableConfiguration
   }
 
   "JournalTable" should "be configured with a schema name" in {

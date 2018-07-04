@@ -45,12 +45,28 @@ class JournalTableColumnNames(config: Config) {
   override def toString: String = s"JournalTableColumnNames($persistenceId,$sequenceNumber,$created,$tags,$message)"
 }
 
+class JournalTagTableColumnNames(config: Config) {
+  private val cfg = config.asConfig("tables.journal.columnNames")
+  val persistenceId: String = cfg.as[String]("persistenceId", "persistence_id")
+  val sequenceNumber: String = cfg.as[String]("sequenceNumber", "sequence_number")
+  val tag: String = cfg.as[String]("tag", "tag")
+  override def toString: String = s"JournalTagTableColumnNames($persistenceId,$sequenceNumber,$tag)"
+}
+
 class JournalTableConfiguration(config: Config) {
   private val cfg = config.asConfig("tables.journal")
   val tableName: String = cfg.as[String]("tableName", "journal")
   val schemaName: Option[String] = cfg.as[String]("schemaName").trim
   val columnNames: JournalTableColumnNames = new JournalTableColumnNames(config)
   override def toString: String = s"JournalTableConfiguration($tableName,$schemaName,$columnNames)"
+}
+
+class JournalTagTableConfiguration(config: Config) {
+  private val cfg = config.asConfig("tables.journal-tag")
+  val tableName: String = cfg.as[String]("tableName", "journal_tag")
+  val schemaName: Option[String] = cfg.as[String]("schemaName").trim
+  val columnNames: JournalTagTableColumnNames = new JournalTagTableColumnNames(config)
+  override def toString: String = s"JournalTagTableConfiguration($tableName,$schemaName,$columnNames)"
 }
 
 class SnapshotTableColumnNames(config: Config) {
@@ -100,6 +116,7 @@ class SnapshotPluginConfig(config: Config) {
 class JournalConfig(config: Config) {
   val slickConfiguration = new SlickConfiguration(config)
   val journalTableConfiguration = new JournalTableConfiguration(config)
+  val journalTagTableConfiguration = new JournalTagTableConfiguration(config)
   val pluginConfig = new JournalPluginConfig(config)
   val daoConfig = new BaseByteArrayJournalDaoConfig(config)
   val useSharedDb: Option[String] = config.asOptionalNonEmptyString(ConfigKeys.useSharedDb)
@@ -127,6 +144,7 @@ case class JournalSequenceRetrievalConfig(batchSize: Int, maxTries: Int, queryDe
 class ReadJournalConfig(config: Config) {
   val slickConfiguration = new SlickConfiguration(config)
   val journalTableConfiguration = new JournalTableConfiguration(config)
+  val journalTagTableConfiguration = new JournalTagTableConfiguration(config)
   val journalSequenceRetrievalConfiguration = JournalSequenceRetrievalConfig(config)
   val pluginConfig = new ReadJournalPluginConfig(config)
   val refreshInterval: FiniteDuration = config.asFiniteDuration("refresh-interval", 1.second)

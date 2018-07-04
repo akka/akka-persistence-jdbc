@@ -24,12 +24,17 @@ class JournalTablesTest extends TablesTestSpec {
   val journalTableConfiguration = journalConfig.journalTableConfiguration
 
   object TestByteAJournalTables extends JournalTables {
-    override val profile: JdbcProfile = slick.jdbc.PostgresProfile
+    override val profile: JdbcProfile = slick.jdbc.OracleProfile
     override val journalTableCfg = journalTableConfiguration
+    override val journalTagTableCfg = journalConfig.journalTagTableConfiguration
   }
 
   "JournalTable" should "be configured with a schema name" in {
     TestByteAJournalTables.JournalTable.baseTableRow.schemaName shouldBe journalTableConfiguration.schemaName
+
+    import TestByteAJournalTables.profile.api._
+
+    TestByteAJournalTables.JournalTagTable.schema.createStatements.foreach(println)
   }
 
   it should "be configured with a table name" in {

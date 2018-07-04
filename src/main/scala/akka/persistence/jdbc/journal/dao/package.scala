@@ -22,6 +22,7 @@ package object dao {
   def encodeTags(tags: Set[String], separator: String): Option[String] =
     if (tags.isEmpty) None else Option(tags.mkString(separator))
 
+  // TODO, this is no longer used, but we do need this when we want to be able to read tags in the old format
   def decodeTags(tags: Option[String], separator: String): Set[String] =
     tags.map(_.split(separator).toSet).getOrElse(Set.empty[String])
 

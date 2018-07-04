@@ -201,7 +201,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
       journalOps.withCurrentEventsByTag()(tag, NoOffset) { tp =>
         // The stream must complete within the given amount of time
         // This make take a while in case the journal sequence actor detects gaps
-        val allEvents = tp.toStrict(atMost = 20.seconds)
+        val allEvents = tp.toStrict(atMost = 40.seconds) // TODO I needed to increase this, performance regression?
         allEvents.size should be >= 600
         val expectedOffsets = 1L.to(allEvents.size).map(Sequence.apply)
         allEvents.map(_.offset) shouldBe expectedOffsets

@@ -33,20 +33,20 @@ trait PersistentReprSerializer[T] {
    * each AtomicWrite to a Try[Seq[T]].
    * The Try denotes whether there was a problem with the AtomicWrite or not.
    */
-  def serialize(messages: Seq[AtomicWrite]): Seq[Try[Seq[T]]] = {
+  def serialize(messages: Seq[AtomicWrite]): Seq[Try[Seq[(T, Set[String])]]] = {
     messages.map { atomicWrite =>
-      val serialized = atomicWrite.payload.map(serialize)
+      val serialized = atomicWrite.payload.map(extractTagsAndSerialize)
       TrySeq.sequence(serialized)
     }
   }
 
-  def serialize(persistentRepr: PersistentRepr): Try[T] = persistentRepr.payload match {
+  def extractTagsAndSerialize(persistentRepr: PersistentRepr): Try[(T, Set[String])] = persistentRepr.payload match {
     case Tagged(payload, tags) =>
-      serialize(persistentRepr.withPayload(payload), tags)
-    case _ => serialize(persistentRepr, Set.empty[String])
+      serialize(persistentRepr.withPayload(payload)).map(result => (result, tags))
+    case _ => serialize(persistentRepr).map(result => (result, Set.empty))
   }
 
-  def serialize(persistentRepr: PersistentRepr, tags: Set[String]): Try[T]
+  def serialize(persistentRepr: PersistentRepr): Try[T]
 
   /**
    * deserialize into a PersistentRepr, a set of tags and a Long representing the global ordering of events

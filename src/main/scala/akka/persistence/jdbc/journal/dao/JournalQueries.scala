@@ -17,17 +17,23 @@
 package akka.persistence.jdbc
 package journal.dao
 
-import akka.persistence.jdbc.config.JournalTableConfiguration
+import akka.persistence.jdbc.config.{JournalTableConfiguration, JournalTagTableConfiguration}
 import slick.jdbc.JdbcProfile
+import slick.sql.FixedSqlAction
 
-class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration) extends JournalTables {
+class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration,
+                     override val journalTagTableCfg: JournalTagTableConfiguration) extends JournalTables {
 
   import profile.api._
 
   private val JournalTableC = Compiled(JournalTable)
+  private val JournalTagTableC = Compiled(JournalTagTable)
 
-  def writeJournalRows(xs: Seq[JournalRow]) =
+  def writeJournalRows(xs: Seq[JournalRow]): FixedSqlAction[Option[Int], NoStream, Effect.Write] =
     JournalTableC ++= xs.sortBy(_.sequenceNumber)
+
+  def writeJournalTagRows(xs: Seq[JournalTagRow]): FixedSqlAction[Option[Int], NoStream, Effect.Write] =
+    JournalTagTableC ++= xs
 
   private def selectAllJournalForPersistenceId(persistenceId: Rep[String]) =
     JournalTable.filter(_.persistenceId === persistenceId).sortBy(_.sequenceNumber.desc)

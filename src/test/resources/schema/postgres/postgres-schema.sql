@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS public.journal_tag;
 DROP TABLE IF EXISTS public.journal;
 
 CREATE TABLE IF NOT EXISTS public.journal (
@@ -22,3 +23,11 @@ CREATE TABLE IF NOT EXISTS public.snapshot (
   PRIMARY KEY(persistence_id, sequence_number)
 );
 
+
+create table if not exists public.journal_tag (
+  tag VARCHAR(255) NOT NULL,
+  persistence_id VARCHAR(255) NOT NULL,
+  sequence_number BIGINT NOT NULL,
+  constraint journal_tag_pkey primary key(tag,persistence_id,sequence_number),
+  constraint journal_tag_pid_sequence_fk foreign key(persistence_id,sequence_number) references journal(persistence_id,sequence_number) on delete CASCADE
+);

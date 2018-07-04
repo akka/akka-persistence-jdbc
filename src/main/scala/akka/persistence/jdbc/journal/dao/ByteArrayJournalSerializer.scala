@@ -25,7 +25,7 @@ import scala.collection.immutable._
 import scala.util.Try
 
 class ByteArrayJournalSerializer(serialization: Serialization, separator: String) extends FlowPersistentReprSerializer[JournalRow] {
-  override def serialize(persistentRepr: PersistentRepr, tags: Set[String]): Try[JournalRow] = {
+  override def serialize(persistentRepr: PersistentRepr): Try[JournalRow] = {
     serialization
       .serialize(persistentRepr)
       .map(JournalRow(
@@ -33,12 +33,14 @@ class ByteArrayJournalSerializer(serialization: Serialization, separator: String
         persistentRepr.deleted,
         persistentRepr.persistenceId,
         persistentRepr.sequenceNr,
-        _,
-        encodeTags(tags, separator)))
+        _
+        //,
+//        encodeTags(Set.empty, separator)
+      )) // TODO re-enable serialization of tags for legacy
   }
 
   override def deserialize(journalRow: JournalRow): Try[(PersistentRepr, Set[String], Long)] = {
     serialization.deserialize(journalRow.message, classOf[PersistentRepr])
-      .map((_, decodeTags(journalRow.tags, separator), journalRow.ordering))
+      .map((_, decodeTags(None /* TODO */, separator), journalRow.ordering))
   }
 }

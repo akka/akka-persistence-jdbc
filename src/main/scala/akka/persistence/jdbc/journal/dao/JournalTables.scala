@@ -17,7 +17,8 @@
 package akka.persistence.jdbc
 package journal.dao
 
-import akka.persistence.jdbc.config.JournalTableConfiguration
+import akka.persistence.jdbc.config.{JournalTableConfiguration, JournalTagTableConfiguration}
+import slick.lifted.ProvenShape
 
 trait JournalTables {
   val profile: slick.jdbc.JdbcProfile
@@ -25,19 +26,34 @@ trait JournalTables {
   import profile.api._
 
   def journalTableCfg: JournalTableConfiguration
+  def journalTagTableCfg: JournalTagTableConfiguration
 
   class Journal(_tableTag: Tag) extends Table[JournalRow](_tableTag, _schemaName = journalTableCfg.schemaName, _tableName = journalTableCfg.tableName) {
-    def * = (ordering, deleted, persistenceId, sequenceNumber, message, tags) <> (JournalRow.tupled, JournalRow.unapply)
+    def * = (ordering, deleted, persistenceId, sequenceNumber, message) <> (JournalRow.tupled, JournalRow.unapply)
 
+    // TODO this should probably have a unique constraint instead of just the index
     val ordering: Rep[Long] = column[Long](journalTableCfg.columnNames.ordering, O.AutoInc)
     val persistenceId: Rep[String] = column[String](journalTableCfg.columnNames.persistenceId, O.Length(255, varying = true))
     val sequenceNumber: Rep[Long] = column[Long](journalTableCfg.columnNames.sequenceNumber)
     val deleted: Rep[Boolean] = column[Boolean](journalTableCfg.columnNames.deleted, O.Default(false))
-    val tags: Rep[Option[String]] = column[Option[String]](journalTableCfg.columnNames.tags, O.Length(255, varying = true))
+//    val tags: Rep[Option[String]] = column[Option[String]](journalTableCfg.columnNames.tags, O.Length(255, varying = true))
     val message: Rep[Array[Byte]] = column[Array[Byte]](journalTableCfg.columnNames.message)
     val pk = primaryKey(s"${tableName}_pk", (persistenceId, sequenceNumber))
     val orderingIdx = index(s"${tableName}_ordering_idx", ordering, unique = true)
   }
 
   lazy val JournalTable = new TableQuery(tag => new Journal(tag))
+
+  /** Table description of table journal_tag. Objects of this class serve as prototypes for rows in queries. */
+  class JournalTag(_tableTag: Tag) extends profile.api.Table[JournalTagRow](_tableTag, journalTagTableCfg.schemaName, journalTagTableCfg.tableName) {
+    def * : ProvenShape[JournalTagRow] = (tag, persistenceId, sequenceNumber) <> (JournalTagRow.tupled, JournalTagRow.unapply)
+    val tag: Rep[String] = column[String](journalTagTableCfg.columnNames.tag, O.Length(255,varying=true))
+    val persistenceId: Rep[String] = column[String](journalTagTableCfg.columnNames.persistenceId, O.Length(255, varying = true))
+    val sequenceNumber: Rep[Long] = column[Long](journalTagTableCfg.columnNames.sequenceNumber)
+
+    val pk = primaryKey(s"${tableName}_pkey", (tag, persistenceId, sequenceNumber))
+    lazy val journalFk = foreignKey(s"${tableName}_${journalTagTableCfg.columnNames.persistenceId}_fk", (persistenceId, sequenceNumber), JournalTable)(r => (r.persistenceId, r.sequenceNumber), onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.Cascade)
+  }
+  /** Collection-like TableQuery object for table JournalTag */
+  lazy val JournalTagTable = new TableQuery(tag => new JournalTag(tag))
 }

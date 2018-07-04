@@ -211,6 +211,7 @@ trait PostgresCleaner extends QueryTestSpec {
 
   val actionsClearPostgres =
     DBIO.seq(
+      sqlu"""TRUNCATE journal_tag""",
       sqlu"""TRUNCATE journal""",
       sqlu"""TRUNCATE snapshot""").transactionally
 
@@ -233,8 +234,13 @@ trait MysqlCleaner extends QueryTestSpec {
 
   val actionsClearMySQL =
     DBIO.seq(
+      // To allow truncating journal_tag, we temporarily need to disable the foreign key checks
+      sqlu"""SET FOREIGN_KEY_CHECKS = 0""",
+      sqlu"""TRUNCATE journal_tag""",
       sqlu"""TRUNCATE journal""",
-      sqlu"""TRUNCATE snapshot""").transactionally
+      sqlu"""TRUNCATE snapshot""",
+      sqlu"""SET FOREIGN_KEY_CHECKS = 1"""
+  ).transactionally
 
   def clearMySQL(): Unit =
     withDatabase(_.run(actionsClearMySQL).futureValue)
@@ -278,6 +284,7 @@ trait H2Cleaner extends QueryTestSpec {
 
   val actionsClearH2 =
     DBIO.seq(
+      sqlu"""TRUNCATE TABLE journal_tag""",
       sqlu"""TRUNCATE TABLE journal""",
       sqlu"""TRUNCATE TABLE snapshot""").transactionally
 

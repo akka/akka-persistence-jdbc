@@ -42,3 +42,12 @@ CREATE TABLE "snapshot" (
   PRIMARY KEY ("persistence_id", "sequence_number")
 )
 /
+
+CREATE TABLE "journal_tag" (
+  "tag" VARCHAR(255) NOT NULL,
+  "persistence_id" VARCHAR(255) NOT NULL,
+  "sequence_number" NUMERIC NOT NULL,
+  PRIMARY KEY("tag", "persistence_id", "sequence_number"),
+  CONSTRAINT "journal_tag_persistence_id_fk" FOREIGN KEY ("persistence_id", "sequence_number") REFERENCES "journal" ("persistence_id", "sequence_number") ON DELETE CASCADE
+)
+/

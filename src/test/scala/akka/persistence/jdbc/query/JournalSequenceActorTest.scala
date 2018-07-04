@@ -23,6 +23,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean) e
 
   val journalSequenceActorConfig = readJournalConfig.journalSequenceRetrievalConfiguration
   val journalTableCfg = journalConfig.journalTableConfiguration
+  val journalTagTableCfg = journalConfig.journalTagTableConfiguration
 
   import profile.api._
 

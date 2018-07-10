@@ -133,5 +133,7 @@ class ReadJournalConfig(config: Config) {
   val maxBufferSize: Int = config.as[String]("max-buffer-size", "500").toInt
   val addShutdownHook: Boolean = config.asBoolean("add-shutdown-hook", true)
   val coordinatedShutdownPhase: String = config.asString("coordinated-shutdown-phase", CoordinatedShutdown.PhaseBeforeActorSystemTerminate)
-  override def toString: String = s"ReadJournalConfig($slickConfiguration,$journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook,$coordinatedShutdownPhase)"
+  val includeDeleted: Boolean = config.as[Boolean]("includeLogicallyDeleted", true)
+
+  override def toString: String = s"ReadJournalConfig($slickConfiguration,$journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook,$coordinatedShutdownPhase,$includeDeleted)"
 }

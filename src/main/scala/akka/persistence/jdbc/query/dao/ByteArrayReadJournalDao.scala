@@ -117,7 +117,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
               WHERE "#$tags" LIKE $theTag
               AND "#$ordering" > $theOffset
               AND "#$ordering" <= $maxOffset
-              AND deleted = false
+              AND "#$deleted" = false
               ORDER BY "#$ordering"
             )
             WHERE rownum <= $max""".as[JournalRow]

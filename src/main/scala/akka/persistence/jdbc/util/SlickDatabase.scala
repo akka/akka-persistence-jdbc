@@ -73,9 +73,9 @@ object SlickDatabase {
   /**
    * INTERNAL API
    */
-  private[jdbc] def strict(config: Config, slickConfiguration: SlickConfiguration, path: String): SlickDatabase = {
+  private[jdbc] def initializeEagerly(config: Config, slickConfiguration: SlickConfiguration, path: String): SlickDatabase = {
     val dbPath = if (path.isEmpty) "db" else s"$path.db"
-    StrictSlickDatabase(
+    EagerSlickDatabase(
       database(config, slickConfiguration, dbPath),
       profile(config, path))
   }
@@ -86,14 +86,14 @@ trait SlickDatabase {
   def profile: JdbcProfile
 
   /**
-   * If true, the requesting side usualy a (read/write/snapshot journal)
+   * If true, the requesting side usually a (read/write/snapshot journal)
    * should shutdown the database when it closes. If false, it should leave
    * the database connection pool open, since it might still be used elsewhere.
    */
   def allowShutdown: Boolean
 }
 
-case class StrictSlickDatabase(database: Database, profile: JdbcProfile) extends SlickDatabase {
+case class EagerSlickDatabase(database: Database, profile: JdbcProfile) extends SlickDatabase {
   override def allowShutdown: Boolean = true
 }
 

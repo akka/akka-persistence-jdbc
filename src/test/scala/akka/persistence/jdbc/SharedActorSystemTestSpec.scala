@@ -47,7 +47,7 @@ abstract class SharedActorSystemTestSpec(val config: Config) extends SimpleSpec 
 
   val cfg = config.getConfig("jdbc-journal")
   val journalConfig = new JournalConfig(cfg)
-  lazy val db = SlickExtension(system).database(cfg)
+  lazy val db = SlickExtension(system).database(cfg).database
   val readJournalConfig = new ReadJournalConfig(config.getConfig(JdbcReadJournal.Identifier))
 
   override protected def afterAll(): Unit = {

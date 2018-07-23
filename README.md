@@ -316,7 +316,7 @@ For more information please review the two default implementations `akka.persist
 
 ## Explicitly shutting down the database connections
 The plugin automatically shuts down the HikariCP connection pool when the ActorSystem is terminated.
-This is done using [Coordinated Shutdown](https://doc.akka.io/docs/akka/current/actors.html#coordinated-shutdown).
+This is done using [ActorSystem.registerOnTermination](https://doc.akka.io/api/akka/current/akka/actor/ActorSystem.html#registerOnTermination[T](code:=>T):Unit).
 
 [slick]: http://slick.lightbend.com/
 [slick-jndi]: http://slick.typesafe.com/doc/3.1.1/database.html#using-a-jndi-name

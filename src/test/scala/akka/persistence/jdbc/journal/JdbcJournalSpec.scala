@@ -44,7 +44,7 @@ abstract class JdbcJournalSpec(config: Config, schemaType: SchemaType) extends J
 
   lazy val journalConfig = new JournalConfig(cfg)
 
-  lazy val db = SlickExtension(system).database(cfg)
+  lazy val db = SlickExtension(system).database(cfg).database
 
   override def beforeAll(): Unit = {
     dropCreate(schemaType)

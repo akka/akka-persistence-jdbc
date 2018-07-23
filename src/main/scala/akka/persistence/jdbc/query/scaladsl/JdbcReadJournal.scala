@@ -17,8 +17,8 @@
 package akka.persistence.jdbc.query
 package scaladsl
 
-import akka.{ Done, NotUsed }
-import akka.actor.{ CoordinatedShutdown, ExtendedActorSystem }
+import akka.NotUsed
+import akka.actor.ExtendedActorSystem
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.query.JournalSequenceActor.{ GetMaxOrderingId, MaxOrderingId }
 import akka.persistence.jdbc.query.dao.ReadJournalDao
@@ -73,18 +73,16 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
   private val eventAdapters = Persistence(system).adaptersFor(writePluginId)
 
   val readJournalDao: ReadJournalDao = {
-    val slickExtension = SlickExtension(system)
-    val db = slickExtension.database(config)
-    if (readJournalConfig.addShutdownHook) {
-      CoordinatedShutdown(system).addTask(readJournalConfig.coordinatedShutdownPhase, "close-jdbc-read-journal-db") { () =>
-        Future {
-          db.close()
-          Done
-        }
+    val slickDb = SlickExtension(system).database(config)
+    val db = slickDb.database
+    if (readJournalConfig.addShutdownHook && slickDb.allowShutdown) {
+      system.registerOnTermination {
+        db.close()
+
       }
     }
     val fqcn = readJournalConfig.pluginConfig.dao
-    val profile: JdbcProfile = slickExtension.profile(config)
+    val profile: JdbcProfile = slickDb.profile
     val args = Seq(
       (classOf[Database], db),
       (classOf[JdbcProfile], profile),

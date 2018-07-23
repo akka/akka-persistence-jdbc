@@ -53,7 +53,7 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
 
   lazy val journalConfig = new JournalConfig(cfg)
 
-  lazy val db = SlickExtension(system).database(cfg)
+  lazy val db = SlickExtension(system).database(cfg).database
 
   override def beforeAll(): Unit = {
     dropCreate(schemaType)

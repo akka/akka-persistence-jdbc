@@ -57,7 +57,9 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
   // we should not introduce another dependency here.
   // Therefore, we make sure we only log a warning for logical deletes once
   lazy val logWarnAboutLogicalDeletionDeprecation = {
-    logger.warn("Logical deletion of events is deprecated and will be removed in version 4.0.0")
+    logger.warn(
+      "Logical deletion of events is deprecated and will be removed in akka-persistende-jdbc version 4.0.0." +
+        "To disable it in this current version you must set the property 'akka-persistence-jdbc.logicalDeletion.enable' to false.")
   }
 
   private val writeQueue = Source.queue[(Promise[Unit], Seq[JournalRow])](bufferSize, OverflowStrategy.dropNew)

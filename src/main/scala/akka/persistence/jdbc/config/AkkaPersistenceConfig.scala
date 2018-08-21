@@ -80,7 +80,7 @@ class BaseByteArrayJournalDaoConfig(config: Config) {
   val batchSize: Int = config.asInt("batchSize", 400)
   val parallelism: Int = config.asInt("parallelism", 8)
   val logicalDelete: Boolean = config.asBoolean("logicalDelete", default = true)
-  override def toString: String = s"BaseByteArrayJournalDaoConfig($bufferSize,$batchSize,$parallelism)"
+  override def toString: String = s"BaseByteArrayJournalDaoConfig($bufferSize,$batchSize,$parallelism,$logicalDelete)"
 }
 
 class ReadJournalPluginConfig(config: Config) {
@@ -131,5 +131,7 @@ class ReadJournalConfig(config: Config) {
   val refreshInterval: FiniteDuration = config.asFiniteDuration("refresh-interval", 1.second)
   val maxBufferSize: Int = config.as[String]("max-buffer-size", "500").toInt
   val addShutdownHook: Boolean = config.asBoolean("add-shutdown-hook", true)
-  override def toString: String = s"ReadJournalConfig($slickConfiguration,$journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook)"
+  val includeDeleted: Boolean = config.as[Boolean]("includeLogicallyDeleted", true)
+
+  override def toString: String = s"ReadJournalConfig($slickConfiguration,$journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook,$includeDeleted)"
 }

@@ -26,6 +26,7 @@ import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.serialization.Serialization
 import akka.stream.scaladsl.{ Keep, Sink, Source }
 import akka.stream.{ Materializer, OverflowStrategy, QueueOfferResult }
+import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcBackend._
 import slick.jdbc.JdbcProfile
 
@@ -48,6 +49,18 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
 
   import journalConfig.daoConfig.{ batchSize, bufferSize, logicalDelete, parallelism }
   import profile.api._
+
+  val logger = LoggerFactory.getLogger(this.getClass)
+
+  // This logging may block since we don't control how the user will configure logback
+  // We can't use a Akka logging neither because we don't have an ActorSystem in scope and
+  // we should not introduce another dependency here.
+  // Therefore, we make sure we only log a warning for logical deletes once
+  lazy val logWarnAboutLogicalDeletionDeprecation = {
+    logger.warn(
+      "Logical deletion of events is deprecated and will be removed in akka-persistende-jdbc version 4.0.0. " +
+        "To disable it in this current version you must set the property 'akka-persistence-jdbc.logicalDeletion.enable' to false.")
+  }
 
   private val writeQueue = Source.queue[(Promise[Unit], Seq[JournalRow])](bufferSize, OverflowStrategy.dropNew)
     .batchWeighted[(Seq[Promise[Unit]], Seq[JournalRow])](batchSize, _._2.size, tup => Vector(tup._1) -> tup._2) {
@@ -96,6 +109,12 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
 
   override def delete(persistenceId: String, maxSequenceNr: Long): Future[Unit] =
     if (logicalDelete) {
+      // We only log a warning when user effectively deletes an event.
+      // The rationale here is that this feature is not so broadly used and the default
+      // is to have logical delete enabled.
+      // We don't want to log warnings for users that are not using this,
+      // so we make it happen only when effectively used.
+      logWarnAboutLogicalDeletionDeprecation
       db.run(queries.markJournalMessagesAsDeleted(persistenceId, maxSequenceNr)).map(_ => ())
     } else {
       // We should keep journal record with highest sequence number in order to be compliant

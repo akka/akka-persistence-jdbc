@@ -16,9 +16,9 @@
 
 package akka.persistence.jdbc.query
 
-import akka.actor.{ ActorRef, ActorSystem, Props }
+import akka.actor.{ ActorRef, ActorSystem, Props, Stash, Status }
 import akka.event.LoggingReceive
-import akka.persistence.PersistentActor
+import akka.persistence.{ DeleteMessagesFailure, DeleteMessagesSuccess, PersistentActor }
 import akka.persistence.jdbc.SingleActorSystemPerTestSpec
 import akka.persistence.jdbc.query.EventAdapterTest.{ Event, TaggedAsyncEvent, TaggedEvent }
 import akka.persistence.jdbc.query.javadsl.{ JdbcReadJournal => JavaJdbcReadJournal }
@@ -141,18 +141,22 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
 
   final val ExpectNextTimeout = 10.second
 
-  class TestActor(id: Int, replyToMessages: Boolean) extends PersistentActor {
+  class TestActor(id: Int, replyToMessages: Boolean) extends PersistentActor with Stash {
     override val persistenceId: String = "my-" + id
 
     var state: Int = 0
 
-    override def receiveCommand: Receive = LoggingReceive {
+    override def receiveCommand: Receive = idle
+
+    def idle: Receive = LoggingReceive {
       case "state" =>
         sender() ! state
 
       case DeleteCmd(toSequenceNr) =>
         deleteMessages(toSequenceNr)
-        if (replyToMessages) sender() ! s"deleted-$toSequenceNr"
+        if (replyToMessages) {
+          context become awaitingDeleting(sender())
+        }
 
       case event: Int =>
         persist(event) { (event: Int) =>
@@ -178,6 +182,22 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
         persistAsync(event) { evt =>
           if (replyToMessages) sender() ! akka.actor.Status.Success((payload, tag))
         }
+    }
+
+    def awaitingDeleting(origSender: ActorRef): Receive = LoggingReceive {
+
+      case DeleteMessagesSuccess(toSequenceNr) =>
+        origSender ! s"deleted-$toSequenceNr"
+        unstashAll()
+        context become idle
+
+      case DeleteMessagesFailure(ex, _) =>
+        origSender ! Status.Failure(ex)
+        unstashAll()
+        context become idle
+
+      // stash whatever other messages
+      case _ => stash()
     }
 
     def updateState(event: Int): Unit = {

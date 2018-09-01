@@ -9,7 +9,7 @@ postgres:
     - "5432:5432"  # credentials (docker:docker)
 
 mysql:
-  image: mysql:latest
+  image: mysql:5.7.23
   container_name: mysql-test
   environment:
     - "TZ=Europe/Amsterdam"

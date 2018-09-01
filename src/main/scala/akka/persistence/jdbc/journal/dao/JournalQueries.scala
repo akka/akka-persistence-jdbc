@@ -19,6 +19,7 @@ package journal.dao
 
 import akka.persistence.jdbc.config.JournalTableConfiguration
 import slick.jdbc.JdbcProfile
+import slick.sql.FixedSqlAction
 
 class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration) extends JournalTables {
 
@@ -43,12 +44,16 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
    * Updates (!) a payload stored in a specific events row.
    * Intended to be used sparingly, e.g. moving all events to their encrypted counterparts.
    */
-  def update(persistenceId: String, seqNr: Long, replacement: Array[Byte]) = {
+  def update(persistenceId: String, seqNr: Long, replacementMessage: Option[Array[Byte]], replacementEvent: Option[Array[Byte]], replacementSerId: Option[Int], replacementSerManifest: Option[String]): FixedSqlAction[Int, NoStream, Effect.Write] = {
     val baseQuery = JournalTable
       .filter(_.persistenceId === persistenceId)
       .filter(_.sequenceNumber === seqNr)
 
-    baseQuery.map(_.message).update(replacement)
+    if (replacementMessage.isDefined) {
+      baseQuery.map(row => (row.message, row.event, row.serId, row.serManifest)).update((replacementMessage, replacementEvent, replacementSerId, replacementSerManifest))
+    } else {
+      baseQuery.map(row => (row.event, row.serId, row.serManifest)).update((replacementEvent, replacementSerId, replacementSerManifest))
+    }
   }
 
   def markJournalMessagesAsDeleted(persistenceId: String, maxSequenceNr: Long) =

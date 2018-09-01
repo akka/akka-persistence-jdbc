@@ -6,7 +6,11 @@ CREATE TABLE IF NOT EXISTS journal (
   sequence_number BIGINT NOT NULL,
   deleted BOOLEAN DEFAULT FALSE,
   tags VARCHAR(255) DEFAULT NULL,
-  message BLOB NOT NULL,
+  event BLOB NOT NULL,
+  event_manifest VARCHAR(255) NOT NULL,
+  ser_id INTEGER NOT NULL,
+  ser_manifest VARCHAR(255) NOT NULL,
+  writer_uuid VARCHAR(36) NOT NULL,
   PRIMARY KEY(persistence_id, sequence_number)
 );
 
@@ -18,6 +22,8 @@ CREATE TABLE IF NOT EXISTS snapshot (
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
   created BIGINT NOT NULL,
-  snapshot BLOB NOT NULL,
+  snapshot_data BLOB NOT NULL,
+  ser_id INTEGER NOT NULL,
+  ser_manifest VARCHAR(255) NOT NULL,
   PRIMARY KEY (persistence_id, sequence_number)
 );

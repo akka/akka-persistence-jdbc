@@ -1,5 +1,5 @@
 mysql:
-  image: mysql:latest
+  image: mysql:5.7.23
   container_name: mysql
   environment:
     - "TZ=Europe/Amsterdam"

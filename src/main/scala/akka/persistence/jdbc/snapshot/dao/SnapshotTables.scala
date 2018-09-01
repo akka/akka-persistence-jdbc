@@ -22,7 +22,15 @@ import akka.persistence.jdbc.util.InputStreamOps._
 import slick.jdbc.JdbcProfile
 
 object SnapshotTables {
-  case class SnapshotRow(persistenceId: String, sequenceNumber: Long, created: Long, snapshot: Array[Byte])
+  case class SnapshotRow(
+      persistenceId: String,
+      sequenceNumber: Long,
+      created: Long,
+      @deprecated("This was used to store the the snapshot serialized wrapped in a Snapshot object, but no longer.", "4.0.0") snapshot: Option[Array[Byte]],
+      snapshotData: Option[Array[Byte]],
+      serId: Option[Int],
+      serManifest: Option[String])
+
   def isOracleDriver(profile: JdbcProfile): Boolean = profile match {
     case slick.jdbc.OracleProfile => true
     case _                        => false
@@ -37,12 +45,27 @@ trait SnapshotTables {
   def snapshotTableCfg: SnapshotTableConfiguration
 
   class Snapshot(_tableTag: Tag) extends Table[SnapshotRow](_tableTag, _schemaName = snapshotTableCfg.schemaName, _tableName = snapshotTableCfg.tableName) {
-    def * = (persistenceId, sequenceNumber, created, snapshot) <> (SnapshotRow.tupled, SnapshotRow.unapply)
+    def * = if (snapshotTableCfg.hasSnapshotColumn) {
+      (persistenceId, sequenceNumber, created, snapshot, snapshotData, serId, serManifest) <> (SnapshotRow.tupled, SnapshotRow.unapply)
+    } else {
+      (persistenceId, sequenceNumber, created, snapshotData, serId, serManifest) <> (
+        {
+          case (persistenceId, sequenceNumber, created, snapshotData, serId, serManifest) =>
+            SnapshotRow(persistenceId, sequenceNumber, created, None, snapshotData, serId, serManifest)
+        },
+        { (row: SnapshotRow) =>
+          Some((row.persistenceId, row.sequenceNumber, row.created, row.snapshotData, row.serId, row.serManifest))
+        })
+    }
 
     val persistenceId: Rep[String] = column[String](snapshotTableCfg.columnNames.persistenceId, O.Length(255, varying = true))
     val sequenceNumber: Rep[Long] = column[Long](snapshotTableCfg.columnNames.sequenceNumber)
     val created: Rep[Long] = column[Long](snapshotTableCfg.columnNames.created)
-    val snapshot: Rep[Array[Byte]] = column[Array[Byte]](snapshotTableCfg.columnNames.snapshot)
+    @deprecated("This was used to store the the snapshot serialized wrapped in a Snapshot object, but no longer.", "4.0.0")
+    val snapshot: Rep[Option[Array[Byte]]] = column[Option[Array[Byte]]](snapshotTableCfg.columnNames.snapshot)
+    val snapshotData: Rep[Option[Array[Byte]]] = column[Option[Array[Byte]]](snapshotTableCfg.columnNames.snapshotData)
+    val serId: Rep[Option[Int]] = column[Option[Int]](snapshotTableCfg.columnNames.serId)
+    val serManifest: Rep[Option[String]] = column[Option[String]](snapshotTableCfg.columnNames.serManifest, O.Length(255, varying = true))
     val pk = primaryKey(s"${tableName}_pk", (persistenceId, sequenceNumber))
   }
 
@@ -53,8 +76,9 @@ trait SnapshotTables {
 
     private val columnType = MappedColumnType.base[Array[Byte], Blob](
       bytes => new SerialBlob(bytes),
-      blob => blob.getBinaryStream.toArray)
-    override val snapshot: Rep[Array[Byte]] = column[Array[Byte]](snapshotTableCfg.columnNames.snapshot)(columnType)
+      blob => blob.getBinaryStream.toArray).optionType
+    override val snapshot: Rep[Option[Array[Byte]]] = column[Option[Array[Byte]]](snapshotTableCfg.columnNames.snapshot)(columnType)
+    override val snapshotData: Rep[Option[Array[Byte]]] = column[Option[Array[Byte]]](snapshotTableCfg.columnNames.snapshotData)(columnType)
   }
 
   lazy val SnapshotTable = new TableQuery(tag => if (isOracleDriver(profile)) OracleSnapshot(tag) else new Snapshot(tag))

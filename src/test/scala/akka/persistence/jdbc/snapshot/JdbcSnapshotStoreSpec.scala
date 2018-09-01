@@ -16,17 +16,20 @@
 
 package akka.persistence.jdbc.snapshot
 
+import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDatabase }
+import akka.persistence.jdbc.util.{ClasspathResources, DropCreate, SlickDatabase}
 import akka.persistence.snapshot.SnapshotStoreSpec
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 
 import scala.concurrent.duration._
 
 abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType) extends SnapshotStoreSpec(config) with BeforeAndAfterAll with ScalaFutures with ClasspathResources with DropCreate {
+
+  override protected def supportsSerialization: CapabilityFlag = false // TODO re-enable
 
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 10.seconds)
 

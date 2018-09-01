@@ -17,5 +17,17 @@
 package akka.persistence
 
 package object jdbc {
-  final case class JournalRow(ordering: Long, deleted: Boolean, persistenceId: String, sequenceNumber: Long, message: Array[Byte], tags: Option[String] = None)
+  final case class JournalRow(
+      ordering: Long,
+      deleted: Boolean,
+      persistenceId: String,
+      sequenceNumber: Long,
+      @deprecated("This was used to store the the PersistentRepr serialized as is, but no longer.", "4.0.0") message: Option[Array[Byte]],
+      tags: Option[String] = None,
+      // These are all options because they were added in 4.0.0, events written earlier won't have them.
+      event: Option[Array[Byte]],
+      eventManifest: Option[String],
+      serId: Option[Int],
+      serManifest: Option[String],
+      writerUuid: Option[String])
 }

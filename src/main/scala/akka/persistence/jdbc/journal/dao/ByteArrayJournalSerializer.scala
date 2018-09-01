@@ -17,28 +17,69 @@
 package akka.persistence.jdbc
 package journal.dao
 
+import akka.actor.ActorRef
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
-import akka.serialization.Serialization
+import akka.serialization.{ Serialization, SerializerWithStringManifest }
 
 import scala.collection.immutable._
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
-class ByteArrayJournalSerializer(serialization: Serialization, separator: String) extends FlowPersistentReprSerializer[JournalRow] {
+class ByteArrayJournalSerializer(serialization: Serialization, separator: String, writeMessageColumn: Boolean) extends FlowPersistentReprSerializer[JournalRow] {
   override def serialize(persistentRepr: PersistentRepr, tags: Set[String]): Try[JournalRow] = {
-    serialization
-      .serialize(persistentRepr)
-      .map(JournalRow(
+
+    val tryMessageColumn = if (writeMessageColumn) {
+      serialization.serialize(persistentRepr).map(Some.apply)
+    } else {
+      Success(None)
+    }
+
+    tryMessageColumn.map { maybeMessage =>
+      val payload = persistentRepr.payload.asInstanceOf[AnyRef]
+      val serializer = serialization.findSerializerFor(payload)
+      val event = Some(serializer.toBinary(payload))
+      val serManifest = serializer match {
+        case stringManifest: SerializerWithStringManifest =>
+          stringManifest.manifest(payload)
+        case _ if serializer.includeManifest =>
+          payload.getClass.getName
+        case _ => ""
+      }
+      JournalRow(
         Long.MinValue,
         persistentRepr.deleted,
         persistentRepr.persistenceId,
         persistentRepr.sequenceNr,
-        _,
-        encodeTags(tags, separator)))
+        maybeMessage,
+        encodeTags(tags, separator),
+        event,
+        Some(persistentRepr.manifest),
+        Some(serializer.identifier),
+        Some(serManifest),
+        Some(persistentRepr.writerUuid))
+    }
   }
 
   override def deserialize(journalRow: JournalRow): Try[(PersistentRepr, Set[String], Long)] = {
-    serialization.deserialize(journalRow.message, classOf[PersistentRepr])
-      .map((_, decodeTags(journalRow.tags, separator), journalRow.ordering))
+    if (journalRow.event.isDefined && journalRow.serId.isDefined) {
+      serialization.deserialize(
+        journalRow.event.get,
+        journalRow.serId.get,
+        journalRow.serManifest.getOrElse("")).map { payload =>
+          (PersistentRepr(
+            payload,
+            journalRow.sequenceNumber,
+            journalRow.persistenceId,
+            journalRow.eventManifest.getOrElse(PersistentRepr.Undefined),
+            journalRow.deleted,
+            ActorRef.noSender,
+            journalRow.writerUuid.getOrElse(PersistentRepr.Undefined)), decodeTags(journalRow.tags, separator), journalRow.ordering)
+        }
+    } else if (journalRow.message.isDefined) {
+      serialization.deserialize(journalRow.message.get, classOf[PersistentRepr])
+        .map((_, decodeTags(journalRow.tags, separator), journalRow.ordering))
+    } else {
+      Failure(new RuntimeException("Row does not define an event or message"))
+    }
   }
 }

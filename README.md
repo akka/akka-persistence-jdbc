@@ -30,6 +30,21 @@ The release notes can be found [here](https://github.com/dnvriend/akka-persisten
 
 For change log prior to v3.2.0, visit [Version History Page (wiki)](https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
 
+### Migrating to v4.x
+
+To migrate from v3.x to v4.x, the database schema needs to be updated. To migrate, see the `<database-name>-migration-v4.sql` files in your corresponding databases [schema directory](https://github.com/dnvriend/akka-persistence-jdbc/tree/master/src/test/resources/schema/). The schema update is both backwards and forwards compatible, however, by default, `akka-persistence-jdbc` won't read the old data. To enable this, you have to enable backwards compatibility. Additionally, if you wish to perform rolling upgrades, canary upgrades, or want to be able to rollback, you will need to enable forwards compatibility. Backwards and forwards compatibility can be enabled with the following configuration:
+
+```
+akka-persistence-jdbc.migration.v4 {
+    backwards-compatibility = true
+    forwards-compatibility = true
+}
+```
+
+There is an overhead to enabling forwards compatibility, as it means all events and snapshots will be doubley serialized and persisted. Once you have upgraded all nodes to v4.x this should be set back to `false`.
+
+Additionally, a migration task has been provided to allow events to be migrated from the old format to the new format - while this is not absolutely necessary, it is recommended since the old format could break with future versions of Akka persistence. This task can be run in the background after all nodes have been upgraded to the new version. To run the migration task, run `akka.persistence.jdbc.migration.V4Migration` with your applications classpath set, and all the database configuration configured correctly. Before you do this, it is recommended that you configure Akka serializers for each event type, so that they are stored in a format suitable for future migrations, eg, json or protobuf.
+
 ## Contribution policy
 
 Contributions via GitHub pull requests are gladly accepted from their original author. Along with any pull requests, please state that the contribution is your original work and that you license the work to the project under the project's open source license. Whether or not you state this explicitly, by submitting any copyrighted material via pull request, email, or other means you agree to license the material under the project's open source license and warrant that you have the legal authority to do so.
@@ -271,9 +286,9 @@ In addition to the offset the EventEnvelope also provides persistenceId and sequ
 The returned event stream contains only events that correspond to the given tag, and is ordered by the creation time of the events. The same stream elements (in same order) are returned for multiple executions of the same query. Deleted events are not deleted from the tagged event stream.
 
 ## Custom DAO Implementation
-The plugin supports loading a custom DAO for the journal and snapshot. You should implement a custom Data Access Object (DAO) if you wish to alter the default persistency strategy in
-any way, but wish to reuse all the logic that the plugin already has in place, eg. the Akka Persistence Query API. For example, the default persistency strategy that the plugin
-supports serializes journal and snapshot messages using a serializer of your choice and stores them as byte arrays in the database.
+The plugin supports loading a custom DAO for the journal and snapshot. You should implement a custom Data Access Object (DAO) if you wish to alter the default persistence strategy in
+any way, but wish to reuse all the logic that the plugin already has in place, eg. the Akka Persistence Query API. For example, the default persistence strategy that the plugin
+supports serializes journal and snapshot messages using a serializer configured using Akka serialization, and stores them as byte arrays in the database.
 
 By means of configuration in `application.conf` a DAO can be configured, below the default DAOs are shown:
 

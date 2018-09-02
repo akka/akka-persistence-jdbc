@@ -35,7 +35,7 @@ abstract class JdbcJournalSpec(config: Config, schemaType: SchemaType) extends J
   with DropCreate {
 
   override protected def supportsRejectingNonSerializableObjects: CapabilityFlag = true
-  override protected def supportsSerialization: CapabilityFlag = false // TODO re-enable
+  override protected def supportsSerialization: CapabilityFlag = true
 
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 10.seconds)
 

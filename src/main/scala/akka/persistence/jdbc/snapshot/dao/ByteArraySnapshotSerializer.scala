@@ -32,11 +32,14 @@ class ByteArraySnapshotSerializer(serialization: Serialization, writeSnapshotCol
     } else {
       Success(None)
     }
+    val snapshotRef = snapshot.asInstanceOf[AnyRef]
+    val trySnapshotData = serialization.serialize(snapshotRef)
 
-    trySnapshotColumn.map { maybeSnapshot =>
-      val snapshotRef = snapshot.asInstanceOf[AnyRef]
+    for {
+      maybeSnapshot <- trySnapshotColumn
+      snapshotData <- trySnapshotData
+    } yield {
       val serializer = serialization.findSerializerFor(snapshotRef)
-      val snapshotData = Some(serializer.toBinary(snapshotRef))
       val serManifest = serializer match {
         case stringManifest: SerializerWithStringManifest =>
           stringManifest.manifest(snapshotRef)
@@ -49,7 +52,7 @@ class ByteArraySnapshotSerializer(serialization: Serialization, writeSnapshotCol
         metadata.sequenceNr,
         metadata.timestamp,
         maybeSnapshot,
-        snapshotData,
+        Some(snapshotData),
         Some(serializer.identifier),
         Some(serManifest))
     }

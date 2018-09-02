@@ -38,7 +38,7 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
   with DropCreate {
 
   override protected def supportsRejectingNonSerializableObjects: CapabilityFlag = true
-  override protected def supportsSerialization: CapabilityFlag = false // TODO re-enable
+  override protected def supportsSerialization: CapabilityFlag = true
 
   implicit lazy val ec = system.dispatcher
 

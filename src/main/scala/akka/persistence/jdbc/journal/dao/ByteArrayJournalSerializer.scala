@@ -33,11 +33,14 @@ class ByteArrayJournalSerializer(serialization: Serialization, separator: String
     } else {
       Success(None)
     }
+    val payload = persistentRepr.payload.asInstanceOf[AnyRef]
+    val tryEvent = serialization.serialize(payload)
 
-    tryMessageColumn.map { maybeMessage =>
-      val payload = persistentRepr.payload.asInstanceOf[AnyRef]
+    for {
+      maybeMessage <- tryMessageColumn
+      event <- tryEvent
+    } yield {
       val serializer = serialization.findSerializerFor(payload)
-      val event = Some(serializer.toBinary(payload))
       val serManifest = serializer match {
         case stringManifest: SerializerWithStringManifest =>
           stringManifest.manifest(payload)
@@ -52,7 +55,7 @@ class ByteArrayJournalSerializer(serialization: Serialization, separator: String
         persistentRepr.sequenceNr,
         maybeMessage,
         encodeTags(tags, separator),
-        event,
+        Some(event),
         Some(persistentRepr.manifest),
         Some(serializer.identifier),
         Some(serManifest),

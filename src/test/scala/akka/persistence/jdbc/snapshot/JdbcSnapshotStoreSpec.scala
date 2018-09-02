@@ -29,7 +29,7 @@ import scala.concurrent.duration._
 
 abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType) extends SnapshotStoreSpec(config) with BeforeAndAfterAll with ScalaFutures with ClasspathResources with DropCreate {
 
-  override protected def supportsSerialization: CapabilityFlag = false // TODO re-enable
+  override protected def supportsSerialization: CapabilityFlag = true
 
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 10.seconds)
 

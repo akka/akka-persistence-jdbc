@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS public.snapshot (
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
   created BIGINT NOT NULL,
-  snapshot_DATA BYTEA NOT NULL,
+  snapshot_data BYTEA NOT NULL,
   ser_id INTEGER NOT NULL,
   ser_manifest VARCHAR(255) NOT NULL,
   PRIMARY KEY(persistence_id, sequence_number)

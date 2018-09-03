@@ -20,10 +20,10 @@ package journal.dao
 import akka.actor.ActorRef
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
-import akka.serialization.{ Serialization, SerializerWithStringManifest }
+import akka.serialization.{Serialization, SerializerWithStringManifest, Serializers}
 
 import scala.collection.immutable._
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 class ByteArrayJournalSerializer(serialization: Serialization, separator: String, writeMessageColumn: Boolean) extends FlowPersistentReprSerializer[JournalRow] {
   override def serialize(persistentRepr: PersistentRepr, tags: Set[String]): Try[JournalRow] = {
@@ -41,13 +41,7 @@ class ByteArrayJournalSerializer(serialization: Serialization, separator: String
       event <- tryEvent
     } yield {
       val serializer = serialization.findSerializerFor(payload)
-      val serManifest = serializer match {
-        case stringManifest: SerializerWithStringManifest =>
-          stringManifest.manifest(payload)
-        case _ if serializer.includeManifest =>
-          payload.getClass.getName
-        case _ => ""
-      }
+      val serManifest = Serializers.manifestFor(serializer, payload)
       JournalRow(
         Long.MinValue,
         persistentRepr.deleted,

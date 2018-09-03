@@ -20,9 +20,9 @@ import akka.persistence.SnapshotMetadata
 import akka.persistence.jdbc.serialization.SnapshotSerializer
 import akka.persistence.jdbc.snapshot.dao.SnapshotTables.SnapshotRow
 import akka.persistence.serialization.Snapshot
-import akka.serialization.{ Serialization, SerializerWithStringManifest }
+import akka.serialization.{Serialization, SerializerWithStringManifest, Serializers}
 
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 class ByteArraySnapshotSerializer(serialization: Serialization, writeSnapshotColumn: Boolean) extends SnapshotSerializer[SnapshotRow] {
 
@@ -40,13 +40,7 @@ class ByteArraySnapshotSerializer(serialization: Serialization, writeSnapshotCol
       snapshotData <- trySnapshotData
     } yield {
       val serializer = serialization.findSerializerFor(snapshotRef)
-      val serManifest = serializer match {
-        case stringManifest: SerializerWithStringManifest =>
-          stringManifest.manifest(snapshotRef)
-        case _ if serializer.includeManifest =>
-          snapshotRef.getClass.getName
-        case _ => ""
-      }
+      val serManifest = Serializers.manifestFor(serializer, snapshotRef)
       SnapshotRow(
         metadata.persistenceId,
         metadata.sequenceNr,

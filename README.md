@@ -101,9 +101,11 @@ needs to be configured in the application.conf. In addition, you might want to c
 the database to be closed automatically:
 
 ```
+akka-persistence-jdbc {
+  database-provider-fqcn = "com.mypackage.CustomSlickDatabaseProvider"
+}
 jdbc-journal {
   use-shared-db = "enabled" // setting this to any non-empty string prevents the journal from closing the database on shutdown
-  database-provider-fqcn = "com.mypackage.CustomSlickDatabaseProvider"
 }
 jdbc-snapshot-store {
   use-shared-db = "enabled" // setting this to any non-empty string prevents the snapshot-journal from closing the database on shutdown

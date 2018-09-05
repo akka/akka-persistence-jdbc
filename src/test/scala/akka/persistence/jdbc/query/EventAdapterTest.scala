@@ -204,4 +204,6 @@ class MySQLScalaEventAdapterTest extends EventAdapterTest("mysql-application.con
 
 class OracleScalaEventAdapterTest extends EventAdapterTest("oracle-application.conf") with OracleCleaner
 
+class SqlServerScalaEventAdapterTest extends EventAdapterTest("sqlserver-application.conf") with SqlServerCleaner
+
 class H2ScalaEventAdapterTest extends EventAdapterTest("h2-application.conf") with H2Cleaner

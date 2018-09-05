@@ -17,7 +17,9 @@ done;
 }
 rm ./bintray.sbt
 
+wait 5432 PostgreSQL
 wait 3306 MySQL
 wait 1521 Oracle
+wait 1433 SqlSever
 
 sbt test

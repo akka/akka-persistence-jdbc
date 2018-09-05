@@ -1,0 +1,12 @@
+sqlserver:
+  image: topaztechnology/mssql-server-linux
+  container_name: sqlserver
+  environment:
+    - "TZ=Europe/Amsterdam"
+    - "DBCA_TOTAL_MEMORY=1024"
+    - "ACCEPT_EULA=Y"
+    - "SQL_USER=docker"
+    - "SQL_PASSWORD=docker"
+    - "SQL_DB=docker"
+  ports:
+    - "1433:1433" # credentials (docker:docker)

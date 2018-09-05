@@ -62,6 +62,7 @@ class PostgresJournalSpecSharedDb extends JdbcJournalSpec(ConfigFactory.load("po
 class PostgresJournalSpecPhysicalDelete extends JdbcJournalSpec(ConfigFactory.load("postgres-application.conf")
   .withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false)), Postgres())
 
+class MySQLJournalSpec extends JdbcJournalSpec(ConfigFactory.load("mysql-application.conf"), MySQL())
 class MySQLJournalSpecSharedDb extends JdbcJournalSpec(ConfigFactory.load("mysql-shared-db-application.conf"), MySQL())
 class MySQLJournalSpecPhysicalDelete extends JdbcJournalSpec(ConfigFactory.load("mysql-application.conf")
   .withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false)), MySQL())
@@ -70,6 +71,11 @@ class OracleJournalSpec extends JdbcJournalSpec(ConfigFactory.load("oracle-appli
 class OracleJournalSpecSharedDb extends JdbcJournalSpec(ConfigFactory.load("oracle-shared-db-application.conf"), Oracle())
 class OracleJournalSpecPhysicalDelete extends JdbcJournalSpec(ConfigFactory.load("oracle-application.conf")
   .withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false)), Oracle())
+
+class SqlServerJournalSpec extends JdbcJournalSpec(ConfigFactory.load("sqlserver-application.conf"), SqlServer())
+class SqlServerJournalSpecSharedDb extends JdbcJournalSpec(ConfigFactory.load("sqlserver-shared-db-application.conf"), SqlServer())
+class SqlServerJournalSpecPhysicalDelete extends JdbcJournalSpec(ConfigFactory.load("sqlserver-application.conf")
+  .withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false)), SqlServer())
 
 class H2JournalSpec extends JdbcJournalSpec(ConfigFactory.load("h2-application.conf"), H2())
 class H2JournalSpecSharedDb extends JdbcJournalSpec(ConfigFactory.load("h2-shared-db-application.conf"), H2())

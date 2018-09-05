@@ -52,4 +52,6 @@ class MySQLScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("mys
 
 class OracleScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("oracle-shared-db-application.conf") with OracleCleaner
 
+class SqlServerScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("sqlserver-application.conf") with SqlServerCleaner
+
 class H2ScalaCurrentPersistenceIdsTest extends CurrentPersistenceIdsTest("h2-shared-db-application.conf") with H2Cleaner

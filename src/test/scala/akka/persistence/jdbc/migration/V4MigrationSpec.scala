@@ -1,13 +1,13 @@
 package akka.persistence.jdbc.migration
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 import java.nio.file.Files
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ ActorSystem, Props }
 import akka.persistence.PersistentActor
 import akka.persistence.jdbc.SimpleSpec
 import akka.persistence.jdbc.config.JournalConfig
-import akka.persistence.jdbc.util.{ClasspathResources, DropCreate, SlickDatabase}
+import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDatabase }
 import com.typesafe.config.ConfigFactory
 import org.h2.util.IOUtils
 import org.scalatest.BeforeAndAfter

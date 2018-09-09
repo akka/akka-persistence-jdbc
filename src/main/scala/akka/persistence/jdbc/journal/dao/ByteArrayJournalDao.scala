@@ -17,8 +17,6 @@
 package akka.persistence.jdbc
 package journal.dao
 
-import java.io.NotSerializableException
-
 import akka.{ Done, NotUsed }
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
@@ -134,7 +132,7 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
       case Success(t)  => t
       case Failure(ex) => throw new IllegalArgumentException(s"Failed to serialize ${write.getClass} for update of [$persistenceId] @ [$sequenceNr]", ex)
     }
-    db.run(queries.update(persistenceId, sequenceNr, serializedRow.message, serializedRow.event, serializedRow.serId, serializedRow.serManifest).map(_ => Done))
+    db.run(queries.update(persistenceId, sequenceNr, serializedRow).map(_ => Done))
   }
 
   private def highestMarkedSequenceNr(persistenceId: String) =
@@ -172,6 +170,7 @@ trait H2JournalDao extends JournalDao {
 
 class ByteArrayJournalDao(val db: Database, val profile: JdbcProfile, val journalConfig: JournalConfig, serialization: Serialization)(implicit val ec: ExecutionContext, val mat: Materializer) extends BaseByteArrayJournalDao with H2JournalDao {
   val queries = new JournalQueries(profile, journalConfig.journalTableConfiguration)
-  val serializer = new ByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator, journalConfig.journalTableConfiguration.writeMessageColumn)
+  val serializer = new ByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator)
+  val legacySerializer = new LegacyByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator, journalConfig.journalTableConfiguration.writeMessageColumn)
 }
 

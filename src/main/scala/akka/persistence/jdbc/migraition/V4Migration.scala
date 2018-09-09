@@ -1,21 +1,22 @@
 package akka.persistence.jdbc.migraition
 
 import akka.actor.ActorSystem
-import akka.persistence.jdbc.config.{ JournalConfig, JournalTableConfiguration, SnapshotConfig }
-import akka.persistence.jdbc.journal.dao.{ ByteArrayJournalSerializer, JournalTables }
-import akka.persistence.jdbc.snapshot.dao.{ ByteArraySnapshotSerializer, SnapshotTables }
-import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
+import akka.event.Logging
+import akka.persistence.jdbc.config.{JournalConfig, JournalTableConfiguration, SnapshotConfig}
+import akka.persistence.jdbc.journal.dao.{ByteArrayJournalSerializer, JournalTables}
+import akka.persistence.jdbc.snapshot.dao.{ByteArraySnapshotSerializer, SnapshotTables}
+import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
 import akka.serialization.SerializationExtension
 import com.typesafe.config.Config
 
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTables {
 
   private val journalConfig = new JournalConfig(config)
-  private val log = system.log
+  private val log = Logging(system, classOf[V4JournalMigration])
 
   if (!journalConfig.journalTableConfiguration.hasMessageColumn) {
     throw new IllegalArgumentException("Journal table configuration does not have message column, cannot perform migration.")
@@ -41,10 +42,10 @@ class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTab
     try {
       val migration = for {
         eventsToMigrate <- countEventsToMigrate(db)
-        _ = log.info(s"Migrating $eventsToMigrate journal events in batches of $RowsPerTransaction.")
+        _ = log.info(s"Migrating {} journal events in batches of {}.", eventsToMigrate, RowsPerTransaction)
         migrated <- migrateNextBatch(db, migrated = 0, orderingFrom = 0L)
       } yield {
-        log.info(s"Journal migration complete! $migrated events were migrated.")
+        log.info("Journal migration complete! {} events were migrated.", migrated)
       }
       Await.result(migration, Duration.Inf)
     } finally {
@@ -55,10 +56,10 @@ class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTab
   private def migrateNextBatch(db: Database, migrated: Int, orderingFrom: Long): Future[Int] = {
     migrateJournalBatch(db, orderingFrom).flatMap {
       case (_, None) =>
-        log.info("done!")
+        log.debug("done!")
         Future.successful(migrated)
       case (batch, Some(maxHandledOrdering)) =>
-        log.info(s"$batch events have been migrated, max(ordering)=$maxHandledOrdering")
+        log.debug(s"{} events have been migrated, max(ordering)={}", batch, maxHandledOrdering)
         migrateNextBatch(db, migrated + batch, maxHandledOrdering)
     }
   }
@@ -104,7 +105,7 @@ class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTab
 }
 
 class V4SnapshotMigration(config: Config, system: ActorSystem) extends SnapshotTables {
-  private val log = system.log
+  private val log = Logging(system, classOf[V4SnapshotMigration])
 
   private val snapshotConfig = new SnapshotConfig(config)
 
@@ -131,10 +132,10 @@ class V4SnapshotMigration(config: Config, system: ActorSystem) extends SnapshotT
     try {
       val migration = for {
         snapshotsToMigrate <- countSnapshotsToMigrate(db)
-        _ = log.info(s"Migrating $snapshotsToMigrate snapshots in batches of $RowsPerTransaction.")
+        _ = log.info("Migrating {} snapshots in batches of {}.", snapshotsToMigrate, RowsPerTransaction)
         migrated <- migrateNextBatch(db, migrated = 0, createdFrom = 0L)
       } yield {
-        log.info(s"Snapshot migration complete! $migrated snapshots were migrated.")
+        log.info("Snapshot migration complete! {} snapshots were migrated.", migrated)
       }
       Await.result(migration, Duration.Inf)
     } finally {
@@ -153,10 +154,10 @@ class V4SnapshotMigration(config: Config, system: ActorSystem) extends SnapshotT
   private def migrateNextBatch(db: Database, migrated: Long, createdFrom: Long): Future[Long] = {
     migrateSnapshotBatch(db, createdFrom).flatMap {
       case (_, None) =>
-        log.info("done!")
+        log.debug("done!")
         Future.successful(migrated)
       case (batch, Some(maxHandledCreated)) =>
-        log.info(s"$batch snapshots have been migrated")
+        log.debug("{} snapshots have been migrated", batch)
         migrateNextBatch(db, migrated + batch, maxHandledCreated)
     }
   }

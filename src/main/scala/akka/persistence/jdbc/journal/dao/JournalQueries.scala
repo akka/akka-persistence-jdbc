@@ -18,38 +18,12 @@ package akka.persistence.jdbc
 package journal.dao
 
 import akka.persistence.jdbc.config.JournalTableConfiguration
-
 import slick.jdbc.JdbcProfile
 import slick.sql.FixedSqlAction
 
-trait GenericQueries {
-  import slick.dbio.Effect
-  val profile: JdbcProfile
-  import profile.api._
-  def writeJournalRows(xs: Seq[JournalRow]): FixedSqlAction[Option[Int], NoStream, Effect.Write]
-  def delete(persistenceId: String, toSequenceNr: Long): FixedSqlAction[Int, NoStream, Effect.Write]
-  def update(persistenceId: String, seqNr: Long, newRow: JournalRow): FixedSqlAction[Int, NoStream, Effect.Write]
-  def markJournalMessagesAsDeleted(persistenceId: String, maxSequenceNr: Long): FixedSqlAction[Int, NoStream, Effect.Write]
-  def journalRowByPersistenceIds(persistenceIds: Iterable[String]): Query[Rep[String], String, Seq]
-}
-
-class LegacyJournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration) extends LegacyJournalTables with GenericQueries {
-  import profile.api._
-  private val JournalTableC = Compiled(JournalTable)
-  import slick.dbio.Effect
-  def writeJournalRows(xs: Seq[JournalRow]): FixedSqlAction[Option[Int], NoStream, Effect.Write] = ???
-  def delete(persistenceId: String, toSequenceNr: Long): FixedSqlAction[Int, NoStream, Effect.Write] = ???
-  def update(persistenceId: String, seqNr: Long, newRow: JournalRow): FixedSqlAction[Int, NoStream, Effect.Write] = ???
-  def markJournalMessagesAsDeleted(persistenceId: String, maxSequenceNr: Long): FixedSqlAction[Int, NoStream, Effect.Write] = ???
-  def journalRowByPersistenceIds(persistenceIds: Iterable[String]): Query[Rep[String], String, Seq] = ???
-
-}
-
-class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration) extends JournalTables with GenericQueries {
+class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration) extends JournalTables {
 
   import profile.api._
-
-  import slick.dbio.Effect
 
   private val JournalTableC = Compiled(JournalTable)
 
@@ -59,7 +33,7 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
   private def selectAllJournalForPersistenceId(persistenceId: Rep[String]) =
     JournalTable.filter(_.persistenceId === persistenceId).sortBy(_.sequenceNumber.desc)
 
-  def delete(persistenceId: String, toSequenceNr: Long): FixedSqlAction[Int, NoStream, Effect.Write] = {
+  def delete(persistenceId: String, toSequenceNr: Long) = {
     JournalTable
       .filter(_.persistenceId === persistenceId)
       .filter(_.sequenceNumber <= toSequenceNr)
@@ -70,15 +44,19 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
    * Updates (!) a payload stored in a specific events row.
    * Intended to be used sparingly, e.g. moving all events to their encrypted counterparts.
    */
-  def update(persistenceId: String, seqNr: Long, newRow: JournalRow): FixedSqlAction[Int, NoStream, Effect.Write] = {
+  def update(persistenceId: String, seqNr: Long, replacementMessage: Option[Array[Byte]], replacementEvent: Option[Array[Byte]], replacementSerId: Option[Int], replacementSerManifest: Option[String]): FixedSqlAction[Int, NoStream, Effect.Write] = {
     val baseQuery = JournalTable
       .filter(_.persistenceId === persistenceId)
       .filter(_.sequenceNumber === seqNr)
 
-    baseQuery.map(row => (row.event, row.serId, row.serManifest)).update((newRow.event, newRow.serId, newRow.serManifest))
+    if (replacementMessage.isDefined) {
+      baseQuery.map(row => (row.message, row.event, row.serId, row.serManifest)).update((replacementMessage, replacementEvent, replacementSerId, replacementSerManifest))
+    } else {
+      baseQuery.map(row => (row.event, row.serId, row.serManifest)).update((replacementEvent, replacementSerId, replacementSerManifest))
+    }
   }
 
-  def markJournalMessagesAsDeleted(persistenceId: String, maxSequenceNr: Long): FixedSqlAction[Int, NoStream, Effect.Write] =
+  def markJournalMessagesAsDeleted(persistenceId: String, maxSequenceNr: Long) =
     JournalTable
       .filter(_.persistenceId === persistenceId)
       .filter(_.sequenceNumber <= maxSequenceNr)

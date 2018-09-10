@@ -90,7 +90,11 @@ trait OracleReadJournalDao extends ReadJournalDao {
     }
   }
 
-  implicit val getJournalRow = GetResult(r => JournalRow(r.<<, r.<<, r.<<, r.<<, None, r.nextBytes(), r.<<, r.<<, r.<<, r.<<))
+  implicit val getJournalRow = if (hasMessageColumn) {
+    GetResult(r => JournalRow(r.<<, r.<<, r.<<, r.<<, r.nextBytesOption(), r.<<, r.nextBytesOption(), r.<<, r.<<, r.<<, r.<<))
+  } else {
+    GetResult(r => JournalRow(r.<<, r.<<, r.<<, r.<<, None, r.<<, r.nextBytesOption(), r.<<, r.<<, r.<<, r.<<))
+  }
 
   abstract override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed] = {
     if (isOracleDriver(profile)) {
@@ -187,6 +191,6 @@ class ByteArrayReadJournalDao(
     serialization: Serialization)(implicit ec: ExecutionContext, mat: Materializer) extends BaseByteArrayReadJournalDao with OracleReadJournalDao with H2ReadJournalDao {
 
   val queries = new ReadJournalQueries(profile, readJournalConfig)
-  val serializer = new ByteArrayJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator)
+  val serializer = new ByteArrayJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator, readJournalConfig.journalTableConfiguration.writeMessageColumn)
 
 }

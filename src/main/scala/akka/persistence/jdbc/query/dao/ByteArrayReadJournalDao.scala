@@ -20,7 +20,7 @@ package query.dao
 import akka.NotUsed
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.config.ReadJournalConfig
-import akka.persistence.jdbc.journal.dao.ByteArrayJournalSerializer
+import akka.persistence.jdbc.journal.dao.{ ByteArrayJournalSerializer, LegacyByteArrayJournalSerializer }
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 import akka.stream.Materializer
@@ -38,6 +38,7 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao {
   val profile: JdbcProfile
   def queries: ReadJournalQueries
   def serializer: FlowPersistentReprSerializer[JournalRow]
+  def legacySerializer: FlowPersistentReprSerializer[LegacyJournalRow]
   def readJournalConfig: ReadJournalConfig
 
   import profile.api._
@@ -90,11 +91,11 @@ trait OracleReadJournalDao extends ReadJournalDao {
     }
   }
 
-  implicit val getJournalRow = if (hasMessageColumn) {
-    GetResult(r => JournalRow(r.<<, r.<<, r.<<, r.<<, r.nextBytesOption(), r.<<, r.nextBytesOption(), r.<<, r.<<, r.<<, r.<<))
-  } else {
-    GetResult(r => JournalRow(r.<<, r.<<, r.<<, r.<<, None, r.<<, r.nextBytesOption(), r.<<, r.<<, r.<<, r.<<))
-  }
+  implicit val getLegacyJournalRow =
+    GetResult(r => LegacyJournalRow(r.<<, r.<<, r.<<, r.<<, r.nextBytesOption(), r.<<, r.nextBytesOption(), r.<<, r.<<, r.<<, r.<<))
+
+  implicit val getJournalRow =
+    GetResult(r => JournalRow(r.<<, r.<<, r.<<, r.<<, r.<<, r.nextBytes(), r.<<, r.<<, r.<<, r.<<))
 
   abstract override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed] = {
     if (isOracleDriver(profile)) {
@@ -191,6 +192,7 @@ class ByteArrayReadJournalDao(
     serialization: Serialization)(implicit ec: ExecutionContext, mat: Materializer) extends BaseByteArrayReadJournalDao with OracleReadJournalDao with H2ReadJournalDao {
 
   val queries = new ReadJournalQueries(profile, readJournalConfig)
-  val serializer = new ByteArrayJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator, readJournalConfig.journalTableConfiguration.writeMessageColumn)
+  val serializer = new ByteArrayJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator)
+  val legacySerializer = new LegacyByteArrayJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator, readJournalConfig.journalTableConfiguration.writeMessageColumn)
 
 }

@@ -2,16 +2,16 @@ package akka.persistence.jdbc.migraition
 
 import akka.actor.ActorSystem
 import akka.event.Logging
-import akka.persistence.jdbc.config.{JournalConfig, JournalTableConfiguration, SnapshotConfig}
-import akka.persistence.jdbc.journal.dao.{ByteArrayJournalSerializer, JournalTables}
-import akka.persistence.jdbc.snapshot.dao.{ByteArraySnapshotSerializer, SnapshotTables}
-import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
+import akka.persistence.jdbc.config.{ JournalConfig, JournalTableConfiguration, SnapshotConfig }
+import akka.persistence.jdbc.journal.dao.{ ByteArrayJournalSerializer, JournalTables, LegacyByteArrayJournalSerializer }
+import akka.persistence.jdbc.snapshot.dao.{ ByteArraySnapshotSerializer, SnapshotTables }
+import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
 import akka.serialization.SerializationExtension
 import com.typesafe.config.Config
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTables {
 
@@ -29,8 +29,10 @@ class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTab
 
   override def journalTableCfg: JournalTableConfiguration = journalConfig.journalTableConfiguration
 
-  private val serializer = new ByteArrayJournalSerializer(SerializationExtension(system), journalConfig.pluginConfig.tagSeparator,
-    false)
+  private val serializer = new LegacyByteArrayJournalSerializer(
+    SerializationExtension(system),
+    journalConfig.pluginConfig.tagSeparator,
+    writeMessageColumn = false)
 
   /**
    * The number of rows migrated per transaction.
@@ -65,7 +67,7 @@ class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTab
   }
 
   private def countEventsToMigrate(db: Database) = {
-    val query = JournalTable
+    val query = LegacyJournalTable
       .filter(_.serId.isEmpty)
       .length
       .result
@@ -73,7 +75,7 @@ class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTab
   }
 
   private def migrateJournalBatch(db: Database, orderingFrom: Long): Future[(Int, Option[Long])] = {
-    val batchUpdate = JournalTable
+    val batchUpdate = LegacyJournalTable
       .filter(_.serId.isEmpty)
       .filter(_.ordering > orderingFrom)
       .sortBy(_.ordering.asc)
@@ -86,7 +88,7 @@ class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTab
             case (pr, tags, _) =>
               serializer.serialize(pr, tags).map { journalRow =>
                 val statement = for {
-                  theRow <- JournalTable if theRow.persistenceId === row.persistenceId && theRow.sequenceNumber === row.sequenceNumber
+                  theRow <- LegacyJournalTable if theRow.persistenceId === row.persistenceId && theRow.sequenceNumber === row.sequenceNumber
                 } yield (theRow.event, theRow.eventManifest, theRow.serId, theRow.serManifest, theRow.writerUuid)
                 statement.update(journalRow.event, journalRow.eventManifest, journalRow.serId, journalRow.serManifest, journalRow.writerUuid)
               }

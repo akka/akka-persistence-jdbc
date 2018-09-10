@@ -17,8 +17,6 @@
 package akka.persistence.jdbc
 package journal.dao
 
-import java.io.NotSerializableException
-
 import akka.{ Done, NotUsed }
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
@@ -37,13 +35,14 @@ import scala.util.{ Failure, Success, Try }
 /**
  * The DefaultJournalDao contains all the knowledge to persist and load serialized journal entries
  */
-trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
+trait BaseByteArrayJournalDao[T <: AbstractJournalRow] extends JournalDaoWithUpdates {
 
   val db: Database
   val profile: JdbcProfile
-  val queries: JournalQueries
+  val queries: JournalQueries[T]
+  val genericQueries: GenericJournalQueries
   val journalConfig: JournalConfig
-  val serializer: FlowPersistentReprSerializer[JournalRow]
+  val serializer: FlowPersistentReprSerializer[T]
   implicit val ec: ExecutionContext
   implicit val mat: Materializer
 
@@ -62,17 +61,17 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
         "To disable it in this current version you must set the property 'akka-persistence-jdbc.logicalDeletion.enable' to false.")
   }
 
-  private val writeQueue = Source.queue[(Promise[Unit], Seq[JournalRow])](bufferSize, OverflowStrategy.dropNew)
-    .batchWeighted[(Seq[Promise[Unit]], Seq[JournalRow])](batchSize, _._2.size, tup => Vector(tup._1) -> tup._2) {
+  private val writeQueue = Source.queue[(Promise[Unit], Seq[T])](bufferSize, OverflowStrategy.dropNew)
+    .batchWeighted[(Seq[Promise[Unit]], Seq[T])](batchSize, _._2.size, tup => Vector(tup._1) -> tup._2) {
       case ((promises, rows), (newPromise, newRows)) => (promises :+ newPromise) -> (rows ++ newRows)
     }.mapAsync(parallelism) {
       case (promises, rows) =>
-        writeJournalRows(rows)
+        queries.writeJournalRows(rows)
           .map(unit => promises.foreach(_.success(unit)))
           .recover { case t => promises.foreach(_.failure(t)) }
     }.toMat(Sink.ignore)(Keep.left).run()
 
-  private def queueWriteJournalRows(xs: Seq[JournalRow]): Future[Unit] = {
+  private def queueWriteJournalRows(xs: Seq[T]): Future[Unit] = {
     val promise = Promise[Unit]()
     writeQueue.offer(promise -> xs).flatMap {
       case QueueOfferResult.Enqueued =>
@@ -85,10 +84,6 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
         Future.failed(new Exception("Failed to enqueue journal row batch write, the queue was closed"))
     }
   }
-
-  private def writeJournalRows(xs: Seq[JournalRow]): Future[Unit] = for {
-    _ <- db.run(queries.writeJournalRows(xs))
-  } yield ()
 
   /**
    * @see [[akka.persistence.journal.AsyncWriteJournal.asyncWriteMessages(messages)]]
@@ -115,12 +110,12 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
       // We don't want to log warnings for users that are not using this,
       // so we make it happen only when effectively used.
       logWarnAboutLogicalDeletionDeprecation
-      db.run(queries.markJournalMessagesAsDeleted(persistenceId, maxSequenceNr)).map(_ => ())
+      db.run(genericQueries.markJournalMessagesAsDeleted(persistenceId, maxSequenceNr)).map(_ => ())
     } else {
       // We should keep journal record with highest sequence number in order to be compliant
       // with @see [[akka.persistence.journal.JournalSpec]]
       val actions = for {
-        _ <- queries.markJournalMessagesAsDeleted(persistenceId, maxSequenceNr)
+        _ <- genericQueries.markJournalMessagesAsDeleted(persistenceId, maxSequenceNr)
         highestMarkedSequenceNr <- highestMarkedSequenceNr(persistenceId)
         _ <- queries.delete(persistenceId, highestMarkedSequenceNr.getOrElse(0L) - 1)
       } yield ()
@@ -134,19 +129,20 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
       case Success(t)  => t
       case Failure(ex) => throw new IllegalArgumentException(s"Failed to serialize ${write.getClass} for update of [$persistenceId] @ [$sequenceNr]", ex)
     }
-    db.run(queries.update(persistenceId, sequenceNr, serializedRow.message, serializedRow.event, serializedRow.serId, serializedRow.serManifest).map(_ => Done))
+    queries.update(persistenceId, sequenceNr, serializedRow).map(_ => Done)
   }
 
   private def highestMarkedSequenceNr(persistenceId: String) =
-    queries.highestMarkedSequenceNrForPersistenceId(persistenceId).result.headOption
+    genericQueries.highestMarkedSequenceNrForPersistenceId(persistenceId).result.headOption
 
   override def highestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] = for {
-    maybeHighestSeqNo <- db.run(queries.highestSequenceNrForPersistenceId(persistenceId).result.headOption)
+    maybeHighestSeqNo <- db.run(genericQueries.highestSequenceNrForPersistenceId(persistenceId).result.headOption)
   } yield maybeHighestSeqNo.getOrElse(0L)
 
-  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
-    Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
+  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] = {
+    queries.messages(persistenceId, fromSequenceNr, toSequenceNr, max)
       .via(serializer.deserializeFlowWithoutTags)
+  }
 }
 
 trait H2JournalDao extends JournalDao {
@@ -170,8 +166,25 @@ trait H2JournalDao extends JournalDao {
   }
 }
 
-class ByteArrayJournalDao(val db: Database, val profile: JdbcProfile, val journalConfig: JournalConfig, serialization: Serialization)(implicit val ec: ExecutionContext, val mat: Materializer) extends BaseByteArrayJournalDao with H2JournalDao {
-  val queries = new JournalQueries(profile, journalConfig.journalTableConfiguration)
-  val serializer = new ByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator, journalConfig.journalTableConfiguration.writeMessageColumn)
+class LegacyByteArrayJournalDao(
+    val db: Database,
+    val profile: JdbcProfile,
+    val journalConfig: JournalConfig,
+    serialization: Serialization)(implicit val ec: ExecutionContext, val mat: Materializer) extends BaseByteArrayJournalDao[LegacyJournalRow] with H2JournalDao {
+
+  val queries = new LegacyJournalQueries(db, profile, journalConfig.journalTableConfiguration)
+  val genericQueries = new GenericJournalQueries(profile, journalConfig.journalTableConfiguration)
+  val serializer = new LegacyByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator, journalConfig.journalTableConfiguration.writeMessageColumn)
+}
+
+class ByteArrayJournalDao(
+    val db: Database,
+    val profile: JdbcProfile,
+    val journalConfig: JournalConfig,
+    serialization: Serialization)(implicit val ec: ExecutionContext, val mat: Materializer) extends BaseByteArrayJournalDao[JournalRow] with H2JournalDao {
+
+  val queries = new NewJournalQueries(db, profile, journalConfig.journalTableConfiguration)
+  val genericQueries = new GenericJournalQueries(profile, journalConfig.journalTableConfiguration)
+  val serializer = new ByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator)
 }
 

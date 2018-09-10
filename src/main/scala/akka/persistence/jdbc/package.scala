@@ -17,7 +17,27 @@
 package akka.persistence
 
 package object jdbc {
+  abstract class AbstractJournalRow {
+    def ordering: Long
+    def deleted: Boolean
+    def persistenceId: String
+    def sequenceNumber: Long
+    def tags: Option[String]
+  }
+
   final case class JournalRow(
+      ordering: Long,
+      deleted: Boolean,
+      persistenceId: String,
+      sequenceNumber: Long,
+      tags: Option[String] = None,
+      event: Array[Byte],
+      eventManifest: Option[String],
+      serId: Int,
+      serManifest: Option[String],
+      writerUuid: String) extends AbstractJournalRow
+
+  final case class LegacyJournalRow(
       ordering: Long,
       deleted: Boolean,
       persistenceId: String,
@@ -29,5 +49,5 @@ package object jdbc {
       eventManifest: Option[String],
       serId: Option[Int],
       serManifest: Option[String],
-      writerUuid: Option[String])
+      writerUuid: Option[String]) extends AbstractJournalRow
 }

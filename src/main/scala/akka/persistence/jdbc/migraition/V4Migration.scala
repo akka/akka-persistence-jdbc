@@ -1,8 +1,9 @@
 package akka.persistence.jdbc.migraition
 
 import akka.actor.ActorSystem
+import akka.event.Logging
 import akka.persistence.jdbc.config.{ JournalConfig, JournalTableConfiguration, SnapshotConfig }
-import akka.persistence.jdbc.journal.dao.{ ByteArrayJournalSerializer, JournalTables }
+import akka.persistence.jdbc.journal.dao.{ ByteArrayJournalSerializer, JournalTables, LegacyByteArrayJournalSerializer }
 import akka.persistence.jdbc.snapshot.dao.{ ByteArraySnapshotSerializer, SnapshotTables }
 import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
 import akka.serialization.SerializationExtension
@@ -15,6 +16,7 @@ import scala.util.{ Failure, Success }
 class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTables {
 
   private val journalConfig = new JournalConfig(config)
+  private val log = Logging(system, classOf[V4JournalMigration])
 
   if (!journalConfig.journalTableConfiguration.hasMessageColumn) {
     throw new IllegalArgumentException("Journal table configuration does not have message column, cannot perform migration.")
@@ -27,8 +29,10 @@ class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTab
 
   override def journalTableCfg: JournalTableConfiguration = journalConfig.journalTableConfiguration
 
-  private val serializer = new ByteArrayJournalSerializer(SerializationExtension(system), journalConfig.pluginConfig.tagSeparator,
-    false)
+  private val serializer = new LegacyByteArrayJournalSerializer(
+    SerializationExtension(system),
+    journalConfig.pluginConfig.tagSeparator,
+    writeMessageColumn = false)
 
   /**
    * The number of rows migrated per transaction.
@@ -38,38 +42,53 @@ class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTab
   def run(): Unit = {
     val db = SlickDatabase.forConfig(config, journalConfig.slickConfiguration)
     try {
-      println(s"Migrating journal events, each . indicates $RowsPerTransaction rows migrated.")
-      val migration = migrateNextBatch(db, 0)
-      val migrated = Await.result(migration, Duration.Inf)
-      println(s"Journal migration complete! $migrated events were migrated.")
+      val migration = for {
+        eventsToMigrate <- countEventsToMigrate(db)
+        _ = log.info(s"Migrating {} journal events in batches of {}.", eventsToMigrate, RowsPerTransaction)
+        migrated <- migrateNextBatch(db, migrated = 0, orderingFrom = 0L)
+      } yield {
+        log.info("Journal migration complete! {} events were migrated.", migrated)
+      }
+      Await.result(migration, Duration.Inf)
     } finally {
       db.close()
     }
   }
 
-  private def migrateNextBatch(db: Database, migrated: Long): Future[Long] = {
-    migrateJournalBatch(db).flatMap {
-      case 0 =>
-        println(" done!")
+  private def migrateNextBatch(db: Database, migrated: Int, orderingFrom: Long): Future[Int] = {
+    migrateJournalBatch(db, orderingFrom).flatMap {
+      case (_, None) =>
+        log.debug("done!")
         Future.successful(migrated)
-      case batch =>
-        print(".")
-        migrateNextBatch(db, migrated + batch)
+      case (batch, Some(maxHandledOrdering)) =>
+        log.debug(s"{} events have been migrated, max(ordering)={}", batch, maxHandledOrdering)
+        migrateNextBatch(db, migrated + batch, maxHandledOrdering)
     }
   }
 
-  private def migrateJournalBatch(db: Database): Future[Int] = {
-    val batchUpdate = JournalTable
-      .filter(_.event.isEmpty)
+  private def countEventsToMigrate(db: Database) = {
+    val query = LegacyJournalTable
+      .filter(_.serId.isEmpty)
+      .length
+      .result
+    db.run(query)
+  }
+
+  private def migrateJournalBatch(db: Database, orderingFrom: Long): Future[(Int, Option[Long])] = {
+    val batchUpdate = LegacyJournalTable
+      .filter(_.serId.isEmpty)
+      .filter(_.ordering > orderingFrom)
+      .sortBy(_.ordering.asc)
       .take(RowsPerTransaction)
       .result
       .flatMap(rows => {
+        val maxHandledOrdering: Option[Long] = if (rows.nonEmpty) Some(rows.map(_.ordering).max) else None
         val updates = rows.map { row =>
           val migration = serializer.deserialize(row).flatMap {
             case (pr, tags, _) =>
               serializer.serialize(pr, tags).map { journalRow =>
                 val statement = for {
-                  theRow <- JournalTable if theRow.persistenceId === row.persistenceId && theRow.sequenceNumber === row.sequenceNumber
+                  theRow <- LegacyJournalTable if theRow.persistenceId === row.persistenceId && theRow.sequenceNumber === row.sequenceNumber
                 } yield (theRow.event, theRow.eventManifest, theRow.serId, theRow.serManifest, theRow.writerUuid)
                 statement.update(journalRow.event, journalRow.eventManifest, journalRow.serId, journalRow.serManifest, journalRow.writerUuid)
               }
@@ -80,7 +99,7 @@ class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTab
               throw new RuntimeException(s"Migration of event with persistence id ${row.persistenceId} and sequence number ${row.sequenceNumber} failed", error)
           }
         }
-        DBIO.seq(updates: _*).map(_ => updates.size)
+        DBIO.seq(updates: _*).map(_ => (updates.size, maxHandledOrdering))
       })
 
     db.run(batchUpdate)
@@ -88,6 +107,7 @@ class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTab
 }
 
 class V4SnapshotMigration(config: Config, system: ActorSystem) extends SnapshotTables {
+  private val log = Logging(system, classOf[V4SnapshotMigration])
 
   private val snapshotConfig = new SnapshotConfig(config)
 
@@ -112,32 +132,47 @@ class V4SnapshotMigration(config: Config, system: ActorSystem) extends SnapshotT
   def run(): Unit = {
     val db = SlickDatabase.forConfig(config, snapshotConfig.slickConfiguration)
     try {
-      println(s"Migrating snapshots, each . indicates $RowsPerTransaction rows migrated.")
-      val migration = migrateNextBatch(db, 0)
-      val migrated = Await.result(migration, Duration.Inf)
-      println(s"Snapshot migration complete! $migrated snapshots were migrated.")
+      val migration = for {
+        snapshotsToMigrate <- countSnapshotsToMigrate(db)
+        _ = log.info("Migrating {} snapshots in batches of {}.", snapshotsToMigrate, RowsPerTransaction)
+        migrated <- migrateNextBatch(db, migrated = 0, createdFrom = 0L)
+      } yield {
+        log.info("Snapshot migration complete! {} snapshots were migrated.", migrated)
+      }
+      Await.result(migration, Duration.Inf)
     } finally {
       db.close()
     }
   }
 
-  private def migrateNextBatch(db: Database, migrated: Long): Future[Long] = {
-    migrateSnapshotBatch(db).flatMap {
-      case 0 =>
-        println(" done!")
+  private def countSnapshotsToMigrate(db: Database) = {
+    val query = SnapshotTable
+      .filter(_.serId.isEmpty)
+      .length
+      .result
+    db.run(query)
+  }
+
+  private def migrateNextBatch(db: Database, migrated: Long, createdFrom: Long): Future[Long] = {
+    migrateSnapshotBatch(db, createdFrom).flatMap {
+      case (_, None) =>
+        log.debug("done!")
         Future.successful(migrated)
-      case batch =>
-        print(".")
-        migrateNextBatch(db, migrated + batch)
+      case (batch, Some(maxHandledCreated)) =>
+        log.debug("{} snapshots have been migrated", batch)
+        migrateNextBatch(db, migrated + batch, maxHandledCreated)
     }
   }
 
-  private def migrateSnapshotBatch(db: Database): Future[Int] = {
+  private def migrateSnapshotBatch(db: Database, createdFrom: Long): Future[(Int, Option[Long])] = {
     val batchUpdate = SnapshotTable
-      .filter(_.snapshotData.isEmpty)
+      .filter(_.serId.isEmpty)
+      .filter(_.created > createdFrom)
+      .sortBy(_.created.asc)
       .take(RowsPerTransaction)
       .result
       .flatMap(rows => {
+        val maxHandledCreated: Option[Long] = if (rows.nonEmpty) Some(rows.map(_.created).max) else None
         val updates = rows.map { row =>
           val migration = serializer.deserialize(row).flatMap {
             case (metadata, snapshot) =>
@@ -154,7 +189,7 @@ class V4SnapshotMigration(config: Config, system: ActorSystem) extends SnapshotT
               throw new RuntimeException(s"Migration of snapshot with persistence id ${row.persistenceId} and sequence number ${row.sequenceNumber} failed", error)
           }
         }
-        DBIO.seq(updates: _*).map(_ => updates.size)
+        DBIO.seq(updates: _*).map(_ => (updates.size, maxHandledCreated))
       })
 
     db.run(batchUpdate)

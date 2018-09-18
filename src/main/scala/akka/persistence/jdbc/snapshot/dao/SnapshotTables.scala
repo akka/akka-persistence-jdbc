@@ -64,8 +64,13 @@ trait SnapshotTables {
     @deprecated("This was used to store the the snapshot serialized wrapped in a Snapshot object, but no longer.", "4.0.0")
     val snapshot: Rep[Option[Array[Byte]]] = column[Option[Array[Byte]]](snapshotTableCfg.columnNames.snapshot)
     val snapshotData: Rep[Option[Array[Byte]]] = column[Option[Array[Byte]]](snapshotTableCfg.columnNames.snapshotData)
-    val serId: Rep[Option[Int]] = column[Option[Int]](snapshotTableCfg.columnNames.serId)
-    val serManifest: Rep[Option[String]] = column[Option[String]](snapshotTableCfg.columnNames.serManifest, O.Length(255, varying = true))
+    val serId: Rep[Option[Int]] =
+      if (snapshotTableCfg.hasSnapshotColumn) column[Option[Int]](snapshotTableCfg.columnNames.serId)
+      else Rep.Some(column[Int](snapshotTableCfg.columnNames.serId))
+    val serManifest: Rep[Option[String]] =
+      if (snapshotTableCfg.hasSnapshotColumn) column[Option[String]](snapshotTableCfg.columnNames.serManifest, O.Length(255, varying = true))
+      else Rep.Some(column[String](snapshotTableCfg.columnNames.serManifest, O.Length(255, varying = true)))
+
     val pk = primaryKey(s"${tableName}_pk", (persistenceId, sequenceNumber))
   }
 

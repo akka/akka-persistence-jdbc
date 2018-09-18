@@ -20,7 +20,7 @@ package journal.dao
 import akka.actor.ActorRef
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
-import akka.serialization.{ Serialization, SerializerWithStringManifest, Serializers }
+import akka.serialization.{ Serialization, Serializers }
 
 import scala.collection.immutable._
 import scala.util.{ Failure, Success, Try }

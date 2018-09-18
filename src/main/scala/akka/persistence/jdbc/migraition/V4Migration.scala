@@ -2,27 +2,28 @@ package akka.persistence.jdbc.migraition
 
 import akka.actor.ActorSystem
 import akka.event.Logging
-import akka.persistence.jdbc.config.{JournalConfig, JournalTableConfiguration, SnapshotConfig}
-import akka.persistence.jdbc.journal.dao.{ByteArrayJournalSerializer, JournalTables}
-import akka.persistence.jdbc.snapshot.dao.{ByteArraySnapshotSerializer, SnapshotTables}
-import akka.persistence.jdbc.util.{SlickDatabase, SlickDriver}
+import akka.persistence.jdbc.config.{ JournalConfig, JournalTableConfiguration, SnapshotConfig }
+import akka.persistence.jdbc.journal.dao.{ ByteArrayJournalSerializer, JournalTables }
+import akka.persistence.jdbc.snapshot.dao.{ ByteArraySnapshotSerializer, SnapshotTables }
+import akka.persistence.jdbc.util.{ SlickDatabase, SlickDriver }
 import akka.serialization.SerializationExtension
 import com.typesafe.config.Config
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
-class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTables {
+class V4JournalMigration(cfg: Config, system: ActorSystem) extends JournalTables {
 
-  private val journalConfig = new JournalConfig(config)
+  private val jdbcJournalConfig: Config = cfg.getConfig("jdbc-journal")
+  private val journalConfig = new JournalConfig(jdbcJournalConfig)
   private val log = Logging(system, classOf[V4JournalMigration])
 
   if (!journalConfig.journalTableConfiguration.hasMessageColumn) {
     throw new IllegalArgumentException("Journal table configuration does not have message column, cannot perform migration.")
   }
 
-  override val profile = SlickDriver.forDriverName(config)
+  override val profile = SlickDriver.forDriverName(jdbcJournalConfig)
 
   import profile.api._
   import system.dispatcher
@@ -35,14 +36,14 @@ class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTab
   /**
    * The number of rows migrated per transaction.
    */
-  private val RowsPerTransaction = 100
+  private val rowsPerTransaction = cfg.getInt("akka-persistence-jdbc.migration.v4.journal.rows-per-transaction")
 
   def run(): Unit = {
-    val db = SlickDatabase.forConfig(config, journalConfig.slickConfiguration)
+    val db = SlickDatabase.forConfig(jdbcJournalConfig, journalConfig.slickConfiguration)
     try {
       val migration = for {
         eventsToMigrate <- countEventsToMigrate(db)
-        _ = log.info(s"Migrating {} journal events in batches of {}.", eventsToMigrate, RowsPerTransaction)
+        _ = log.info(s"Migrating {} journal events in batches of {}.", eventsToMigrate, rowsPerTransaction)
         migrated <- migrateNextBatch(db, migrated = 0, orderingFrom = 0L)
       } yield {
         log.info("Journal migration complete! {} events were migrated.", migrated)
@@ -77,7 +78,7 @@ class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTab
       .filter(_.serId.isEmpty)
       .filter(_.ordering > orderingFrom)
       .sortBy(_.ordering.asc)
-      .take(RowsPerTransaction)
+      .take(rowsPerTransaction)
       .result
       .flatMap(rows => {
         val maxHandledOrdering: Option[Long] = if (rows.nonEmpty) Some(rows.map(_.ordering).max) else None
@@ -104,16 +105,17 @@ class V4JournalMigration(config: Config, system: ActorSystem) extends JournalTab
   }
 }
 
-class V4SnapshotMigration(config: Config, system: ActorSystem) extends SnapshotTables {
+class V4SnapshotMigration(cfg: Config, system: ActorSystem) extends SnapshotTables {
   private val log = Logging(system, classOf[V4SnapshotMigration])
 
-  private val snapshotConfig = new SnapshotConfig(config)
+  private val jdbcSnapshotStoreConfig = cfg.getConfig("jdbc-snapshot-store")
+  private val snapshotConfig = new SnapshotConfig(jdbcSnapshotStoreConfig)
 
   if (!snapshotConfig.snapshotTableConfiguration.hasSnapshotColumn) {
     throw new IllegalArgumentException("Snapshot table configuration does not have snapshot column, cannot perform migration.")
   }
 
-  override val profile = SlickDriver.forDriverName(config)
+  override val profile = SlickDriver.forDriverName(jdbcSnapshotStoreConfig)
 
   import profile.api._
   import system.dispatcher
@@ -125,14 +127,14 @@ class V4SnapshotMigration(config: Config, system: ActorSystem) extends SnapshotT
   /**
    * The number of rows migrated per transaction.
    */
-  private val RowsPerTransaction = 100
+  private val rowsPerTransaction = cfg.getInt("akka-persistence-jdbc.migration.v4.snapshot.rows-per-transaction")
 
   def run(): Unit = {
-    val db = SlickDatabase.forConfig(config, snapshotConfig.slickConfiguration)
+    val db = SlickDatabase.forConfig(jdbcSnapshotStoreConfig, snapshotConfig.slickConfiguration)
     try {
       val migration = for {
         snapshotsToMigrate <- countSnapshotsToMigrate(db)
-        _ = log.info("Migrating {} snapshots in batches of {}.", snapshotsToMigrate, RowsPerTransaction)
+        _ = log.info("Migrating {} snapshots in batches of {}.", snapshotsToMigrate, rowsPerTransaction)
         migrated <- migrateNextBatch(db, migrated = 0, createdFrom = 0L)
       } yield {
         log.info("Snapshot migration complete! {} snapshots were migrated.", migrated)
@@ -167,7 +169,7 @@ class V4SnapshotMigration(config: Config, system: ActorSystem) extends SnapshotT
       .filter(_.serId.isEmpty)
       .filter(_.created > createdFrom)
       .sortBy(_.created.asc)
-      .take(RowsPerTransaction)
+      .take(rowsPerTransaction)
       .result
       .flatMap(rows => {
         val maxHandledCreated: Option[Long] = if (rows.nonEmpty) Some(rows.map(_.created).max) else None
@@ -199,8 +201,8 @@ object V4Migration extends App {
   val system = ActorSystem()
   try {
     val config = system.settings.config
-    new V4JournalMigration(config.getConfig("jdbc-journal"), system).run()
-    new V4SnapshotMigration(config.getConfig("jdbc-snapshot-store"), system).run()
+    new V4JournalMigration(config, system).run()
+    new V4SnapshotMigration(config, system).run()
   } finally {
     system.terminate()
   }

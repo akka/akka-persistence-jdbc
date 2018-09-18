@@ -52,7 +52,7 @@ class V4MigrationSpec extends SimpleSpec with BeforeAndAfter with ClasspathResou
   }
 
   it should "support loading a V3 events after event migration" in {
-    new V4JournalMigration(backwardsCompatiblilityConfig().getConfig("jdbc-journal"), system).run()
+    new V4JournalMigration(backwardsCompatiblilityConfig(), system).run()
     system = ActorSystem("test", loadConfig(""))
     // JDBC journal is not configured to use old data, so will only read new data, assuming its migrated.
     Await.result(system.actorOf(Props(new TestActor)) ? "load", 10.seconds) shouldBe "abcdef"

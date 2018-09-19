@@ -12,12 +12,13 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{ Sink, Source }
 import akka.testkit.TestProbe
 import org.slf4j.LoggerFactory
-import slick.jdbc.JdbcBackend
+import slick.jdbc.{ JdbcBackend, JdbcCapabilities }
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean) extends QueryTestSpec(configFile) with JournalTables {
+abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
+  extends QueryTestSpec(configFile) with JournalTables {
 
   private val log = LoggerFactory.getLogger(classOf[JournalSequenceActorTest])
 
@@ -47,34 +48,38 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean) e
     }
   }
 
-  it should s"recover ${if (isOracle) "one hundred thousand" else "one million"} events quickly if no ids are missing" in {
-    withActorSystem { implicit system: ActorSystem =>
-      withDatabase { db =>
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
-        val elements = if (isOracle) 100000 else 1000000
-        Source.fromIterator(() => (1 to elements).iterator)
-          .map(id => JournalRow(id, deleted = false, "id", id, Array(0.toByte)))
-          .grouped(10000)
-          .mapAsync(4) { rows =>
-            db.run(JournalTable.forceInsertAll(rows))
-          }
-          .runWith(Sink.ignore).futureValue
+  private def canForceInsert: Boolean = profile.capabilities.contains(JdbcCapabilities.forceInsert)
 
-        val startTime = System.currentTimeMillis()
-        withJournalSequenceActor(db, maxTries = 100) { actor =>
-          val patienceConfig = PatienceConfig(10.seconds)
-          eventually {
-            val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
-            currentMax shouldBe elements
-          }(patienceConfig, implicitly)
+  if (canForceInsert) {
+    it should s"recover ${if (isOracle) "one hundred thousand" else "one million"} events quickly if no ids are missing" in {
+      withActorSystem { implicit system: ActorSystem =>
+        withDatabase { db =>
+          implicit val materializer: ActorMaterializer = ActorMaterializer()
+          val elements = if (isOracle) 100000 else 1000000
+          Source.fromIterator(() => (1 to elements).iterator)
+            .map(id => JournalRow(id, deleted = false, "id", id, Array(0.toByte)))
+            .grouped(10000)
+            .mapAsync(4) { rows =>
+              db.run(JournalTable.forceInsertAll(rows))
+            }
+            .runWith(Sink.ignore).futureValue
+
+          val startTime = System.currentTimeMillis()
+          withJournalSequenceActor(db, maxTries = 100) { actor =>
+            val patienceConfig = PatienceConfig(10.seconds)
+            eventually {
+              val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
+              currentMax shouldBe elements
+            }(patienceConfig, implicitly)
+          }
+          val timeTaken = System.currentTimeMillis() - startTime
+          log.info(s"Recovered all events in $timeTaken ms")
         }
-        val timeTaken = System.currentTimeMillis() - startTime
-        log.info(s"Recovered all events in $timeTaken ms")
       }
     }
   }
 
-  if (!isOracle) {
+  if (!isOracle && canForceInsert) {
     // Note this test case cannot be executed for oracle, because forceInsertAll is not supported in the oracle driver.
     it should "recover after the specified max number if tries if the first event has a very high sequence number and lots of large gaps exist" in {
       withActorSystem { implicit system: ActorSystem =>
@@ -105,34 +110,36 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean) e
     }
   }
 
-  it should s"assume that the max ordering id in the database on startup is the max after (queryDelay * maxTries)" in {
-    withActorSystem { implicit system: ActorSystem =>
-      withDatabase { db =>
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
-        val maxElement = 100000
-        // only even numbers, odd numbers are missing
-        val idSeq = 2 to maxElement by 2
-        Source.fromIterator(() => idSeq.iterator)
-          .map(id => JournalRow(id, deleted = false, "id", id, Array(0.toByte)))
-          .grouped(10000)
-          .mapAsync(4) { rows =>
-            db.run(JournalTable.forceInsertAll(rows))
+  if (canForceInsert) {
+    it should s"assume that the max ordering id in the database on startup is the max after (queryDelay * maxTries)" in {
+      withActorSystem { implicit system: ActorSystem =>
+        withDatabase { db =>
+          implicit val materializer: ActorMaterializer = ActorMaterializer()
+          val maxElement = 100000
+          // only even numbers, odd numbers are missing
+          val idSeq = 2 to maxElement by 2
+          Source.fromIterator(() => idSeq.iterator)
+            .map(id => JournalRow(id, deleted = false, "id", id, Array(0.toByte)))
+            .grouped(10000)
+            .mapAsync(4) { rows =>
+              db.run(JournalTable.forceInsertAll(rows))
+            }
+            .runWith(Sink.ignore).futureValue
+
+          val highestValue = if (isOracle) {
+            // ForceInsert does not seem to work for oracle, we must delete the odd numbered events
+            db.run(JournalTable.filter(_.ordering % 2L === 1L).delete).futureValue
+            maxElement / 2
+          } else maxElement
+
+          withJournalSequenceActor(db, maxTries = 2) { actor =>
+            // The actor should assume the max after 2 seconds
+            val patienceConfig = PatienceConfig(3.seconds)
+            eventually {
+              val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
+              currentMax shouldBe highestValue
+            }(patienceConfig, implicitly)
           }
-          .runWith(Sink.ignore).futureValue
-
-        val highestValue = if (isOracle) {
-          // ForceInsert does not seem to work for oracle, we must delete the odd numbered events
-          db.run(JournalTable.filter(_.ordering % 2L === 1L).delete).futureValue
-          maxElement / 2
-        } else maxElement
-
-        withJournalSequenceActor(db, maxTries = 2) { actor =>
-          // The actor should assume the max after 2 seconds
-          val patienceConfig = PatienceConfig(3.seconds)
-          eventually {
-            val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
-            currentMax shouldBe highestValue
-          }(patienceConfig, implicitly)
         }
       }
     }
@@ -251,5 +258,7 @@ class PostgresJournalSequenceActorTest extends JournalSequenceActorTest("postgre
 class MySQLJournalSequenceActorTest extends JournalSequenceActorTest("mysql-application.conf", isOracle = false) with MysqlCleaner
 
 class OracleJournalSequenceActorTest extends JournalSequenceActorTest("oracle-application.conf", isOracle = true) with OracleCleaner
+
+class SqlServerJournalSequenceActorTest extends JournalSequenceActorTest("sqlserver-application.conf", isOracle = false) with SqlServerCleaner
 
 class H2JournalSequenceActorTest extends JournalSequenceActorTest("h2-application.conf", isOracle = false) with H2Cleaner

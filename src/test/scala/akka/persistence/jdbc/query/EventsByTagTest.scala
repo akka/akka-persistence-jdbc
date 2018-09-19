@@ -359,4 +359,6 @@ class OracleScalaEventByTagTest extends EventsByTagTest("oracle-application.conf
   override def timeoutMultiplier: Int = 4
 }
 
+class SqlServerScalaEventByTagTest extends EventsByTagTest("sqlserver-application.conf") with SqlServerCleaner
+
 class H2ScalaEventsByTagTest extends EventsByTagTest("h2-application.conf") with H2Cleaner

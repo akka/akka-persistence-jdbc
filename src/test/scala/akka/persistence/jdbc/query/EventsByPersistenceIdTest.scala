@@ -224,4 +224,6 @@ class MySQLScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mys
 
 class OracleScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("oracle-application.conf") with OracleCleaner
 
+class SqlServerScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("sqlserver-application.conf") with SqlServerCleaner
+
 class H2ScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("h2-application.conf") with H2Cleaner

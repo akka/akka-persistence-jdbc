@@ -293,6 +293,34 @@ trait OracleCleaner extends QueryTestSpec {
   }
 }
 
+trait SqlServerCleaner extends QueryTestSpec {
+  import akka.persistence.jdbc.util.Schema.SqlServer
+
+  val actionsClearSqlServer =
+    DBIO.seq(
+      sqlu"""TRUNCATE TABLE journal""",
+      sqlu"""TRUNCATE TABLE snapshot""",
+      sqlu"""DBCC CHECKIDENT('journal', RESEED, 1)""").transactionally
+
+  def clearSqlServer(): Unit =
+    withDatabase(_.run(actionsClearSqlServer).futureValue)
+
+  override def beforeAll() = {
+    dropCreate(SqlServer())
+    super.beforeAll()
+  }
+
+  override def afterAll(): Unit = {
+    dropCreate(SqlServer())
+    super.afterAll()
+  }
+
+  override def beforeEach(): Unit = {
+    clearSqlServer()
+    super.beforeEach()
+  }
+}
+
 trait H2Cleaner extends QueryTestSpec {
   import akka.persistence.jdbc.util.Schema.H2
 

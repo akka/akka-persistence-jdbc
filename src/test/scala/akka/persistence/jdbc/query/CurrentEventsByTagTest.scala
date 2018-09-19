@@ -219,4 +219,6 @@ class MySQLScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-sha
 
 class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-shared-db-application.conf") with OracleCleaner
 
+class SqlServerScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("sqlserver-shared-db-application.conf") with SqlServerCleaner
+
 class H2ScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("h2-shared-db-application.conf") with H2Cleaner

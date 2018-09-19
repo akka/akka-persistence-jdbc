@@ -85,12 +85,8 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
   }
 
   private def writeJournalRows(xs: Seq[JournalRow]): Future[Unit] = {
-    if (slickProfile != H2Profile)
-      // Write atomically without auto-commit
-      db.run(queries.writeJournalRows(xs).transactionally).map(_ => Unit)
-    else
-      // However transactionally causes H2 tests to fail
-      db.run(queries.writeJournalRows(xs)).map(_ => Unit)
+    // Write atomically without auto-commit
+    db.run(queries.writeJournalRows(xs).transactionally).map(_ => Unit)
   }
 
   /**

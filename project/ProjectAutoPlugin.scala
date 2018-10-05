@@ -9,7 +9,8 @@ import SbtScalariform.autoImport._
 import scalariform.formatter.preferences.FormattingPreferences
 
 object ProjectAutoPlugin extends AutoPlugin {
-  final val AkkaVersion = "2.5.16"
+  final val ScalaVersion = "2.12.7"
+  final val AkkaVersion = "2.5.17"
   final val SlickVersion = "3.2.3"
   final val ScalaTestVersion = "3.0.5"
 
@@ -37,9 +38,9 @@ object ProjectAutoPlugin extends AutoPlugin {
 
     licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php")),
 
-    scalaVersion := "2.12.6",
+    scalaVersion := ScalaVersion,
 
-    crossScalaVersions := Seq("2.11.12", "2.12.6"),
+    crossScalaVersions := Seq("2.11.12", ScalaVersion),
 
     fork in Test := true,
 

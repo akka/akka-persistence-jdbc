@@ -13,4 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-sbt.version=1.2.3
+#!/bin/bash
+export VM_HOST="${VM_HOST:-localhost}"
+
+# Wait for a certain service to become available
+# Usage: wait 1433 SqlServer
+wait() {
+while true; do
+  if ! nc -z $VM_HOST $1
+  then
+    echo "$2 not available, retrying..."
+    sleep 1
+  else
+    echo "$2 is available"
+    break;
+  fi
+done;
+}
+
+docker-compose -f scripts/sqlserver.yml kill
+docker-compose -f scripts/sqlserver.yml rm -f
+docker-compose -f scripts/sqlserver.yml up -d
+wait 1433 SqlServer

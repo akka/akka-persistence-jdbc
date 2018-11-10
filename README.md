@@ -70,6 +70,7 @@ Configure `slick`:
   - `slick.jdbc.MySQLProfile$`
   - `slick.jdbc.H2Profile$`
   - `slick.jdbc.OracleProfile$`
+  - `slick.jdbc.SQLServerProfile$`
 
 ## Database Schema
 
@@ -77,6 +78,7 @@ Configure `slick`:
 - [MySQL Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/mysql/mysql-schema.sql)
 - [H2 Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/h2/h2-schema.sql)
 - [Oracle Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/oracle/oracle-schema.sql)
+- [SQL Server Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/sqlserver/sqlserver-schema.sql)
 
 ## Configuration
 
@@ -95,6 +97,7 @@ configuration shows how this is configured:
 - [MySQL](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/mysql-application.conf)
 - [H2](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/h2-application.conf)
 - [Oracle](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/oracle-application.conf)
+- [SQL Server](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/sqlserver-application.conf)
 
 ### Sharing the database connection pool between the journals
 
@@ -104,6 +107,7 @@ In order to create only one connection pool which is shared between all journals
 - [MySQL](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/mysql-shared-db-application.conf)
 - [H2](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/h2-shared-db-application.conf)
 - [Oracle](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/oracle-shared-db-application.conf)
+- [SQL Server](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/sqlserver-shared-db-application.conf)
 
 ### Customized loading of the db connection
 
@@ -116,9 +120,11 @@ needs to be configured in the application.conf. In addition, you might want to c
 the database to be closed automatically:
 
 ```
+akka-persistence-jdbc {
+  database-provider-fqcn = "com.mypackage.CustomSlickDatabaseProvider"
+}
 jdbc-journal {
   use-shared-db = "enabled" // setting this to any non-empty string prevents the journal from closing the database on shutdown
-  database-provider-fqcn = "com.mypackage.CustomSlickDatabaseProvider"
 }
 jdbc-snapshot-store {
   use-shared-db = "enabled" // setting this to any non-empty string prevents the snapshot-journal from closing the database on shutdown

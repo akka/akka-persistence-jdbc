@@ -70,4 +70,6 @@ class MySQLScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("mysql-appli
 
 class OracleScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("oracle-application.conf") with OracleCleaner
 
+class SqlServerScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("sqlserver-application.conf") with SqlServerCleaner
+
 class H2ScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("h2-application.conf") with H2Cleaner

@@ -17,8 +17,6 @@
 package akka.persistence.jdbc
 package journal.dao
 
-import java.io.NotSerializableException
-
 import akka.{ Done, NotUsed }
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
@@ -28,7 +26,7 @@ import akka.stream.scaladsl.{ Keep, Sink, Source }
 import akka.stream.{ Materializer, OverflowStrategy, QueueOfferResult }
 import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcBackend._
-import slick.jdbc.JdbcProfile
+import slick.jdbc.{ JdbcProfile, H2Profile }
 
 import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future, Promise }
@@ -86,9 +84,14 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
     }
   }
 
-  private def writeJournalRows(xs: Seq[JournalRow]): Future[Unit] = for {
-    _ <- db.run(queries.writeJournalRows(xs))
-  } yield ()
+  private def writeJournalRows(xs: Seq[JournalRow]): Future[Unit] = {
+    if (slickProfile != H2Profile)
+      // Write atomically without auto-commit
+      db.run(queries.writeJournalRows(xs).transactionally).map(_ => Unit)
+    else
+      // However transactionally causes H2 tests to fail
+      db.run(queries.writeJournalRows(xs)).map(_ => Unit)
+  }
 
   /**
    * @see [[akka.persistence.journal.AsyncWriteJournal.asyncWriteMessages(messages)]]

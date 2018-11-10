@@ -9,9 +9,10 @@ import SbtScalariform.autoImport._
 import scalariform.formatter.preferences.FormattingPreferences
 
 object ProjectAutoPlugin extends AutoPlugin {
-  final val AkkaVersion = "2.5.13"
+  final val ScalaVersion = "2.12.7"
+  final val AkkaVersion = "2.5.17"
   final val SlickVersion = "3.2.3"
-  final val ScalaTestVersion = "3.0.3"
+  final val ScalaTestVersion = "3.0.5"
 
   final val formattingPreferences: FormattingPreferences = {
     import scalariform.formatter.preferences._
@@ -37,9 +38,9 @@ object ProjectAutoPlugin extends AutoPlugin {
 
     licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php")),
 
-    scalaVersion := "2.12.5",
+    scalaVersion := ScalaVersion,
 
-    crossScalaVersions := Seq("2.11.12", "2.12.5"),
+    crossScalaVersions := Seq("2.11.12", ScalaVersion),
 
     fork in Test := true,
 
@@ -81,9 +82,10 @@ object ProjectAutoPlugin extends AutoPlugin {
    libraryDependencies += "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
    libraryDependencies += "com.typesafe.slick" %% "slick" % SlickVersion,
    libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
-   libraryDependencies += "org.postgresql" % "postgresql" % "42.2.2" % Test,
+   libraryDependencies += "org.postgresql" % "postgresql" % "42.2.5" % Test,
    libraryDependencies += "com.h2database" % "h2" % "1.4.197" % Test,
-   libraryDependencies += "mysql" % "mysql-connector-java" % "6.0.6" % Test,
+   libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.12" % Test,
+   libraryDependencies += "com.microsoft.sqlserver" % "mssql-jdbc" % "7.0.0.jre8" % Test,
    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-persistence-tck" % AkkaVersion % Test,

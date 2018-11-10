@@ -97,7 +97,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
   }
 
   // Started lazily to prevent the actor for querying the db if no eventsByTag queries are used
-  private[query] lazy val journalSequenceActor = system.actorOf(
+  private[query] lazy val journalSequenceActor = system.systemActorOf(
     JournalSequenceActor.props(readJournalDao, readJournalConfig.journalSequenceRetrievalConfiguration),
     s"$configPath.akka-persistence-jdbc-journal-sequence-actor")
   private val delaySource =

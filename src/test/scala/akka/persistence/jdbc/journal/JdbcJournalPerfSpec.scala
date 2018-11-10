@@ -149,7 +149,20 @@ class OracleJournalPerfSpecPhysicalDelete extends OracleJournalPerfSpec {
   this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
 }
 
+class SqlServerJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("sqlserver-application.conf"), SqlServer()) {
+  override def eventsCount: Int = 100
+}
+
+class SqlServerJournalPerfSpecSharedDb extends JdbcJournalPerfSpec(ConfigFactory.load("sqlserver-shared-db-application.conf"), SqlServer()) {
+  override def eventsCount: Int = 100
+}
+
+class SqlServerJournalPerfSpecPhysicalDelete extends SqlServerJournalPerfSpec {
+  this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
+}
+
 class H2JournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("h2-application.conf"), H2())
+
 class H2JournalPerfSpecSharedDb extends JdbcJournalPerfSpec(ConfigFactory.load("h2-shared-db-application.conf"), H2())
 
 class H2JournalPerfSpecPhysicalDelete extends H2JournalPerfSpec {

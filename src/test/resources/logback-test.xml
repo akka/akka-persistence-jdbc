@@ -3,20 +3,41 @@
 
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>info</level>
+            <level>debug</level>
         </filter>
         <encoder>
-            <!--<pattern>%date{ISO8601} %-5level %logger{36} %X{sourceThread} - %msg%n</pattern>-->
-            <!--<pattern>%X{akkaTimestamp} %-5level[%thread] %logger{0} - %msg%n</pattern>-->
-            <pattern>%logger -> %-5level[%thread] %logger{0} - %msg%n</pattern>
+            <pattern>%date{ISO8601} - %logger -> %-5level[%thread] %logger{0} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <logger name="akka.persistence.jdbc" level="info" additivity="false">
-        <appender-ref ref="console" />
-    </logger>
+    <!--<logger name="akka.persistence.jdbc" level="debug"/>-->
+    <!--<logger name="akka.persistence.jdbc.journal" level="info"/>-->
 
-    <root level="info">
+    <logger name="com.zaxxer.hikari" level="warn"/>
+
+    <!--<logger name="slick.backend.DatabaseComponent.action" level="debug"/>-->
+
+    <!-- Shows execution times for SQL statements. -->
+    <!--<logger name="slick.jdbc.JdbcBackend.benchmark" level="debug"/>-->
+
+    <!-- Shows the execution of every Database I/O Action -->
+    <!--<logger name="slick.basic.BasicBackend.action" level="debug"/>-->
+
+    <!-- Logs session events such as opening/closing connections -->
+    <!--<logger name="slick.session" level="debug"/>-->
+
+    <!-- Shows bind variable contents (for supported types) of all SQL statements which are executed. -->
+    <!--<logger name="slick.jdbc.JdbcBackend.parameter" level="DEBUG"/>-->
+
+    <!-- Logs SQL sent to the database -->
+    <!--<logger name="slick.jdbc.JdbcBackend.statement" level="DEBUG"/>-->
+
+    <!-- Logs the first few results of each query. -->
+    <!--<logger name="slick.jdbc.StatementInvoker.result" level="DEBUG"/>-->
+
+    <!--<logger name="slick.util.AsyncExecutor" level="DEBUG" />-->
+
+    <root level="INFO">
         <appender-ref ref="console"/>
     </root>
 

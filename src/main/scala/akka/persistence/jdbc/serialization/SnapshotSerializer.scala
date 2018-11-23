@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Dennis Vriend
+ * Copyright 2016 Dennis Vriend
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,12 @@
 
 package akka.persistence.jdbc.serialization
 
-import akka.persistence.serialization.Snapshot
-import akka.serialization.Serialization
+import akka.persistence.SnapshotMetadata
 
-trait SnapshotSerializer {
-  def unmarshal(value: String, persistenceId: String)(implicit conv: SnapshotTypeConverter, serialization: Serialization): Snapshot =
-    conv.unmarshal(value, persistenceId)
+import scala.util.Try
 
-  def marshal(value: Snapshot)(implicit conv: SnapshotTypeConverter, serialization: Serialization): String =
-    conv.marshal(value)
+trait SnapshotSerializer[T] {
+  def serialize(metadata: SnapshotMetadata, snapshot: Any): Try[T]
+
+  def deserialize(t: T): Try[(SnapshotMetadata, Any)]
 }

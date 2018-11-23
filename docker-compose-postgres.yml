@@ -1,7 +1,0 @@
-postgres:
-  image: postgres:9.4
-  environment:
-    - "POSTGRES_USER=docker"
-    - "POSTGRES_PASSWORD=docker"
-  ports:
-    - "5432:5432"

@@ -1,18 +1,35 @@
 language: scala
-sudo: false
+sudo: true
+services:
+  - mysql
+  - postgresql
+  - docker
+before_install:
+  - docker pull alexeiled/docker-oracle-xe-11g
+  - docker pull topaztechnology/mssql-server-linux
+  - docker run --name oracle -d -p 127.0.0.1:1521:1521 -e ORACLE_ALLOW_REMOTE=true alexeiled/docker-oracle-xe-11g
+  - docker run --name sqlserver -d -p 127.0.0.1:1433:1433 -e DBCA_TOTAL_MEMORY=1024 -e ACCEPT_EULA=Y -e SQL_USER=docker -e SQL_PASSWORD=docker -e SQL_DB=docker topaztechnology/mssql-server-linux
+  - docker inspect oracle
+  - docker inspect sqlserver
+  - docker ps -a
 scala:
-  - "2.10.5"
-  - "2.11.6"
+  - 2.11.12
+  - 2.12.7
 jdk:
   - oraclejdk8
-branches:
-  only:
-    - master
 before_script:
   - psql -c 'create database docker;' -U postgres
 addons:
-  postgresql: "9.3"
+  postgresql: "9.4"
 script: "./build.sh"
-notifications:
-  email:
-    - dnvriend@gmail.com
+
+before_cache:
+  - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
+  - find $HOME/.sbt -name "*.lock" -delete
+
+cache:
+  directories:
+   - $HOME/.m2
+   - $HOME/.ivy2
+   - $HOME/.sbt/boot/scala-$TRAVIS_SCALA_VERSION
+   - $HOME/.sbt/launchers

@@ -36,7 +36,7 @@ object CurrentEventsByTagTest {
     "jdbc-read-journal.refresh-interval" -> ConfigValueFactory.fromAnyRef(refreshInterval.toString()))
 }
 
-abstract class CurrentEventsByTagTest(config: String, batchSize: Int = 10000) extends QueryTestSpec(config, configOverrides) {
+abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config, configOverrides) {
 
   it should "not find an event by tag for unknown tag" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
@@ -190,8 +190,7 @@ abstract class CurrentEventsByTagTest(config: String, batchSize: Int = 10000) ex
       // send a batch of 3 * 200
       val batch1 = sendMessagesWithTag(tag, 200)
       // Try to persist a large batch of events per actor. Some of these may be returned, but not all!
-
-      val batch2 = sendMessagesWithTag(tag, batchSize)
+      val batch2 = sendMessagesWithTag(tag, 10000)
 
       // wait for acknowledgement of the first batch only
       batch1.futureValue
@@ -222,4 +221,4 @@ class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-s
 
 class SqlServerScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("sqlserver-shared-db-application.conf") with SqlServerCleaner
 
-class H2ScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("h2-shared-db-application.conf", 5000) with H2Cleaner
+class H2ScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("h2-shared-db-application.conf") with H2Cleaner

@@ -83,7 +83,7 @@ object ProjectAutoPlugin extends AutoPlugin {
    libraryDependencies += "com.typesafe.slick" %% "slick" % SlickVersion,
    libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
    libraryDependencies += "org.postgresql" % "postgresql" % "42.2.5" % Test,
-   libraryDependencies += "com.h2database" % "h2" % "1.4.197" % Test,
+   libraryDependencies += "com.h2database" % "h2" % "1.4.196" % Test,
    libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.12" % Test,
    libraryDependencies += "com.microsoft.sqlserver" % "mssql-jdbc" % "7.0.0.jre8" % Test,
    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,

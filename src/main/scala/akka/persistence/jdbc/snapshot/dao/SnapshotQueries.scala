@@ -51,4 +51,16 @@ class SnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: S
   private def _selectByPersistenceIdAndMaxSequenceNrAndMaxTimestamp(persistenceId: Rep[String], maxSequenceNr: Rep[Long], maxTimestamp: Rep[Long]) =
     _selectByPersistenceIdAndMaxSequenceNr(persistenceId, maxSequenceNr).filter(_.created <= maxTimestamp)
   val selectByPersistenceIdAndMaxSequenceNrAndMaxTimestamp = Compiled(_selectByPersistenceIdAndMaxSequenceNrAndMaxTimestamp _)
+
+  private def _selectOneByPersistenceIdAndMaxTimestamp(persistenceId: Rep[String], maxTimestamp: Rep[Long]) =
+    _selectAll(persistenceId).filter(_.created <= maxTimestamp).take(1)
+  val selectOneByPersistenceIdAndMaxTimestamp = Compiled(_selectOneByPersistenceIdAndMaxTimestamp _)
+
+  private def _selectOneByPersistenceIdAndMaxSequenceNr(persistenceId: Rep[String], maxSequenceNr: Rep[Long]) =
+    _selectAll(persistenceId).filter(_.sequenceNumber <= maxSequenceNr).take(1)
+  val selectOneByPersistenceIdAndMaxSequenceNr = Compiled(_selectOneByPersistenceIdAndMaxSequenceNr _)
+
+  private def _selectOneByPersistenceIdAndMaxSequenceNrAndMaxTimestamp(persistenceId: Rep[String], maxSequenceNr: Rep[Long], maxTimestamp: Rep[Long]) =
+    _selectOneByPersistenceIdAndMaxSequenceNr(persistenceId, maxSequenceNr).filter(_.created <= maxTimestamp).take(1)
+  val selectOneByPersistenceIdAndMaxSequenceNrAndMaxTimestamp = Compiled(_selectOneByPersistenceIdAndMaxSequenceNrAndMaxTimestamp _)
 }

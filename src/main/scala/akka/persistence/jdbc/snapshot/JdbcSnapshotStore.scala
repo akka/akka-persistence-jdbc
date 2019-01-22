@@ -71,7 +71,7 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
     criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] = {
     val result = criteria match {
       case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue, _, _) =>
-        snapshotDao.snapshotForMaxSequenceNr(persistenceId)
+        snapshotDao.latestSnapshot(persistenceId)
       case SnapshotSelectionCriteria(Long.MaxValue, maxTimestamp, _, _) =>
         snapshotDao.snapshotForMaxTimestamp(persistenceId, maxTimestamp)
       case SnapshotSelectionCriteria(maxSequenceNr, Long.MaxValue, _, _) =>

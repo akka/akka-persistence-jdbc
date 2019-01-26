@@ -26,9 +26,8 @@ object ConfigKeys {
 }
 
 class SlickConfiguration(config: Config) {
-  private val cfg = config.asConfig("slick")
-  val jndiName: Option[String] = cfg.as[String]("jndiName").trim
-  val jndiDbName: Option[String] = cfg.as[String]("jndiDbName")
+  val jndiName: Option[String] = config.as[String]("jndiName").trim
+  val jndiDbName: Option[String] = config.as[String]("jndiDbName")
   override def toString: String = s"SlickConfiguration($jndiName,$jndiDbName)"
 }
 
@@ -97,20 +96,18 @@ class SnapshotPluginConfig(config: Config) {
 // aggregations
 
 class JournalConfig(config: Config) {
-  val slickConfiguration = new SlickConfiguration(config)
   val journalTableConfiguration = new JournalTableConfiguration(config)
   val pluginConfig = new JournalPluginConfig(config)
   val daoConfig = new BaseByteArrayJournalDaoConfig(config)
   val useSharedDb: Option[String] = config.asOptionalNonEmptyString(ConfigKeys.useSharedDb)
-  override def toString: String = s"JournalConfig($slickConfiguration,$journalTableConfiguration,$pluginConfig,$useSharedDb)"
+  override def toString: String = s"JournalConfig($journalTableConfiguration,$pluginConfig,$useSharedDb)"
 }
 
 class SnapshotConfig(config: Config) {
-  val slickConfiguration = new SlickConfiguration(config)
   val snapshotTableConfiguration = new SnapshotTableConfiguration(config)
   val pluginConfig = new SnapshotPluginConfig(config)
   val useSharedDb: Option[String] = config.asOptionalNonEmptyString(ConfigKeys.useSharedDb)
-  override def toString: String = s"SnapshotConfig($slickConfiguration,$snapshotTableConfiguration,$pluginConfig,$useSharedDb)"
+  override def toString: String = s"SnapshotConfig($snapshotTableConfiguration,$pluginConfig,$useSharedDb)"
 }
 
 object JournalSequenceRetrievalConfig {
@@ -124,7 +121,6 @@ object JournalSequenceRetrievalConfig {
 case class JournalSequenceRetrievalConfig(batchSize: Int, maxTries: Int, queryDelay: FiniteDuration, maxBackoffQueryDelay: FiniteDuration, askTimeout: FiniteDuration)
 
 class ReadJournalConfig(config: Config) {
-  val slickConfiguration = new SlickConfiguration(config)
   val journalTableConfiguration = new JournalTableConfiguration(config)
   val journalSequenceRetrievalConfiguration = JournalSequenceRetrievalConfig(config)
   val pluginConfig = new ReadJournalPluginConfig(config)
@@ -133,5 +129,5 @@ class ReadJournalConfig(config: Config) {
   val addShutdownHook: Boolean = config.asBoolean("add-shutdown-hook", true)
   val includeDeleted: Boolean = config.as[Boolean]("includeLogicallyDeleted", true)
 
-  override def toString: String = s"ReadJournalConfig($slickConfiguration,$journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook,$includeDeleted)"
+  override def toString: String = s"ReadJournalConfig($journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook,$includeDeleted)"
 }

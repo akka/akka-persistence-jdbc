@@ -61,6 +61,6 @@ class SnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: S
   val selectOneByPersistenceIdAndMaxSequenceNr = Compiled(_selectOneByPersistenceIdAndMaxSequenceNr _)
 
   private def _selectOneByPersistenceIdAndMaxSequenceNrAndMaxTimestamp(persistenceId: Rep[String], maxSequenceNr: Rep[Long], maxTimestamp: Rep[Long]) =
-    _selectOneByPersistenceIdAndMaxSequenceNr(persistenceId, maxSequenceNr).filter(_.created <= maxTimestamp).take(1)
+    _selectByPersistenceIdUpToMaxSequenceNr(persistenceId, maxSequenceNr).filter(_.created <= maxTimestamp).take(1)
   val selectOneByPersistenceIdAndMaxSequenceNrAndMaxTimestamp = Compiled(_selectOneByPersistenceIdAndMaxSequenceNrAndMaxTimestamp _)
 }

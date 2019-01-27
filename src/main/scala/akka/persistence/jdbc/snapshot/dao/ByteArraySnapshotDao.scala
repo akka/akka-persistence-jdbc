@@ -40,20 +40,20 @@ class ByteArraySnapshotDao(db: JdbcBackend#Database, profile: JdbcProfile, snaps
       case Failure(cause)        => throw cause
     }
 
-  override def snapshotForMaxSequenceNr(persistenceId: String): Future[Option[(SnapshotMetadata, Any)]] = for {
-    rows <- db.run(queries.selectByPersistenceIdAndMaxSeqNr(persistenceId).result)
+  override def latestSnapshot(persistenceId: String): Future[Option[(SnapshotMetadata, Any)]] = for {
+    rows <- db.run(queries.selectLatestByPersistenceId(persistenceId).result)
   } yield rows.headOption map toSnapshotData
 
   override def snapshotForMaxTimestamp(persistenceId: String, maxTimestamp: Long): Future[Option[(SnapshotMetadata, Any)]] = for {
-    rows <- db.run(queries.selectByPersistenceIdAndMaxTimestamp(persistenceId, maxTimestamp).result)
+    rows <- db.run(queries.selectOneByPersistenceIdAndMaxTimestamp(persistenceId, maxTimestamp).result)
   } yield rows.headOption map toSnapshotData
 
   override def snapshotForMaxSequenceNr(persistenceId: String, maxSequenceNr: Long): Future[Option[(SnapshotMetadata, Any)]] = for {
-    rows <- db.run(queries.selectByPersistenceIdAndMaxSequenceNr(persistenceId, maxSequenceNr).result)
+    rows <- db.run(queries.selectOneByPersistenceIdAndMaxSequenceNr(persistenceId, maxSequenceNr).result)
   } yield rows.headOption map toSnapshotData
 
   override def snapshotForMaxSequenceNrAndMaxTimestamp(persistenceId: String, maxSequenceNr: Long, maxTimestamp: Long): Future[Option[(SnapshotMetadata, Any)]] = for {
-    rows <- db.run(queries.selectByPersistenceIdAndMaxSequenceNrAndMaxTimestamp(persistenceId, maxSequenceNr, maxTimestamp).result)
+    rows <- db.run(queries.selectOneByPersistenceIdAndMaxSequenceNrAndMaxTimestamp(persistenceId, maxSequenceNr, maxTimestamp).result)
   } yield rows.headOption map toSnapshotData
 
   override def save(snapshotMetadata: SnapshotMetadata, snapshot: Any): Future[Unit] = {
@@ -62,7 +62,7 @@ class ByteArraySnapshotDao(db: JdbcBackend#Database, profile: JdbcProfile, snaps
   }
 
   override def delete(persistenceId: String, sequenceNr: Long): Future[Unit] = for {
-    _ <- db.run(queries.selectByPersistenceIdAndSeqNr(persistenceId, sequenceNr).delete)
+    _ <- db.run(queries.selectByPersistenceIdAndSequenceNr(persistenceId, sequenceNr).delete)
   } yield ()
 
   override def deleteAllSnapshots(persistenceId: String): Future[Unit] = for {
@@ -70,14 +70,14 @@ class ByteArraySnapshotDao(db: JdbcBackend#Database, profile: JdbcProfile, snaps
   } yield ()
 
   override def deleteUpToMaxSequenceNr(persistenceId: String, maxSequenceNr: Long): Future[Unit] = for {
-    _ <- db.run(queries.selectByPersistenceIdAndMaxSequenceNr(persistenceId, maxSequenceNr).delete)
+    _ <- db.run(queries.selectByPersistenceIdUpToMaxSequenceNr(persistenceId, maxSequenceNr).delete)
   } yield ()
 
   override def deleteUpToMaxTimestamp(persistenceId: String, maxTimestamp: Long): Future[Unit] = for {
-    _ <- db.run(queries.selectByPersistenceIdAndMaxTimestamp(persistenceId, maxTimestamp).delete)
+    _ <- db.run(queries.selectByPersistenceIdUpToMaxTimestamp(persistenceId, maxTimestamp).delete)
   } yield ()
 
   override def deleteUpToMaxSequenceNrAndMaxTimestamp(persistenceId: String, maxSequenceNr: Long, maxTimestamp: Long): Future[Unit] = for {
-    _ <- db.run(queries.selectByPersistenceIdAndMaxSequenceNrAndMaxTimestamp(persistenceId, maxSequenceNr, maxTimestamp).delete)
+    _ <- db.run(queries.selectByPersistenceIdUpToMaxSequenceNrAndMaxTimestamp(persistenceId, maxSequenceNr, maxTimestamp).delete)
   } yield ()
 }

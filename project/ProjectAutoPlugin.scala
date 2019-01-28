@@ -9,8 +9,8 @@ import SbtScalariform.autoImport._
 import scalariform.formatter.preferences.FormattingPreferences
 
 object ProjectAutoPlugin extends AutoPlugin {
-  final val ScalaVersion = "2.12.7"
-  final val AkkaVersion = "2.5.17"
+  final val ScalaVersion = "2.12.8"
+  final val AkkaVersion = "2.5.19"
   final val SlickVersion = "3.2.3"
   final val ScalaTestVersion = "3.0.5"
 

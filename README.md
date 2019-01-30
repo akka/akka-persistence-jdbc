@@ -14,14 +14,7 @@ akka-persistence-jdbc writes journal and snapshot entries to a configured JDBC s
 Add the following to your `build.sbt`:
 
 ```scala
-// the library is available in Bintray's JCenter
-resolvers += Resolver.jcenterRepo
-
-// akka 2.5.x
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.4.0"
-
-// akka 2.4.x
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "2.8.0"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.5.0"
 ```
 
 ## Release notes
@@ -43,7 +36,7 @@ If you want to take action, feel free to contact Dennis Vriend <dnvriend@gmail.c
 This source code is made available under the [Apache 2.0 License][apache]. The [quick summary of what this license means is available here](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0))
 
 ## Configuration
-The plugin relies on Slick 3.2.3 to do create the SQL dialect for the database in use, therefore the following must be configured in `application.conf`
+The plugin relies on Slick to do create the SQL dialect for the database in use, therefore the following must be configured in `application.conf`
 
 Configure `akka-persistence`:
 - instruct akka persistence to use the `jdbc-journal` plugin,
@@ -338,7 +331,7 @@ The plugin automatically shuts down the HikariCP connection pool when the ActorS
 This is done using [ActorSystem.registerOnTermination](https://doc.akka.io/api/akka/current/akka/actor/ActorSystem.html#registerOnTermination[T](code:=>T):Unit).
 
 [slick]: http://slick.lightbend.com/
-[slick-jndi]: http://slick.typesafe.com/doc/3.1.1/database.html#using-a-jndi-name
+[slick-jndi]: http://slick.typesafe.com/doc/3.3.0/database.html#using-a-jndi-name
 [apache]: http://www.apache.org/licenses/LICENSE-2.0
 [w3c-cond]: http://www.w3.org/Consortium/cepc/
 [w3c-proc]: http://www.w3.org/Consortium/pwe/#Procedures

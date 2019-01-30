@@ -11,7 +11,7 @@ import scalariform.formatter.preferences.FormattingPreferences
 object ProjectAutoPlugin extends AutoPlugin {
   final val ScalaVersion = "2.12.8"
   final val AkkaVersion = "2.5.20"
-  final val SlickVersion = "3.2.3"
+  final val SlickVersion = "3.3.0"
   final val ScalaTestVersion = "3.0.5"
 
   final val formattingPreferences: FormattingPreferences = {

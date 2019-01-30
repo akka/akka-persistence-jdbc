@@ -17,11 +17,11 @@
 package akka.persistence.jdbc
 
 import akka.actor.ActorSystem
-import akka.persistence.jdbc.config.{ JournalConfig, ReadJournalConfig }
+import akka.persistence.jdbc.config.{JournalConfig, ReadJournalConfig, SlickConfiguration}
 import akka.persistence.jdbc.query.javadsl.JdbcReadJournal
-import akka.persistence.jdbc.util.{ DropCreate, SlickDatabase, SlickDriver }
+import akka.persistence.jdbc.util.{DropCreate, SlickDatabase, SlickDriver}
 import akka.util.Timeout
-import com.typesafe.config.{ Config, ConfigFactory, ConfigValue }
+import com.typesafe.config.{Config, ConfigFactory, ConfigValue}
 import org.scalatest.BeforeAndAfterEach
 import slick.jdbc.JdbcBackend.Database
 
@@ -49,8 +49,8 @@ abstract class SingleActorSystemPerTestSpec(val config: Config) extends SimpleSp
   def db: Database = {
     dbOpt.getOrElse {
       val newDb = if (cfg.hasPath("slick.profile")) {
-        SlickDatabase.database(cfg, journalConfig.slickConfiguration, "slick.db")
-      } else SlickDatabase.database(config, journalConfig.slickConfiguration, "akka-persistence-jdbc.shared-databases.slick.db")
+        SlickDatabase.database(cfg, new SlickConfiguration(cfg.getConfig("slick")), "slick.db")
+      } else SlickDatabase.database(config, new SlickConfiguration(config.getConfig("akka-persistence-jdbc.shared-databases.slick")), "akka-persistence-jdbc.shared-databases.slick.db")
 
       dbOpt = Some(newDb)
       newDb

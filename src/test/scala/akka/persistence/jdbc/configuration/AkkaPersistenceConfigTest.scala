@@ -218,8 +218,9 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
 
   "empty config" should "parse JournalConfig" in {
     val cfg = new JournalConfig(ConfigFactory.empty)
-    cfg.slickConfiguration.jndiDbName shouldBe None
-    cfg.slickConfiguration.jndiDbName shouldBe None
+    val slickConfiguration = new SlickConfiguration(ConfigFactory.empty)
+    slickConfiguration.jndiName shouldBe None
+    slickConfiguration.jndiDbName shouldBe None
 
     cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao"
     cfg.pluginConfig.tagSeparator shouldBe ","
@@ -239,8 +240,9 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
 
   it should "parse SnapshotConfig" in {
     val cfg = new SnapshotConfig(ConfigFactory.empty)
-    cfg.slickConfiguration.jndiDbName shouldBe None
-    cfg.slickConfiguration.jndiDbName shouldBe None
+    val slickConfiguration = new SlickConfiguration(ConfigFactory.empty)
+    slickConfiguration.jndiName shouldBe None
+    slickConfiguration.jndiDbName shouldBe None
 
     cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao"
 
@@ -255,8 +257,9 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
 
   it should "parse ReadJournalConfig" in {
     val cfg = new ReadJournalConfig(ConfigFactory.empty)
-    cfg.slickConfiguration.jndiDbName shouldBe None
-    cfg.slickConfiguration.jndiDbName shouldBe None
+    val slickConfiguration = new SlickConfiguration(ConfigFactory.empty)
+    slickConfiguration.jndiName shouldBe None
+    slickConfiguration.jndiDbName shouldBe None
 
     cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.readjournal.ByteArrayReadJournalDao"
     cfg.pluginConfig.tagSeparator shouldBe ","
@@ -276,8 +279,9 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
 
   "full config" should "parse JournalConfig" in {
     val cfg = new JournalConfig(config.getConfig("jdbc-journal"))
-    cfg.slickConfiguration.jndiDbName shouldBe None
-    cfg.slickConfiguration.jndiDbName shouldBe None
+    val slickConfiguration = new SlickConfiguration(config.getConfig("jdbc-journal.slick"))
+    slickConfiguration.jndiName shouldBe None
+    slickConfiguration.jndiDbName shouldBe None
 
     cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao"
     cfg.pluginConfig.tagSeparator shouldBe ","
@@ -295,8 +299,9 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
 
   it should "parse SnapshotConfig" in {
     val cfg = new SnapshotConfig(config.getConfig("jdbc-snapshot-store"))
-    cfg.slickConfiguration.jndiDbName shouldBe None
-    cfg.slickConfiguration.jndiDbName shouldBe None
+    val slickConfiguration = new SlickConfiguration(config.getConfig("jdbc-snapshot-store.slick"))
+    slickConfiguration.jndiName shouldBe None
+    slickConfiguration.jndiDbName shouldBe None
 
     cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao"
 
@@ -311,8 +316,9 @@ class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
 
   it should "parse ReadJournalConfig" in {
     val cfg = new ReadJournalConfig(config.getConfig("jdbc-read-journal"))
-    cfg.slickConfiguration.jndiDbName shouldBe None
-    cfg.slickConfiguration.jndiDbName shouldBe None
+    val slickConfiguration = new SlickConfiguration(config.getConfig("jdbc-read-journal.slick"))
+    slickConfiguration.jndiName shouldBe None
+    slickConfiguration.jndiDbName shouldBe None
 
     cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.readjournal.ByteArrayReadJournalDao"
     cfg.pluginConfig.tagSeparator shouldBe ","

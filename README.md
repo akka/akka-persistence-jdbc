@@ -131,6 +131,19 @@ jdbc-journal {
 }
 ```
 
+When using the `use-shared-db = slick` setting, the follow configuration can serve as an example:
+
+```
+akka-persistence-jdbc {
+  shared-databases {
+    slick {
+      profile = "slick.jdbc.PostgresProfile$"
+      jndiName = "java:/jboss/datasources/bla"
+    }
+  }
+}
+```
+
 ## How to get the ReadJournal using Scala
 The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery` extension:
 

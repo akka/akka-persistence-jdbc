@@ -18,7 +18,7 @@ mysql:
     - "3306:3306" # credentials (root:root)
 
 oracle:
-  image: wnameless/oracle-xe-11g
+  image: oracleinanutshell/oracle-xe-11g
   container_name: oracle-test
   environment:
     - "TZ=Europe/Amsterdam"

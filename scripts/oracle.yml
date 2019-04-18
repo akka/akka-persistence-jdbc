@@ -14,7 +14,7 @@
 #    - "1521:1521" # DB_CONN: credentials (system:oracle)
 
 oracle:
-  image: wnameless/oracle-xe-11g
+  image: oracleinanutshell/oracle-xe-11g
   container_name: oracle-test
   environment:
     - "TZ=Europe/Amsterdam"

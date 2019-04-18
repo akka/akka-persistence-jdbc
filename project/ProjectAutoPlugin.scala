@@ -10,9 +10,9 @@ import scalariform.formatter.preferences.FormattingPreferences
 
 object ProjectAutoPlugin extends AutoPlugin {
   final val ScalaVersion = "2.12.8"
-  final val AkkaVersion = "2.5.20"
+  final val AkkaVersion = "2.5.22"
   final val SlickVersion = "3.3.0"
-  final val ScalaTestVersion = "3.0.5"
+  final val ScalaTestVersion = "3.0.7"
 
   final val formattingPreferences: FormattingPreferences = {
     import scalariform.formatter.preferences._
@@ -83,9 +83,9 @@ object ProjectAutoPlugin extends AutoPlugin {
    libraryDependencies += "com.typesafe.slick" %% "slick" % SlickVersion,
    libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
    libraryDependencies += "org.postgresql" % "postgresql" % "42.2.5" % Test,
-   libraryDependencies += "com.h2database" % "h2" % "1.4.196" % Test,
-   libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.12" % Test,
-   libraryDependencies += "com.microsoft.sqlserver" % "mssql-jdbc" % "7.0.0.jre8" % Test,
+   libraryDependencies += "com.h2database" % "h2" % "1.4.199" % Test,
+   libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.15" % Test,
+   libraryDependencies += "com.microsoft.sqlserver" % "mssql-jdbc" % "7.2.1.jre8" % Test,
    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Test,
    libraryDependencies += "com.typesafe.akka" %% "akka-persistence-tck" % AkkaVersion % Test,

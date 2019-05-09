@@ -69,8 +69,8 @@ class DefaultSlickDatabaseProvider(system: ActorSystem) extends SlickDatabasePro
       val conf = confObj.toConfig
       if (conf.hasPath("profile")) {
         // Only create the LazySlickDatabase if a profile has actually been configured, this ensures that the example in the reference conf is ignored
-        Some(key -> new LazySlickDatabase(conf, system))
-      } else None
+        List(key -> new LazySlickDatabase(conf, system))
+      } else Nil
     case (key, notAnObject) => throw new RuntimeException(s"""Expected "akka-persistence-jdbc.shared-databases.$key" to be a config ConfigObject, but got ${notAnObject.valueType()} (${notAnObject.getClass})""")
   }.toMap
 

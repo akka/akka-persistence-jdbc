@@ -86,7 +86,7 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
 
   private def writeJournalRows(xs: Seq[JournalRow]): Future[Unit] = {
     // Write atomically without auto-commit
-    db.run(queries.writeJournalRows(xs).transactionally).map(_ => Unit)
+    db.run(queries.writeJournalRows(xs).transactionally).map(_ => ())
   }
 
   /**

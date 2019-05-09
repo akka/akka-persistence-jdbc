@@ -30,7 +30,7 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
   def journalRowByPersistenceIds(persistenceIds: Iterable[String]) =
     for {
       query <- JournalTable.map(_.persistenceId)
-      if query inSetBind persistenceIds
+      if query inSetBind persistenceIds.toIterable
     } yield query
 
   private def _allPersistenceIdsDistinct(max: ConstColumn[Long]): Query[Rep[String], String, Seq] =

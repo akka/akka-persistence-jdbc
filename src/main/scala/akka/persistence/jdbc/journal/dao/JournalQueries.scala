@@ -80,7 +80,7 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
 
   def journalRowByPersistenceIds(persistenceIds: Iterable[String]): Query[Rep[String], String, Seq] = for {
     query <- JournalTable.map(_.persistenceId)
-    if query inSetBind persistenceIds
+    if query inSetBind persistenceIds.toIterable
   } yield query
 
   private def _messagesQuery(persistenceId: Rep[String], fromSequenceNr: Rep[Long], toSequenceNr: Rep[Long], max: ConstColumn[Long]) =

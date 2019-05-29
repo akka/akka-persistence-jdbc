@@ -31,15 +31,15 @@ class JNDIConfigTest extends SimpleSpec {
     }
   }
 
- def withActorSystem(config: String)(f: ActorSystem => Unit): Unit = {
-   val cfg = ConfigFactory.load(config)
-   val system = ActorSystem("test", cfg)
+  def withActorSystem(config: String)(f: ActorSystem => Unit): Unit = {
+    val cfg = ConfigFactory.load(config)
+    val system = ActorSystem("test", cfg)
 
-   try {
-     f(system)
-   } finally {
-     system.terminate().futureValue
-   }
+    try {
+      f(system)
+    } finally {
+      system.terminate().futureValue
+    }
   }
 
 }

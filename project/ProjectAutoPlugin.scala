@@ -10,9 +10,9 @@ import scalariform.formatter.preferences.FormattingPreferences
 
 object ProjectAutoPlugin extends AutoPlugin {
   final val ScalaVersion = "2.12.8"
-  final val AkkaVersion = "2.5.22"
-  final val SlickVersion = "3.3.0"
-  final val ScalaTestVersion = "3.0.7"
+  final val AkkaVersion = "2.5.23"
+  final val SlickVersion = "3.3.1"
+  final val ScalaTestVersion = "3.0.8-RC2"
 
   final val formattingPreferences: FormattingPreferences = {
     import scalariform.formatter.preferences._
@@ -40,7 +40,7 @@ object ProjectAutoPlugin extends AutoPlugin {
 
     scalaVersion := ScalaVersion,
 
-    crossScalaVersions := Seq("2.11.12", ScalaVersion),
+    crossScalaVersions := Seq("2.11.12", ScalaVersion, "2.13.0-RC2"),
 
     fork in Test := true,
 
@@ -62,7 +62,10 @@ object ProjectAutoPlugin extends AutoPlugin {
       "-target:jvm-1.8"
     ),
 
-    scalacOptions += "-Ypartial-unification",
+    scalacOptions += {
+      if (scalaVersion.value.startsWith("2.13")) ""
+      else "-Ypartial-unification"
+    },
     scalacOptions += "-Ydelambdafy:method",
 
     // show full stack traces and test case durations

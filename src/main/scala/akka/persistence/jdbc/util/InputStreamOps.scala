@@ -16,7 +16,7 @@
 
 package akka.persistence.jdbc.util
 
-import java.io.{ByteArrayOutputStream, InputStream}
+import java.io.{ ByteArrayOutputStream, InputStream }
 
 import scala.concurrent.blocking
 

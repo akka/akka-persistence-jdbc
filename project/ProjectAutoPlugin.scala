@@ -1,5 +1,8 @@
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
+import com.typesafe.tools.mima.core.IncompatibleResultTypeProblem
+import com.typesafe.tools.mima.plugin.MimaKeys.{mimaBinaryIssueFilters, mimaPreviousArtifacts}
 import de.heikoseeberger.sbtheader.License.ALv2
 import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.headerLicense
 import sbt.Keys._
@@ -29,7 +32,7 @@ object ProjectAutoPlugin extends AutoPlugin {
   object autoImport {
   }
 
-  override val projectSettings: Seq[Setting[_]] = SbtScalariform.projectSettings ++ Seq(
+  override val projectSettings: Seq[Setting[_]] = SbtScalariform.projectSettings ++ mimaDefaultSettings ++ Seq(
     name := "akka-persistence-jdbc",
     organization := "com.github.dnvriend",
     organizationName := "Dennis Vriend",
@@ -78,7 +81,11 @@ object ProjectAutoPlugin extends AutoPlugin {
 
     ScalariformKeys.preferences in Compile := formattingPreferences,
     ScalariformKeys.preferences in Test := formattingPreferences,
-
+    mimaPreviousArtifacts := determineMimaPreviousArtifacts(scalaBinaryVersion.value),
+    mimaBinaryIssueFilters ++= Seq(
+      // Scala 2.11 issue which occurs because the signature of an internal lambda has changed. This lambda is not accessible outside of the method itself
+      ProblemFilters.exclude[IncompatibleResultTypeProblem]("akka.persistence.jdbc.util.DefaultSlickDatabaseProvider#lambda#1.apply")
+    ),
    libraryDependencies += "com.typesafe.akka" %% "akka-actor" % AkkaVersion,
    libraryDependencies += "com.typesafe.akka" %% "akka-persistence" % AkkaVersion,
    libraryDependencies += "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
@@ -96,4 +103,13 @@ object ProjectAutoPlugin extends AutoPlugin {
    libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % AkkaVersion % Test,
    libraryDependencies += "org.scalatest" %% "scalatest" % ScalaTestVersion % Test   
  )
+
+  def determineMimaPreviousArtifacts(scalaBinVersion: String): Set[ModuleID] = {
+    val compatVersions: Set[String] = if (scalaBinVersion.startsWith("2.13")) Set.empty else {
+      Set("3.5.0")
+    }
+    compatVersions.map { v =>
+      "com.github.dnvriend" % ("akka-persistence-jdbc_" + scalaBinVersion) % v
+    }
+  }
 }

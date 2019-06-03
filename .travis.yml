@@ -23,7 +23,17 @@ before_script:
   - psql -c 'create database docker;' -U postgres
 addons:
   postgresql: "9.4"
+
 script: "./build.sh"
+
+jobs:
+  include:
+    - stage: publish
+      script: "./sbt-publish.sh"
+
+stages:
+  - name: publish
+    if: repo = dnvriend/akka-persistence-jdbc AND type != pull_request AND tag =~ ^v
 
 before_cache:
   - find $HOME/.ivy2 -name "ivydata-*.properties" -delete

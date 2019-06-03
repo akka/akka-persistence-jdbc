@@ -14,7 +14,7 @@ akka-persistence-jdbc writes journal and snapshot entries to a configured JDBC s
 Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.5.0"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.5.1"
 ```
 
 ## Release notes

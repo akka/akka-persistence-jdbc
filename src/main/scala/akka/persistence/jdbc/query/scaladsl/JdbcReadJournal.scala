@@ -115,7 +115,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
           knownIds += id
           xs
         }
-        (id) => next(id)
+        id => next(id)
       }
 
   private def adaptEvents(repr: PersistentRepr): Seq[PersistentRepr] = {
@@ -133,7 +133,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
       .map(repr => EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload))
 
   override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
-    Source.unfoldAsync[Long, Seq[EventEnvelope]](Math.max(1, fromSequenceNr)) { (from: Long) =>
+    Source.unfoldAsync[Long, Seq[EventEnvelope]](Math.max(1, fromSequenceNr)) { from: Long =>
       def nextFromSeqNr(xs: Seq[EventEnvelope]): Long = {
         if (xs.isEmpty) from else xs.map(_.sequenceNr).max + 1
       }
@@ -142,7 +142,8 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
         case _ =>
           delaySource
             .flatMapConcat { _ =>
-              currentJournalEventsByPersistenceId(persistenceId, from, from + (readJournalConfig.maxBufferSize - 1))
+              val to = Math.min(from + (readJournalConfig.maxBufferSize - 1), toSequenceNr)
+              currentJournalEventsByPersistenceId(persistenceId, from, to)
             }
             .mapConcat(adaptEvents)
             .map(repr => EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload))

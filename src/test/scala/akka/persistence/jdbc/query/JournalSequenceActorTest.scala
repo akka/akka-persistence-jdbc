@@ -8,7 +8,7 @@ import akka.persistence.jdbc.query.JournalSequenceActor.{ GetMaxOrderingId, MaxO
 import akka.persistence.jdbc.query.dao.{ ByteArrayReadJournalDao, TestProbeReadJournalDao }
 import akka.persistence.jdbc.{ JournalRow, SharedActorSystemTestSpec }
 import akka.serialization.SerializationExtension
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.stream.scaladsl.{ Sink, Source }
 import akka.testkit.TestProbe
 import org.slf4j.LoggerFactory
@@ -54,7 +54,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
     it should s"recover ${if (isOracle) "one hundred thousand" else "one million"} events quickly if no ids are missing" in {
       withActorSystem { implicit system: ActorSystem =>
         withDatabase { db =>
-          implicit val materializer: ActorMaterializer = ActorMaterializer()
+          implicit val materializer = Materializer.matFromSystem(system)
           val elements = if (isOracle) 100000 else 1000000
           Source.fromIterator(() => (1 to elements).iterator)
             .map(id => JournalRow(id, deleted = false, "id", id, Array(0.toByte)))
@@ -84,7 +84,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
     it should "recover after the specified max number if tries if the first event has a very high sequence number and lots of large gaps exist" in {
       withActorSystem { implicit system: ActorSystem =>
         withDatabase { db =>
-          implicit val materializer: ActorMaterializer = ActorMaterializer()
+          implicit val materializer = Materializer.matFromSystem(system)
           val numElements = 1000
           val gapSize = 10000
           val firstElement = 100000000
@@ -114,7 +114,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
     it should s"assume that the max ordering id in the database on startup is the max after (queryDelay * maxTries)" in {
       withActorSystem { implicit system: ActorSystem =>
         withDatabase { db =>
-          implicit val materializer: ActorMaterializer = ActorMaterializer()
+          implicit val materializer = Materializer.matFromSystem(system)
           val maxElement = 100000
           // only even numbers, odd numbers are missing
           val idSeq = 2 to maxElement by 2
@@ -152,7 +152,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
    */
   def withJournalSequenceActor(db: JdbcBackend.Database, maxTries: Int)(f: ActorRef => Unit)(implicit system: ActorSystem): Unit = {
     import system.dispatcher
-    implicit val mat: ActorMaterializer = ActorMaterializer()
+    implicit val mat = Materializer.matFromSystem(system)
     val readJournalDao = new ByteArrayReadJournalDao(db, profile, readJournalConfig, SerializationExtension(system))
     val actor = system.actorOf(JournalSequenceActor.props(readJournalDao, journalSequenceActorConfig.copy(maxTries = maxTries)))
     try f(actor) finally system.stop(actor)

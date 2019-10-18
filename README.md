@@ -165,13 +165,13 @@ The plugin supports the following queries:
 
 ```scala
 import akka.actor.ActorSystem
-import akka.stream.{Materializer, ActorMaterializer}
+import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.persistence.query.PersistenceQuery
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 
 implicit val system: ActorSystem = ActorSystem()
-implicit val mat: Materializer = ActorMaterializer()(system)
+implicit val mat: Materializer = Materializer.matFromSystem(system)
 val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 
 val willNotCompleteTheStream: Source[String, NotUsed] = readJournal.allPersistenceIds()
@@ -195,13 +195,13 @@ a specific PersistentActor identified by persistenceId.
 
 ```scala
 import akka.actor.ActorSystem
-import akka.stream.{Materializer, ActorMaterializer}
+import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 
 implicit val system: ActorSystem = ActorSystem()
-implicit val mat: Materializer = ActorMaterializer()(system)
+implicit val mat: Materializer = Materializer.matFromSystem(system)
 val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 
 val willNotCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.eventsByPersistenceId("some-persistence-id", 0L, Long.MaxValue)
@@ -221,13 +221,13 @@ The stream is completed with failure if there is a failure in executing the quer
 
 ```scala
 import akka.actor.ActorSystem
-import akka.stream.{Materializer, ActorMaterializer}
+import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 
 implicit val system: ActorSystem = ActorSystem()
-implicit val mat: Materializer = ActorMaterializer()(system)
+implicit val mat: Materializer = Materializer.matFromSystem(system)
 val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
 
 val willNotCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.eventsByTag("apple", 0L)

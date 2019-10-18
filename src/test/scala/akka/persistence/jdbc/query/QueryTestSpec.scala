@@ -29,7 +29,7 @@ import akka.stream.scaladsl.Sink
 import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.javadsl.{ TestSink => JavaSink }
 import akka.stream.testkit.scaladsl.TestSink
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.stream.Materializer
 import com.typesafe.config.ConfigValue
 import slick.jdbc.PostgresProfile.api._
 
@@ -48,7 +48,7 @@ trait ReadJournalOperations {
 
 class ScalaJdbcReadJournalOperations(readJournal: JdbcReadJournal)(implicit system: ActorSystem, mat: Materializer) extends ReadJournalOperations {
   def this(system: ActorSystem) =
-    this(PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier))(system, ActorMaterializer()(system))
+    this(PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier))(system, Materializer.matFromSystem(system))
 
   import system.dispatcher
 
@@ -92,7 +92,7 @@ class ScalaJdbcReadJournalOperations(readJournal: JdbcReadJournal)(implicit syst
 
 class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)(implicit system: ActorSystem, mat: Materializer) extends ReadJournalOperations {
   def this(system: ActorSystem) =
-    this(PersistenceQuery.get(system).getReadJournalFor(classOf[javadsl.JdbcReadJournal], JavaJdbcReadJournal.Identifier))(system, ActorMaterializer()(system))
+    this(PersistenceQuery.get(system).getReadJournalFor(classOf[javadsl.JdbcReadJournal], JavaJdbcReadJournal.Identifier))(system, Materializer.matFromSystem(system))
 
   import system.dispatcher
 

@@ -17,7 +17,7 @@ scala:
   - 2.12.8
   - 2.13.0
 jdk:
-  - oraclejdk8
+  - openjdk8
   - openjdk11
 before_script:
   - psql -c 'create database docker;' -U postgres

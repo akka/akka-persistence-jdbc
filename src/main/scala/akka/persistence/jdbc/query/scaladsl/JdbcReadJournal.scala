@@ -128,11 +128,12 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
       .mapAsync(1)(deserializedRepr => Future.fromTry(deserializedRepr))
 
   override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
-    currentJournalEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr, Long.MaxValue)
-      .mapConcat(adaptEvents)
-      .map(repr => EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload))
+    eventsByPersistenceIdSource(persistenceId, fromSequenceNr, toSequenceNr, currentEventsOnly = true)
 
-  override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] = {
+  override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
+    eventsByPersistenceIdSource(persistenceId, fromSequenceNr, toSequenceNr, currentEventsOnly = false)
+
+  private def eventsByPersistenceIdSource(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, currentEventsOnly: Boolean): Source[EventEnvelope, NotUsed] = {
     import JdbcReadJournal._
     val batchSize = readJournalConfig.maxBufferSize
 
@@ -143,17 +144,19 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
             xs <- currentJournalEventsByPersistenceId(persistenceId, from, toSequenceNr, batchSize).runWith(Sink.seq)
           } yield {
             val hasMoreEvents = xs.size == batchSize
-            // Events are ordered by sequence number, therefore the last one is the largest
-            val hasLastEvent = xs.lastOption.exists(last => last.sequenceNr >= toSequenceNr)
+            // Events are ordered by sequence number, therefore the last one is the largest)
+            val lastSeqNrInBatch: Option[Long] = xs.lastOption.map(_.sequenceNr)
+            val hasLastEvent = lastSeqNrInBatch.exists(_ >= toSequenceNr)
             val nextControl: FlowControl =
               if (hasLastEvent || from > toSequenceNr) Stop
               else if (hasMoreEvents) Continue
+              else if (currentEventsOnly) Stop
               else ContinueDelayed
 
-            val nextFrom: Long = if (xs.isEmpty) from
-            else {
+            val nextFrom: Long = lastSeqNrInBatch match {
               // Continue querying from the last sequence number (the events are ordered)
-              xs.last.sequenceNr + 1
+              case Some(lastSeqNr) => lastSeqNr + 1
+              case None => from
             }
             Some((nextFrom, nextControl), xs)
           }

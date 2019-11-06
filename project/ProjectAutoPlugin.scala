@@ -106,8 +106,8 @@ object ProjectAutoPlugin extends AutoPlugin {
  )
 
   def determineMimaPreviousArtifacts(scalaBinVersion: String): Set[ModuleID] = {
-    val compatVersions: Set[String] = if (scalaBinVersion.startsWith("2.13")) Set.empty else {
-      Set("3.5.0")
+    val compatVersions: Set[String] = if (scalaBinVersion.startsWith("2.13")) Set("3.5.2") else {
+      Set("3.5.0", "3.5.1", "3.5.2")
     }
     compatVersions.map { v =>
       "com.github.dnvriend" % ("akka-persistence-jdbc_" + scalaBinVersion) % v

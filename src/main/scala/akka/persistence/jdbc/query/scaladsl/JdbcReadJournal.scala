@@ -123,36 +123,56 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
     adapter.fromJournal(repr.payload, repr.manifest).events.map(repr.withPayload)
   }
 
-  private def currentJournalEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[PersistentRepr, NotUsed] =
-    readJournalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, Long.MaxValue)
+  private def currentJournalEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[PersistentRepr, NotUsed] =
+    readJournalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, max)
       .mapAsync(1)(deserializedRepr => Future.fromTry(deserializedRepr))
 
   override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
-    currentJournalEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr)
-      .mapConcat(adaptEvents)
-      .map(repr => EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload))
+    eventsByPersistenceIdSource(persistenceId, fromSequenceNr, toSequenceNr, currentEventsOnly = true)
 
   override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
-    Source.unfoldAsync[Long, Seq[EventEnvelope]](Math.max(1, fromSequenceNr)) { (from: Long) =>
-      def nextFromSeqNr(xs: Seq[EventEnvelope]): Long = {
-        if (xs.isEmpty) from else xs.map(_.sequenceNr).max + 1
-      }
-      from match {
-        case x if x > toSequenceNr => Future.successful(None)
-        case _ =>
-          delaySource
-            .flatMapConcat { _ =>
-              currentJournalEventsByPersistenceId(persistenceId, from, toSequenceNr)
-                .take(readJournalConfig.maxBufferSize)
+    eventsByPersistenceIdSource(persistenceId, fromSequenceNr, toSequenceNr, currentEventsOnly = false)
+
+  private def eventsByPersistenceIdSource(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, currentEventsOnly: Boolean): Source[EventEnvelope, NotUsed] = {
+    import JdbcReadJournal._
+    val batchSize = readJournalConfig.maxBufferSize
+
+    Source.unfoldAsync[(Long, FlowControl), Seq[PersistentRepr]]((Math.max(1, fromSequenceNr), Continue)) {
+      case (from, control) =>
+        def retrieveNextBatch(): Future[Option[((Long, FlowControl), Seq[PersistentRepr])]] = {
+          for {
+            xs <- currentJournalEventsByPersistenceId(persistenceId, from, toSequenceNr, batchSize).runWith(Sink.seq)
+          } yield {
+            val hasMoreEvents = xs.size == batchSize
+            // Events are ordered by sequence number, therefore the last one is the largest)
+            val lastSeqNrInBatch: Option[Long] = xs.lastOption.map(_.sequenceNr)
+            val hasLastEvent = lastSeqNrInBatch.exists(_ >= toSequenceNr)
+            val nextControl: FlowControl =
+              if (hasLastEvent || from > toSequenceNr) Stop
+              else if (hasMoreEvents) Continue
+              else if (currentEventsOnly) Stop
+              else ContinueDelayed
+
+            val nextFrom: Long = lastSeqNrInBatch match {
+              // Continue querying from the last sequence number (the events are ordered)
+              case Some(lastSeqNr) => lastSeqNr + 1
+              case None => from
             }
-            .mapConcat(adaptEvents)
-            .map(repr => EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload))
-            .runWith(Sink.seq).map { xs =>
-              val newFromSeqNr = nextFromSeqNr(xs)
-              Some((newFromSeqNr, xs))
-            }
-      }
-    }.mapConcat(identity)
+            Some((nextFrom, nextControl), xs)
+          }
+        }
+
+        control match {
+          case Stop     => Future.successful(None)
+          case Continue => retrieveNextBatch()
+          case ContinueDelayed =>
+            akka.pattern.after(readJournalConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
+        }
+    }
+    .mapConcat(identity)
+    .mapConcat(adaptEvents)
+    .map(repr => EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload))
+  }
 
   /**
    * Same type of query as [[EventsByTagQuery#eventsByTag]] but the event stream
@@ -202,7 +222,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
           } yield {
 
             val hasMoreEvents = xs.size == batchSize
-            val control =
+            val nextControl: FlowControl =
               terminateAfterOffset match {
                 // we may stop if target is behind queryUntil and we don't have more events to fetch
                 case Some(target) if !hasMoreEvents && target <= queryUntil.maxOrdering => Stop
@@ -223,7 +243,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
               // Continue querying from the largest offset
               xs.map(_.offset.value).max
             }
-            Some((nextStartingOffset, control), xs)
+            Some((nextStartingOffset, nextControl), xs)
           }
         }
 

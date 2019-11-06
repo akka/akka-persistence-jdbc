@@ -16,8 +16,11 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.query.{ EventEnvelope, Sequence }
+import akka.Done
+import akka.persistence.jdbc.query.EventAdapterTest.{Event, TaggedAsyncEvent}
+import akka.persistence.query.{EventEnvelope, Sequence}
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(config) {
@@ -213,6 +216,33 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
         tp.cancel()
         tp.expectNoMessage(100.millis)
+      }
+    }
+  }
+
+  it should "find a large number of events quickly" in withActorSystem { implicit system =>
+    import akka.pattern.ask
+    import system.dispatcher
+    val journalOps = new JavaDslJdbcReadJournalOperations(system)
+    withTestActors(replyToMessages = true) { (actor1, _, _) =>
+      def sendMessagesWithTag(tag: String, numberOfMessages: Int): Future[Done] = {
+        val futures = for (i <- 1 to numberOfMessages) yield {
+          actor1 ? TaggedAsyncEvent(Event(i.toString), tag)
+        }
+        Future.sequence(futures).map(_ => Done)
+      }
+
+      val tag = "someTag"
+      val numberOfEvents = 10000
+      // send a batch with a large number of events
+      val batch = sendMessagesWithTag(tag, numberOfEvents)
+
+      // wait for acknowledgement of the batch
+      batch.futureValue
+
+      journalOps.withEventsByPersistenceId()("my-1", 1, numberOfEvents) { tp =>
+        val allEvents = tp.toStrict(atMost = 20.seconds)
+        allEvents.size shouldBe numberOfEvents
       }
     }
   }

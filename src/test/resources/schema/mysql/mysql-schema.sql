@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS journal (
   ordering SERIAL,
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
-  deleted BOOLEAN DEFAULT FALSE,
+  deleted BOOLEAN DEFAULT FALSE NOT NULL,
   tags VARCHAR(255) DEFAULT NULL,
   message BLOB NOT NULL,
   PRIMARY KEY(persistence_id, sequence_number)

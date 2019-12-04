@@ -2,7 +2,7 @@
 
 [![Join the chat at https://gitter.im/dnvriend/akka-persistence-jdbc](https://badges.gitter.im/dnvriend/akka-persistence-jdbc.svg)](https://gitter.im/dnvriend/akka-persistence-jdbc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Join the contributors chat at https://gitter.im/akka-persistence-jdbc/contributors](https://img.shields.io/badge/chat-contributors%20channel-green.svg)](https://gitter.im/akka-persistence-jdbc/contributors?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Build Status](https://travis-ci.org/dnvriend/akka-persistence-jdbc.svg?branch=master)](https://travis-ci.org/dnvriend/akka-persistence-jdbc)
+[![Build Status](https://travis-ci.org/akka/akka-persistence-jdbc.svg?branch=master)](https://travis-ci.org/akka/akka-persistence-jdbc)
 [![Download](https://api.bintray.com/packages/dnvriend/maven/akka-persistence-jdbc/images/download.svg)](https://bintray.com/dnvriend/maven/akka-persistence-jdbc/_latestVersion)
 [![Latest version](https://index.scala-lang.org/dnvriend/akka-persistence-jdbc/akka-persistence-jdbc/latest.svg)](https://index.scala-lang.org/dnvriend/akka-persistence-jdbc/akka-persistence-jdbc)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/a5d8576c2a56479ab1c40d87c78bba58)](https://www.codacy.com/app/dnvriend/akka-persistence-jdbc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dnvriend/akka-persistence-jdbc&amp;utm_campaign=Badge_Grade)
@@ -19,9 +19,9 @@ libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.5.2
 
 ## Release notes
 
-The release notes can be found [here](https://github.com/dnvriend/akka-persistence-jdbc/releases).
+The release notes can be found [here](https://github.com/akka/akka-persistence-jdbc/releases).
 
-For change log prior to v3.2.0, visit [Version History Page (wiki)](https://github.com/dnvriend/akka-persistence-jdbc/wiki/Version-History).
+For change log prior to v3.2.0, visit [Version History Page (wiki)](https://github.com/akka/akka-persistence-jdbc/wiki/Version-History).
 
 ## Contribution policy
 
@@ -52,15 +52,15 @@ Configure `slick`:
 
 ## Database Schema
 
-- [Postgres Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/postgres/postgres-schema.sql)
-- [MySQL Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/mysql/mysql-schema.sql)
-- [H2 Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/h2/h2-schema.sql)
-- [Oracle Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/oracle/oracle-schema.sql)
-- [SQL Server Schema](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/schema/sqlserver/sqlserver-schema.sql)
+- [Postgres Schema](https://github.com/akka/akka-persistence-jdbc/blob/master/src/test/resources/schema/postgres/postgres-schema.sql)
+- [MySQL Schema](https://github.com/akka/akka-persistence-jdbc/blob/master/src/test/resources/schema/mysql/mysql-schema.sql)
+- [H2 Schema](https://github.com/akka/akka-persistence-jdbc/blob/master/src/test/resources/schema/h2/h2-schema.sql)
+- [Oracle Schema](https://github.com/akka/akka-persistence-jdbc/blob/master/src/test/resources/schema/oracle/oracle-schema.sql)
+- [SQL Server Schema](https://github.com/akka/akka-persistence-jdbc/blob/master/src/test/resources/schema/sqlserver/sqlserver-schema.sql)
 
 ## Configuration
 
-akka-persistence-jdbc provides the defaults as part of the [reference.conf](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/resources/reference.conf)
+akka-persistence-jdbc provides the defaults as part of the [reference.conf](https://github.com/akka/akka-persistence-jdbc/blob/master/src/main/resources/reference.conf)
 this file documents all the values which can be configured.
 
 There are several possible ways to configure loading your database connections. Options will be explained below.
@@ -71,26 +71,26 @@ There is the possibility to create a separate database connection pool per journ
 one pool for the snapshot-journal, and one pool for the read-journal). This is the default and the following example
 configuration shows how this is configured:
 
-- [Postgres](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/postgres-application.conf)
-- [MySQL](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/mysql-application.conf)
-- [H2](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/h2-application.conf)
-- [Oracle](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/oracle-application.conf)
-- [SQL Server](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/sqlserver-application.conf)
+- [Postgres](https://github.com/akka/akka-persistence-jdbc/blob/master/src/test/resources/postgres-application.conf)
+- [MySQL](https://github.com/akka/akka-persistence-jdbc/blob/master/src/test/resources/mysql-application.conf)
+- [H2](https://github.com/akka/akka-persistence-jdbc/blob/master/src/test/resources/h2-application.conf)
+- [Oracle](https://github.com/akka/akka-persistence-jdbc/blob/master/src/test/resources/oracle-application.conf)
+- [SQL Server](https://github.com/akka/akka-persistence-jdbc/blob/master/src/test/resources/sqlserver-application.conf)
 
 ### Sharing the database connection pool between the journals
 
 In order to create only one connection pool which is shared between all journals the following configuration can be used:
 
-- [Postgres](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/postgres-shared-db-application.conf)
-- [MySQL](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/mysql-shared-db-application.conf)
-- [H2](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/h2-shared-db-application.conf)
-- [Oracle](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/oracle-shared-db-application.conf)
-- [SQL Server](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/test/resources/sqlserver-shared-db-application.conf)
+- [Postgres](https://github.com/akka/akka-persistence-jdbc/blob/master/src/test/resources/postgres-shared-db-application.conf)
+- [MySQL](https://github.com/akka/akka-persistence-jdbc/blob/master/src/test/resources/mysql-shared-db-application.conf)
+- [H2](https://github.com/akka/akka-persistence-jdbc/blob/master/src/test/resources/h2-shared-db-application.conf)
+- [Oracle](https://github.com/akka/akka-persistence-jdbc/blob/master/src/test/resources/oracle-shared-db-application.conf)
+- [SQL Server](https://github.com/akka/akka-persistence-jdbc/blob/master/src/test/resources/sqlserver-shared-db-application.conf)
 
 ### Customized loading of the db connection
 
 It is also possible to load a custom database connection. 
-In order to do so a custom implementation of [SlickDatabaseProvider](https://github.com/dnvriend/akka-persistence-jdbc/blob/master/src/main/scala/akka/persistence/jdbc/util/SlickExtension.scala)
+In order to do so a custom implementation of [SlickDatabaseProvider](https://github.com/akka/akka-persistence-jdbc/blob/master/src/main/scala/akka/persistence/jdbc/util/SlickExtension.scala)
 needs to be created. The methods that need to be implemented supply the Slick `Database` and `Profile` to the journals.
 
 To enable your custom `SlickDatabaseProvider`, the fully qualified class name of the `SlickDatabaseProvider`
@@ -331,9 +331,9 @@ The plugin automatically shuts down the HikariCP connection pool when the ActorS
 This is done using [ActorSystem.registerOnTermination](https://doc.akka.io/api/akka/current/akka/actor/ActorSystem.html#registerOnTermination[T](code:=>T):Unit).
 
 [slick]: http://slick.lightbend.com/
-[slick-jndi]: http://slick.typesafe.com/doc/3.3.0/database.html#using-a-jndi-name
-[apache]: http://www.apache.org/licenses/LICENSE-2.0
-[w3c-cond]: http://www.w3.org/Consortium/cepc/
-[w3c-proc]: http://www.w3.org/Consortium/pwe/#Procedures
-[ds]: http://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html
-[event-adapter]: http://doc.akka.io/docs/akka/current/scala/persistence.html#event-adapters-scala
+[slick-jndi]: http://slick.typesafe.com/doc/3.3.1/database.html#using-a-jndi-name
+[apache]: https://www.apache.org/licenses/LICENSE-2.0
+[w3c-cond]: https://www.w3.org/Consortium/cepc/
+[w3c-proc]: https://www.w3.org/Consortium/pwe/#Procedures
+[ds]: https://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html
+[event-adapter]: https://doc.akka.io/docs/akka/current/persistence.html#event-adapters-scala

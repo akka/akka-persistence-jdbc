@@ -1,28 +1,16 @@
-import com.typesafe.sbt.SbtScalariform
-import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-import com.typesafe.sbt.SbtScalariform.autoImport._
 import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
 import de.heikoseeberger.sbtheader.HeaderPlugin
 import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.{HeaderLicense, headerLicense}
 import sbt.Keys._
 import sbt._
 import sbt.plugins.JvmPlugin
-import scalariform.formatter.preferences.FormattingPreferences
 
 object ProjectAutoPlugin extends AutoPlugin {
 
   object autoImport {
   }
 
-  final val formattingPreferences: FormattingPreferences = {
-    import scalariform.formatter.preferences._
-    FormattingPreferences()
-      .setPreference(AlignSingleLineCaseStatements, true)
-      .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 100)
-      .setPreference(DoubleIndentConstructorArguments, true)
-  }
-
-  override val requires = com.typesafe.sbt.SbtScalariform && JvmPlugin && HeaderPlugin
+  override val requires = JvmPlugin && HeaderPlugin
 
   override def globalSettings = Seq(
     organization := "com.lightbend.akka",
@@ -41,14 +29,13 @@ object ProjectAutoPlugin extends AutoPlugin {
 
   override val trigger: PluginTrigger = allRequirements
 
-  override val projectSettings: Seq[Setting[_]] = SbtScalariform.projectSettings ++ mimaDefaultSettings ++ Seq(
+  override val projectSettings: Seq[Setting[_]] = mimaDefaultSettings ++ Seq(
     crossVersion := CrossVersion.binary,
     crossScalaVersions := Dependencies.ScalaVersions,
     scalaVersion := Dependencies.Scala212,
     Test / fork := true,
     Test / parallelExecution := false,
     Test / logBuffered := true,
-    scalariformAutoformat := true,
 
     scalacOptions ++= Seq(
       "-encoding",
@@ -81,9 +68,6 @@ object ProjectAutoPlugin extends AutoPlugin {
 
     resolvers += Resolver.typesafeRepo("releases"),
     resolvers += Resolver.jcenterRepo,
-
-    ScalariformKeys.preferences in Compile := formattingPreferences,
-    ScalariformKeys.preferences in Test := formattingPreferences,
  )
 
   def determineMimaPreviousArtifacts(scalaBinVersion: String): Set[ModuleID] = {

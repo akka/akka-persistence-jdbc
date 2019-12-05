@@ -17,9 +17,6 @@
 // to deploy to bintray
 addSbtPlugin("org.foundweekends" % "sbt-bintray" % "0.5.5")
 
-// to format scala source code
-addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.8.2")
-
 // enable updating file headers eg. for copyright
 addSbtPlugin("de.heikoseeberger" % "sbt-header" % "5.3.1")
 

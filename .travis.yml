@@ -13,7 +13,6 @@ before_install:
   - docker inspect sqlserver
   - docker ps -a
 scala:
-  - 2.11.12
   - 2.12.8
   - 2.13.0
 jdk:

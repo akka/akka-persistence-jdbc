@@ -2,6 +2,9 @@ language: scala
 sudo: true
 services:
   - docker
+before_install:
+  # make comparing to origin/master work and fetch full history for correct current and previous version detection
+  - git remote set-branches --add origin master && git fetch --unshallow
 scala:
   - 2.12.8
   - 2.13.0

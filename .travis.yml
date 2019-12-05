@@ -26,7 +26,7 @@ jobs:
     - stage: test
       env:
         - PRE_CMD="./scripts/launch-all.sh"
-        - CMD="++2.12.8 test"
+        - CMD="++2.12.10 test"
       name: "Run tests with Scala 2.12 and AdoptOpenJDK 8"
     - env:
         - PRE_CMD="./scripts/launch-all.sh"
@@ -36,7 +36,7 @@ jobs:
         - JDK="adopt@~1.11-0"
         - _JAVA_OPTIONS="-XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler"
         - PRE_CMD="./scripts/launch-all.sh"
-        - CMD="++2.12.8 test"
+        - CMD="++2.12.10 test"
       name: "Run tests with Scala 2.12 and AdoptOpenJDK 11"
     - env:
         - JDK="adopt@~1.11-0"

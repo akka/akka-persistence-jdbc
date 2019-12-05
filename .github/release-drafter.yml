@@ -1,0 +1,18 @@
+# Config for https://github.com/toolmantim/release-drafter
+name-template: 'Akka Persistence JDBC $NEXT_PATCH_VERSION'
+tag-template: 'v$NEXT_PATCH_VERSION'
+
+categories:
+  - title: '🐛 Bug Fixes'
+    label: 'bug'
+  - title: '🚀 Enhancements'
+    label: 'enhancement'
+  - title: 'Dependency changes'
+    label: 'dependency-change'
+
+change-template: '- $TITLE [#$NUMBER](https://github.com/akka/akka-persistence-jdbc/issues/$NUMBER) by [@$AUTHOR](https://github.com/$AUTHOR)'
+
+template: |
+  ## Changes
+
+  $CHANGES

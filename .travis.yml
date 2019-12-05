@@ -21,7 +21,8 @@ script:
 jobs:
   include:
     - stage: check
-    - env: CMD="+Test/compile"
+      env: CMD="+Test/compile"
+      name: "Compile all code with Scala 2.12 and 2.13"
 
     - stage: test
       env:

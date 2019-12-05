@@ -23,6 +23,8 @@ jobs:
     - stage: check
       env: CMD="+Test/compile"
       name: "Compile all code with Scala 2.12 and 2.13"
+    - env: CMD="scalafmtCheckAll scalafmtSbtCheck"
+      name: "Check that code has been formatted"
 
     - stage: test
       env:

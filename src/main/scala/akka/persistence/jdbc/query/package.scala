@@ -26,7 +26,9 @@ package object query {
     def value = that match {
       case Sequence(offsetValue) => offsetValue
       case NoOffset              => 0L
-      case _                     => throw new IllegalArgumentException("akka-persistence-jdbc does not support " + that.getClass.getName + " offsets")
+      case _ =>
+        throw new IllegalArgumentException(
+          "akka-persistence-jdbc does not support " + that.getClass.getName + " offsets")
     }
   }
 }

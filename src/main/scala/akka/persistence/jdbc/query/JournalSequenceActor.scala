@@ -12,7 +12,8 @@ import scala.collection.immutable.NumericRange
 import scala.concurrent.duration.FiniteDuration
 
 object JournalSequenceActor {
-  def props(readJournalDao: ReadJournalDao, config: JournalSequenceRetrievalConfig)(implicit materializer: Materializer): Props = Props(new JournalSequenceActor(readJournalDao, config))
+  def props(readJournalDao: ReadJournalDao, config: JournalSequenceRetrievalConfig)(
+      implicit materializer: Materializer): Props = Props(new JournalSequenceActor(readJournalDao, config))
 
   private case object QueryOrderingIds
   private case class NewOrderingIds(originalOffset: Long, elements: Seq[OrderingId])
@@ -50,10 +51,14 @@ object JournalSequenceActor {
  * This is required to guarantee the EventByTag does not skip any rows in case rows with a higher (ordering) id are
  * visible in the database before rows with a lower (ordering) id.
  */
-class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequenceRetrievalConfig)(implicit materializer: Materializer) extends Actor with ActorLogging with Timers {
+class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequenceRetrievalConfig)(
+    implicit materializer: Materializer)
+    extends Actor
+    with ActorLogging
+    with Timers {
   import JournalSequenceActor._
   import context.dispatcher
-  import config.{ maxTries, maxBackoffQueryDelay, queryDelay, batchSize }
+  import config.{ batchSize, maxBackoffQueryDelay, maxTries, queryDelay }
 
   override def receive: Receive = receive(0L, Map.empty, 0)
 
@@ -74,8 +79,11 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
    * @param moduloCounter A counter which is incremented every time a new query have been executed, modulo `maxTries`
    * @param previousDelay The last used delay (may change in case failures occur)
    */
-  def receive(currentMaxOrdering: OrderingId, missingByCounter: Map[Int, MissingElements], moduloCounter: Int, previousDelay: FiniteDuration = queryDelay): Receive = {
-
+  def receive(
+      currentMaxOrdering: OrderingId,
+      missingByCounter: Map[Int, MissingElements],
+      moduloCounter: Int,
+      previousDelay: FiniteDuration = queryDelay): Receive = {
     case ScheduleAssumeMaxOrderingId(max) =>
       // All elements smaller than max can be assumed missing after this delay
       val delay = queryDelay * maxTries
@@ -93,7 +101,8 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
       readJournalDao
         .journalSequence(currentMaxOrdering, batchSize)
         .runWith(Sink.seq)
-        .map(result => NewOrderingIds(currentMaxOrdering, result)) pipeTo self
+        .map(result => NewOrderingIds(currentMaxOrdering, result))
+        .pipeTo(self)
 
     case NewOrderingIds(originalOffset, _) if originalOffset < currentMaxOrdering =>
       // search was done using an offset that became obsolete in the meantime
@@ -115,18 +124,22 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
   /**
    * This method that implements the "find gaps" algo. It's the meat and main purpose of this actor.
    */
-  def findGaps(elements: Seq[OrderingId], currentMaxOrdering: OrderingId, missingByCounter: Map[Int, MissingElements], moduloCounter: Int): Unit = {
-
+  def findGaps(
+      elements: Seq[OrderingId],
+      currentMaxOrdering: OrderingId,
+      missingByCounter: Map[Int, MissingElements],
+      moduloCounter: Int): Unit = {
     // list of elements that will be considered as genuine gaps.
     // `givenUp` is either empty or is was filled on a previous iteration
     val givenUp = missingByCounter.getOrElse(moduloCounter, MissingElements.empty)
 
     val (nextMax, _, missingElems) =
       // using the ordering elements that were fetched, we verify if there are any gaps
-      elements.foldLeft[(OrderingId, OrderingId, MissingElements)](currentMaxOrdering, currentMaxOrdering, MissingElements.empty) {
-
+      elements.foldLeft[(OrderingId, OrderingId, MissingElements)](
+        currentMaxOrdering,
+        currentMaxOrdering,
+        MissingElements.empty) {
         case ((currentMax, previousElement, missing), currentElement) =>
-
           // we must decide if we move the cursor forward
           val newMax =
             if ((currentMax + 1).until(currentElement).forall(givenUp.contains)) {

@@ -2,7 +2,7 @@ package akka.persistence.jdbc.query.dao
 
 import akka.NotUsed
 import akka.persistence.jdbc.query.dao.TestProbeReadJournalDao.JournalSequence
-import akka.persistence.{ PersistentRepr, jdbc }
+import akka.persistence.{ jdbc, PersistentRepr }
 import akka.stream.scaladsl.Source
 import akka.testkit.TestProbe
 import akka.util.Timeout
@@ -32,12 +32,20 @@ class TestProbeReadJournalDao(val probe: TestProbe) extends ReadJournalDao {
    * Returns a Source of bytes for certain tag from an offset. The result is sorted by
    * created time asc thus the offset is relative to the creation time
    */
-  override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed] = ???
+  override def eventsByTag(
+      tag: String,
+      offset: Long,
+      maxOffset: Long,
+      max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed] = ???
 
   /**
    * Returns a Source of bytes for a certain persistenceId
    */
-  override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] = ???
+  override def messages(
+      persistenceId: String,
+      fromSequenceNr: Long,
+      toSequenceNr: Long,
+      max: Long): Source[Try[PersistentRepr], NotUsed] = ???
 
   /**
    * @param offset Minimum value to retrieve

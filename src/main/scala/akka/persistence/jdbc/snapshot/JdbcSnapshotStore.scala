@@ -33,7 +33,6 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
 object JdbcSnapshotStore {
-
   def toSelectedSnapshot(tupled: (SnapshotMetadata, Any)): SelectedSnapshot = tupled match {
     case (meta: SnapshotMetadata, snapshot: Any) => SelectedSnapshot(meta, snapshot)
   }
@@ -67,8 +66,8 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
   }
 
   override def loadAsync(
-    persistenceId: String,
-    criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] = {
+      persistenceId: String,
+      criteria: SnapshotSelectionCriteria): Future[Option[SelectedSnapshot]] = {
     val result = criteria match {
       case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue, _, _) =>
         snapshotDao.latestSnapshot(persistenceId)
@@ -87,9 +86,10 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
   override def saveAsync(metadata: SnapshotMetadata, snapshot: Any): Future[Unit] =
     snapshotDao.save(metadata, snapshot)
 
-  override def deleteAsync(metadata: SnapshotMetadata): Future[Unit] = for {
-    _ <- snapshotDao.delete(metadata.persistenceId, metadata.sequenceNr)
-  } yield ()
+  override def deleteAsync(metadata: SnapshotMetadata): Future[Unit] =
+    for {
+      _ <- snapshotDao.delete(metadata.persistenceId, metadata.sequenceNr)
+    } yield ()
 
   override def deleteAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Unit] = criteria match {
     case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue, _, _) =>

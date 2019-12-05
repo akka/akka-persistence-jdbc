@@ -23,7 +23,6 @@ import scala.io.{ Source => ScalaIOSource }
 object ClasspathResources extends ClasspathResources
 
 trait ClasspathResources {
-
   def streamToString(is: InputStream): String =
     ScalaIOSource.fromInputStream(is).mkString
 
@@ -32,5 +31,4 @@ trait ClasspathResources {
 
   def fromClasspathAsStream(fileName: String): InputStream =
     getClass.getClassLoader.getResourceAsStream(fileName)
-
 }

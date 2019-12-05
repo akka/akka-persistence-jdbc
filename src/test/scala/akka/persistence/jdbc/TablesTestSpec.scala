@@ -21,7 +21,6 @@ import com.typesafe.config.ConfigFactory
 import org.scalatest.{ FlatSpec, Matchers }
 
 abstract class TablesTestSpec extends FlatSpec with Matchers {
-
   def toColumnName[A](tableName: String)(columnName: String): String = s"$tableName.$columnName"
 
   val config = ConfigFactory.parseString(

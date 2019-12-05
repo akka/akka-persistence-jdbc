@@ -22,7 +22,6 @@ import akka.persistence.jdbc.journal.dao.JournalTables
 import slick.jdbc.JdbcProfile
 
 class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJournalConfig) extends JournalTables {
-
   override val journalTableCfg: JournalTableConfiguration = readJournalConfig.journalTableConfiguration
 
   import profile.api._
@@ -30,7 +29,7 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
   def journalRowByPersistenceIds(persistenceIds: Iterable[String]) =
     for {
       query <- JournalTable.map(_.persistenceId)
-      if query inSetBind persistenceIds
+      if query.inSetBind(persistenceIds)
     } yield query
 
   private def _allPersistenceIdsDistinct(max: ConstColumn[Long]): Query[Rep[String], String, Seq] =
@@ -42,7 +41,11 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
 
   val allPersistenceIdsDistinct = Compiled(_allPersistenceIdsDistinct _)
 
-  private def _messagesQuery(persistenceId: Rep[String], fromSequenceNr: Rep[Long], toSequenceNr: Rep[Long], max: ConstColumn[Long]) =
+  private def _messagesQuery(
+      persistenceId: Rep[String],
+      fromSequenceNr: Rep[Long],
+      toSequenceNr: Rep[Long],
+      max: ConstColumn[Long]) =
     baseTableQuery()
       .filter(_.persistenceId === persistenceId)
       .filter(_.sequenceNumber >= fromSequenceNr)
@@ -52,9 +55,13 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
 
   val messagesQuery = Compiled(_messagesQuery _)
 
-  private def _eventsByTag(tag: Rep[String], offset: ConstColumn[Long], maxOffset: ConstColumn[Long], max: ConstColumn[Long]) = {
+  private def _eventsByTag(
+      tag: Rep[String],
+      offset: ConstColumn[Long],
+      maxOffset: ConstColumn[Long],
+      max: ConstColumn[Long]) = {
     baseTableQuery()
-      .filter(_.tags like tag)
+      .filter(_.tags.like(tag))
       .sortBy(_.ordering.asc)
       .filter(row => row.ordering > offset && row.ordering <= maxOffset)
       .take(max)
@@ -65,11 +72,7 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
   def writeJournalRows(xs: Seq[JournalRow]) = JournalTable ++= xs.sortBy(_.sequenceNumber)
 
   private def _journalSequenceQuery(from: ConstColumn[Long], limit: ConstColumn[Long]) =
-    JournalTable
-      .filter(_.ordering > from)
-      .map(_.ordering)
-      .sorted
-      .take(limit)
+    JournalTable.filter(_.ordering > from).map(_.ordering).sorted.take(limit)
 
   val journalSequenceQuery = Compiled(_journalSequenceQuery _)
 

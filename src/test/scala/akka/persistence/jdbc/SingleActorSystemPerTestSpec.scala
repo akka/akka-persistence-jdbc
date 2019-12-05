@@ -27,8 +27,10 @@ import slick.jdbc.JdbcBackend.Database
 
 import scala.concurrent.duration._
 
-abstract class SingleActorSystemPerTestSpec(val config: Config) extends SimpleSpec with DropCreate with BeforeAndAfterEach {
-
+abstract class SingleActorSystemPerTestSpec(val config: Config)
+    extends SimpleSpec
+    with DropCreate
+    with BeforeAndAfterEach {
   def this(config: String = "postgres-application.conf", configOverrides: Map[String, ConfigValue] = Map.empty) =
     this(configOverrides.foldLeft(ConfigFactory.load(config)) {
       case (conf, (path, configValue)) => conf.withValue(path, configValue)
@@ -50,7 +52,11 @@ abstract class SingleActorSystemPerTestSpec(val config: Config) extends SimpleSp
     dbOpt.getOrElse {
       val newDb = if (cfg.hasPath("slick.profile")) {
         SlickDatabase.database(cfg, new SlickConfiguration(cfg.getConfig("slick")), "slick.db")
-      } else SlickDatabase.database(config, new SlickConfiguration(config.getConfig("akka-persistence-jdbc.shared-databases.slick")), "akka-persistence-jdbc.shared-databases.slick.db")
+      } else
+        SlickDatabase.database(
+          config,
+          new SlickConfiguration(config.getConfig("akka-persistence-jdbc.shared-databases.slick")),
+          "akka-persistence-jdbc.shared-databases.slick.db")
 
       dbOpt = Some(newDb)
       newDb

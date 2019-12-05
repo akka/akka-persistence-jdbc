@@ -39,7 +39,11 @@ trait JournalDao {
   /**
    * Returns a Source of PersistentRepr for a certain persistenceId
    */
-  def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed]
+  def messages(
+      persistenceId: String,
+      fromSequenceNr: Long,
+      toSequenceNr: Long,
+      max: Long): Source[Try[PersistentRepr], NotUsed]
 
   /**
    * @see [[akka.persistence.journal.AsyncWriteJournal.asyncWriteMessages(messages)]]

@@ -30,7 +30,6 @@ object SlickExtension extends ExtensionId[SlickExtensionImpl] with ExtensionIdPr
 }
 
 class SlickExtensionImpl(system: ExtendedActorSystem) extends Extension {
-
   private val dbProvider: SlickDatabaseProvider = {
     val fqcn = system.settings.config.getString("akka-persistence-jdbc.database-provider-fqcn")
     val args = List(classOf[ActorSystem] -> system)
@@ -63,21 +62,28 @@ trait SlickDatabaseProvider {
 }
 
 class DefaultSlickDatabaseProvider(system: ActorSystem) extends SlickDatabaseProvider {
-
-  val sharedDatabases: Map[String, LazySlickDatabase] = system.settings.config.getObject("akka-persistence-jdbc.shared-databases").asScala.flatMap {
-    case (key, confObj: ConfigObject) =>
-      val conf = confObj.toConfig
-      if (conf.hasPath("profile")) {
-        // Only create the LazySlickDatabase if a profile has actually been configured, this ensures that the example in the reference conf is ignored
-        List(key -> new LazySlickDatabase(conf, system))
-      } else Nil
-    case (key, notAnObject) => throw new RuntimeException(s"""Expected "akka-persistence-jdbc.shared-databases.$key" to be a config ConfigObject, but got ${notAnObject.valueType()} (${notAnObject.getClass})""")
-  }.toMap
+  val sharedDatabases: Map[String, LazySlickDatabase] = system.settings.config
+    .getObject("akka-persistence-jdbc.shared-databases")
+    .asScala
+    .flatMap {
+      case (key, confObj: ConfigObject) =>
+        val conf = confObj.toConfig
+        if (conf.hasPath("profile")) {
+          // Only create the LazySlickDatabase if a profile has actually been configured, this ensures that the example in the reference conf is ignored
+          List(key -> new LazySlickDatabase(conf, system))
+        } else Nil
+      case (key, notAnObject) =>
+        throw new RuntimeException(
+          s"""Expected "akka-persistence-jdbc.shared-databases.$key" to be a config ConfigObject, but got ${notAnObject
+            .valueType()} (${notAnObject.getClass})""")
+    }
+    .toMap
 
   private def getSharedDbOrThrow(sharedDbName: String): LazySlickDatabase =
     sharedDatabases.getOrElse(
       sharedDbName,
-      throw new RuntimeException(s"No shared database is configured under akka-persistence-jdbc.shared-databases.$sharedDbName"))
+      throw new RuntimeException(
+        s"No shared database is configured under akka-persistence-jdbc.shared-databases.$sharedDbName"))
 
   def database(config: Config): SlickDatabase = {
     config.asOptionalNonEmptyString(ConfigKeys.useSharedDb) match {

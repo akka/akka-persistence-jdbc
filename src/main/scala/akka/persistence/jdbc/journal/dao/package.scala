@@ -24,5 +24,4 @@ package object dao {
 
   def decodeTags(tags: Option[String], separator: String): Set[String] =
     tags.map(_.split(separator).toSet).getOrElse(Set.empty[String])
-
 }

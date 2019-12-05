@@ -31,37 +31,31 @@ object ConfigOps {
       Try(config.getAnyRef(key)).map(_.asInstanceOf[A])
 
     def as[A](key: String, default: A): A =
-      Try(config.getAnyRef(key)).map(_.asInstanceOf[A])
-        .getOrElse(default)
+      Try(config.getAnyRef(key)).map(_.asInstanceOf[A]).getOrElse(default)
 
     def asConfig(key: String, default: Config = ConfigFactory.empty) =
-      Try(config.getConfig(key))
-        .getOrElse(default)
+      Try(config.getConfig(key)).getOrElse(default)
 
     def asInt(key: String, default: Int): Int =
-      Try(config.getInt(key))
-        .getOrElse(default)
+      Try(config.getInt(key)).getOrElse(default)
 
     def asString(key: String, default: String): String =
-      Try(config.getString(key))
-        .getOrElse(default)
+      Try(config.getString(key)).getOrElse(default)
 
     def asOptionalNonEmptyString(key: String): Option[String] = {
       if (config.hasPath(key)) Some(config.getString(key)).filterNot(_.isEmpty) else None
     }
 
     def asBoolean(key: String, default: Boolean) =
-      Try(config.getBoolean(key))
-        .getOrElse(default)
+      Try(config.getBoolean(key)).getOrElse(default)
 
     def asFiniteDuration(key: String, default: FiniteDuration) =
-      Try(FiniteDuration(config.getDuration(key).toMillis, TimeUnit.MILLISECONDS))
-        .getOrElse(default)
+      Try(FiniteDuration(config.getDuration(key).toMillis, TimeUnit.MILLISECONDS)).getOrElse(default)
 
     def asDuration(key: String): Duration =
       config.getString(key).toLowerCase(Locale.ROOT) match {
         case "off" => Duration.Undefined
-        case _     => config.getMillisDuration(key) requiring (_ > Duration.Zero, key + " >0s, or off")
+        case _     => config.getMillisDuration(key).requiring(_ > Duration.Zero, key + " >0s, or off")
       }
 
     def getMillisDuration(key: String): FiniteDuration = getDuration(key, TimeUnit.MILLISECONDS)

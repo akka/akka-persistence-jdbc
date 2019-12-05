@@ -18,8 +18,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
-  extends QueryTestSpec(configFile) with JournalTables {
-
+    extends QueryTestSpec(configFile)
+    with JournalTables {
   private val log = LoggerFactory.getLogger(classOf[JournalSequenceActorTest])
 
   val journalSequenceActorConfig = readJournalConfig.journalSequenceRetrievalConfiguration
@@ -31,7 +31,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
 
   def generateId: Int = 0
 
-  behavior of "JournalSequenceActor"
+  behavior.of("JournalSequenceActor")
 
   it should "recover normally" in {
     withActorSystem { implicit system: ActorSystem =>
@@ -56,13 +56,15 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
         withDatabase { db =>
           implicit val materializer: ActorMaterializer = ActorMaterializer()
           val elements = if (isOracle) 100000 else 1000000
-          Source.fromIterator(() => (1 to elements).iterator)
+          Source
+            .fromIterator(() => (1 to elements).iterator)
             .map(id => JournalRow(id, deleted = false, "id", id, Array(0.toByte)))
             .grouped(10000)
             .mapAsync(4) { rows =>
               db.run(JournalTable.forceInsertAll(rows))
             }
-            .runWith(Sink.ignore).futureValue
+            .runWith(Sink.ignore)
+            .futureValue
 
           val startTime = System.currentTimeMillis()
           withJournalSequenceActor(db, maxTries = 100) { actor =>
@@ -89,13 +91,15 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
           val gapSize = 10000
           val firstElement = 100000000
           val lastElement = firstElement + (numElements * gapSize)
-          Source.fromIterator(() => (firstElement to lastElement by gapSize).iterator)
+          Source
+            .fromIterator(() => (firstElement to lastElement by gapSize).iterator)
             .map(id => JournalRow(id, deleted = false, "id", id, Array(0.toByte)))
             .grouped(10000)
             .mapAsync(4) { rows =>
               db.run(JournalTable.forceInsertAll(rows))
             }
-            .runWith(Sink.ignore).futureValue
+            .runWith(Sink.ignore)
+            .futureValue
 
           withJournalSequenceActor(db, maxTries = 2) { actor =>
             // Should normally recover after `maxTries` seconds
@@ -118,13 +122,15 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
           val maxElement = 100000
           // only even numbers, odd numbers are missing
           val idSeq = 2 to maxElement by 2
-          Source.fromIterator(() => idSeq.iterator)
+          Source
+            .fromIterator(() => idSeq.iterator)
             .map(id => JournalRow(id, deleted = false, "id", id, Array(0.toByte)))
             .grouped(10000)
             .mapAsync(4) { rows =>
               db.run(JournalTable.forceInsertAll(rows))
             }
-            .runWith(Sink.ignore).futureValue
+            .runWith(Sink.ignore)
+            .futureValue
 
           val highestValue = if (isOracle) {
             // ForceInsert does not seem to work for oracle, we must delete the odd numbered events
@@ -150,18 +156,19 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
    *                 (since the actor queries every second by default,
    *                 this is effectively the number of seconds after which events are assumed missing)
    */
-  def withJournalSequenceActor(db: JdbcBackend.Database, maxTries: Int)(f: ActorRef => Unit)(implicit system: ActorSystem): Unit = {
+  def withJournalSequenceActor(db: JdbcBackend.Database, maxTries: Int)(f: ActorRef => Unit)(
+      implicit system: ActorSystem): Unit = {
     import system.dispatcher
     implicit val mat: ActorMaterializer = ActorMaterializer()
     val readJournalDao = new ByteArrayReadJournalDao(db, profile, readJournalConfig, SerializationExtension(system))
-    val actor = system.actorOf(JournalSequenceActor.props(readJournalDao, journalSequenceActorConfig.copy(maxTries = maxTries)))
-    try f(actor) finally system.stop(actor)
+    val actor =
+      system.actorOf(JournalSequenceActor.props(readJournalDao, journalSequenceActorConfig.copy(maxTries = maxTries)))
+    try f(actor)
+    finally system.stop(actor)
   }
-
 }
 
 class MockDaoJournalSequenceActorTest extends SharedActorSystemTestSpec {
-
   def fetchMaxOrderingId(journalSequenceActor: ActorRef): Future[Long] = {
     journalSequenceActor.ask(GetMaxOrderingId)(20.millis).mapTo[MaxOrderingId].map(_.maxOrdering)
   }
@@ -190,7 +197,8 @@ class MockDaoJournalSequenceActorTest extends SharedActorSystemTestSpec {
       }
       val thirdBatch = 41L to 110L
       daoProbe.reply(thirdBatch)
-      withClue(s"when no more events are missing, but less that batchSize elemens have been received, " +
+      withClue(
+        s"when no more events are missing, but less that batchSize elemens have been received, " +
         s"the actor should wait for $queryDelay before querying again") {
         daoProbe.expectNoMessage(almostQueryDelay)
         daoProbe.expectMsg(almostQueryDelay, TestProbeReadJournalDao.JournalSequence(110, batchSize))
@@ -198,7 +206,8 @@ class MockDaoJournalSequenceActorTest extends SharedActorSystemTestSpec {
 
       val fourthBatch = 111L to 210L
       daoProbe.reply(fourthBatch)
-      withClue("When no more events are missing and the number of events received is equal to batchSize, " +
+      withClue(
+        "When no more events are missing and the number of events received is equal to batchSize, " +
         "the actor should query again immediately") {
         daoProbe.expectMsg(almostImmediately, TestProbeReadJournalDao.JournalSequence(210, batchSize))
       }
@@ -232,7 +241,8 @@ class MockDaoJournalSequenceActorTest extends SharedActorSystemTestSpec {
 
       // sanity check
       retryResponse.last shouldBe 142
-      withClue("The elements 41 and 42 should be assumed missing, " +
+      withClue(
+        "The elements 41 and 42 should be assumed missing, " +
         "the actor should query again immediately since a full batch has been received") {
         daoProbe.expectMsg(almostImmediately, TestProbeReadJournalDao.JournalSequence(142, batchSize))
         fetchMaxOrderingId(actor).futureValue shouldBe 142
@@ -244,21 +254,38 @@ class MockDaoJournalSequenceActorTest extends SharedActorSystemTestSpec {
     }
   }
 
-  def withTestProbeJournalSequenceActor(batchSize: Int, maxTries: Int, queryDelay: FiniteDuration)(f: (TestProbe, ActorRef) => Unit)(implicit system: ActorSystem): Unit = {
+  def withTestProbeJournalSequenceActor(batchSize: Int, maxTries: Int, queryDelay: FiniteDuration)(
+      f: (TestProbe, ActorRef) => Unit)(implicit system: ActorSystem): Unit = {
     val testProbe = TestProbe()
-    val config = JournalSequenceRetrievalConfig(batchSize = batchSize, maxTries = maxTries, queryDelay = queryDelay, maxBackoffQueryDelay = 4.seconds, askTimeout = 100.millis)
+    val config = JournalSequenceRetrievalConfig(
+      batchSize = batchSize,
+      maxTries = maxTries,
+      queryDelay = queryDelay,
+      maxBackoffQueryDelay = 4.seconds,
+      askTimeout = 100.millis)
     val mockDao = new TestProbeReadJournalDao(testProbe)
     val actor = system.actorOf(JournalSequenceActor.props(mockDao, config))
-    try f(testProbe, actor) finally system.stop(actor)
+    try f(testProbe, actor)
+    finally system.stop(actor)
   }
 }
 
-class PostgresJournalSequenceActorTest extends JournalSequenceActorTest("postgres-application.conf", isOracle = false) with PostgresCleaner
+class PostgresJournalSequenceActorTest
+    extends JournalSequenceActorTest("postgres-application.conf", isOracle = false)
+    with PostgresCleaner
 
-class MySQLJournalSequenceActorTest extends JournalSequenceActorTest("mysql-application.conf", isOracle = false) with MysqlCleaner
+class MySQLJournalSequenceActorTest
+    extends JournalSequenceActorTest("mysql-application.conf", isOracle = false)
+    with MysqlCleaner
 
-class OracleJournalSequenceActorTest extends JournalSequenceActorTest("oracle-application.conf", isOracle = true) with OracleCleaner
+class OracleJournalSequenceActorTest
+    extends JournalSequenceActorTest("oracle-application.conf", isOracle = true)
+    with OracleCleaner
 
-class SqlServerJournalSequenceActorTest extends JournalSequenceActorTest("sqlserver-application.conf", isOracle = false) with SqlServerCleaner
+class SqlServerJournalSequenceActorTest
+    extends JournalSequenceActorTest("sqlserver-application.conf", isOracle = false)
+    with SqlServerCleaner
 
-class H2JournalSequenceActorTest extends JournalSequenceActorTest("h2-application.conf", isOracle = false) with H2Cleaner
+class H2JournalSequenceActorTest
+    extends JournalSequenceActorTest("h2-application.conf", isOracle = false)
+    with H2Cleaner

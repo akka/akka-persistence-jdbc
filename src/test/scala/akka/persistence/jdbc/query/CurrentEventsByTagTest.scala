@@ -37,7 +37,6 @@ object CurrentEventsByTagTest {
 }
 
 abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(config, configOverrides) {
-
   it should "not find an event by tag for unknown tag" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
@@ -175,50 +174,59 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
     }
   }
 
-  it should "complete without any gaps in case events are being persisted when the query is executed" in withActorSystem { implicit system =>
-    val journalOps = new JavaDslJdbcReadJournalOperations(system)
-    import system.dispatcher
-    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
-      def sendMessagesWithTag(tag: String, numberOfMessagesPerActor: Int): Future[Done] = {
-        val futures = for (actor <- Seq(actor1, actor2, actor3); i <- 1 to numberOfMessagesPerActor) yield {
-          actor ? TaggedAsyncEvent(Event(i.toString), tag)
+  it should "complete without any gaps in case events are being persisted when the query is executed" in withActorSystem {
+    implicit system =>
+      val journalOps = new JavaDslJdbcReadJournalOperations(system)
+      import system.dispatcher
+      withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
+        def sendMessagesWithTag(tag: String, numberOfMessagesPerActor: Int): Future[Done] = {
+          val futures = for (actor <- Seq(actor1, actor2, actor3); i <- 1 to numberOfMessagesPerActor) yield {
+            actor ? TaggedAsyncEvent(Event(i.toString), tag)
+          }
+          Future.sequence(futures).map(_ => Done)
         }
-        Future.sequence(futures).map(_ => Done)
+
+        val tag = "someTag"
+        // send a batch of 3 * 200
+        val batch1 = sendMessagesWithTag(tag, 200)
+        // Try to persist a large batch of events per actor. Some of these may be returned, but not all!
+        val batch2 = sendMessagesWithTag(tag, 10000)
+
+        // wait for acknowledgement of the first batch only
+        batch1.futureValue
+        // Sanity check, all events in the first batch must be in the journal
+        journalOps.countJournal.futureValue should be >= 600L
+
+        // start the query before the last batch completes
+        journalOps.withCurrentEventsByTag()(tag, NoOffset) { tp =>
+          // The stream must complete within the given amount of time
+          // This make take a while in case the journal sequence actor detects gaps
+          val allEvents = tp.toStrict(atMost = 20.seconds)
+          allEvents.size should be >= 600
+          val expectedOffsets = 1L.to(allEvents.size).map(Sequence.apply)
+          allEvents.map(_.offset) shouldBe expectedOffsets
+        }
+        batch2.futureValue
       }
-
-      val tag = "someTag"
-      // send a batch of 3 * 200
-      val batch1 = sendMessagesWithTag(tag, 200)
-      // Try to persist a large batch of events per actor. Some of these may be returned, but not all!
-      val batch2 = sendMessagesWithTag(tag, 10000)
-
-      // wait for acknowledgement of the first batch only
-      batch1.futureValue
-      // Sanity check, all events in the first batch must be in the journal
-      journalOps.countJournal.futureValue should be >= 600L
-
-      // start the query before the last batch completes
-      journalOps.withCurrentEventsByTag()(tag, NoOffset) { tp =>
-        // The stream must complete within the given amount of time
-        // This make take a while in case the journal sequence actor detects gaps
-        val allEvents = tp.toStrict(atMost = 20.seconds)
-        allEvents.size should be >= 600
-        val expectedOffsets = 1L.to(allEvents.size).map(Sequence.apply)
-        allEvents.map(_.offset) shouldBe expectedOffsets
-      }
-      batch2.futureValue
-    }
   }
 }
 
 // Note: these tests use the shared-db configs, the test for all (so not only current) events use the regular db config
 
-class PostgresScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("postgres-shared-db-application.conf") with PostgresCleaner
+class PostgresScalaCurrentEventsByTagTest
+    extends CurrentEventsByTagTest("postgres-shared-db-application.conf")
+    with PostgresCleaner
 
-class MySQLScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("mysql-shared-db-application.conf") with MysqlCleaner
+class MySQLScalaCurrentEventsByTagTest
+    extends CurrentEventsByTagTest("mysql-shared-db-application.conf")
+    with MysqlCleaner
 
-class OracleScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("oracle-shared-db-application.conf") with OracleCleaner
+class OracleScalaCurrentEventsByTagTest
+    extends CurrentEventsByTagTest("oracle-shared-db-application.conf")
+    with OracleCleaner
 
-class SqlServerScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("sqlserver-shared-db-application.conf") with SqlServerCleaner
+class SqlServerScalaCurrentEventsByTagTest
+    extends CurrentEventsByTagTest("sqlserver-shared-db-application.conf")
+    with SqlServerCleaner
 
 class H2ScalaCurrentEventsByTagTest extends CurrentEventsByTagTest("h2-shared-db-application.conf") with H2Cleaner

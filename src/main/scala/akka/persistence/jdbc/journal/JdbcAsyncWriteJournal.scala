@@ -39,6 +39,7 @@ import akka.pattern.pipe
 
 object JdbcAsyncWriteJournal {
   private case class WriteFinished(pid: String, f: Future[_])
+
   /**
    * Extra Plugin API: May be used to issue in-place updates for events.
    * To be used only for data migrations such as "encrypt all events" and similar operations.
@@ -77,7 +78,8 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   def journalDaoWithUpdates: JournalDaoWithUpdates =
     journalDao match {
       case upgraded: JournalDaoWithUpdates => upgraded
-      case _ => throw new IllegalStateException(s"The ${journalDao.getClass} does NOT implement [JournalDaoWithUpdates], " +
+      case _ =>
+        throw new IllegalStateException(s"The ${journalDao.getClass} does NOT implement [JournalDaoWithUpdates], " +
         s"which is required to perform updates of events! Please configure a valid update capable DAO (e.g. the default [ByteArrayJournalDao].")
     }
 
@@ -100,7 +102,7 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
     def fetchHighestSeqNr() = journalDao.highestSequenceNr(persistenceId, fromSequenceNr)
     writeInProgress.get(persistenceId) match {
       case null => fetchHighestSeqNr()
-      case f =>
+      case f    =>
         // we must fetch the highest sequence number after the previous write has completed
         // If the previous write failed then we can ignore this
         f.recover { case _ => () }.flatMap(_ => fetchHighestSeqNr())
@@ -111,8 +113,10 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
     journalDaoWithUpdates.update(persistenceId, sequenceNr, message)
   }
 
-  override def asyncReplayMessages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(recoveryCallback: (PersistentRepr) => Unit): Future[Unit] =
-    journalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, max)
+  override def asyncReplayMessages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(
+      recoveryCallback: (PersistentRepr) => Unit): Future[Unit] =
+    journalDao
+      .messages(persistenceId, fromSequenceNr, toSequenceNr, max)
       .mapAsync(1)(deserializedRepr => Future.fromTry(deserializedRepr))
       .runForeach(recoveryCallback)
       .map(_ => ())
@@ -129,7 +133,6 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
     case WriteFinished(persistenceId, future) =>
       writeInProgress.remove(persistenceId, future)
     case InPlaceUpdateEvent(pid, seq, write) =>
-      asyncUpdateEvent(pid, seq, write)
-        .pipeTo(sender())
+      asyncUpdateEvent(pid, seq, write).pipeTo(sender())
   }
 }

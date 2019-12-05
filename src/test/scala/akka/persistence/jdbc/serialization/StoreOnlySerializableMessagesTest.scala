@@ -25,20 +25,26 @@ import akka.testkit.TestProbe
 
 import scala.concurrent.duration._
 
-abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: SchemaType) extends SharedActorSystemTestSpec(config) {
-
+abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: SchemaType)
+    extends SharedActorSystemTestSpec(config) {
   case class PersistFailure(cause: Throwable, event: Any, seqNr: Long)
   case class PersistRejected(cause: Throwable, event: Any, seqNr: Long)
 
-  class TestActor(val persistenceId: String, recoverProbe: ActorRef, persistFailureProbe: ActorRef, persistRejectedProbe: ActorRef) extends PersistentActor {
+  class TestActor(
+      val persistenceId: String,
+      recoverProbe: ActorRef,
+      persistFailureProbe: ActorRef,
+      persistRejectedProbe: ActorRef)
+      extends PersistentActor {
     override val receiveRecover: Receive = LoggingReceive {
       case msg => recoverProbe ! msg
     }
 
     override val receiveCommand: Receive = LoggingReceive {
-      case msg => persist(msg) { _ =>
-        sender ! akka.actor.Status.Success("")
-      }
+      case msg =>
+        persist(msg) { _ =>
+          sender ! akka.actor.Status.Success("")
+        }
     }
 
     override protected def onPersistFailure(cause: Throwable, event: Any, seqNr: Long): Unit =
@@ -52,8 +58,10 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
     val recoverProbe = TestProbe()
     val persistFailureProbe = TestProbe()
     val persistRejectedProbe = TestProbe()
-    val persistentActor = system.actorOf(Props(new TestActor(s"my-$id", recoverProbe.ref, persistFailureProbe.ref, persistRejectedProbe.ref)))
-    try f(persistentActor)(recoverProbe)(persistFailureProbe)(persistRejectedProbe) finally killActors(persistentActor)
+    val persistentActor = system.actorOf(
+      Props(new TestActor(s"my-$id", recoverProbe.ref, persistFailureProbe.ref, persistRejectedProbe.ref)))
+    try f(persistentActor)(recoverProbe)(persistFailureProbe)(persistRejectedProbe)
+    finally killActors(persistentActor)
   }
 
   override def beforeAll(): Unit = {
@@ -126,12 +134,16 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
   }
 }
 
-class PostgresStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("postgres-application.conf", Postgres())
+class PostgresStoreOnlySerializableMessagesTest
+    extends StoreOnlySerializableMessagesTest("postgres-application.conf", Postgres())
 
-class MySQLStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("mysql-application.conf", MySQL())
+class MySQLStoreOnlySerializableMessagesTest
+    extends StoreOnlySerializableMessagesTest("mysql-application.conf", MySQL())
 
-class OracleStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("oracle-application.conf", Oracle())
+class OracleStoreOnlySerializableMessagesTest
+    extends StoreOnlySerializableMessagesTest("oracle-application.conf", Oracle())
 
-class SqlServerStoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("sqlserver-application.conf", SqlServer())
+class SqlServerStoreOnlySerializableMessagesTest
+    extends StoreOnlySerializableMessagesTest("sqlserver-application.conf", SqlServer())
 
 class H2StoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("h2-application.conf", H2())

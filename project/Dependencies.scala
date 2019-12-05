@@ -2,7 +2,6 @@ import sbt._
 import Keys._
 
 object Dependencies {
-
   val Nightly = sys.env.get("TRAVIS_EVENT_TYPE").contains("cron")
 
   val Scala212 = "2.12.8"
@@ -31,7 +30,5 @@ object Dependencies {
     "com.typesafe.akka" %% "akka-persistence-tck" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-testkit" % AkkaVersion % Test,
-    "org.scalatest" %% "scalatest" % ScalaTestVersion % Test
-  )
-
+    "org.scalatest" %% "scalatest" % ScalaTestVersion % Test)
 }

@@ -22,8 +22,9 @@ import akka.persistence.query.{ NoOffset, PersistenceQuery }
 import akka.stream.{ ActorMaterializer, Materializer }
 import akka.stream.scaladsl.Sink
 
-class MultipleReadJournalTest extends QueryTestSpec("h2-two-read-journals-application.conf", configOverrides) with H2Cleaner {
-
+class MultipleReadJournalTest
+    extends QueryTestSpec("h2-two-read-journals-application.conf", configOverrides)
+    with H2Cleaner {
   it should "be able to create two read journals and use eventsByTag on them" in withActorSystem { implicit system =>
     implicit val mat: Materializer = ActorMaterializer()
     val normalReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)

@@ -29,7 +29,6 @@ import slick.jdbc.JdbcBackend._
  */
 @deprecated(message = "Internal API, will be removed in 4.0.0", since = "3.4.0")
 object SlickDriver {
-
   /**
    * INTERNAL API
    */
@@ -42,7 +41,6 @@ object SlickDriver {
  * INTERNAL API
  */
 object SlickDatabase {
-
   /**
    * INTERNAL API
    */
@@ -64,8 +62,7 @@ object SlickDatabase {
     slickConfiguration.jndiName
       .map(Database.forName(_, None))
       .orElse {
-        slickConfiguration.jndiDbName.map(
-          new InitialContext().lookup(_).asInstanceOf[Database])
+        slickConfiguration.jndiDbName.map(new InitialContext().lookup(_).asInstanceOf[Database])
       }
       .getOrElse(Database.forConfig(path, config))
   }
@@ -73,11 +70,12 @@ object SlickDatabase {
   /**
    * INTERNAL API
    */
-  private[jdbc] def initializeEagerly(config: Config, slickConfiguration: SlickConfiguration, path: String): SlickDatabase = {
+  private[jdbc] def initializeEagerly(
+      config: Config,
+      slickConfiguration: SlickConfiguration,
+      path: String): SlickDatabase = {
     val dbPath = if (path.isEmpty) "db" else s"$path.db"
-    EagerSlickDatabase(
-      database(config, slickConfiguration, dbPath),
-      profile(config, path))
+    EagerSlickDatabase(database(config, slickConfiguration, dbPath), profile(config, path))
   }
 }
 
@@ -108,7 +106,6 @@ class LazySlickDatabase(config: Config, system: ActorSystem) extends SlickDataba
     val db = SlickDatabase.database(config, new SlickConfiguration(config), path = "db")
     system.registerOnTermination {
       db.close()
-
     }
     db
   }

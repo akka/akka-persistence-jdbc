@@ -23,7 +23,6 @@ import akka.pattern.ask
 import akka.persistence.journal.{ EventSeq, ReadEventAdapter, Tagged, WriteEventAdapter }
 
 object EventAdapterTest {
-
   case class Event(value: String) {
     def adapted = EventAdapted(value)
   }
@@ -54,8 +53,8 @@ object EventAdapterTest {
       case _                               => event
     }
   }
-
 }
+
 /**
  * Tests that check persistence queries when event adapter is configured for persisted event.
  */
@@ -81,13 +80,11 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
         tp.cancel()
       }
     }
-
   }
 
   it should "apply event adapters when querying events by tag from an offset" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
-
       (actor1 ? TaggedEvent(Event("1"), "event")).futureValue
       (actor2 ? TaggedEvent(Event("2"), "event")).futureValue
       (actor3 ? TaggedEvent(Event("3"), "event")).futureValue
@@ -97,7 +94,6 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
       }
 
       journalOps.withEventsByTag(10.seconds)("event", Sequence(1)) { tp =>
-
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, EventRestored("2")))
         tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, EventRestored("3")))
@@ -123,21 +119,15 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 1, 1) { tp =>
-        tp.request(Int.MaxValue)
-          .expectNext(EventEnvelope(Sequence(1), "my-1", 1, EventRestored("1")))
-          .expectComplete()
+        tp.request(Int.MaxValue).expectNext(EventEnvelope(Sequence(1), "my-1", 1, EventRestored("1"))).expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 2, 2) { tp =>
-        tp.request(Int.MaxValue)
-          .expectNext(EventEnvelope(Sequence(2), "my-1", 2, EventRestored("2")))
-          .expectComplete()
+        tp.request(Int.MaxValue).expectNext(EventEnvelope(Sequence(2), "my-1", 2, EventRestored("2"))).expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 3, 3) { tp =>
-        tp.request(Int.MaxValue)
-          .expectNext(EventEnvelope(Sequence(3), "my-1", 3, EventRestored("3")))
-          .expectComplete()
+        tp.request(Int.MaxValue).expectNext(EventEnvelope(Sequence(3), "my-1", 3, EventRestored("3"))).expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 2, 3) { tp =>
@@ -195,7 +185,6 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
       }
     }
   }
-
 }
 
 class PostgresScalaEventAdapterTest extends EventAdapterTest("postgres-application.conf") with PostgresCleaner

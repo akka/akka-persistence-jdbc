@@ -36,10 +36,15 @@ trait SnapshotTables {
 
   def snapshotTableCfg: SnapshotTableConfiguration
 
-  class Snapshot(_tableTag: Tag) extends Table[SnapshotRow](_tableTag, _schemaName = snapshotTableCfg.schemaName, _tableName = snapshotTableCfg.tableName) {
+  class Snapshot(_tableTag: Tag)
+      extends Table[SnapshotRow](
+        _tableTag,
+        _schemaName = snapshotTableCfg.schemaName,
+        _tableName = snapshotTableCfg.tableName) {
     def * = (persistenceId, sequenceNumber, created, snapshot) <> (SnapshotRow.tupled, SnapshotRow.unapply)
 
-    val persistenceId: Rep[String] = column[String](snapshotTableCfg.columnNames.persistenceId, O.Length(255, varying = true))
+    val persistenceId: Rep[String] =
+      column[String](snapshotTableCfg.columnNames.persistenceId, O.Length(255, varying = true))
     val sequenceNumber: Rep[Long] = column[Long](snapshotTableCfg.columnNames.sequenceNumber)
     val created: Rep[Long] = column[Long](snapshotTableCfg.columnNames.created)
     val snapshot: Rep[Array[Byte]] = column[Array[Byte]](snapshotTableCfg.columnNames.snapshot)
@@ -47,15 +52,14 @@ trait SnapshotTables {
   }
 
   case class OracleSnapshot(_tableTag: Tag) extends Snapshot(_tableTag) {
-
     import java.sql.Blob
     import javax.sql.rowset.serial.SerialBlob
 
-    private val columnType = MappedColumnType.base[Array[Byte], Blob](
-      bytes => new SerialBlob(bytes),
-      blob => blob.getBinaryStream.toArray)
+    private val columnType =
+      MappedColumnType.base[Array[Byte], Blob](bytes => new SerialBlob(bytes), blob => blob.getBinaryStream.toArray)
     override val snapshot: Rep[Array[Byte]] = column[Array[Byte]](snapshotTableCfg.columnNames.snapshot)(columnType)
   }
 
-  lazy val SnapshotTable = new TableQuery(tag => if (isOracleDriver(profile)) OracleSnapshot(tag) else new Snapshot(tag))
+  lazy val SnapshotTable = new TableQuery(tag =>
+    if (isOracleDriver(profile)) OracleSnapshot(tag) else new Snapshot(tag))
 }

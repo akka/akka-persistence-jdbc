@@ -6,7 +6,6 @@ import akka.persistence.jdbc.util.SlickExtension
 import com.typesafe.config.ConfigFactory
 
 class JNDIConfigTest extends SimpleSpec {
-
   "JNDI config" should "read the config and throw NoInitialContextException in case the JNDI resource is not available" in {
     withActorSystem("jndi-application.conf") { system =>
       val jdbcJournalConfig = system.settings.config.getConfig("jdbc-journal")
@@ -41,5 +40,4 @@ class JNDIConfigTest extends SimpleSpec {
       system.terminate().futureValue
     }
   }
-
 }

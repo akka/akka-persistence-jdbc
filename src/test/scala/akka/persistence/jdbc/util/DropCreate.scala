@@ -22,7 +22,6 @@ import akka.persistence.jdbc.util.Schema.{ Oracle, SchemaType }
 import slick.jdbc.JdbcBackend.{ Database, Session }
 
 object Schema {
-
   sealed trait SchemaType { def schema: String }
   final case class Postgres(schema: String = "schema/postgres/postgres-schema.sql") extends SchemaType
   final case class H2(schema: String = "schema/h2/h2-schema.sql") extends SchemaType
@@ -32,7 +31,6 @@ object Schema {
 }
 
 trait DropCreate extends ClasspathResources {
-
   def db: Database
 
   val listOfOracleDropQueries = List(
@@ -46,7 +44,8 @@ trait DropCreate extends ClasspathResources {
 
   def dropOracle(): Unit = withStatement { stmt =>
     listOfOracleDropQueries.foreach { ddl =>
-      try stmt.executeUpdate(ddl) catch {
+      try stmt.executeUpdate(ddl)
+      catch {
         case t: java.sql.SQLException if t.getMessage contains "ORA-00942" => // suppress known error message in the test
         case t: java.sql.SQLException if t.getMessage contains "ORA-04080" => // suppress known error message in the test
         case t: java.sql.SQLException if t.getMessage contains "ORA-02289" => // suppress known error message in the test
@@ -63,17 +62,19 @@ trait DropCreate extends ClasspathResources {
     case s: SchemaType => create(s.schema)
   }
 
-  def create(schema: String, separator: String = ";"): Unit = for {
-    schema <- Option(fromClasspathAsString(schema))
-    ddl <- for {
-      trimmedLine <- schema.split(separator) map (_.trim)
-      if trimmedLine.nonEmpty
-    } yield trimmedLine
-  } withStatement { stmt =>
-    try stmt.executeUpdate(ddl) catch {
-      case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" => // suppress known error message in the test
+  def create(schema: String, separator: String = ";"): Unit =
+    for {
+      schema <- Option(fromClasspathAsString(schema))
+      ddl <- for {
+        trimmedLine <- schema.split(separator).map(_.trim)
+        if trimmedLine.nonEmpty
+      } yield trimmedLine
+    } withStatement { stmt =>
+      try stmt.executeUpdate(ddl)
+      catch {
+        case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" => // suppress known error message in the test
+      }
     }
-  }
 
   def withDatabase[A](f: Database => A): A =
     f(db)
@@ -81,7 +82,8 @@ trait DropCreate extends ClasspathResources {
   def withSession[A](f: Session => A): A = {
     withDatabase { db =>
       val session = db.createSession()
-      try f(session) finally session.close()
+      try f(session)
+      finally session.close()
     }
   }
 

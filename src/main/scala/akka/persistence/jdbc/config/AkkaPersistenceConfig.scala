@@ -111,14 +111,20 @@ class SnapshotConfig(config: Config) {
 }
 
 object JournalSequenceRetrievalConfig {
-  def apply(config: Config): JournalSequenceRetrievalConfig = JournalSequenceRetrievalConfig(
-    batchSize = config.asInt("journal-sequence-retrieval.batch-size", 10000),
-    maxTries = config.asInt("journal-sequence-retrieval.max-tries", 10),
-    queryDelay = config.asFiniteDuration("journal-sequence-retrieval.query-delay", 1.second),
-    maxBackoffQueryDelay = config.asFiniteDuration("journal-sequence-retrieval.max-backoff-query-delay", 1.minute),
-    askTimeout = config.asFiniteDuration("journal-sequence-retrieval.ask-timeout", 1.second))
+  def apply(config: Config): JournalSequenceRetrievalConfig =
+    JournalSequenceRetrievalConfig(
+      batchSize = config.asInt("journal-sequence-retrieval.batch-size", 10000),
+      maxTries = config.asInt("journal-sequence-retrieval.max-tries", 10),
+      queryDelay = config.asFiniteDuration("journal-sequence-retrieval.query-delay", 1.second),
+      maxBackoffQueryDelay = config.asFiniteDuration("journal-sequence-retrieval.max-backoff-query-delay", 1.minute),
+      askTimeout = config.asFiniteDuration("journal-sequence-retrieval.ask-timeout", 1.second))
 }
-case class JournalSequenceRetrievalConfig(batchSize: Int, maxTries: Int, queryDelay: FiniteDuration, maxBackoffQueryDelay: FiniteDuration, askTimeout: FiniteDuration)
+case class JournalSequenceRetrievalConfig(
+    batchSize: Int,
+    maxTries: Int,
+    queryDelay: FiniteDuration,
+    maxBackoffQueryDelay: FiniteDuration,
+    askTimeout: FiniteDuration)
 
 class ReadJournalConfig(config: Config) {
   val journalTableConfiguration = new JournalTableConfiguration(config)
@@ -129,5 +135,6 @@ class ReadJournalConfig(config: Config) {
   val addShutdownHook: Boolean = config.asBoolean("add-shutdown-hook", true)
   val includeDeleted: Boolean = config.as[Boolean]("includeLogicallyDeleted", true)
 
-  override def toString: String = s"ReadJournalConfig($journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook,$includeDeleted)"
+  override def toString: String =
+    s"ReadJournalConfig($journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook,$includeDeleted)"
 }

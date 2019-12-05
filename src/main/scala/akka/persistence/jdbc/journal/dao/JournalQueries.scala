@@ -20,8 +20,8 @@ package journal.dao
 import akka.persistence.jdbc.config.JournalTableConfiguration
 import slick.jdbc.JdbcProfile
 
-class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration) extends JournalTables {
-
+class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration)
+    extends JournalTables {
   import profile.api._
 
   private val JournalTableC = Compiled(JournalTable)
@@ -33,10 +33,7 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
     JournalTable.filter(_.persistenceId === persistenceId).sortBy(_.sequenceNumber.desc)
 
   def delete(persistenceId: String, toSequenceNr: Long) = {
-    JournalTable
-      .filter(_.persistenceId === persistenceId)
-      .filter(_.sequenceNumber <= toSequenceNr)
-      .delete
+    JournalTable.filter(_.persistenceId === persistenceId).filter(_.sequenceNumber <= toSequenceNr).delete
   }
 
   /**
@@ -44,9 +41,7 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
    * Intended to be used sparingly, e.g. moving all events to their encrypted counterparts.
    */
   def update(persistenceId: String, seqNr: Long, replacement: Array[Byte]) = {
-    val baseQuery = JournalTable
-      .filter(_.persistenceId === persistenceId)
-      .filter(_.sequenceNumber === seqNr)
+    val baseQuery = JournalTable.filter(_.persistenceId === persistenceId).filter(_.sequenceNumber === seqNr)
 
     baseQuery.map(_.message).update(replacement)
   }
@@ -56,7 +51,8 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
       .filter(_.persistenceId === persistenceId)
       .filter(_.sequenceNumber <= maxSequenceNr)
       .filter(_.deleted === false)
-      .map(_.deleted).update(true)
+      .map(_.deleted)
+      .update(true)
 
   private def _highestSequenceNrForPersistenceId(persistenceId: Rep[String]): Query[Rep[Long], Long, Seq] =
     selectAllJournalForPersistenceId(persistenceId).map(_.sequenceNumber).take(1)
@@ -78,12 +74,17 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
 
   val allPersistenceIdsDistinct = Compiled(_allPersistenceIdsDistinct)
 
-  def journalRowByPersistenceIds(persistenceIds: Iterable[String]): Query[Rep[String], String, Seq] = for {
-    query <- JournalTable.map(_.persistenceId)
-    if query inSetBind persistenceIds
-  } yield query
+  def journalRowByPersistenceIds(persistenceIds: Iterable[String]): Query[Rep[String], String, Seq] =
+    for {
+      query <- JournalTable.map(_.persistenceId)
+      if query.inSetBind(persistenceIds)
+    } yield query
 
-  private def _messagesQuery(persistenceId: Rep[String], fromSequenceNr: Rep[Long], toSequenceNr: Rep[Long], max: ConstColumn[Long]) =
+  private def _messagesQuery(
+      persistenceId: Rep[String],
+      fromSequenceNr: Rep[Long],
+      toSequenceNr: Rep[Long],
+      max: ConstColumn[Long]) =
     JournalTable
       .filter(_.persistenceId === persistenceId)
       .filter(_.deleted === false)
@@ -93,5 +94,4 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
       .take(max)
 
   val messagesQuery = Compiled(_messagesQuery _)
-
 }

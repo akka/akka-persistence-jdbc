@@ -4,11 +4,9 @@ import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
 import com.typesafe.tools.mima.core.IncompatibleResultTypeProblem
 import com.typesafe.tools.mima.core.ProblemFilters
 import com.typesafe.tools.mima.plugin.MimaKeys.{mimaBinaryIssueFilters, mimaPreviousArtifacts}
-import de.heikoseeberger.sbtheader.License.ALv2
-import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.headerLicense
+import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.{HeaderLicense, headerLicense}
 import sbt.Keys._
 import sbt._
-
 import SbtScalariform.autoImport._
 import scalariform.formatter.preferences.FormattingPreferences
 
@@ -35,12 +33,18 @@ object ProjectAutoPlugin extends AutoPlugin {
 
   override val projectSettings: Seq[Setting[_]] = SbtScalariform.projectSettings ++ mimaDefaultSettings ++ Seq(
     name := "akka-persistence-jdbc",
-    organization := "com.github.dnvriend",
-    organizationName := "Dennis Vriend",
+    organization := "com.lightbend.akka",
+    organizationName := "Lightbend Inc.",
+    organizationHomepage := Some(url("https://www.lightbend.com/")),
+    homepage := Some(url("https://github.com/akka/akka-persistence-jdbc")),
+    scmInfo := Some(ScmInfo(url("https://github.com/akka/akka-persistence-jdbc"), "git@github.com:akka/akka-persistence-jdbc.git")),
+    developers += Developer("contributors",
+      "Contributors",
+      "https://gitter.im/akka/dev",
+      url("https://github.com/akka/akka-persistence-jdbc/graphs/contributors")),
+    licenses := Seq("Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0")),
     description := "A plugin for storing events in an event journal akka-persistence-jdbc",
     startYear := Some(2014),
-
-    licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache2.0.php")),
 
     scalaVersion := ScalaVersion,
 
@@ -75,7 +79,13 @@ object ProjectAutoPlugin extends AutoPlugin {
     // show full stack traces and test case durations
     testOptions in Test += Tests.Argument("-oDF"),
 
-    headerLicense := Some(ALv2("2018", "Dennis Vriend")),
+    headerLicense := Some(
+      HeaderLicense.Custom(
+        """|Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
+           |Copyright (C) 2019 - 2019 Lightbend Inc. <https://www.lightbend.com>
+           |""".stripMargin
+      )
+    ),
 
     resolvers += Resolver.typesafeRepo("releases"),
     resolvers += Resolver.jcenterRepo,

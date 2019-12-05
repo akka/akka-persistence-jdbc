@@ -17,8 +17,8 @@
 package akka.persistence.jdbc.query
 
 import akka.Done
-import akka.persistence.jdbc.query.EventAdapterTest.{Event, TaggedAsyncEvent}
-import akka.persistence.query.{EventEnvelope, Sequence}
+import akka.persistence.jdbc.query.EventAdapterTest.{ Event, TaggedAsyncEvent }
+import akka.persistence.query.{ EventEnvelope, Sequence }
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

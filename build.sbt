@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2016 Dennis Vriend
  *
@@ -13,3 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+Global / onLoad := (Global / onLoad).value.andThen { s =>
+  val v = version.value
+  if (dynverGitDescribeOutput.value.hasNoTags)
+    throw new MessageOnlyException(
+      s"Failed to derive version from git tags. Maybe run `git fetch --unshallow`? Derived version: $v"
+    )
+  s
+}

@@ -2,19 +2,66 @@ language: scala
 sudo: true
 services:
   - docker
+
 before_install:
   # make comparing to origin/master work and fetch full history for correct current and previous version detection
   - git remote set-branches --add origin master && git fetch --unshallow
-scala:
-  - 2.12.8
-  - 2.13.0
-jdk:
-  - openjdk8
-  - openjdk11
+  # using jabba for custom jdk management
+  - curl -sL https://raw.githubusercontent.com/shyiko/jabba/0.11.2/install.sh | bash && . ~/.jabba/jabba.sh
+  - jabba install adopt@~1.8-0
+  - jabba install adopt@~1.11-0
+
+# default script for jobs, that do not have any specified
 script:
-  - "./scripts/launch-all.sh"
-  - docker ps -a
-  - "./build.sh"
+  - jabba use ${JDK:=adopt@~1.8-0}
+  - java -version
+  - ${PRE_CMD:=return 0} # do nothing if not set
+  - sbt -jvm-opts .jvmopts-travis "$CMD"
+
+jobs:
+  include:
+    - stage: check
+      env: CMD="+Test/compile"
+      name: "Compile all code with Scala 2.12 and 2.13"
+
+    - stage: test
+      env:
+        - PRE_CMD="./scripts/launch-all.sh"
+        - CMD="++2.12.8 test"
+      name: "Run tests with Scala 2.12 and AdoptOpenJDK 8"
+    - env:
+        - PRE_CMD="./scripts/launch-all.sh"
+        - CMD="++2.13.1 test"
+      name: "Run tests with Scala 2.13 and AdoptOpenJDK 8"
+    - env:
+        - JDK="adopt@~1.11-0"
+        - _JAVA_OPTIONS="-XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler"
+        - PRE_CMD="./scripts/launch-all.sh"
+        - CMD="++2.12.8 test"
+      name: "Run tests with Scala 2.12 and AdoptOpenJDK 11"
+    - env:
+        - JDK="adopt@~1.11-0"
+        - _JAVA_OPTIONS="-XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler"
+        - PRE_CMD="./scripts/launch-all.sh"
+        - CMD="++2.13.1 test"
+      name: "Run tests with Scala 2.13 and AdoptOpenJDK 11"
+
+stages:
+  # runs on master commits and PRs
+  - name: check
+    if: NOT tag =~ ^v
+
+  # runs on master commits and PRs
+  - name: test
+    if: NOT tag =~ ^v
+
+  # runs on main repo master commits and version-tagged commits
+#  - name: whitesource
+#    if: repo = akka/akka-persistence-jdbc AND ( ( branch = master AND type = push ) OR tag =~ ^v )
+
+  # runs on main repo master commits and version-tagged commits
+#  - name: publish
+#    if: repo = akka/akka-persistence-jdbc AND tag =~ ^v
 
 before_cache:
   - find $HOME/.ivy2 -name "ivydata-*.properties" -delete

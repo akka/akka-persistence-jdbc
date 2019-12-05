@@ -27,6 +27,6 @@ addSbtPlugin("de.heikoseeberger" % "sbt-header" % "4.1.0")
 // https://github.com/sbt/sbt-release
 addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.7")
 
-addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.3.0")
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.6.0")
 
 addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.0.0")

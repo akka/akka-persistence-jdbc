@@ -31,7 +31,7 @@ while true; do
 done;
 }
 
-docker-compose -f scripts/mysql.yml kill
-docker-compose -f scripts/mysql.yml rm -f
-docker-compose -f scripts/mysql.yml up -d
+docker-compose -f scripts/docker-compose.yml kill mysql
+docker-compose -f scripts/docker-compose.yml rm -f mysql
+docker-compose -f scripts/docker-compose.yml up -d mysql
 wait 3306 MySQL

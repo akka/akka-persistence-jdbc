@@ -31,7 +31,7 @@ while true; do
 done;
 }
 
-docker-compose -f scripts/sqlserver.yml kill
-docker-compose -f scripts/sqlserver.yml rm -f
-docker-compose -f scripts/sqlserver.yml up -d
+docker-compose -f scripts/docker-compose.yml kill sqlserver
+docker-compose -f scripts/docker-compose.yml rm -f sqlserver
+docker-compose -f scripts/docker-compose.yml up -d sqlserver
 wait 1433 SqlServer

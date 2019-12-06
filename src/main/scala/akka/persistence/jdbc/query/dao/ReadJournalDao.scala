@@ -15,6 +15,7 @@ import scala.concurrent.Future
 import scala.util.Try
 
 trait ReadJournalDao {
+
   /**
    * Returns distinct stream of persistenceIds
    */

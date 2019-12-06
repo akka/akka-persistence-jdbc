@@ -14,6 +14,7 @@ import scala.concurrent.Future
 import scala.util.Try
 
 trait JournalDao {
+
   /**
    * Deletes all persistent messages up to toSequenceNr (inclusive) for the persistenceId
    */

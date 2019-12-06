@@ -22,6 +22,7 @@ trait SimpleSpec
     with BeforeAndAfterAll
     with BeforeAndAfterEach
     with GivenWhenThen {
+
   /**
    * Sends the PoisonPill command to an actor and waits for it to die
    */

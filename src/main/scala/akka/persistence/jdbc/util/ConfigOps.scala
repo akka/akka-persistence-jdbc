@@ -67,6 +67,7 @@ object ConfigOps {
   }
 
   final implicit class StringTryOps(val t: Try[String]) extends AnyVal {
+
     /**
      * Trim the String content, when empty, return None
      */

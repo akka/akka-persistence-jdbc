@@ -4,9 +4,9 @@ import akka.persistence.query.{ EventEnvelope, NoOffset, Sequence }
 import akka.pattern._
 import com.typesafe.config.ConfigFactory
 import org.scalactic.source.Position
-import org.scalatest.Matchers
 
 import scala.concurrent.duration._
+import org.scalatest.matchers.should.Matchers
 
 abstract class HardDeleteQueryTest(config: String) extends QueryTestSpec(config) with Matchers {
   implicit val askTimeout = 500.millis

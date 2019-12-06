@@ -18,11 +18,12 @@ package akka.persistence.jdbc.configuration
 
 import akka.persistence.jdbc.config._
 import com.typesafe.config.{ Config, ConfigFactory }
-import org.scalatest.{ FlatSpec, Matchers }
 
 import scala.concurrent.duration._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class AkkaPersistenceConfigTest extends FlatSpec with Matchers {
+class AkkaPersistenceConfigTest extends AnyFlatSpec with Matchers {
   val config: Config = ConfigFactory.parseString(
     """
       |jdbc-journal {

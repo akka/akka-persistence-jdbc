@@ -13,7 +13,7 @@ object Dependencies {
   val AkkaBinaryVersion = if (Nightly) "2.6" else "2.5"
 
   val SlickVersion = "3.3.2"
-  val ScalaTestVersion = "3.0.8"
+  val ScalaTestVersion = "3.1.0"
 
   val Libraries = Seq(
     "com.typesafe.akka" %% "akka-actor" % AkkaVersion,

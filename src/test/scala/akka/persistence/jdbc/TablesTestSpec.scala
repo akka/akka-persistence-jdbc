@@ -18,9 +18,10 @@ package akka.persistence.jdbc
 
 import akka.persistence.jdbc.config._
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-abstract class TablesTestSpec extends FlatSpec with Matchers {
+abstract class TablesTestSpec extends AnyFlatSpec with Matchers {
   def toColumnName[A](tableName: String)(columnName: String): String = s"$tableName.$columnName"
 
   val config = ConfigFactory.parseString(

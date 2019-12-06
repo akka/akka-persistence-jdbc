@@ -48,6 +48,10 @@ jobs:
         - CMD="++2.13.1 test"
       name: "Run tests with Scala 2.13 and AdoptOpenJDK 11"
 
+    - stage: whitesource
+      script: git branch -f "$TRAVIS_BRANCH" && git checkout "$TRAVIS_BRANCH" && sbt whitesourceCheckPolicies whitesourceUpdate
+      name: "Check licenses via WhiteSource"
+
 stages:
   # runs on master commits and PRs
   - name: check
@@ -58,8 +62,8 @@ stages:
     if: NOT tag =~ ^v
 
   # runs on main repo master commits and version-tagged commits
-#  - name: whitesource
-#    if: repo = akka/akka-persistence-jdbc AND ( ( branch = master AND type = push ) OR tag =~ ^v )
+  - name: whitesource
+    if: repo = akka/akka-persistence-jdbc AND ( ( branch = master AND type = push ) OR tag =~ ^v )
 
   # runs on main repo master commits and version-tagged commits
 #  - name: publish
@@ -77,3 +81,9 @@ cache:
    - $HOME/.sbt/launchers
    - $HOME/.cache/coursier
    - $HOME/.jabba/jdk
+
+env:
+  global:
+    # API Key from https://saas.whitesourcesoftware.com/Wss/WSS.html#!adminOrganization_integration
+    # encrypt with: travis encrypt WHITESOURCE_PASSWORD=...
+    - secure: "bhlP+VQWUARVUzE/JFwajZbdVDm3mfKIJ4M3D7ONF/MjW3lE69DhL7SyLnot5Zb91N87bDl6gVymePUU5Fpe8dEHsqALn+Z0y1dI3iAImUD2K+cnMeo75cFiQyFblvkGBFapXuR6NJll4S48Q/xiwsiJfVcol6SBeOLqxDsMKdw="

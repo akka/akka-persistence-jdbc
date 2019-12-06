@@ -2,7 +2,7 @@
  * Copyright (C) 2009-2018 Lightbend Inc. <http://www.lightbend.com>
  */
 import sbt.Keys._
-import sbt.{Def, _}
+import sbt.{ Def, _ }
 
 /**
  * Helper to set Automatic-Module-Name in projects.
@@ -16,6 +16,5 @@ object AutomaticModuleName {
   private val AutomaticModuleName = "Automatic-Module-Name"
 
   def settings(name: String): Seq[Def.Setting[Task[Seq[PackageOption]]]] = Seq(
-    packageOptions in (Compile, packageBin) += Package.ManifestAttributes(AutomaticModuleName → name)
-  )
+    packageOptions in (Compile, packageBin) += Package.ManifestAttributes(AutomaticModuleName -> name))
 }

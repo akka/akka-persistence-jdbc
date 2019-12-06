@@ -24,7 +24,7 @@ object Dependencies {
     "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
     "org.postgresql" % "postgresql" % "42.2.5" % Test,
     "com.h2database" % "h2" % "1.4.199" % Test,
-    "mysql" % "mysql-connector-java" % "8.0.15" % Test,
+    "mysql" % "mysql-connector-java" % "8.0.18" % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc" % "7.2.1.jre8" % Test,
     "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,
     "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Test,

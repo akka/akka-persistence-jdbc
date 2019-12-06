@@ -8,11 +8,10 @@ before_install:
   - git remote set-branches --add origin master && git fetch --unshallow
   # using jabba for custom jdk management
   - curl -sL https://raw.githubusercontent.com/shyiko/jabba/0.11.2/install.sh | bash && . ~/.jabba/jabba.sh
-  - jabba install adopt@~1.8-0
-  - jabba install adopt@~1.11-0
 
 # default script for jobs, that do not have any specified
 script:
+  - jabba install ${JDK:=adopt@~1.8-0}
   - jabba use ${JDK:=adopt@~1.8-0}
   - java -version
   - ${PRE_CMD:=return 0} # do nothing if not set
@@ -29,7 +28,7 @@ jobs:
     - stage: test
       env:
         - PRE_CMD="./scripts/launch-all.sh"
-        - CMD="++2.12.8 test"
+        - CMD="++2.12.10 test"
       name: "Run tests with Scala 2.12 and AdoptOpenJDK 8"
     - env:
         - PRE_CMD="./scripts/launch-all.sh"
@@ -39,7 +38,7 @@ jobs:
         - JDK="adopt@~1.11-0"
         - _JAVA_OPTIONS="-XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler"
         - PRE_CMD="./scripts/launch-all.sh"
-        - CMD="++2.12.8 test"
+        - CMD="++2.12.10 test"
       name: "Run tests with Scala 2.12 and AdoptOpenJDK 11"
     - env:
         - JDK="adopt@~1.11-0"

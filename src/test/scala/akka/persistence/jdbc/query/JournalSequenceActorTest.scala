@@ -72,7 +72,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
             eventually {
               val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
               currentMax shouldBe elements
-            }(patienceConfig, implicitly)
+            }(patienceConfig, implicitly, implicitly)
           }
           val timeTaken = System.currentTimeMillis() - startTime
           log.info(s"Recovered all events in $timeTaken ms")
@@ -107,7 +107,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
             eventually {
               val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
               currentMax shouldBe lastElement
-            }(patienceConfig, implicitly)
+            }(patienceConfig, implicitly, implicitly)
           }
         }
       }
@@ -144,7 +144,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
             eventually {
               val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
               currentMax shouldBe highestValue
-            }(patienceConfig, implicitly)
+            }(patienceConfig, implicitly, implicitly)
           }
         }
       }

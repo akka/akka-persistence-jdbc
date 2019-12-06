@@ -21,6 +21,9 @@ script:
 jobs:
   include:
     - stage: check
+      script: sbt Test/headerCheck || { echo "[error] Missing license headers found. Please run 'Test/headerCreate' and commit the updated code."; false; }
+      name: "Copyright header check"
+    - stage: check
       env: CMD=";scalafmtCheckAll;scalafmtSbtCheck"
       name: "Code style check (fixed with `sbt scalafmtAll;scalafmtSbt`)"
     - env: CMD="+Test/compile"

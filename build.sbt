@@ -3,6 +3,7 @@ import com.typesafe.tools.mima.plugin.MimaKeys.mimaBinaryIssueFilters
 
 lazy val `akka-persistence-jdbc` = project
   .in(file("."))
+  .enablePlugins(HeaderPlugin)
   .settings(
     name := "akka-persistence-jdbc",
     libraryDependencies ++= Dependencies.Libraries,
@@ -12,6 +13,7 @@ lazy val `akka-persistence-jdbc` = project
           "akka.persistence.jdbc.util.DefaultSlickDatabaseProvider#lambda#1.apply")),
     // special handling as we change organization id
     mimaPreviousArtifacts := ProjectAutoPlugin.determineMimaPreviousArtifacts(scalaBinaryVersion.value))
+  .settings(AutomaticModuleName.settings("akka.persistence.jdbc"))
 
 Global / onLoad := (Global / onLoad).value.andThen { s =>
   val v = version.value

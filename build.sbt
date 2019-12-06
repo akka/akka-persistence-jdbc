@@ -1,9 +1,17 @@
+import com.lightbend.paradox.apidoc.ApidocPlugin.autoImport.apidocRootPackage
 import com.typesafe.tools.mima.core.{ IncompatibleResultTypeProblem, ProblemFilters }
 import com.typesafe.tools.mima.plugin.MimaKeys.mimaBinaryIssueFilters
 
 lazy val `akka-persistence-jdbc` = project
   .in(file("."))
-  .enablePlugins(HeaderPlugin)
+  .enablePlugins(ScalaUnidocPlugin)
+  .disablePlugins(SitePlugin)
+  .aggregate(core, docs)
+  .settings(publish / skip := true)
+
+lazy val core = project
+  .in(file("core"))
+  .disablePlugins(SitePlugin)
   .settings(
     name := "akka-persistence-jdbc",
     libraryDependencies ++= Dependencies.Libraries,
@@ -13,7 +21,36 @@ lazy val `akka-persistence-jdbc` = project
           "akka.persistence.jdbc.util.DefaultSlickDatabaseProvider#lambda#1.apply")),
     // special handling as we change organization id
     mimaPreviousArtifacts := ProjectAutoPlugin.determineMimaPreviousArtifacts(scalaBinaryVersion.value))
-  .settings(AutomaticModuleName.settings("akka.persistence.jdbc"))
+
+lazy val docs = project
+  .enablePlugins(ProjectAutoPlugin, AkkaParadoxPlugin, ParadoxSitePlugin, PreprocessPlugin, PublishRsyncPlugin)
+  .settings(
+    name := "Akka Persistence JDBC",
+    publish / skip := true,
+    makeSite := makeSite.dependsOn(LocalRootProject / ScalaUnidoc / doc).value,
+    previewPath := (Paradox / siteSubdirName).value,
+    Preprocess / siteSubdirName := s"api/akka-persistence-jdbc/${if (isSnapshot.value) "snapshot"
+      else version.value}",
+    Preprocess / sourceDirectory := (LocalRootProject / ScalaUnidoc / unidoc / target).value,
+    Paradox / siteSubdirName := s"docs/akka-persistence-jdbc/${if (isSnapshot.value) "snapshot" else version.value}",
+    paradoxProperties ++= Map(
+        "akka.version" -> Dependencies.AkkaVersion,
+        "extref.github.base_url" -> s"https://github.com/akka/akka-persistence-jdbc/blob/${if (isSnapshot.value) "master"
+        else "v" + version.value}/%s",
+        // Akka
+        "extref.akka.base_url" -> s"https://doc.akka.io/docs/akka/${Dependencies.AkkaBinaryVersion}/%s",
+        "scaladoc.akka.base_url" -> s"https://doc.akka.io/api/akka/${Dependencies.AkkaBinaryVersion}/",
+        "javadoc.akka.base_url" -> s"https://doc.akka.io/japi/akka/${Dependencies.AkkaBinaryVersion}/",
+        // Java
+        "javadoc.base_url" -> "https://docs.oracle.com/javase/8/docs/api/",
+        // Scala
+        "scaladoc.scala.base_url" -> s"https://www.scala-lang.org/api/${scalaBinaryVersion.value}.x/",
+        "scaladoc.akka.persistence.jdbc.base_url" -> s"/${(Preprocess / siteSubdirName).value}/"),
+    paradoxGroups := Map("Language" -> Seq("Java", "Scala")),
+    resolvers += Resolver.jcenterRepo,
+    publishRsyncArtifact := makeSite.value -> "www/",
+    publishRsyncHost := "akkarepo@gustav.akka.io",
+    apidocRootPackage := "akka")
 
 Global / onLoad := (Global / onLoad).value.andThen { s =>
   val v = version.value

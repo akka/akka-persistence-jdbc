@@ -53,6 +53,7 @@ class SlickExtensionImpl(system: ExtendedActorSystem) extends Extension {
  *   Therefore the class must have such a constructor.
  */
 trait SlickDatabaseProvider {
+
   /**
    * Create or retrieve the database
    * @param config The configuration which may be used to create the database. If the database is shared

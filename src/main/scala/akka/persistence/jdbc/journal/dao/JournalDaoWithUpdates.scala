@@ -25,6 +25,7 @@ import scala.concurrent.Future
  * These operations should be used sparingly, for example for migrating data from un-encrypted to encrypted formats
  */
 trait JournalDaoWithUpdates extends JournalDao {
+
   /**
    * Update (!) an existing event with the passed in data.
    */

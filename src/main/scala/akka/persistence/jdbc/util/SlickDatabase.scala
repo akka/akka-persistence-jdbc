@@ -29,6 +29,7 @@ import slick.jdbc.JdbcBackend._
  */
 @deprecated(message = "Internal API, will be removed in 4.0.0", since = "3.4.0")
 object SlickDriver {
+
   /**
    * INTERNAL API
    */
@@ -41,6 +42,7 @@ object SlickDriver {
  * INTERNAL API
  */
 object SlickDatabase {
+
   /**
    * INTERNAL API
    */

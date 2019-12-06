@@ -21,7 +21,6 @@ import akka.persistence.jdbc.journal.dao.JournalTables
 import slick.jdbc.JdbcProfile
 
 class ReadJournalTablesTest extends TablesTestSpec {
-
   val readJournalTableConfiguration = readJournalConfig.journalTableConfiguration
 
   object TestByteAReadJournalTables extends JournalTables {
@@ -39,8 +38,10 @@ class ReadJournalTablesTest extends TablesTestSpec {
 
   it should "be configured with column names" in {
     val colName = toColumnName(readJournalTableConfiguration.tableName)(_)
-    TestByteAReadJournalTables.JournalTable.baseTableRow.persistenceId.toString shouldBe colName(readJournalTableConfiguration.columnNames.persistenceId)
-    TestByteAReadJournalTables.JournalTable.baseTableRow.sequenceNumber.toString shouldBe colName(readJournalTableConfiguration.columnNames.sequenceNumber)
+    TestByteAReadJournalTables.JournalTable.baseTableRow.persistenceId.toString shouldBe colName(
+      readJournalTableConfiguration.columnNames.persistenceId)
+    TestByteAReadJournalTables.JournalTable.baseTableRow.sequenceNumber.toString shouldBe colName(
+      readJournalTableConfiguration.columnNames.sequenceNumber)
     //    TestByteAJournalTables.JournalTable.baseTableRow.tags.toString() shouldBe colName(journalTableConfiguration.columnNames.tags)
   }
 }

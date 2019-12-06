@@ -57,14 +57,14 @@ object JdbcReadJournal {
   private case object Stop extends FlowControl
 }
 
-class JdbcReadJournal(config: Config, configPath: String)(implicit val system: ExtendedActorSystem) extends ReadJournal
-  with CurrentPersistenceIdsQuery
-  with PersistenceIdsQuery
-  with CurrentEventsByPersistenceIdQuery
-  with EventsByPersistenceIdQuery
-  with CurrentEventsByTagQuery
-  with EventsByTagQuery {
-
+class JdbcReadJournal(config: Config, configPath: String)(implicit val system: ExtendedActorSystem)
+    extends ReadJournal
+    with CurrentPersistenceIdsQuery
+    with PersistenceIdsQuery
+    with CurrentEventsByPersistenceIdQuery
+    with EventsByPersistenceIdQuery
+    with CurrentEventsByTagQuery
+    with EventsByTagQuery {
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val mat: Materializer = ActorMaterializer()
   val readJournalConfig = new ReadJournalConfig(config)
@@ -78,7 +78,6 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
     if (readJournalConfig.addShutdownHook && slickDb.allowShutdown) {
       system.registerOnTermination {
         db.close()
-
       }
     }
     val fqcn = readJournalConfig.pluginConfig.dao
@@ -107,7 +106,9 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
     readJournalDao.allPersistenceIdsSource(Long.MaxValue)
 
   override def persistenceIds(): Source[String, NotUsed] =
-    Source.repeat(0).flatMapConcat(_ => delaySource.flatMapConcat(_ => currentPersistenceIds()))
+    Source
+      .repeat(0)
+      .flatMapConcat(_ => delaySource.flatMapConcat(_ => currentPersistenceIds()))
       .statefulMapConcat[String] { () =>
         var knownIds = Set.empty[String]
         def next(id: String): Iterable[String] = {
@@ -123,52 +124,68 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
     adapter.fromJournal(repr.payload, repr.manifest).events.map(repr.withPayload)
   }
 
-  private def currentJournalEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[PersistentRepr, NotUsed] =
-    readJournalDao.messages(persistenceId, fromSequenceNr, toSequenceNr, max)
+  private def currentJournalEventsByPersistenceId(
+      persistenceId: String,
+      fromSequenceNr: Long,
+      toSequenceNr: Long,
+      max: Long): Source[PersistentRepr, NotUsed] =
+    readJournalDao
+      .messages(persistenceId, fromSequenceNr, toSequenceNr, max)
       .mapAsync(1)(deserializedRepr => Future.fromTry(deserializedRepr))
 
-  override def currentEventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
+  override def currentEventsByPersistenceId(
+      persistenceId: String,
+      fromSequenceNr: Long,
+      toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     eventsByPersistenceIdSource(persistenceId, fromSequenceNr, toSequenceNr, currentEventsOnly = true)
 
-  override def eventsByPersistenceId(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
+  override def eventsByPersistenceId(
+      persistenceId: String,
+      fromSequenceNr: Long,
+      toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     eventsByPersistenceIdSource(persistenceId, fromSequenceNr, toSequenceNr, currentEventsOnly = false)
 
-  private def eventsByPersistenceIdSource(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, currentEventsOnly: Boolean): Source[EventEnvelope, NotUsed] = {
+  private def eventsByPersistenceIdSource(
+      persistenceId: String,
+      fromSequenceNr: Long,
+      toSequenceNr: Long,
+      currentEventsOnly: Boolean): Source[EventEnvelope, NotUsed] = {
     import JdbcReadJournal._
     val batchSize = readJournalConfig.maxBufferSize
 
-    Source.unfoldAsync[(Long, FlowControl), Seq[PersistentRepr]]((Math.max(1, fromSequenceNr), Continue)) {
-      case (from, control) =>
-        def retrieveNextBatch(): Future[Option[((Long, FlowControl), Seq[PersistentRepr])]] = {
-          for {
-            xs <- currentJournalEventsByPersistenceId(persistenceId, from, toSequenceNr, batchSize).runWith(Sink.seq)
-          } yield {
-            val hasMoreEvents = xs.size == batchSize
-            // Events are ordered by sequence number, therefore the last one is the largest)
-            val lastSeqNrInBatch: Option[Long] = xs.lastOption.map(_.sequenceNr)
-            val hasLastEvent = lastSeqNrInBatch.exists(_ >= toSequenceNr)
-            val nextControl: FlowControl =
-              if (hasLastEvent || from > toSequenceNr) Stop
-              else if (hasMoreEvents) Continue
-              else if (currentEventsOnly) Stop
-              else ContinueDelayed
+    Source
+      .unfoldAsync[(Long, FlowControl), Seq[PersistentRepr]]((Math.max(1, fromSequenceNr), Continue)) {
+        case (from, control) =>
+          def retrieveNextBatch(): Future[Option[((Long, FlowControl), Seq[PersistentRepr])]] = {
+            for {
+              xs <- currentJournalEventsByPersistenceId(persistenceId, from, toSequenceNr, batchSize).runWith(Sink.seq)
+            } yield {
+              val hasMoreEvents = xs.size == batchSize
+              // Events are ordered by sequence number, therefore the last one is the largest)
+              val lastSeqNrInBatch: Option[Long] = xs.lastOption.map(_.sequenceNr)
+              val hasLastEvent = lastSeqNrInBatch.exists(_ >= toSequenceNr)
+              val nextControl: FlowControl =
+                if (hasLastEvent || from > toSequenceNr) Stop
+                else if (hasMoreEvents) Continue
+                else if (currentEventsOnly) Stop
+                else ContinueDelayed
 
-            val nextFrom: Long = lastSeqNrInBatch match {
-              // Continue querying from the last sequence number (the events are ordered)
-              case Some(lastSeqNr) => lastSeqNr + 1
-              case None            => from
+              val nextFrom: Long = lastSeqNrInBatch match {
+                // Continue querying from the last sequence number (the events are ordered)
+                case Some(lastSeqNr) => lastSeqNr + 1
+                case None            => from
+              }
+              Some((nextFrom, nextControl), xs)
             }
-            Some((nextFrom, nextControl), xs)
           }
-        }
 
-        control match {
-          case Stop     => Future.successful(None)
-          case Continue => retrieveNextBatch()
-          case ContinueDelayed =>
-            akka.pattern.after(readJournalConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
-        }
-    }
+          control match {
+            case Stop     => Future.successful(None)
+            case Continue => retrieveNextBatch()
+            case ContinueDelayed =>
+              akka.pattern.after(readJournalConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
+          }
+      }
       .mapConcat(identity)
       .mapConcat(adaptEvents)
       .map(repr => EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload))
@@ -188,15 +205,17 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
   override def currentEventsByTag(tag: String, offset: Offset): Source[EventEnvelope, NotUsed] =
     currentEventsByTag(tag, offset.value)
 
-  private def currentJournalEventsByTag(tag: String, offset: Long, max: Long, latestOrdering: MaxOrderingId): Source[EventEnvelope, NotUsed] = {
+  private def currentJournalEventsByTag(
+      tag: String,
+      offset: Long,
+      max: Long,
+      latestOrdering: MaxOrderingId): Source[EventEnvelope, NotUsed] = {
     if (latestOrdering.maxOrdering < offset) Source.empty
     else {
-      readJournalDao.eventsByTag(tag, offset, latestOrdering.maxOrdering, max)
-        .mapAsync(1)(Future.fromTry)
-        .mapConcat {
-          case (repr, _, ordering) =>
-            adaptEvents(repr).map(r => EventEnvelope(Sequence(ordering), r.persistenceId, r.sequenceNr, r.payload))
-        }
+      readJournalDao.eventsByTag(tag, offset, latestOrdering.maxOrdering, max).mapAsync(1)(Future.fromTry).mapConcat {
+        case (repr, _, ordering) =>
+          adaptEvents(repr).map(r => EventEnvelope(Sequence(ordering), r.persistenceId, r.sequenceNr, r.payload))
+      }
     }
   }
 
@@ -206,62 +225,63 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
    *                             The stream may include offsets higher than the value in terminateAfterOffset, since the last batch
    *                             will be returned completely.
    */
-  private def eventsByTag(tag: String, offset: Long, terminateAfterOffset: Option[Long]): Source[EventEnvelope, NotUsed] = {
-
+  private def eventsByTag(
+      tag: String,
+      offset: Long,
+      terminateAfterOffset: Option[Long]): Source[EventEnvelope, NotUsed] = {
     import akka.pattern.ask
     import JdbcReadJournal._
     implicit val askTimeout: Timeout = Timeout(readJournalConfig.journalSequenceRetrievalConfiguration.askTimeout)
     val batchSize = readJournalConfig.maxBufferSize
 
-    Source.unfoldAsync[(Long, FlowControl), Seq[EventEnvelope]]((offset, Continue)) {
-      case (from, control) =>
-        def retrieveNextBatch() = {
-          for {
-            queryUntil <- journalSequenceActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId]
-            xs <- currentJournalEventsByTag(tag, from, batchSize, queryUntil).runWith(Sink.seq)
-          } yield {
+    Source
+      .unfoldAsync[(Long, FlowControl), Seq[EventEnvelope]]((offset, Continue)) {
+        case (from, control) =>
+          def retrieveNextBatch() = {
+            for {
+              queryUntil <- journalSequenceActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId]
+              xs <- currentJournalEventsByTag(tag, from, batchSize, queryUntil).runWith(Sink.seq)
+            } yield {
+              val hasMoreEvents = xs.size == batchSize
+              val nextControl: FlowControl =
+                terminateAfterOffset match {
+                  // we may stop if target is behind queryUntil and we don't have more events to fetch
+                  case Some(target) if !hasMoreEvents && target <= queryUntil.maxOrdering => Stop
+                  // We may also stop if we have found an event with an offset >= target
+                  case Some(target) if xs.exists(_.offset.value >= target) => Stop
 
-            val hasMoreEvents = xs.size == batchSize
-            val nextControl: FlowControl =
-              terminateAfterOffset match {
-                // we may stop if target is behind queryUntil and we don't have more events to fetch
-                case Some(target) if !hasMoreEvents && target <= queryUntil.maxOrdering => Stop
-                // We may also stop if we have found an event with an offset >= target
-                case Some(target) if xs.exists(_.offset.value >= target)                => Stop
+                  // otherwise, disregarding if Some or None, we must decide how to continue
+                  case _ =>
+                    if (hasMoreEvents) Continue else ContinueDelayed
+                }
 
-                // otherwise, disregarding if Some or None, we must decide how to continue
-                case _ =>
-                  if (hasMoreEvents) Continue else ContinueDelayed
+              val nextStartingOffset = if (xs.isEmpty) {
+                /* If no events matched the tag between `from` and `maxOrdering` then there is no need to execute the exact
+                 * same query again. We can continue querying from `maxOrdering`, which will save some load on the db.
+                 * (Note: we may never return a value smaller than `from`, otherwise we might return duplicate events) */
+                math.max(from, queryUntil.maxOrdering)
+              } else {
+                // Continue querying from the largest offset
+                xs.map(_.offset.value).max
               }
-
-            val nextStartingOffset = if (xs.isEmpty) {
-              /* If no events matched the tag between `from` and `maxOrdering` then there is no need to execute the exact
-               * same query again. We can continue querying from `maxOrdering`, which will save some load on the db.
-               * (Note: we may never return a value smaller than `from`, otherwise we might return duplicate events) */
-              math.max(from, queryUntil.maxOrdering)
-            } else {
-              // Continue querying from the largest offset
-              xs.map(_.offset.value).max
+              Some((nextStartingOffset, nextControl), xs)
             }
-            Some((nextStartingOffset, nextControl), xs)
           }
-        }
 
-        control match {
-          case Stop     => Future.successful(None)
-          case Continue => retrieveNextBatch()
-          case ContinueDelayed =>
-            akka.pattern.after(readJournalConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
-        }
-
-    }.mapConcat(identity)
+          control match {
+            case Stop     => Future.successful(None)
+            case Continue => retrieveNextBatch()
+            case ContinueDelayed =>
+              akka.pattern.after(readJournalConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
+          }
+      }
+      .mapConcat(identity)
   }
 
   def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    Source.fromFuture(readJournalDao.maxJournalSequence())
-      .flatMapConcat { maxOrderingInDb =>
-        eventsByTag(tag, offset, terminateAfterOffset = Some(maxOrderingInDb))
-      }
+    Source.fromFuture(readJournalDao.maxJournalSequence()).flatMapConcat { maxOrderingInDb =>
+      eventsByTag(tag, offset, terminateAfterOffset = Some(maxOrderingInDb))
+    }
 
   /**
    * Query events that have a specific tag.

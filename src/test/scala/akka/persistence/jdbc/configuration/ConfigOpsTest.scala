@@ -23,8 +23,7 @@ import com.typesafe.config.ConfigFactory
 
 class ConfigOpsTest extends SimpleSpec {
   it should "parse field values to Try[A]" in {
-    val cfg = ConfigFactory.parseString(
-      """
+    val cfg = ConfigFactory.parseString("""
         | person {
         |   firstName = "foo"
         |   lastName = "bar"
@@ -51,8 +50,7 @@ class ConfigOpsTest extends SimpleSpec {
   }
 
   it should "parse field values with default values for wrong config" in {
-    val cfg = ConfigFactory.parseString(
-      """
+    val cfg = ConfigFactory.parseString("""
         | RedShirt {
         |   firstName = "red"
         |   lastName = "shirt"
@@ -70,8 +68,7 @@ class ConfigOpsTest extends SimpleSpec {
   }
 
   it should "parse field values to with defaults" in {
-    val cfg = ConfigFactory.parseString(
-      """
+    val cfg = ConfigFactory.parseString("""
         | person {
         |   age = 25
         |   hasGirlfriend = true
@@ -84,5 +81,4 @@ class ConfigOpsTest extends SimpleSpec {
     cfg.as[Boolean]("person.hasCar", false) shouldBe false
     cfg.as[Boolean]("person.hasGirlfriend", false) shouldBe true
   }
-
 }

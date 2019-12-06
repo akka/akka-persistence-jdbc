@@ -24,7 +24,6 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(config) {
-
   it should "not find any events for unknown pid" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     journalOps.withEventsByPersistenceId()("unkown-pid", 0L, Long.MaxValue) { tp =>
@@ -150,34 +149,35 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
     }
   }
 
-  it should "find events for actor with pid 'my-1' and persisting messages to other actor" in withActorSystem { implicit system =>
-    val journalOps = new JavaDslJdbcReadJournalOperations(system)
-    withTestActors() { (actor1, actor2, actor3) =>
-      journalOps.withEventsByPersistenceId()("my-1", 0, Long.MaxValue) { tp =>
-        tp.request(10)
-        tp.expectNoMessage(100.millis)
+  it should "find events for actor with pid 'my-1' and persisting messages to other actor" in withActorSystem {
+    implicit system =>
+      val journalOps = new JavaDslJdbcReadJournalOperations(system)
+      withTestActors() { (actor1, actor2, actor3) =>
+        journalOps.withEventsByPersistenceId()("my-1", 0, Long.MaxValue) { tp =>
+          tp.request(10)
+          tp.expectNoMessage(100.millis)
 
-        actor1 ! 1
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
-        tp.expectNoMessage(100.millis)
+          actor1 ! 1
+          tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
+          tp.expectNoMessage(100.millis)
 
-        actor1 ! 2
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, 2))
-        tp.expectNoMessage(100.millis)
+          actor1 ! 2
+          tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, 2))
+          tp.expectNoMessage(100.millis)
 
-        actor2 ! 1
-        actor2 ! 2
-        actor2 ! 3
-        tp.expectNoMessage(100.millis)
+          actor2 ! 1
+          actor2 ! 2
+          actor2 ! 3
+          tp.expectNoMessage(100.millis)
 
-        actor1 ! 3
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(3), "my-1", 3, 3))
-        tp.expectNoMessage(100.millis)
+          actor1 ! 3
+          tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(3), "my-1", 3, 3))
+          tp.expectNoMessage(100.millis)
 
-        tp.cancel()
-        tp.expectNoMessage(100.millis)
+          tp.cancel()
+          tp.expectNoMessage(100.millis)
+        }
       }
-    }
   }
 
   it should "find events for actor with pid 'my-2'" in withActorSystem { implicit system =>
@@ -248,12 +248,18 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
   }
 }
 
-class PostgresScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("postgres-application.conf") with PostgresCleaner
+class PostgresScalaEventsByPersistenceIdTest
+    extends EventsByPersistenceIdTest("postgres-application.conf")
+    with PostgresCleaner
 
 class MySQLScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mysql-application.conf") with MysqlCleaner
 
-class OracleScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("oracle-application.conf") with OracleCleaner
+class OracleScalaEventsByPersistenceIdTest
+    extends EventsByPersistenceIdTest("oracle-application.conf")
+    with OracleCleaner
 
-class SqlServerScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("sqlserver-application.conf") with SqlServerCleaner
+class SqlServerScalaEventsByPersistenceIdTest
+    extends EventsByPersistenceIdTest("sqlserver-application.conf")
+    with SqlServerCleaner
 
 class H2ScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("h2-application.conf") with H2Cleaner

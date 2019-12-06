@@ -21,7 +21,9 @@ script:
 jobs:
   include:
     - stage: check
-      env: CMD="+Test/compile"
+      env: CMD=";scalafmtCheckAll;scalafmtSbtCheck"
+      name: "Code style check (fixed with `sbt scalafmtAll;scalafmtSbt`)"
+    - env: CMD="+Test/compile"
       name: "Compile all code with Scala 2.12 and 2.13"
 
     - stage: test

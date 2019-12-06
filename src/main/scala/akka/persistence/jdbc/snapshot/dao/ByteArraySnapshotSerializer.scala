@@ -25,7 +25,6 @@ import akka.serialization.Serialization
 import scala.util.Try
 
 class ByteArraySnapshotSerializer(serialization: Serialization) extends SnapshotSerializer[SnapshotRow] {
-
   def serialize(metadata: SnapshotMetadata, snapshot: Any): Try[SnapshotRow] = {
     serialization
       .serialize(Snapshot(snapshot))
@@ -36,12 +35,9 @@ class ByteArraySnapshotSerializer(serialization: Serialization) extends Snapshot
     serialization
       .deserialize(snapshotRow.snapshot, classOf[Snapshot])
       .map(snapshot => {
-        val snapshotMetadata = SnapshotMetadata(
-          snapshotRow.persistenceId,
-          snapshotRow.sequenceNumber,
-          snapshotRow.created)
+        val snapshotMetadata =
+          SnapshotMetadata(snapshotRow.persistenceId, snapshotRow.sequenceNumber, snapshotRow.created)
         (snapshotMetadata, snapshot.data)
       })
   }
-
 }

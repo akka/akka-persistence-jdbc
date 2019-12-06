@@ -26,8 +26,12 @@ import org.scalatest.concurrent.ScalaFutures
 
 import scala.concurrent.duration._
 
-abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType) extends SnapshotStoreSpec(config) with BeforeAndAfterAll with ScalaFutures with ClasspathResources with DropCreate {
-
+abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType)
+    extends SnapshotStoreSpec(config)
+    with BeforeAndAfterAll
+    with ScalaFutures
+    with ClasspathResources
+    with DropCreate {
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 10.seconds)
 
   implicit lazy val ec = system.dispatcher
@@ -48,12 +52,14 @@ abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType) ext
   }
 }
 
-class PostgresSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("postgres-application.conf"), Postgres())
+class PostgresSnapshotStoreSpec
+    extends JdbcSnapshotStoreSpec(ConfigFactory.load("postgres-application.conf"), Postgres())
 
 class MySQLSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("mysql-application.conf"), MySQL())
 
 class OracleSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("oracle-application.conf"), Oracle())
 
-class SqlServerSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("sqlserver-application.conf"), SqlServer())
+class SqlServerSnapshotStoreSpec
+    extends JdbcSnapshotStoreSpec(ConfigFactory.load("sqlserver-application.conf"), SqlServer())
 
 class H2SnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("h2-application.conf"), H2())

@@ -26,7 +26,6 @@ import scala.collection.immutable._
 import scala.util.Try
 
 trait PersistentReprSerializer[T] {
-
   /**
    * An akka.persistence.AtomicWrite contains a Sequence of events (with metadata, the PersistentRepr)
    * that must all be persisted or all fail, what makes the operation atomic. The function converts
@@ -52,11 +51,9 @@ trait PersistentReprSerializer[T] {
    * deserialize into a PersistentRepr, a set of tags and a Long representing the global ordering of events
    */
   def deserialize(t: T): Try[(PersistentRepr, Set[String], Long)]
-
 }
 
 trait FlowPersistentReprSerializer[T] extends PersistentReprSerializer[T] {
-
   /**
    * A flow which deserializes each element into a PersistentRepr,
    * a set of tags and a Long representing the global ordering of events

@@ -17,5 +17,11 @@
 package akka.persistence
 
 package object jdbc {
-  final case class JournalRow(ordering: Long, deleted: Boolean, persistenceId: String, sequenceNumber: Long, message: Array[Byte], tags: Option[String] = None)
+  final case class JournalRow(
+      ordering: Long,
+      deleted: Boolean,
+      persistenceId: String,
+      sequenceNumber: Long,
+      message: Array[Byte],
+      tags: Option[String] = None)
 }

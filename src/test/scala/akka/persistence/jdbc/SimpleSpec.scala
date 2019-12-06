@@ -22,24 +22,24 @@ import akka.testkit.TestProbe
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 
-trait SimpleSpec extends FlatSpec
-  with Matchers
-  with ScalaFutures
-  with TryValues
-  with OptionValues
-  with Eventually
-  with ClasspathResources
-  with BeforeAndAfterAll
-  with BeforeAndAfterEach
-  with GivenWhenThen {
-
+trait SimpleSpec
+    extends FlatSpec
+    with Matchers
+    with ScalaFutures
+    with TryValues
+    with OptionValues
+    with Eventually
+    with ClasspathResources
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach
+    with GivenWhenThen {
   /**
    * Sends the PoisonPill command to an actor and waits for it to die
    */
   def killActors(actors: ActorRef*)(implicit system: ActorSystem): Unit = {
     val tp = TestProbe()
     actors.foreach { (actor: ActorRef) =>
-      tp watch actor
+      tp.watch(actor)
       system.stop(actor)
       tp.expectTerminated(actor)
     }

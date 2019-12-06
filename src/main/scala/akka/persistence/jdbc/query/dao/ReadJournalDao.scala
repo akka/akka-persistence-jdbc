@@ -36,12 +36,20 @@ trait ReadJournalDao {
    * the global ordering of the events.
    * Each element with be a try with a PersistentRepr, set of tags, and a Long representing the global ordering of events
    */
-  def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed]
+  def eventsByTag(
+      tag: String,
+      offset: Long,
+      maxOffset: Long,
+      max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed]
 
   /**
    * Returns a Source of bytes for a certain persistenceId
    */
-  def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed]
+  def messages(
+      persistenceId: String,
+      fromSequenceNr: Long,
+      toSequenceNr: Long,
+      max: Long): Source[Try[PersistentRepr], NotUsed]
 
   /**
    * @param offset Minimum value to retrieve

@@ -37,7 +37,6 @@ object EventsByTagTest {
 }
 
 abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, configOverrides) {
-
   final val NoMsgTime: FiniteDuration = 100.millis
 
   it should "not find events for unknown tags" in withActorSystem { implicit system =>
@@ -131,33 +130,34 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
     }
   }
 
-  it should "find all events by tag even when lots of events are persisted concurrently" in withActorSystem { implicit system =>
-    val journalOps = new ScalaJdbcReadJournalOperations(system)
-    val msgCountPerActor = 20
-    val numberOfActors = 100
-    val totalNumberOfMessages = msgCountPerActor * numberOfActors
-    withManyTestActors(numberOfActors) { (actors) =>
-      val actorsWithIndexes = actors.zipWithIndex
-      for {
-        messageNumber <- 0 until msgCountPerActor
-        (actor, actorIdx) <- actorsWithIndexes
-      } actor ! TaggedEvent(Event(s"$actorIdx-$messageNumber"), "myEvent")
+  it should "find all events by tag even when lots of events are persisted concurrently" in withActorSystem {
+    implicit system =>
+      val journalOps = new ScalaJdbcReadJournalOperations(system)
+      val msgCountPerActor = 20
+      val numberOfActors = 100
+      val totalNumberOfMessages = msgCountPerActor * numberOfActors
+      withManyTestActors(numberOfActors) { (actors) =>
+        val actorsWithIndexes = actors.zipWithIndex
+        for {
+          messageNumber <- 0 until msgCountPerActor
+          (actor, actorIdx) <- actorsWithIndexes
+        } actor ! TaggedEvent(Event(s"$actorIdx-$messageNumber"), "myEvent")
 
-      journalOps.withEventsByTag()("myEvent", NoOffset) { tp =>
-        tp.request(Int.MaxValue)
-        (1 to totalNumberOfMessages).foldLeft(Map.empty[Int, Int]) { (map, _) =>
-          val mgsParts = tp.expectNext().event.asInstanceOf[EventRestored].value.split("-")
-          val actorIdx = mgsParts(0).toInt
-          val msgNumber = mgsParts(1).toInt
-          val expectedCount = map.getOrElse(actorIdx, 0)
-          assertResult(expected = expectedCount)(msgNumber)
-          // keep track of the next message number we expect for this actor idx
-          map.updated(actorIdx, msgNumber + 1)
+        journalOps.withEventsByTag()("myEvent", NoOffset) { tp =>
+          tp.request(Int.MaxValue)
+          (1 to totalNumberOfMessages).foldLeft(Map.empty[Int, Int]) { (map, _) =>
+            val mgsParts = tp.expectNext().event.asInstanceOf[EventRestored].value.split("-")
+            val actorIdx = mgsParts(0).toInt
+            val msgNumber = mgsParts(1).toInt
+            val expectedCount = map.getOrElse(actorIdx, 0)
+            assertResult(expected = expectedCount)(msgNumber)
+            // keep track of the next message number we expect for this actor idx
+            map.updated(actorIdx, msgNumber + 1)
+          }
+          tp.cancel()
+          tp.expectNoMessage(NoMsgTime)
         }
-        tp.cancel()
-        tp.expectNoMessage(NoMsgTime)
       }
-    }
   }
 
   it should "find events by tag from an offset" in withActorSystem { implicit system =>

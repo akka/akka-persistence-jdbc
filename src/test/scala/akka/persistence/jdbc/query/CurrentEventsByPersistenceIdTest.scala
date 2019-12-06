@@ -23,7 +23,6 @@ import akka.persistence.query.{ EventEnvelope, Sequence }
 import akka.testkit.TestProbe
 
 abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTestSpec(config) {
-
   it should "not find any events for unknown pid" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     journalOps.withCurrentEventsByPersistenceId()("unkown-pid", 0L, Long.MaxValue) { tp =>
@@ -112,21 +111,15 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 1, 1) { tp =>
-        tp.request(Int.MaxValue)
-          .expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
-          .expectComplete()
+        tp.request(Int.MaxValue).expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1)).expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 2, 2) { tp =>
-        tp.request(Int.MaxValue)
-          .expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2))
-          .expectComplete()
+        tp.request(Int.MaxValue).expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2)).expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 3, 3) { tp =>
-        tp.request(Int.MaxValue)
-          .expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
-          .expectComplete()
+        tp.request(Int.MaxValue).expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3)).expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 2, 3) { tp =>
@@ -178,12 +171,22 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
 
 // Note: these tests use the shared-db configs, the test for all (so not only current) events use the regular db config
 
-class PostgresScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("postgres-shared-db-application.conf") with PostgresCleaner
+class PostgresScalaCurrentEventsByPersistenceIdTest
+    extends CurrentEventsByPersistenceIdTest("postgres-shared-db-application.conf")
+    with PostgresCleaner
 
-class MySQLScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("mysql-shared-db-application.conf") with MysqlCleaner
+class MySQLScalaCurrentEventsByPersistenceIdTest
+    extends CurrentEventsByPersistenceIdTest("mysql-shared-db-application.conf")
+    with MysqlCleaner
 
-class OracleScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("oracle-shared-db-application.conf") with OracleCleaner
+class OracleScalaCurrentEventsByPersistenceIdTest
+    extends CurrentEventsByPersistenceIdTest("oracle-shared-db-application.conf")
+    with OracleCleaner
 
-class SqlServerScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("sqlserver-shared-db-application.conf") with SqlServerCleaner
+class SqlServerScalaCurrentEventsByPersistenceIdTest
+    extends CurrentEventsByPersistenceIdTest("sqlserver-shared-db-application.conf")
+    with SqlServerCleaner
 
-class H2ScalaCurrentEventsByPersistenceIdTest extends CurrentEventsByPersistenceIdTest("h2-shared-db-application.conf") with H2Cleaner
+class H2ScalaCurrentEventsByPersistenceIdTest
+    extends CurrentEventsByPersistenceIdTest("h2-shared-db-application.conf")
+    with H2Cleaner

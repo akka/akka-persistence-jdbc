@@ -23,7 +23,6 @@ import scala.collection.immutable._
 import scala.util.{ Failure, Success }
 
 class TrySeqTest extends SimpleSpec {
-
   def failure(text: String) = Failure(new RuntimeException(text))
 
   it should "sequence an empty immutable.Seq" in {

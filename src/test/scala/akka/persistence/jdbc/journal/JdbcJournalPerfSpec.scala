@@ -30,13 +30,13 @@ import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 
 import scala.concurrent.duration._
 
-abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) extends JournalPerfSpec(config)
-  with BeforeAndAfterAll
-  with BeforeAndAfterEach
-  with ScalaFutures
-  with ClasspathResources
-  with DropCreate {
-
+abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType)
+    extends JournalPerfSpec(config)
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach
+    with ScalaFutures
+    with ClasspathResources
+    with DropCreate {
   override protected def supportsRejectingNonSerializableObjects: CapabilityFlag = true
 
   implicit lazy val ec = system.dispatcher
@@ -73,7 +73,8 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
     s"measure: persist()-ing $eventsCount events for $actorCount actors" in {
       val testProbe = TestProbe()
       val replyAfter = eventsCount
-      def createBenchActor(actorNumber: Int) = system.actorOf(Props(classOf[BenchActor], s"$pid--$actorNumber", testProbe.ref, replyAfter))
+      def createBenchActor(actorNumber: Int) =
+        system.actorOf(Props(classOf[BenchActor], s"$pid--$actorNumber", testProbe.ref, replyAfter))
       val actors = 1.to(actorCount).map(createBenchActor)
 
       measure(d => s"Persist()-ing $eventsCount * $actorCount took ${d.toMillis} ms") {
@@ -94,7 +95,8 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType) exten
     s"measure: persistAsync()-ing $eventsCount events for $actorCount actors" in {
       val testProbe = TestProbe()
       val replyAfter = eventsCount
-      def createBenchActor(actorNumber: Int) = system.actorOf(Props(classOf[BenchActor], s"$pid--$actorNumber", testProbe.ref, replyAfter))
+      def createBenchActor(actorNumber: Int) =
+        system.actorOf(Props(classOf[BenchActor], s"$pid--$actorNumber", testProbe.ref, replyAfter))
       val actors = 1.to(actorCount).map(createBenchActor)
 
       measure(d => s"persistAsync()-ing $eventsCount * $actorCount took ${d.toMillis} ms") {
@@ -116,7 +118,8 @@ class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("po
   override def eventsCount: Int = 100
 }
 
-class PostgresJournalPerfSpecSharedDb extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-shared-db-application.conf"), Postgres()) {
+class PostgresJournalPerfSpecSharedDb
+    extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-shared-db-application.conf"), Postgres()) {
   override def eventsCount: Int = 100
 }
 
@@ -128,7 +131,8 @@ class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql
   override def eventsCount: Int = 100
 }
 
-class MySQLJournalPerfSpecSharedDb extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-shared-db-application.conf"), MySQL()) {
+class MySQLJournalPerfSpecSharedDb
+    extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-shared-db-application.conf"), MySQL()) {
   override def eventsCount: Int = 100
 }
 
@@ -140,7 +144,8 @@ class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("orac
   override def eventsCount: Int = 100
 }
 
-class OracleJournalPerfSpecSharedDb extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-shared-db-application.conf"), Oracle()) {
+class OracleJournalPerfSpecSharedDb
+    extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-shared-db-application.conf"), Oracle()) {
   override def eventsCount: Int = 100
 }
 
@@ -148,11 +153,13 @@ class OracleJournalPerfSpecPhysicalDelete extends OracleJournalPerfSpec {
   this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
 }
 
-class SqlServerJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("sqlserver-application.conf"), SqlServer()) {
+class SqlServerJournalPerfSpec
+    extends JdbcJournalPerfSpec(ConfigFactory.load("sqlserver-application.conf"), SqlServer()) {
   override def eventsCount: Int = 100
 }
 
-class SqlServerJournalPerfSpecSharedDb extends JdbcJournalPerfSpec(ConfigFactory.load("sqlserver-shared-db-application.conf"), SqlServer()) {
+class SqlServerJournalPerfSpecSharedDb
+    extends JdbcJournalPerfSpec(ConfigFactory.load("sqlserver-shared-db-application.conf"), SqlServer()) {
   override def eventsCount: Int = 100
 }
 

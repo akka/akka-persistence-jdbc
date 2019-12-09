@@ -23,7 +23,11 @@ jobs:
       script: sbt Test/headerCheck || { echo "[error] Missing license headers found. Please run 'Test/headerCreate' and commit the updated code."; false; }
       name: "Copyright header check"
     - stage: check
-      env: CMD=";scalafmtCheckAll;scalafmtSbtCheck"
+      script:
+        SCALAFMT_VERSION=2.3.2
+        INSTALL_LOCATION=$HOME/.scalafmt/scalafmt-native
+        curl https://raw.githubusercontent.com/scalameta/scalafmt/master/bin/install-scalafmt-native.sh | sh -s -- $SCALAFMT_VERSION $INSTALL_LOCATION
+        .scalafmt/scalafmt-native --test
       name: "Code style check (fixed with `sbt scalafmtAll;scalafmtSbt`)"
     - env: CMD="+Test/compile"
       name: "Compile all code with Scala 2.12 and 2.13"
@@ -85,6 +89,7 @@ cache:
    - $HOME/.sbt/launchers
    - $HOME/.cache/coursier
    - $HOME/.jabba/jdk
+   - $HOME/.scalafmt
 
 env:
   global:

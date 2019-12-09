@@ -5,7 +5,7 @@ import com.typesafe.tools.mima.plugin.MimaKeys.mimaBinaryIssueFilters
 lazy val `akka-persistence-jdbc` = project
   .in(file("."))
   .enablePlugins(ScalaUnidocPlugin)
-  .disablePlugins(SitePlugin)
+  .disablePlugins(MimaPlugin, SitePlugin)
   .aggregate(core, docs)
   .settings(publish / skip := true)
 
@@ -24,6 +24,7 @@ lazy val core = project
 
 lazy val docs = project
   .enablePlugins(ProjectAutoPlugin, AkkaParadoxPlugin, ParadoxSitePlugin, PreprocessPlugin, PublishRsyncPlugin)
+  .disablePlugins(BintrayPlugin, MimaPlugin)
   .settings(
     name := "Akka Persistence JDBC",
     publish / skip := true,

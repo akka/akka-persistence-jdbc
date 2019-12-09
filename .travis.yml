@@ -58,6 +58,13 @@ jobs:
       script: git branch -f "$TRAVIS_BRANCH" && git checkout "$TRAVIS_BRANCH" && sbt whitesourceCheckPolicies whitesourceUpdate
       name: "Check licenses via WhiteSource"
 
+    - stage: publish
+      env: CMD="+publish"
+      name: "Publish artifacts to Bintray"
+#    - script: openssl aes-256-cbc -K $encrypted_bbf1dc4f2a07_key -iv $encrypted_bbf1dc4f2a07_iv -in .travis/travis_alpakka_rsa.enc -out .travis/id_rsa -d && eval "$(ssh-agent -s)" && chmod 600 .travis/id_rsa && ssh-add .travis/id_rsa && sbt -jvm-opts .jvmopts-travis docs/publishRsync
+#      name: "Publish API and reference documentation"
+
+
 stages:
   # runs on master commits and PRs
   - name: check
@@ -72,8 +79,8 @@ stages:
     if: repo = akka/akka-persistence-jdbc AND ( ( branch = master AND type = push ) OR tag =~ ^v )
 
   # runs on main repo master commits and version-tagged commits
-#  - name: publish
-#    if: repo = akka/akka-persistence-jdbc AND tag =~ ^v
+  - name: publish
+    if: repo = akka/akka-persistence-jdbc AND tag =~ ^v
 
 before_cache:
   - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
@@ -93,3 +100,7 @@ env:
     # API Key from https://saas.whitesourcesoftware.com/Wss/WSS.html#!adminOrganization_integration
     # encrypt with: travis encrypt --pro WHITESOURCE_PASSWORD=...
     - secure: "O3pD+CI5Twbdu4qXwW0MAX9mAYTYMGmZWvUJe4yNO5n/O90SGsb8fVPWjtw6iBX3FZFyGary0VGvQFJtdYRO8xj8NqYG1teJWsMYzqobQ5CEgqKdcPoRfPTmS0m2RR5ThL8KagGMfWAuy+7+OCbbocuPxpDhGbQ53UjcmRFrQicsy/7YEM2woafh7s/uejAgEJL7v2HKeR82ZVUGcDXAmAF2Djyn9zmMddPRvkftCdcquCqbQocj162WOjKG/wDm1u+Amd7ZzIoop23Oxmc4p1HSNex7OOFwTsrA95K8H3mNEzO2NQ6fr458ghfjXAEqi3Sa47ZgyqmcQ7f+XSfk9v/vzehsZxtrm81GpYmYq3hg952Fh6eP2sQEC+LOaBcYOETHQoCxYN/vYX4Mqy9QCEbr6WjuIagjQzcC8ZjR6q0yCYPnEF8NDyPghp8+0UaLUv/Qd/9k/+6AX8OFIO+fVW5jawM4M2/NF96gH8GgSue7jocf4EoBCx+BNVY8ulpq/VWtCBifYVpXSPPMNJXr3pEoeRKEVFD3h5nLFNw6PKXL9hITRkz9G4LoWXSMX0NdJ6dDr3IGeNrrr1ZDNa0CCKRlCIT5bMh5dWE7YjAVwD8FvX9SRhGL+jrFOZyahnN4un6aprwC6vzkgqSeJsE2I/L31LlxV77mHQ+Z3dUeAxQ="
+    # encrypt with: travis encrypt BINTRAY_USER=...
+    - secure: "jkI5fKGFpMYjLNUH1ST1dFCd4SaVC0RSaIEJtxFl5U+iYBbkOB6ydEjmLduXu2rPGiIN5ujyvzgBj4hcVtzdugiwSIxiDO0pYDEZpX/+EADiYc8r2EoMHpgs0HsfRCFl/rpJv/9skMn/NFLQI1vphH/0C9BHhuMlPS8BzTr/CiE="
+    # encrypt with: travis encrypt BINTRAY_PASS=...
+    - secure: "EJV2pUhTUgJ5cJz3wBfR6X2VKQL1T3zBd56C1tqHpYaeQETir/GsVAHSII9bpK7rSqsmsiYOxQHDWi54y/hWnnwo4QBbloZGxGpWSxaO6vPeoMD7JYmM46qCEwx6wHaXPFs3y2S+kpIEVjBipPmMoZwSMqscZR5zeSsvy/iS14g="

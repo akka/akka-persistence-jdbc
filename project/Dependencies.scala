@@ -22,7 +22,7 @@ object Dependencies {
     "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
     "com.typesafe.slick" %% "slick" % SlickVersion,
     "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
-    "org.postgresql" % "postgresql" % "42.2.8" % Test,
+    "org.postgresql" % "postgresql" % "42.2.9" % Test,
     "com.h2database" % "h2" % "1.4.200" % Test,
     "mysql" % "mysql-connector-java" % "8.0.18" % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8" % Test,

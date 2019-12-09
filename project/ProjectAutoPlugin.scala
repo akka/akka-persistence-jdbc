@@ -53,6 +53,21 @@ object ProjectAutoPlugin extends AutoPlugin {
         else "-Ypartial-unification"
       },
       scalacOptions += "-Ydelambdafy:method",
+      Compile / doc / scalacOptions := scalacOptions.value ++ Seq(
+          "-doc-title",
+          "Akka Persistence JDBC",
+          "-doc-version",
+          version.value,
+          "-sourcepath",
+          (baseDirectory in ThisBuild).value.toString,
+          "-skip-packages",
+          "akka.pattern", // for some reason Scaladoc creates this
+          "-doc-source-url", {
+            val branch = if (isSnapshot.value) "master" else s"v${version.value}"
+            s"https://github.com/akka/akka-persistence-jdbc/tree/${branch}€{FILE_PATH_EXT}#L€{FILE_LINE}"
+          },
+          "-doc-canonical-base-url",
+          "https://doc.akka.io/api/akka-persistence-jdbc/current/"),
       // show full stack traces and test case durations
       Test / testOptions += Tests.Argument("-oDF"),
       headerLicense := Some(

@@ -27,8 +27,10 @@ jobs:
       name: "Code style check (fixed with `sbt scalafmtAll;scalafmtSbt`)"
     - env: CMD="+Test/compile"
       name: "Compile all code with Scala 2.12 and 2.13"
-    - env: CMD="mimaReportBinaryIssues"
-      name: "Check binary compatibility. Run locally with: sbt mimaReportBinaryIssues"
+    - env: CMD="docs/paradox"
+      name: "Create site with Paradox. Run locally with: `sbt docs/previewSite`"
+    - env: CMD="core/mimaReportBinaryIssues"
+      name: "Check binary compatibility. Run locally with: sbt core/mimaReportBinaryIssues"
 
     - stage: test
       env:

@@ -92,4 +92,4 @@ env:
   global:
     # API Key from https://saas.whitesourcesoftware.com/Wss/WSS.html#!adminOrganization_integration
     # encrypt with: travis encrypt WHITESOURCE_PASSWORD=...
-    - secure: "bhlP+VQWUARVUzE/JFwajZbdVDm3mfKIJ4M3D7ONF/MjW3lE69DhL7SyLnot5Zb91N87bDl6gVymePUU5Fpe8dEHsqALn+Z0y1dI3iAImUD2K+cnMeo75cFiQyFblvkGBFapXuR6NJll4S48Q/xiwsiJfVcol6SBeOLqxDsMKdw="
+    - secure: "rWwXrbFtAjQnwSQoc4Ek7BH5YGo2jPbcH8EGWG5/Pow1udzC9qu9ltTOeE+s+upc0rFZswi2+W25zO4i/BKazAb/MJ5sfUO97i5oTY9V9gAH+G2++g/rO3iZMIfOaUeyPI6r8Tb7pgzzvb8hW26fWcfKqJwB0cAOI1z1osFkHeY="

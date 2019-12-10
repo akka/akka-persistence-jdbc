@@ -15,21 +15,32 @@ object Dependencies {
   val SlickVersion = "3.3.2"
   val ScalaTestVersion = "3.0.8"
 
-  val Libraries = Seq(
+  val JdbcDrivers = Seq(
+    "org.postgresql" % "postgresql" % "42.2.9",
+    "com.h2database" % "h2" % "1.4.200",
+    "mysql" % "mysql-connector-java" % "8.0.18",
+    "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8")
+
+  val Libraries: Seq[ModuleID] = Seq(
     "com.typesafe.akka" %% "akka-actor" % AkkaVersion,
     "com.typesafe.akka" %% "akka-persistence" % AkkaVersion,
     "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
     "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
     "com.typesafe.slick" %% "slick" % SlickVersion,
     "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
-    "org.postgresql" % "postgresql" % "42.2.9" % Test,
-    "com.h2database" % "h2" % "1.4.200" % Test,
-    "mysql" % "mysql-connector-java" % "8.0.18" % Test,
-    "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8" % Test,
     "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,
     "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-persistence-tck" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-testkit" % AkkaVersion % Test,
-    "org.scalatest" %% "scalatest" % ScalaTestVersion % Test)
+    "org.scalatest" %% "scalatest" % ScalaTestVersion % Test
+  ) ++ JdbcDrivers.map(_ % Test)
+
+  val Migration: Seq[ModuleID] = Seq(
+    "org.flywaydb" % "flyway-core" % "6.1.1",
+    "com.typesafe" % "config" % "1.4.0",
+    "ch.qos.logback" % "logback-classic" % "1.2.3",
+    "org.testcontainers" % "postgresql" % "1.12.4" % Test,
+    "org.scalatest" %% "scalatest" % ScalaTestVersion % Test
+  ) ++ JdbcDrivers.map(_ % Provided)
 }

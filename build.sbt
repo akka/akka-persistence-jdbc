@@ -23,6 +23,14 @@ lazy val core = project
     // special handling as we change organization id
     mimaPreviousArtifacts := ProjectAutoPlugin.determineMimaPreviousArtifacts(scalaBinaryVersion.value))
 
+lazy val migration = project
+  .in(file("migration"))
+  .enablePlugins(Publish)
+  .disablePlugins(SitePlugin, MimaPlugin)
+  .settings(
+      name := "akka-persistence-jdbc-migration",
+      libraryDependencies ++= Dependencies.Migration)
+
 lazy val docs = project
   .enablePlugins(ProjectAutoPlugin, AkkaParadoxPlugin, ParadoxSitePlugin, PreprocessPlugin, PublishRsyncPlugin)
   .disablePlugins(MimaPlugin)

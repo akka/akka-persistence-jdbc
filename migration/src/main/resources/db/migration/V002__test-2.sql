@@ -4,3 +4,6 @@ CREATE TABLE IF NOT EXISTS public.migrated2 (
   created BIGINT NOT NULL,
   snapshot BYTEA NOT NULL
 );
+CREATE TABLE test_user (
+  name VARCHAR(200)
+);

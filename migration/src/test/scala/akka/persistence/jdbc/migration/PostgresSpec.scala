@@ -9,7 +9,12 @@ import org.testcontainers.containers.PostgreSQLContainer
 
 class PostgresSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
 
-  val postgres: PostgreSQLContainer[_] = new PostgreSQLContainer().withInitScript("postgres/init.sql")
+  val postgres: PostgreSQLContainer[_] = {
+    val c = new PostgreSQLContainer()
+    c.withDatabaseName("public")
+    c.withInitScript("postgres/init.sql")
+    c
+  }
   var migrationConfig: Config = null
   val connectionProperties = new Properties()
 
@@ -35,7 +40,20 @@ class PostgresSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
     val connection = DriverManager.getConnection(postgres.getJdbcUrl, connectionProperties);
     println(existingTables(connection))
     val stmt = connection.createStatement()
-    stmt.executeQuery("SELECT * FROM public.migrated2;")
+    stmt.executeQuery("SELECT * FROM migrated2;")
+  }
+
+  "Scala migration 003" should "be applied" in {
+    Main.run(migrationConfig)
+    val connection = DriverManager.getConnection(postgres.getJdbcUrl, connectionProperties);
+    println(existingTables(connection))
+    val stmt = connection.createStatement()
+    val rs = stmt.executeQuery("SELECT * FROM test_user;")
+    val sb = new StringBuilder()
+    while (rs.next()) {
+      sb.append(rs.getString(1)).append("\n")
+    }
+    sb.toString() shouldBe "Obelix\n"
   }
 
   private def existingTables(connection: Connection) = {

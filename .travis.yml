@@ -61,6 +61,7 @@ jobs:
     - stage: publish
       env: CMD="+publish"
       name: "Publish artifacts to Bintray"
+    # File encryption and key/IV injection courtesy of Travis: https://docs.travis-ci.com/user/encrypting-files/
     - script: openssl aes-256-cbc -K $encrypted_9f19d2edcfdd_key -iv $encrypted_9f19d2edcfdd_iv -in .travis/travis_apjdbc_rsa.enc -out .travis/id_rsa -d && eval "$(ssh-agent -s)" && chmod 600 .travis/id_rsa && ssh-add .travis/id_rsa && sbt -jvm-opts .jvmopts-travis docs/publishRsync
       name: "Publish API and reference documentation"
 

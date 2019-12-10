@@ -91,5 +91,5 @@ cache:
 env:
   global:
     # API Key from https://saas.whitesourcesoftware.com/Wss/WSS.html#!adminOrganization_integration
-    # encrypt with: travis encrypt WHITESOURCE_PASSWORD=...
-    - secure: "rWwXrbFtAjQnwSQoc4Ek7BH5YGo2jPbcH8EGWG5/Pow1udzC9qu9ltTOeE+s+upc0rFZswi2+W25zO4i/BKazAb/MJ5sfUO97i5oTY9V9gAH+G2++g/rO3iZMIfOaUeyPI6r8Tb7pgzzvb8hW26fWcfKqJwB0cAOI1z1osFkHeY="
+    # encrypt with: travis encrypt --pro WHITESOURCE_PASSWORD=...
+    - secure: "O3pD+CI5Twbdu4qXwW0MAX9mAYTYMGmZWvUJe4yNO5n/O90SGsb8fVPWjtw6iBX3FZFyGary0VGvQFJtdYRO8xj8NqYG1teJWsMYzqobQ5CEgqKdcPoRfPTmS0m2RR5ThL8KagGMfWAuy+7+OCbbocuPxpDhGbQ53UjcmRFrQicsy/7YEM2woafh7s/uejAgEJL7v2HKeR82ZVUGcDXAmAF2Djyn9zmMddPRvkftCdcquCqbQocj162WOjKG/wDm1u+Amd7ZzIoop23Oxmc4p1HSNex7OOFwTsrA95K8H3mNEzO2NQ6fr458ghfjXAEqi3Sa47ZgyqmcQ7f+XSfk9v/vzehsZxtrm81GpYmYq3hg952Fh6eP2sQEC+LOaBcYOETHQoCxYN/vYX4Mqy9QCEbr6WjuIagjQzcC8ZjR6q0yCYPnEF8NDyPghp8+0UaLUv/Qd/9k/+6AX8OFIO+fVW5jawM4M2/NF96gH8GgSue7jocf4EoBCx+BNVY8ulpq/VWtCBifYVpXSPPMNJXr3pEoeRKEVFD3h5nLFNw6PKXL9hITRkz9G4LoWXSMX0NdJ6dDr3IGeNrrr1ZDNa0CCKRlCIT5bMh5dWE7YjAVwD8FvX9SRhGL+jrFOZyahnN4un6aprwC6vzkgqSeJsE2I/L31LlxV77mHQ+Z3dUeAxQ="

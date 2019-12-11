@@ -62,7 +62,7 @@ jobs:
       env: CMD="+publish"
       name: "Publish artifacts to Bintray"
 
-    - script: $HOME/.travis/travis-to-gustav.sh
+    - script: ./.travis/travis-to-gustav.sh
       name: "Publish API and reference documentation"
 
 

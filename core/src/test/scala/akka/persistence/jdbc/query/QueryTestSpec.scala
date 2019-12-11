@@ -118,12 +118,14 @@ class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)(
   import system.dispatcher
 
   def withCurrentPersistenceIds(within: FiniteDuration)(f: TestSubscriber.Probe[String] => Unit): Unit = {
-    val tp = readJournal.currentPersistenceIds().runWith(JavaSink.probe(system), mat)
+    val sink: akka.stream.javadsl.Sink[String, TestSubscriber.Probe[String]] = JavaSink.probe(system)
+    val tp = readJournal.currentPersistenceIds().runWith(sink, mat)
     tp.within(within)(f(tp))
   }
 
   def withPersistenceIds(within: FiniteDuration)(f: TestSubscriber.Probe[String] => Unit): Unit = {
-    val tp = readJournal.persistenceIds().runWith(JavaSink.probe(system), mat)
+    val sink: akka.stream.javadsl.Sink[String, TestSubscriber.Probe[String]] = JavaSink.probe(system)
+    val tp = readJournal.persistenceIds().runWith(sink, mat)
     tp.within(within)(f(tp))
   }
 
@@ -131,9 +133,8 @@ class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)(
       persistenceId: String,
       fromSequenceNr: Long = 0,
       toSequenceNr: Long = Long.MaxValue)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
-    val tp = readJournal
-      .currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr)
-      .runWith(JavaSink.probe(system), mat)
+    val sink: akka.stream.javadsl.Sink[EventEnvelope, TestSubscriber.Probe[EventEnvelope]] = JavaSink.probe(system)
+    val tp = readJournal.currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).runWith(sink, mat)
     tp.within(within)(f(tp))
   }
 
@@ -141,21 +142,22 @@ class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)(
       persistenceId: String,
       fromSequenceNr: Long,
       toSequenceNr: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
-    val tp = readJournal
-      .eventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr)
-      .runWith(JavaSink.probe(system), mat)
+    val sink: akka.stream.javadsl.Sink[EventEnvelope, TestSubscriber.Probe[EventEnvelope]] = JavaSink.probe(system)
+    val tp = readJournal.eventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).runWith(sink, mat)
     tp.within(within)(f(tp))
   }
 
   def withCurrentEventsByTag(within: FiniteDuration)(tag: String, offset: Offset)(
       f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
-    val tp = readJournal.currentEventsByTag(tag, offset).runWith(JavaSink.probe(system), mat)
+    val sink: akka.stream.javadsl.Sink[EventEnvelope, TestSubscriber.Probe[EventEnvelope]] = JavaSink.probe(system)
+    val tp = readJournal.currentEventsByTag(tag, offset).runWith(sink, mat)
     tp.within(within)(f(tp))
   }
 
   def withEventsByTag(within: FiniteDuration)(tag: String, offset: Offset)(
       f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
-    val tp = readJournal.eventsByTag(tag, offset).runWith(JavaSink.probe(system), mat)
+    val sink: akka.stream.javadsl.Sink[EventEnvelope, TestSubscriber.Probe[EventEnvelope]] = JavaSink.probe(system)
+    val tp = readJournal.eventsByTag(tag, offset).runWith(sink, mat)
     tp.within(within)(f(tp))
   }
 

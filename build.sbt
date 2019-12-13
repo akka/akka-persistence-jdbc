@@ -27,9 +27,7 @@ lazy val migration = project
   .in(file("migration"))
   .enablePlugins(Publish)
   .disablePlugins(SitePlugin, MimaPlugin)
-  .settings(
-      name := "akka-persistence-jdbc-migration",
-      libraryDependencies ++= Dependencies.Migration)
+  .settings(name := "akka-persistence-jdbc-migration", libraryDependencies ++= Dependencies.Migration)
 
 lazy val docs = project
   .enablePlugins(ProjectAutoPlugin, AkkaParadoxPlugin, ParadoxSitePlugin, PreprocessPlugin, PublishRsyncPlugin)

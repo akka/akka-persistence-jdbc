@@ -1,8 +1,6 @@
-package db.migration
+package db.migration.postgres
 
-import org.flywaydb.core.api.migration.BaseJavaMigration
-import org.flywaydb.core.api.migration.Context
-import java.sql.PreparedStatement
+import org.flywaydb.core.api.migration.{BaseJavaMigration, Context}
 
 
 class V003__UpdateUsers extends BaseJavaMigration{

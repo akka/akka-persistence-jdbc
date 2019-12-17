@@ -22,6 +22,7 @@ class PostgresSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
     postgres.start()
     migrationConfig = ConfigFactory.parseString(
       s"""migration {
+         |database-vendor = postgres
          |url = "${postgres.getJdbcUrl}"
          |user = "${postgres.getUsername}"
          |password = "${postgres.getPassword}"

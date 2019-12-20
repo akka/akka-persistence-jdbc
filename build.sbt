@@ -61,3 +61,16 @@ Global / onLoad := (Global / onLoad).value.andThen { s =>
       s"Failed to derive version from git tags. Maybe run `git fetch --unshallow`? Derived version: $v")
   s
 }
+
+TaskKey[Unit]("verifyCodeFmt") := {
+  scalafmtCheckAll.all(ScopeFilter(inAnyProject)).result.value.toEither.left.foreach { _ =>
+    throw new MessageOnlyException(
+      "Unformatted Scala code found. Please run 'scalafmtAll' and commit the reformatted code")
+  }
+  (Compile / scalafmtSbtCheck).result.value.toEither.left.foreach { _ =>
+    throw new MessageOnlyException(
+      "Unformatted sbt code found. Please run 'scalafmtSbt' and commit the reformatted code")
+  }
+}
+
+addCommandAlias("verifyCodeStyle", "headerCheck; verifyCodeFmt")

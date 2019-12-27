@@ -4,7 +4,7 @@ addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.3.0")
 addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.6.1")
 addSbtPlugin("com.lightbend" % "sbt-whitesource" % "0.1.18")
 // release
-addSbtPlugin("org.foundweekends" % "sbt-bintray" % "0.5.5")
+addSbtPlugin("org.foundweekends" % "sbt-bintray" % "0.5.6")
 addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.0.0")
 // docs
 addSbtPlugin("com.lightbend.akka" % "sbt-paradox-akka" % "0.28")

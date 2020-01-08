@@ -1,10 +1,15 @@
+/*
+ * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
+ * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
+ */
+
 package akka.persistence.jdbc.migration
 
-import java.sql.{Connection, DriverManager}
+import java.sql.{ Connection, DriverManager }
 import java.util.Properties
 
-import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import com.typesafe.config.{ Config, ConfigFactory }
+import org.scalatest.{ BeforeAndAfterAll, FlatSpec, Matchers }
 import org.testcontainers.containers.PostgreSQLContainer
 
 class PostgresSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
@@ -20,8 +25,7 @@ class PostgresSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
 
   override def beforeAll(): Unit = {
     postgres.start()
-    migrationConfig = ConfigFactory.parseString(
-      s"""migration {
+    migrationConfig = ConfigFactory.parseString(s"""migration {
          |database-vendor = postgres
          |url = "${postgres.getJdbcUrl}"
          |user = "${postgres.getUsername}"
@@ -59,7 +63,8 @@ class PostgresSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
 
   private def existingTables(connection: Connection) = {
     val stmt = connection.createStatement()
-    val rs = stmt.executeQuery("SELECT schemaname, tablename FROM pg_catalog.pg_tables WHERE schemaname NOT IN ('pg_catalog', 'information_schema');")
+    val rs = stmt.executeQuery(
+      "SELECT schemaname, tablename FROM pg_catalog.pg_tables WHERE schemaname NOT IN ('pg_catalog', 'information_schema');")
     val sb = new StringBuilder("Existing tables:\n")
     while (rs.next()) {
       sb.append(" " + rs.getString(1) + "." + rs.getString(2) + "\n")

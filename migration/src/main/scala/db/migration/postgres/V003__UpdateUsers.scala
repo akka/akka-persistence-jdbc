@@ -1,10 +1,13 @@
+/*
+ * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
+ * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
+ */
+
 package db.migration.postgres
 
-import org.flywaydb.core.api.migration.{BaseJavaMigration, Context}
+import org.flywaydb.core.api.migration.{ BaseJavaMigration, Context }
 
-
-class V003__UpdateUsers extends BaseJavaMigration{
-
+class V003__UpdateUsers extends BaseJavaMigration {
 
   @throws[Exception]
   override def migrate(context: Context): Unit = {

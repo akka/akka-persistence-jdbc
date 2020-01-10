@@ -1,6 +1,11 @@
+/*
+ * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
+ * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
+ */
+
 package akka.persistence.jdbc.migration
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.Location
 
@@ -14,12 +19,11 @@ object Main extends App {
     val user = config.getString("user")
     val password = config.getString("password")
 
-    val flywayConfig = Flyway.configure.dataSource(url, user, password)
-      .table("apjdbc_schema_history")
+    val flywayConfig = Flyway.configure.dataSource(url, user, password).table("apjdbc_schema_history")
 
     vendor match {
       case "postgres" =>
-          flywayConfig.locations(new Location("classpath:db/migration/postgres"))
+        flywayConfig.locations(new Location("classpath:db/migration/postgres"))
       case other =>
         sys.error(s"Akka Persistence JDBC migrations do not support `$other` (supported are `postgres`)")
     }

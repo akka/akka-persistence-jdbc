@@ -78,9 +78,12 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
 
   override def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] = {
     val future = journalDao.asyncWriteMessages(messages)
-    val persistenceId = messages.head.persistenceId
-    writeInProgress.put(persistenceId, future)
-    future.onComplete(_ => self ! WriteFinished(persistenceId, future))
+    // messages can be empty when using defer, deferAsync
+    messages.headOption.foreach { head =>
+      val persistenceId = head.persistenceId
+      writeInProgress.put(persistenceId, future)
+      future.onComplete(_ => self ! WriteFinished(persistenceId, future))
+    }
     future
   }
 

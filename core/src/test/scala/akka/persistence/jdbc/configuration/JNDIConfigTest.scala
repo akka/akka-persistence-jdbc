@@ -7,7 +7,7 @@ package akka.persistence.jdbc.configuration
 
 import akka.actor.ActorSystem
 import akka.persistence.jdbc.SimpleSpec
-import akka.persistence.jdbc.util.SlickExtension
+import akka.persistence.jdbc.db.SlickExtension
 import com.typesafe.config.ConfigFactory
 
 class JNDIConfigTest extends SimpleSpec {

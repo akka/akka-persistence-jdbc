@@ -8,7 +8,8 @@ package akka.persistence.jdbc
 import akka.actor.ActorSystem
 import akka.persistence.jdbc.config.{ JournalConfig, ReadJournalConfig }
 import akka.persistence.jdbc.query.javadsl.JdbcReadJournal
-import akka.persistence.jdbc.util.{ DropCreate, SlickExtension }
+import akka.persistence.jdbc.util.DropCreate
+import akka.persistence.jdbc.db.SlickExtension
 import akka.serialization.SerializationExtension
 import akka.stream.{ ActorMaterializer, Materializer }
 import akka.util.Timeout

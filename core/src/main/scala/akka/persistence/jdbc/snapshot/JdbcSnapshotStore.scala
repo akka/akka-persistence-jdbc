@@ -8,7 +8,7 @@ package akka.persistence.jdbc.snapshot
 import akka.actor.{ ActorSystem, ExtendedActorSystem }
 import akka.persistence.jdbc.config.SnapshotConfig
 import akka.persistence.jdbc.snapshot.dao.SnapshotDao
-import akka.persistence.jdbc.util.{ SlickDatabase, SlickExtension }
+import akka.persistence.jdbc.db.{ SlickDatabase, SlickExtension }
 import akka.persistence.snapshot.SnapshotStore
 import akka.persistence.{ SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria }
 import akka.serialization.{ Serialization, SerializationExtension }

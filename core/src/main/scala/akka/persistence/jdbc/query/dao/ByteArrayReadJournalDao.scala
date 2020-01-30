@@ -14,6 +14,7 @@ import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
+import slick.basic.DatabasePublisher
 import slick.jdbc.JdbcProfile
 import slick.jdbc.GetResult
 import slick.jdbc.JdbcBackend._
@@ -38,10 +39,12 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao {
       tag: String,
       offset: Long,
       maxOffset: Long,
-      max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed] =
-    Source
-      .fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", offset, maxOffset, max).result))
-      .via(serializer.deserializeFlow)
+      max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed] = {
+
+    val publisher = db.stream(queries.eventsByTag(s"%$tag%", offset, maxOffset, max).result)
+    // applies workaround for https://github.com/akka/akka-persistence-jdbc/issues/168
+    TagFilter.perfectlyMatchTag(publisher, tag).via(serializer.deserializeFlow)
+  }
 
   override def messages(
       persistenceId: String,
@@ -57,6 +60,21 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao {
 
   override def maxJournalSequence(): Future[Long] = {
     db.run(queries.maxJournalSequenceQuery.result)
+  }
+}
+
+object TagFilter {
+  /*
+   * Retains every event with tags that perfectly match passed tag.
+   * This is a workaround for bug https://github.com/akka/akka-persistence-jdbc/issues/168
+   *
+   * Builds a Source using the passed DatabasePublisher and
+   * filter out all events that where wrongly selected because of the usage ot LIKE operantor.
+   */
+  private[dao] def perfectlyMatchTag(
+      dbPublisher: DatabasePublisher[JournalRow],
+      tag: String): Source[JournalRow, NotUsed] = {
+    Source.fromPublisher(dbPublisher).filter(_.tags.exists(tags => tags.split(",").contains(tag)))
   }
 }
 
@@ -125,7 +143,9 @@ trait OracleReadJournalDao extends ReadJournalDao {
             )
             WHERE rownum <= $max""".as[JournalRow]
 
-      Source.fromPublisher(db.stream(selectStatement)).via(serializer.deserializeFlow)
+      // applies workaround for https://github.com/akka/akka-persistence-jdbc/issues/168
+      TagFilter.perfectlyMatchTag(db.stream(selectStatement), tag).via(serializer.deserializeFlow)
+
     } else {
       super.eventsByTag(tag, offset, maxOffset, max)
     }

@@ -138,18 +138,21 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
       journalOps.withEventsByTag()("sharded-1", Sequence(Long.MinValue)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
 
       journalOps.withEventsByTag()("sharded-10", Sequence(Long.MinValue)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
+        tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
 
       journalOps.withEventsByTag()("sharded-100", Sequence(Long.MinValue)) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
+        tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
     }

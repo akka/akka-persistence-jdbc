@@ -10,10 +10,11 @@ import akka.NotUsed
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.journal.dao.ByteArrayJournalSerializer
+import akka.persistence.jdbc.query.dao.TagFilterFlow.perfectlyMatchTag
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 import akka.stream.Materializer
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{ Flow, Source }
 import slick.basic.DatabasePublisher
 import slick.jdbc.JdbcProfile
 import slick.jdbc.GetResult
@@ -43,7 +44,10 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao {
 
     val publisher = db.stream(queries.eventsByTag(s"%$tag%", offset, maxOffset, max).result)
     // applies workaround for https://github.com/akka/akka-persistence-jdbc/issues/168
-    TagFilter.perfectlyMatchTag(publisher, tag).via(serializer.deserializeFlow)
+    Source
+      .fromPublisher(publisher)
+      .via(perfectlyMatchTag(tag, readJournalConfig.pluginConfig.tagSeparator))
+      .via(serializer.deserializeFlow)
   }
 
   override def messages(
@@ -63,19 +67,13 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao {
   }
 }
 
-object TagFilter {
+object TagFilterFlow {
   /*
-   * Retains every event with tags that perfectly match passed tag.
+   * Returns a Flow that retains every event with tags that perfectly match passed tag.
    * This is a workaround for bug https://github.com/akka/akka-persistence-jdbc/issues/168
-   *
-   * Builds a Source using the passed DatabasePublisher and
-   * filter out all events that where wrongly selected because of the usage ot LIKE operantor.
    */
-  private[dao] def perfectlyMatchTag(
-      dbPublisher: DatabasePublisher[JournalRow],
-      tag: String): Source[JournalRow, NotUsed] = {
-    Source.fromPublisher(dbPublisher).filter(_.tags.exists(tags => tags.split(",").contains(tag)))
-  }
+  private[dao] def perfectlyMatchTag(tag: String, separator: String) =
+    Flow[JournalRow].filter(_.tags.exists(tags => tags.split(separator).contains(tag)))
 }
 
 trait OracleReadJournalDao extends ReadJournalDao {
@@ -144,7 +142,10 @@ trait OracleReadJournalDao extends ReadJournalDao {
             WHERE rownum <= $max""".as[JournalRow]
 
       // applies workaround for https://github.com/akka/akka-persistence-jdbc/issues/168
-      TagFilter.perfectlyMatchTag(db.stream(selectStatement), tag).via(serializer.deserializeFlow)
+      Source
+        .fromPublisher(db.stream(selectStatement))
+        .via(perfectlyMatchTag(tag, readJournalConfig.pluginConfig.tagSeparator))
+        .via(serializer.deserializeFlow)
 
     } else {
       super.eventsByTag(tag, offset, maxOffset, max)

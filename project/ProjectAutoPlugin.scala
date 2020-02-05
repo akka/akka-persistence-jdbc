@@ -1,4 +1,3 @@
-import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
 import de.heikoseeberger.sbtheader.HeaderPlugin
 import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.{ headerLicense, HeaderLicense }
 import sbt.Keys._
@@ -31,7 +30,7 @@ object ProjectAutoPlugin extends AutoPlugin {
 
   override val trigger: PluginTrigger = allRequirements
 
-  override val projectSettings: Seq[Setting[_]] = mimaDefaultSettings ++ Seq(
+  override val projectSettings: Seq[Setting[_]] = Seq(
       crossVersion := CrossVersion.binary,
       crossScalaVersions := Dependencies.ScalaVersions,
       scalaVersion := Dependencies.Scala212,

@@ -1,6 +1,7 @@
 import com.lightbend.paradox.apidoc.ApidocPlugin.autoImport.apidocRootPackage
 import com.typesafe.tools.mima.core.{ IncompatibleResultTypeProblem, ProblemFilters }
 import com.typesafe.tools.mima.plugin.MimaKeys.mimaBinaryIssueFilters
+import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
 
 lazy val `akka-persistence-jdbc` = project
   .in(file("."))
@@ -16,6 +17,7 @@ lazy val core = project
   .settings(
     name := "akka-persistence-jdbc",
     libraryDependencies ++= Dependencies.Libraries,
+    mimaDefaultSettings,
     mimaBinaryIssueFilters ++= Seq(
         // Scala 2.11 issue which occurs because the signature of an internal lambda has changed. This lambda is not accessible outside of the method itself
         ProblemFilters.exclude[IncompatibleResultTypeProblem](

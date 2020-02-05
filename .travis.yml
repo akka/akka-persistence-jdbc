@@ -26,8 +26,8 @@ jobs:
       name: "Compile all code with Scala 2.12 and 2.13"
     - env: CMD="docs/paradox"
       name: "Create site with Paradox. Run locally with: `sbt docs/previewSite`"
-    - env: CMD="core/mimaReportBinaryIssues"
-      name: "Check binary compatibility. Run locally with: sbt core/mimaReportBinaryIssues"
+    - env: CMD="mimaReportBinaryIssues"
+      name: "Check binary compatibility. Run locally with: sbt mimaReportBinaryIssues"
 
     - stage: test
       env:

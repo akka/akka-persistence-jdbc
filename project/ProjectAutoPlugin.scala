@@ -31,50 +31,49 @@ object ProjectAutoPlugin extends AutoPlugin {
   override val trigger: PluginTrigger = allRequirements
 
   override val projectSettings: Seq[Setting[_]] = Seq(
-      crossVersion := CrossVersion.binary,
-      crossScalaVersions := Dependencies.ScalaVersions,
-      scalaVersion := Dependencies.Scala212,
-      Test / fork := true,
-      Test / parallelExecution := false,
-      Test / logBuffered := true,
-      scalacOptions ++= Seq(
-          "-encoding",
-          "UTF-8",
-          "-deprecation",
-          "-feature",
-          "-unchecked",
-          "-Xlog-reflective-calls",
-          "-language:higherKinds",
-          "-language:implicitConversions",
-          "-target:jvm-1.8"),
-      scalacOptions += {
-        if (scalaVersion.value.startsWith("2.13")) ""
-        else "-Ypartial-unification"
-      },
-      scalacOptions += "-Ydelambdafy:method",
-      Compile / doc / scalacOptions := scalacOptions.value ++ Seq(
-          "-doc-title",
-          "Akka Persistence JDBC",
-          "-doc-version",
-          version.value,
-          "-sourcepath",
-          (baseDirectory in ThisBuild).value.toString,
-          "-skip-packages",
-          "akka.pattern", // for some reason Scaladoc creates this
-          "-doc-source-url", {
-            val branch = if (isSnapshot.value) "master" else s"v${version.value}"
-            s"https://github.com/akka/akka-persistence-jdbc/tree/${branch}€{FILE_PATH_EXT}#L€{FILE_LINE}"
-          },
-          "-doc-canonical-base-url",
-          "https://doc.akka.io/api/akka-persistence-jdbc/current/"),
-      // show full stack traces and test case durations
-      Test / testOptions += Tests.Argument("-oDF"),
-      headerLicense := Some(
-          HeaderLicense.Custom("""|Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
+    crossVersion := CrossVersion.binary,
+    crossScalaVersions := Dependencies.ScalaVersions,
+    scalaVersion := Dependencies.Scala212,
+    Test / fork := true,
+    Test / parallelExecution := false,
+    Test / logBuffered := true,
+    scalacOptions ++= Seq(
+        "-encoding",
+        "UTF-8",
+        "-deprecation",
+        "-feature",
+        "-unchecked",
+        "-Xlog-reflective-calls",
+        "-language:higherKinds",
+        "-language:implicitConversions",
+        "-target:jvm-1.8"),
+    scalacOptions += {
+      if (scalaVersion.value.startsWith("2.13")) ""
+      else "-Ypartial-unification"
+    },
+    scalacOptions += "-Ydelambdafy:method",
+    Compile / doc / scalacOptions := scalacOptions.value ++ Seq(
+        "-doc-title",
+        "Akka Persistence JDBC",
+        "-doc-version",
+        version.value,
+        "-sourcepath",
+        (baseDirectory in ThisBuild).value.toString,
+        "-skip-packages",
+        "akka.pattern", // for some reason Scaladoc creates this
+        "-doc-source-url", {
+          val branch = if (isSnapshot.value) "master" else s"v${version.value}"
+          s"https://github.com/akka/akka-persistence-jdbc/tree/${branch}€{FILE_PATH_EXT}#L€{FILE_LINE}"
+        },
+        "-doc-canonical-base-url",
+        "https://doc.akka.io/api/akka-persistence-jdbc/current/"),
+    // show full stack traces and test case durations
+    Test / testOptions += Tests.Argument("-oDF"),
+    headerLicense := Some(HeaderLicense.Custom("""|Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
            |Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
            |""".stripMargin)),
-      resolvers += Resolver.typesafeRepo("releases"),
-      resolvers += Resolver.jcenterRepo)
+    resolvers += Resolver.typesafeRepo("releases"),
+    resolvers += Resolver.jcenterRepo)
 
   def determineMimaPreviousArtifacts(scalaBinVersion: String): Set[ModuleID] = {
     val compatVersions: Set[String] =

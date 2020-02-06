@@ -11,7 +11,7 @@ import akka.actor.ExtendedActorSystem
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.query.JournalSequenceActor.{ GetMaxOrderingId, MaxOrderingId }
 import akka.persistence.jdbc.query.dao.ReadJournalDao
-import akka.persistence.jdbc.util.SlickExtension
+import akka.persistence.jdbc.db.SlickExtension
 import akka.persistence.query.scaladsl._
 import akka.persistence.query.{ EventEnvelope, Offset, Sequence }
 import akka.persistence.{ Persistence, PersistentRepr }
@@ -27,6 +27,7 @@ import scala.collection.immutable._
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
+import akka.persistence.jdbc.util.PluginVersionChecker
 
 object JdbcReadJournal {
   final val Identifier = "jdbc-read-journal"
@@ -54,8 +55,12 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
     with EventsByPersistenceIdQuery
     with CurrentEventsByTagQuery
     with EventsByTagQuery {
+
+  PluginVersionChecker.check()
+
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val mat: Materializer = ActorMaterializer()
+
   val readJournalConfig = new ReadJournalConfig(config)
 
   private val writePluginId = config.getString("write-plugin")

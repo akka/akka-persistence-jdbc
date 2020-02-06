@@ -8,7 +8,8 @@ package akka.persistence.jdbc.journal
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickDatabase, SlickExtension }
+import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate }
+import akka.persistence.jdbc.db.{ SlickDatabase, SlickExtension }
 import akka.persistence.journal.JournalSpec
 import com.typesafe.config.{ Config, ConfigFactory, ConfigValueFactory }
 import org.scalatest.concurrent.ScalaFutures

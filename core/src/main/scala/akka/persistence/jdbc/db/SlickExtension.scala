@@ -3,7 +3,7 @@
  * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
  */
 
-package akka.persistence.jdbc.util
+package akka.persistence.jdbc.db
 
 import akka.actor.{ ActorSystem, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider }
 import akka.persistence.jdbc.config.{ ConfigKeys, SlickConfiguration }
@@ -12,6 +12,7 @@ import com.typesafe.config.{ Config, ConfigObject }
 
 import scala.collection.JavaConverters._
 import scala.util.{ Failure, Success }
+import scala.util.control.NonFatal
 
 object SlickExtension extends ExtensionId[SlickExtensionImpl] with ExtensionIdProvider {
   override def lookup: SlickExtension.type = SlickExtension
@@ -19,6 +20,7 @@ object SlickExtension extends ExtensionId[SlickExtensionImpl] with ExtensionIdPr
 }
 
 class SlickExtensionImpl(system: ExtendedActorSystem) extends Extension {
+
   private val dbProvider: SlickDatabaseProvider = {
     val fqcn = system.settings.config.getString("akka-persistence-jdbc.database-provider-fqcn")
     val args = List(classOf[ActorSystem] -> system)

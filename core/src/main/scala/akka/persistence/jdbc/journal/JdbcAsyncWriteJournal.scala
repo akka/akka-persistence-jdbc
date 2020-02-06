@@ -12,7 +12,7 @@ import akka.actor.{ ActorSystem, ExtendedActorSystem }
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.journal.JdbcAsyncWriteJournal.{ InPlaceUpdateEvent, WriteFinished }
 import akka.persistence.jdbc.journal.dao.{ JournalDao, JournalDaoWithUpdates }
-import akka.persistence.jdbc.util.{ SlickDatabase, SlickExtension }
+import akka.persistence.jdbc.db.{ SlickDatabase, SlickExtension }
 import akka.persistence.journal.AsyncWriteJournal
 import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.serialization.{ Serialization, SerializationExtension }
@@ -25,6 +25,7 @@ import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
 import akka.pattern.pipe
+import akka.persistence.jdbc.util.PluginVersionChecker
 
 object JdbcAsyncWriteJournal {
   private case class WriteFinished(pid: String, f: Future[_])
@@ -40,10 +41,13 @@ object JdbcAsyncWriteJournal {
 }
 
 class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
+
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val system: ActorSystem = context.system
   implicit val mat: Materializer = ActorMaterializer()
   val journalConfig = new JournalConfig(config)
+
+  PluginVersionChecker.check()
 
   val slickDb: SlickDatabase = SlickExtension(system).database(config)
   def db: Database = slickDb.database

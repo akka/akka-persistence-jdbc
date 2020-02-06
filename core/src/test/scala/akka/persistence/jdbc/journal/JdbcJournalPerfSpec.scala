@@ -9,7 +9,8 @@ import akka.actor.Props
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate, SlickExtension }
+import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate }
+import akka.persistence.jdbc.db.SlickExtension
 import akka.persistence.journal.JournalPerfSpec
 import akka.persistence.journal.JournalPerfSpec.{ BenchActor, Cmd, ResetCounter }
 import akka.testkit.TestProbe

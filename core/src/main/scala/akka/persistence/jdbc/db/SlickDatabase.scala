@@ -3,7 +3,7 @@
  * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
  */
 
-package akka.persistence.jdbc.util
+package akka.persistence.jdbc.db
 
 import akka.actor.ActorSystem
 import javax.naming.InitialContext

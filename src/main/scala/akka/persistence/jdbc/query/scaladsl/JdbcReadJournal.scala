@@ -156,7 +156,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
             val nextFrom: Long = lastSeqNrInBatch match {
               // Continue querying from the last sequence number (the events are ordered)
               case Some(lastSeqNr) => lastSeqNr + 1
-              case None => from
+              case None            => from
             }
             Some((nextFrom, nextControl), xs)
           }
@@ -169,9 +169,9 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
             akka.pattern.after(readJournalConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
         }
     }
-    .mapConcat(identity)
-    .mapConcat(adaptEvents)
-    .map(repr => EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload))
+      .mapConcat(identity)
+      .mapConcat(adaptEvents)
+      .map(repr => EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload))
   }
 
   /**

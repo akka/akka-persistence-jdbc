@@ -131,6 +131,45 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
     }
   }
 
+  it should "select events by tag with exact match" in withActorSystem { implicit system =>
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
+
+    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
+      (actor1 ? withTags(1, "number", "sharded-1")).futureValue
+      (actor2 ? withTags(2, "number", "sharded-10")).futureValue
+      (actor3 ? withTags(3, "number", "sharded-100")).futureValue
+
+      journalOps.withEventsByTag()("number", Sequence(Long.MinValue)) { tp =>
+        tp.request(Int.MaxValue)
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
+        tp.cancel()
+      }
+
+      journalOps.withEventsByTag()("sharded-1", Sequence(Long.MinValue)) { tp =>
+        tp.request(Int.MaxValue)
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNoMessage(NoMsgTime)
+        tp.cancel()
+      }
+
+      journalOps.withEventsByTag()("sharded-10", Sequence(Long.MinValue)) { tp =>
+        tp.request(Int.MaxValue)
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
+        tp.expectNoMessage(NoMsgTime)
+        tp.cancel()
+      }
+
+      journalOps.withEventsByTag()("sharded-100", Sequence(Long.MinValue)) { tp =>
+        tp.request(Int.MaxValue)
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
+        tp.expectNoMessage(NoMsgTime)
+        tp.cancel()
+      }
+    }
+  }
+
   it should "find all events by tag even when lots of events are persisted concurrently" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     val msgCountPerActor = 20

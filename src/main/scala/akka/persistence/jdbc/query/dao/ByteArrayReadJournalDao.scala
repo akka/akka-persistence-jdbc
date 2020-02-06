@@ -21,10 +21,12 @@ import akka.NotUsed
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.journal.dao.ByteArrayJournalSerializer
+import akka.persistence.jdbc.query.dao.TagFilterFlow.perfectlyMatchTag
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 import akka.stream.Materializer
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{ Flow, Source }
+import slick.basic.DatabasePublisher
 import slick.jdbc.JdbcProfile
 import slick.jdbc.GetResult
 import slick.jdbc.JdbcBackend._
@@ -45,9 +47,19 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao {
   override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
     Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct(max).result))
 
-  override def eventsByTag(tag: String, offset: Long, maxOffset: Long, max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed] =
-    Source.fromPublisher(db.stream(queries.eventsByTag(s"%$tag%", offset, maxOffset, max).result))
+  override def eventsByTag(
+    tag: String,
+    offset: Long,
+    maxOffset: Long,
+    max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed] = {
+
+    val publisher = db.stream(queries.eventsByTag(s"%$tag%", offset, maxOffset, max).result)
+    // applies workaround for https://github.com/akka/akka-persistence-jdbc/issues/168
+    Source
+      .fromPublisher(publisher)
+      .via(perfectlyMatchTag(tag, readJournalConfig.pluginConfig.tagSeparator))
       .via(serializer.deserializeFlow)
+  }
 
   override def messages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long): Source[Try[PersistentRepr], NotUsed] =
     Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
@@ -59,6 +71,15 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao {
   override def maxJournalSequence(): Future[Long] = {
     db.run(queries.maxJournalSequenceQuery.result)
   }
+}
+
+object TagFilterFlow {
+  /*
+   * Returns a Flow that retains every event with tags that perfectly match passed tag.
+   * This is a workaround for bug https://github.com/akka/akka-persistence-jdbc/issues/168
+   */
+  private[dao] def perfectlyMatchTag(tag: String, separator: String) =
+    Flow[JournalRow].filter(_.tags.exists(tags => tags.split(separator).contains(tag)))
 }
 
 trait OracleReadJournalDao extends ReadJournalDao {
@@ -122,8 +143,10 @@ trait OracleReadJournalDao extends ReadJournalDao {
             )
             WHERE rownum <= $max""".as[JournalRow]
 
+      // applies workaround for https://github.com/akka/akka-persistence-jdbc/issues/168
       Source
         .fromPublisher(db.stream(selectStatement))
+        .via(perfectlyMatchTag(tag, readJournalConfig.pluginConfig.tagSeparator))
         .via(serializer.deserializeFlow)
 
     } else {

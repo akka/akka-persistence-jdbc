@@ -36,6 +36,7 @@ import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
 import akka.pattern.pipe
+import akka.persistence.jdbc.util.PluginVersionChecker
 
 object JdbcAsyncWriteJournal {
   private case class WriteFinished(pid: String, f: Future[_])
@@ -54,6 +55,8 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   implicit val system: ActorSystem = context.system
   implicit val mat: Materializer = ActorMaterializer()
   val journalConfig = new JournalConfig(config)
+
+  PluginVersionChecker.check()
 
   val slickDb: SlickDatabase = SlickExtension(system).database(config)
   def db: Database = slickDb.database

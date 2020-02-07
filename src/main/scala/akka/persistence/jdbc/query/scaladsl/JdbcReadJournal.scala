@@ -38,6 +38,7 @@ import scala.collection.immutable._
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
+import akka.persistence.jdbc.util.PluginVersionChecker
 
 object JdbcReadJournal {
   final val Identifier = "jdbc-read-journal"
@@ -64,6 +65,8 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
   with EventsByPersistenceIdQuery
   with CurrentEventsByTagQuery
   with EventsByTagQuery {
+
+  PluginVersionChecker.check()
 
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val mat: Materializer = ActorMaterializer()

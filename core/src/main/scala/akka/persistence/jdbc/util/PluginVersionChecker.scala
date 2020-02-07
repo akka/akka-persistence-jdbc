@@ -5,8 +5,11 @@
 
 package akka.persistence.jdbc.util
 
-object PluginVersionChecker {
-  def check() =
+import akka.annotation.InternalApi
+
+@InternalApi
+private[jdbc] object PluginVersionChecker {
+  def check(): Unit =
     try {
       Class.forName("akka.persistence.jdbc.util.DefaultSlickDatabaseProvider")
       throw new RuntimeException(

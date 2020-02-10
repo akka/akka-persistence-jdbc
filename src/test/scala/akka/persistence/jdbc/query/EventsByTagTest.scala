@@ -131,6 +131,43 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
     }
   }
 
+  it should "deliver EventEnvelopes non-zero timestamps" in withActorSystem { implicit system =>
+
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
+    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
+
+      val testStartTime = System.currentTimeMillis()
+
+      (actor1 ? withTags(1, "number")).futureValue
+      (actor2 ? withTags(2, "number")).futureValue
+      (actor3 ? withTags(3, "number")).futureValue
+
+      def assertTimestamp(timestamp: Long, clue: String) = {
+        withClue(clue) {
+          timestamp should !==(0L)
+          // we want to prove that the event got a non-zero timestamp
+          // but also a timestamp that between some boundaries around this test run
+          (timestamp - testStartTime) should be < 120000L
+          (timestamp - testStartTime) should be > 0L
+        }
+      }
+
+      journalOps.withEventsByTag()("number", Sequence(Long.MinValue)) { tp =>
+        tp.request(Int.MaxValue)
+        tp.expectNextPF {
+          case ev @ EventEnvelope(Sequence(1), "my-1", 1, 1) => assertTimestamp(ev.timestamp, "my-1")
+        }
+        tp.expectNextPF {
+          case ev @ EventEnvelope(Sequence(2), "my-2", 1, 2) => assertTimestamp(ev.timestamp, "my-2")
+        }
+        tp.expectNextPF {
+          case ev @ EventEnvelope(Sequence(3), "my-3", 1, 3) => assertTimestamp(ev.timestamp, "my-3")
+        }
+        tp.cancel()
+      }
+    }
+  }
+
   it should "select events by tag with exact match" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
 

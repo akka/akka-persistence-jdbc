@@ -173,4 +173,3 @@ class ByteArrayJournalDao(val db: Database, val profile: JdbcProfile, val journa
   val queries = new JournalQueries(profile, journalConfig.journalTableConfiguration)
   val serializer = new ByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator)
 }
-

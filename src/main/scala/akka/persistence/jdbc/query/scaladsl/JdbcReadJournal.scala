@@ -174,7 +174,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
     }
       .mapConcat(identity)
       .mapConcat(adaptEvents)
-      .map(repr => EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload))
+      .map(repr => EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload, repr.timestamp))
   }
 
   /**
@@ -198,7 +198,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
         .mapAsync(1)(Future.fromTry)
         .mapConcat {
           case (repr, _, ordering) =>
-            adaptEvents(repr).map(r => EventEnvelope(Sequence(ordering), r.persistenceId, r.sequenceNr, r.payload))
+            adaptEvents(repr).map(r => EventEnvelope(Sequence(ordering), r.persistenceId, r.sequenceNr, r.payload, r.timestamp))
         }
     }
   }

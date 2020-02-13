@@ -15,7 +15,7 @@ import akka.stream.scaladsl.{ Keep, Sink, Source }
 import akka.stream.{ Materializer, OverflowStrategy, QueueOfferResult }
 import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcBackend._
-import slick.jdbc.{ H2Profile, JdbcProfile }
+import slick.jdbc.{ H2Profile, JdbcProfile, ResultSetConcurrency, ResultSetType }
 
 import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future, Promise }
@@ -145,7 +145,16 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
       toSequenceNr: Long,
       max: Long): Source[Try[PersistentRepr], NotUsed] =
     Source
-      .fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
+      .fromPublisher(
+        db.stream(
+          queries
+            .messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max)
+            .result
+            .withStatementParameters(
+              rsType = ResultSetType.ForwardOnly,
+              rsConcurrency = ResultSetConcurrency.ReadOnly,
+              fetchSize = 1000)
+            .transactionally))
       .via(serializer.deserializeFlowWithoutTags)
 }
 

@@ -33,7 +33,7 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
   implicit val ec: ExecutionContext
   implicit val mat: Materializer
 
-  import journalConfig.daoConfig.{ batchSize, bufferSize, logicalDelete, parallelism }
+  import journalConfig.daoConfig.{ batchSize, bufferSize, logicalDelete, parallelism, fetchSize }
   import profile.api._
 
   val logger = LoggerFactory.getLogger(this.getClass)
@@ -153,7 +153,7 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
             .withStatementParameters(
               rsType = ResultSetType.ForwardOnly,
               rsConcurrency = ResultSetConcurrency.ReadOnly,
-              fetchSize = 1000)
+              fetchSize = fetchSize)
             .transactionally))
       .via(serializer.deserializeFlowWithoutTags)
 }

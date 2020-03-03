@@ -14,7 +14,7 @@ Please find some background to it in [Issue #252](https://github.com/akka/akka-p
 
 ## Documentation
 
-* [Akka Persistence JDBC 3.5.2 documentation](https://doc.akka.io/docs/akka-persistence-jdbc/3.5.2/) 
+* [Akka Persistence JDBC 3.5.x documentation](https://doc.akka.io/docs/akka-persistence-jdbc/3.5/)
 * [Snapshot documentation](https://doc.akka.io/docs/akka-persistence-jdbc/snapshot/)
 
 ## Release notes

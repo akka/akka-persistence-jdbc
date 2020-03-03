@@ -7,14 +7,9 @@
 akka-persistence-jdbc writes journal and snapshot entries to a configured JDBC store. It implements the full akka-persistence-query API and is therefore very useful for implementing DDD-style 
 application models using Akka for creating reactive applications.
 
-# Note (December 2019)
-
-**This project is moving from its creator's repository to become part of the Akka Github organisation.**
-Please find some background to it in [Issue #252](https://github.com/akka/akka-persistence-jdbc/issues/252).
-
 ## Documentation
 
-* [Akka Persistence JDBC 3.5.2 documentation](https://doc.akka.io/docs/akka-persistence-jdbc/3.5.2/) 
+* [Akka Persistence JDBC 3.5.x documentation](https://doc.akka.io/docs/akka-persistence-jdbc/3.5/)
 * [Snapshot documentation](https://doc.akka.io/docs/akka-persistence-jdbc/snapshot/)
 
 ## Release notes

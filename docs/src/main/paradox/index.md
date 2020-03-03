@@ -4,7 +4,6 @@ The Akka Persistence JDBC plugin allows for using JDBC-compliant databases as ba
 
 akka-persistence-jdbc writes journal and snapshot entries to a configured JDBC store. It implements the full akka-persistence-query API and is therefore very useful for implementing DDD-style application models using Akka and Scala for creating reactive applications.
 
-
 ## Module info
 
 @@dependency [Maven,sbt,Gradle] {
@@ -14,7 +13,6 @@ akka-persistence-jdbc writes journal and snapshot entries to a configured JDBC s
 }
 
 @@project-info{ projectId="core" }
-
 
 ## Release notes
 
@@ -27,21 +25,24 @@ For change log prior to v3.2.0, visit [Version History Page (wiki)](https://gith
 Contributions via GitHub pull requests are gladly accepted from their original author. Along with any pull requests, please state that the contribution is your original work and that you license the work to the project under the project's open source license. Whether or not you state this explicitly, by submitting any copyrighted material via pull request, email, or other means you agree to license the material under the project's open source license and warrant that you have the legal authority to do so.
 
 ## Code of Conduct
-Contributors all agree to follow the [W3C Code of Ethics and Professional Conduct][w3c-cond].
 
-If you want to take action, feel free to contact Dennis Vriend <dnvriend@gmail.com>. You can also contact W3C Staff as explained in [W3C Procedures][w3c-proc].
+Contributors all agree to follow the [Lightbend Community Code of Conduct][code-of-conduct].
 
 ## License
+
 This source code is made available under the [Apache 2.0 License][apache].
 
 ## Configuration
+
 The plugin relies on Slick to do create the SQL dialect for the database in use, therefore the following must be configured in `application.conf`
 
 Configure `akka-persistence`:
+
 - instruct akka persistence to use the `jdbc-journal` plugin,
 - instruct akka persistence to use the `jdbc-snapshot-store` plugin,
 
 Configure `slick`:
+
 - The following slick profiles are supported:
   - `slick.jdbc.PostgresProfile$`
   - `slick.jdbc.MySQLProfile$`
@@ -57,15 +58,14 @@ Configure `slick`:
 - @extref:[Oracle Schema](github:/src/test/resources/schema/oracle/oracle-schema.sql)
 - @extref:[SQL Server Schema](github:/src/test/resources/schema/sqlserver/sqlserver-schema.sql)
 
-## Configuration
+## Reference Configuration
 
-akka-persistence-jdbc provides the defaults as part of the @extref:[reference.conf](github:/src/main/resources/reference.conf)
-this file documents all the values which can be configured.
+akka-persistence-jdbc provides the defaults as part of the @extref:[reference.conf](github:/src/main/resources/reference.conf). This file documents all the values which can be configured.
 
 There are several possible ways to configure loading your database connections. Options will be explained below.
 
 ### One database connection pool per journal type
- 
+
 There is the possibility to create a separate database connection pool per journal-type (one pool for the write-journal,
 one pool for the snapshot-journal, and one pool for the read-journal). This is the default and the following example
 configuration shows how this is configured:
@@ -96,7 +96,7 @@ To enable your custom `SlickDatabaseProvider`, the fully qualified class name of
 needs to be configured in the application.conf. In addition, you might want to consider whether you want
 the database to be closed automatically:
 
-```
+```hocon
 akka-persistence-jdbc {
   database-provider-fqcn = "com.mypackage.CustomSlickDatabaseProvider"
 }
@@ -108,24 +108,24 @@ jdbc-snapshot-store {
 }
 ```
 
-
 ### DataSource lookup by JNDI name
+
 The plugin uses `Slick` as the database access library. Slick [supports jndi][slick-jndi] for looking up [DataSource][ds]s.
 
 To enable the JNDI lookup, you must add the following to your application.conf:
 
-```
+```hocon
 jdbc-journal {
   slick {
     profile = "slick.jdbc.PostgresProfile$"
-    jndiName = "java:jboss/datasources/PostgresDS"   
+    jndiName = "java:jboss/datasources/PostgresDS"
   }
 }
 ```
 
 When using the `use-shared-db = slick` setting, the follow configuration can serve as an example:
 
-```
+```hocon
 akka-persistence-jdbc {
   shared-databases {
     slick {
@@ -137,6 +137,7 @@ akka-persistence-jdbc {
 ```
 
 ## How to get the ReadJournal using Scala
+
 The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery` extension:
 
 ```scala
@@ -147,6 +148,7 @@ val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcR
 ```
 
 ## How to get the ReadJournal using Java
+
 The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery` extension:
 
 ```java
@@ -157,9 +159,11 @@ final JdbcReadJournal readJournal = PersistenceQuery.get(system).getReadJournalF
 ```
 
 ## Persistence Query
+
 The plugin supports the following queries:
 
 ## AllPersistenceIdsQuery and CurrentPersistenceIdsQuery
+
 `allPersistenceIds` and `currentPersistenceIds` are used for retrieving all persistenceIds of all persistent actors.
 
 ```scala
@@ -189,6 +193,7 @@ thus it is not a `live` query.
 The stream is completed with failure if there is a failure in executing the query in the backend journal.
 
 ## EventsByPersistenceIdQuery and CurrentEventsByPersistenceIdQuery
+
 `eventsByPersistenceId` and `currentEventsByPersistenceId` is used for retrieving events for
 a specific PersistentActor identified by persistenceId.
 
@@ -215,6 +220,7 @@ The returned event stream is ordered by sequence number, i.e. the same order as 
 The stream is completed with failure if there is a failure in executing the query in the backend journal.
 
 ## EventsByTag and CurrentEventsByTag
+
 `eventsByTag` and `currentEventsByTag` are used for retrieving events that were marked with a given
 `tag`, e.g. all domain events of an Aggregate Root type.
 
@@ -235,6 +241,7 @@ val willCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.currentE
 ```
 
 ## Tagging events
+
 To tag events you'll need to create an @extref:[Event Adapter](akka:persistence.html#event-adapters-scala) that will wrap the event in a @apidoc[akka.persistence.journal.Tagged] class with the given tags. The `Tagged` class will instruct `akka-persistence-jdbc` to tag the event with the given set of tags.
 
 The persistence plugin will __not__ store the `Tagged` class in the journal. It will strip the `tags` and `payload` from the `Tagged` class, and use the class only as an instruction to tag the event with the given tags and store the `payload` in the  `message` field of the journal table.
@@ -282,13 +289,14 @@ In addition to the offset the EventEnvelope also provides persistenceId and sequ
 The returned event stream contains only events that correspond to the given tag, and is ordered by the creation time of the events. The same stream elements (in same order) are returned for multiple executions of the same query. Deleted events are not deleted from the tagged event stream.
 
 ## Custom DAO Implementation
+
 The plugin supports loading a custom DAO for the journal and snapshot. You should implement a custom Data Access Object (DAO) if you wish to alter the default persistency strategy in
 any way, but wish to reuse all the logic that the plugin already has in place, eg. the Akka Persistence Query API. For example, the default persistency strategy that the plugin
 supports serializes journal and snapshot messages using a serializer of your choice and stores them as byte arrays in the database.
 
 By means of configuration in `application.conf` a DAO can be configured, below the default DAOs are shown:
 
-```bash
+```hocon
 jdbc-journal {
   dao = "akka.persistence.jdbc.journal.dao.ByteArrayJournalDao"
 }
@@ -326,12 +334,12 @@ You should register the Fully Qualified Class Name in `application.conf` so that
 For more information please review the two default implementations `akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao` and `akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao` or the demo custom DAO example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc) site.
 
 ## Explicitly shutting down the database connections
+
 The plugin automatically shuts down the HikariCP connection pool when the ActorSystem is terminated.
 This is done using @apidoc[ActorSystem.registerOnTermination](ActorSystem).
 
 [slick]: http://slick.lightbend.com/
 [slick-jndi]: http://slick.typesafe.com/doc/3.3.0/database.html#using-a-jndi-name
 [apache]: http://www.apache.org/licenses/LICENSE-2.0
-[w3c-cond]: http://www.w3.org/Consortium/cepc/
-[w3c-proc]: http://www.w3.org/Consortium/pwe/#Procedures
+[code-of-conduct]: https://www.lightbend.com/conduct
 [ds]: http://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html

@@ -313,8 +313,7 @@ jdbc-read-journal {
 Storing messages as byte arrays in blobs is not the only way to store information in a database. For example, you could store messages with full type information as a normal database rows, each event type having its own table.
 For example, implementing a Journal Log table that stores all persistenceId, sequenceNumber and event type discriminator field, and storing the event data in another table with full typing
 
-You only have to implement two interfaces `akka.persistence.jdbc.journal.dao.JournalDao` and/or `akka.persistence.jdbc.snapshot.dao.SnapshotDao`. As these APIs are only now exposed for public use, the interfaces may change when the API needs to
-change for whatever reason.
+You only have to implement two interfaces `akka.persistence.jdbc.journal.dao.JournalDao` and/or `akka.persistence.jdbc.snapshot.dao.SnapshotDao`. 
 
 For example, take a look at the following two custom DAOs:
 
@@ -332,6 +331,14 @@ As you can see, the custom DAOs get a _Slick database_, a _Slick profile_, the j
 You should register the Fully Qualified Class Name in `application.conf` so that the custom DAOs will be used.
 
 For more information please review the two default implementations `akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao` and `akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao` or the demo custom DAO example from the [demo-akka-persistence](https://github.com/dnvriend/demo-akka-persistence-jdbc) site.
+
+@@@warning { title="Binary compatibility" }
+
+The APIs for custom DAOs are not guaranteed to be binary backwards compatible between major versions of the plugin.
+For example 4.0.0 is not binary backwards compatible with 3.5.x. There may also be source incompatible changes of
+the APIs for customer DAOs if new capabilities must be added to to the traits.
+
+@@@
 
 ## Explicitly shutting down the database connections
 

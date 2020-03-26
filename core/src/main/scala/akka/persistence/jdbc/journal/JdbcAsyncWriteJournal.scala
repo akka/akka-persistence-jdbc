@@ -109,7 +109,8 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   override def asyncReplayMessages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(
       recoveryCallback: (PersistentRepr) => Unit): Future[Unit] =
     journalDao
-      .messages(persistenceId, fromSequenceNr, toSequenceNr, max)
+      .messagesWithBatch(persistenceId, fromSequenceNr, toSequenceNr, journalConfig.daoConfig.replayBatchSize, None)
+      .take(max)
       .mapAsync(1)(deserializedRepr => Future.fromTry(deserializedRepr))
       .runForeach(recoveryCallback)
       .map(_ => ())

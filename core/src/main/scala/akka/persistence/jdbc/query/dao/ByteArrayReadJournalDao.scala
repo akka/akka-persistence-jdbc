@@ -9,22 +9,21 @@ package query.dao
 import akka.NotUsed
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.config.ReadJournalConfig
+import akka.persistence.jdbc.journal.dao.BaseJournalDaoWithReadMessages
 import akka.persistence.jdbc.journal.dao.ByteArrayJournalSerializer
 import akka.persistence.jdbc.query.dao.TagFilterFlow.perfectlyMatchTag
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.{ Flow, Source }
-import slick.basic.DatabasePublisher
 import slick.jdbc.JdbcProfile
 import slick.jdbc.GetResult
 import slick.jdbc.JdbcBackend._
-
 import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
-trait BaseByteArrayReadJournalDao extends ReadJournalDao {
+trait BaseByteArrayReadJournalDao extends ReadJournalDao with BaseJournalDaoWithReadMessages {
   def db: Database
   val profile: JdbcProfile
   def queries: ReadJournalQueries
@@ -191,7 +190,7 @@ class ByteArrayReadJournalDao(
     val db: Database,
     val profile: JdbcProfile,
     val readJournalConfig: ReadJournalConfig,
-    serialization: Serialization)(implicit ec: ExecutionContext, mat: Materializer)
+    serialization: Serialization)(implicit val ec: ExecutionContext, val mat: Materializer)
     extends BaseByteArrayReadJournalDao
     with OracleReadJournalDao
     with H2ReadJournalDao {

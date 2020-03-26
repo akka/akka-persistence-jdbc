@@ -12,10 +12,11 @@ import akka.stream.scaladsl.Source
 import akka.testkit.TestProbe
 import akka.util.Timeout
 import akka.pattern.ask
-
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.Try
+
+import akka.actor.Scheduler
 
 object TestProbeReadJournalDao {
   case class JournalSequence(offset: Long, limit: Long)
@@ -52,6 +53,13 @@ class TestProbeReadJournalDao(val probe: TestProbe) extends ReadJournalDao {
       toSequenceNr: Long,
       max: Long): Source[Try[PersistentRepr], NotUsed] = ???
 
+  override def messagesWithBatch(
+      persistenceId: String,
+      fromSequenceNr: Long,
+      toSequenceNr: Long,
+      batchSize: Int,
+      refreshInterval: Option[(FiniteDuration, Scheduler)]): Source[Try[PersistentRepr], NotUsed] = ???
+
   /**
    * @param offset Minimum value to retrieve
    * @param limit  Maximum number of values to retrieve
@@ -66,4 +74,5 @@ class TestProbeReadJournalDao(val probe: TestProbe) extends ReadJournalDao {
    * @return The value of the maximum (ordering) id in the journal
    */
   override def maxJournalSequence(): Future[Long] = Future.successful(0)
+
 }

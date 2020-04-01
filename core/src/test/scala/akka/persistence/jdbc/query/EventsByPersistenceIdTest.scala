@@ -11,8 +11,10 @@ import akka.persistence.query.{ EventEnvelope, Sequence }
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import akka.pattern.ask
 
 abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(config) {
+
   it should "not find any events for unknown pid" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     journalOps.withEventsByPersistenceId()("unkown-pid", 0L, Long.MaxValue) { tp =>
@@ -114,6 +116,53 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(3), "my-1", 3, 3))
         tp.request(1)
         tp.expectComplete()
+        tp.cancel()
+      }
+    }
+  }
+
+  it should "deliver EventEnvelopes non-zero timestamps" in withActorSystem { implicit system =>
+
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
+    withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
+
+      val testStartTime = System.currentTimeMillis()
+
+      (actor1 ? withTags(1, "number")).futureValue
+      (actor2 ? withTags(2, "number")).futureValue
+      (actor3 ? withTags(3, "number")).futureValue
+
+      def assertTimestamp(timestamp: Long, clue: String) = {
+        withClue(clue) {
+          timestamp should !==(0L)
+          // we want to prove that the event got a non-zero timestamp
+          // but also a timestamp that between some boundaries around this test run
+          (timestamp - testStartTime) should be < 120000L
+          (timestamp - testStartTime) should be > 0L
+        }
+      }
+
+      journalOps.withEventsByPersistenceId()("my-1", 0, 1) { tp =>
+        tp.request(Int.MaxValue)
+        tp.expectNextPF {
+          case ev @ EventEnvelope(Sequence(1), "my-1", 1, 1) => assertTimestamp(ev.timestamp, "my-1")
+        }
+        tp.cancel()
+      }
+
+      journalOps.withEventsByPersistenceId()("my-2", 0, 1) { tp =>
+        tp.request(Int.MaxValue)
+        tp.expectNextPF {
+          case ev @ EventEnvelope(Sequence(1), "my-2", 1, 2) => assertTimestamp(ev.timestamp, "my-2")
+        }
+        tp.cancel()
+      }
+
+      journalOps.withEventsByPersistenceId()("my-3", 0, 1) { tp =>
+        tp.request(Int.MaxValue)
+        tp.expectNextPF {
+          case ev @ EventEnvelope(Sequence(1), "my-3", 1, 3) => assertTimestamp(ev.timestamp, "my-3")
+        }
         tp.cancel()
       }
     }

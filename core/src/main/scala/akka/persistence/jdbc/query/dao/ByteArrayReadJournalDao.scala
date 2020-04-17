@@ -21,6 +21,8 @@ import slick.jdbc.GetResult
 import slick.jdbc.JdbcBackend._
 import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.Failure
+import scala.util.Success
 import scala.util.Try
 
 trait BaseByteArrayReadJournalDao extends ReadJournalDao with BaseJournalDaoWithReadMessages {
@@ -53,10 +55,15 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao with BaseJournalDaoWith
       persistenceId: String,
       fromSequenceNr: Long,
       toSequenceNr: Long,
-      max: Long): Source[Try[PersistentRepr], NotUsed] =
+      max: Long): Source[Try[(PersistentRepr, Long)], NotUsed] = {
     Source
       .fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
-      .via(serializer.deserializeFlowWithoutTags)
+      .via(serializer.deserializeFlow)
+      .map {
+        case Success((repr, _, ordering)) => Success(repr -> ordering)
+        case Failure(e)                   => Failure(e)
+      }
+  }
 
   override def journalSequence(offset: Long, limit: Long): Source[Long, NotUsed] =
     Source.fromPublisher(db.stream(queries.journalSequenceQuery(offset, limit).result))
@@ -174,7 +181,7 @@ trait H2ReadJournalDao extends ReadJournalDao {
       persistenceId: String,
       fromSequenceNr: Long,
       toSequenceNr: Long,
-      max: Long): Source[Try[PersistentRepr], NotUsed] =
+      max: Long): Source[Try[(PersistentRepr, Long)], NotUsed] =
     super.messages(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max))
 
   private def correctMaxForH2Driver(max: Long): Long = {

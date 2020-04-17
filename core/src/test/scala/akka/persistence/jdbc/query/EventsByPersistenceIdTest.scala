@@ -8,12 +8,14 @@ package akka.persistence.jdbc.query
 import akka.Done
 import akka.persistence.jdbc.query.EventAdapterTest.{ Event, TaggedAsyncEvent }
 import akka.persistence.query.{ EventEnvelope, Sequence }
-
 import scala.concurrent.Future
 import scala.concurrent.duration._
+
 import akka.pattern.ask
+import akka.persistence.query.Offset
 
 abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(config) {
+  import QueryTestSpec.EventEnvelopeProbeOps
 
   it should "not find any events for unknown pid" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
@@ -25,7 +27,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
     }
   }
 
-  it should "find events from an offset" in withActorSystem { implicit system =>
+  it should "find events from sequenceNr" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors() { (actor1, actor2, actor3) =>
       actor1 ! withTags(1, "number")
@@ -45,7 +47,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
       journalOps.withEventsByPersistenceId()("my-1", 0, 1) { tp =>
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 1, 1)
         tp.request(1)
         tp.expectComplete()
         tp.cancel()
@@ -53,7 +55,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
       journalOps.withEventsByPersistenceId()("my-1", 1, 1) { tp =>
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 1, 1)
         tp.request(1)
         tp.expectComplete()
         tp.cancel()
@@ -61,9 +63,9 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
       journalOps.withEventsByPersistenceId()("my-1", 1, 2) { tp =>
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 1, 1)
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, 2))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 2, 2)
         tp.request(1)
         tp.expectComplete()
         tp.cancel()
@@ -71,7 +73,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
       journalOps.withEventsByPersistenceId()("my-1", 2, 2) { tp =>
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, 2))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 2, 2)
         tp.request(1)
         tp.expectComplete()
         tp.cancel()
@@ -79,9 +81,9 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
       journalOps.withEventsByPersistenceId()("my-1", 2, 3) { tp =>
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, 2))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 2, 2)
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(3), "my-1", 3, 3))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 3, 3)
         tp.request(1)
         tp.expectComplete()
         tp.cancel()
@@ -89,7 +91,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
       journalOps.withEventsByPersistenceId()("my-1", 3, 3) { tp =>
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(3), "my-1", 3, 3))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 3, 3)
         tp.request(1)
         tp.expectComplete()
         tp.cancel()
@@ -97,11 +99,11 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
       journalOps.withEventsByPersistenceId()("my-1", 0, 3) { tp =>
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 1, 1)
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, 2))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 2, 2)
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(3), "my-1", 3, 3))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 3, 3)
         tp.request(1)
         tp.expectComplete()
         tp.cancel()
@@ -109,11 +111,11 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
       journalOps.withEventsByPersistenceId()("my-1", 1, 3) { tp =>
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 1, 1)
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, 2))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 2, 2)
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(3), "my-1", 3, 3))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 3, 3)
         tp.request(1)
         tp.expectComplete()
         tp.cancel()
@@ -121,11 +123,55 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
     }
   }
 
-  it should "deliver EventEnvelopes non-zero timestamps" in withActorSystem { implicit system =>
+  it should "include ordering Offset in EventEnvelope" in withActorSystem { implicit system =>
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
+    withTestActors() { (actor1, actor2, actor3) =>
+      actor1 ! withTags(1, "ordering")
+      actor1 ! withTags(2, "ordering")
+      actor1 ! withTags(3, "ordering")
 
+      eventually {
+        journalOps.countJournal.futureValue shouldBe 3
+      }
+
+      journalOps.withEventsByPersistenceId()("my-1", 0, Long.MaxValue) { tp =>
+        tp.request(100)
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 1, 1)
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 2, 2)
+
+        val env3 = tp.expectNext(ExpectNextTimeout)
+        val ordering3 = env3.offset match {
+          case Sequence(value) => value
+        }
+
+        actor2 ! withTags(4, "ordering")
+        eventually {
+          journalOps.countJournal.futureValue shouldBe 4
+        }
+        actor3 ! withTags(5, "ordering")
+        eventually {
+          journalOps.countJournal.futureValue shouldBe 5
+        }
+        actor1 ! withTags(6, "ordering")
+        eventually {
+          journalOps.countJournal.futureValue shouldBe 6
+        }
+
+        val env6 = tp.expectNext(ExpectNextTimeout)
+        env6.persistenceId shouldBe "my-1"
+        env6.sequenceNr shouldBe 4
+        env6.event shouldBe 6
+        // event 4 and 5 persisted before 6 by different actors, increasing the ordering
+        env6.offset shouldBe Offset.sequence(ordering3 + 3)
+
+        tp.cancel()
+      }
+    }
+  }
+
+  it should "deliver EventEnvelopes non-zero timestamps" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
-
       val testStartTime = System.currentTimeMillis()
 
       (actor1 ? withTags(1, "number")).futureValue
@@ -153,7 +199,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
       journalOps.withEventsByPersistenceId()("my-2", 0, 1) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNextPF {
-          case ev @ EventEnvelope(Sequence(1), "my-2", 1, 2) => assertTimestamp(ev.timestamp, "my-2")
+          case ev @ EventEnvelope(_, "my-2", 1, 2) => assertTimestamp(ev.timestamp, "my-2")
         }
         tp.cancel()
       }
@@ -161,7 +207,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
       journalOps.withEventsByPersistenceId()("my-3", 0, 1) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNextPF {
-          case ev @ EventEnvelope(Sequence(1), "my-3", 1, 3) => assertTimestamp(ev.timestamp, "my-3")
+          case ev @ EventEnvelope(_, "my-3", 1, 3) => assertTimestamp(ev.timestamp, "my-3")
         }
         tp.cancel()
       }
@@ -176,11 +222,11 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         tp.expectNoMessage(100.millis)
 
         actor1 ! 1
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 1, 1)
         tp.expectNoMessage(100.millis)
 
         actor1 ! 2
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, 2))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 2, 2)
         tp.expectNoMessage(100.millis)
         tp.cancel()
       }
@@ -196,11 +242,11 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
           tp.expectNoMessage(100.millis)
 
           actor1 ! 1
-          tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, 1))
+          tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 1, 1)
           tp.expectNoMessage(100.millis)
 
           actor1 ! 2
-          tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, 2))
+          tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 2, 2)
           tp.expectNoMessage(100.millis)
 
           actor2 ! 1
@@ -209,7 +255,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
           tp.expectNoMessage(100.millis)
 
           actor1 ! 3
-          tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(3), "my-1", 3, 3))
+          tp.expectNextEventEnvelope(ExpectNextTimeout, "my-1", 3, 3)
           tp.expectNoMessage(100.millis)
 
           tp.cancel()
@@ -231,11 +277,11 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
       journalOps.withEventsByPersistenceId()("my-2", 0, Long.MaxValue) { tp =>
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-2", 1, 1))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-2", 1, 1)
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-2", 2, 2))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-2", 2, 2)
         tp.request(1)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(3), "my-2", 3, 3))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-2", 3, 3)
         tp.expectNoMessage(100.millis)
 
         actor2 ! 5
@@ -247,9 +293,9 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
         }
 
         tp.request(3)
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(4), "my-2", 4, 5))
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(5), "my-2", 5, 6))
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(6), "my-2", 6, 7))
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-2", 4, 5)
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-2", 5, 6)
+        tp.expectNextEventEnvelope(ExpectNextTimeout, "my-2", 6, 7)
         tp.expectNoMessage(100.millis)
 
         tp.cancel()

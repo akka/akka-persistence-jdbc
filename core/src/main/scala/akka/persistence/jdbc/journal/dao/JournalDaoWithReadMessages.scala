@@ -16,22 +16,26 @@ import akka.stream.scaladsl.Source
 trait JournalDaoWithReadMessages {
 
   /**
-   * Returns a Source of PersistentRepr for a certain persistenceId
+   * Returns a Source of PersistentRepr and ordering number for a certain persistenceId.
+   * It includes the events with sequenceNr between `fromSequenceNr` (inclusive) and
+   * `toSequenceNr` (inclusive).
    */
   def messages(
       persistenceId: String,
       fromSequenceNr: Long,
       toSequenceNr: Long,
-      max: Long): Source[Try[PersistentRepr], NotUsed]
+      max: Long): Source[Try[(PersistentRepr, Long)], NotUsed]
 
   /**
-   * Returns a Source of PersistentRepr for a certain persistenceId
+   * Returns a Source of PersistentRepr and ordering number for a certain persistenceId.
+   * It includes the events with sequenceNr between `fromSequenceNr` (inclusive) and
+   * `toSequenceNr` (inclusive).
    */
   def messagesWithBatch(
       persistenceId: String,
       fromSequenceNr: Long,
       toSequenceNr: Long,
       batchSize: Int,
-      refreshInterval: Option[(FiniteDuration, Scheduler)]): Source[Try[PersistentRepr], NotUsed]
+      refreshInterval: Option[(FiniteDuration, Scheduler)]): Source[Try[(PersistentRepr, Long)], NotUsed]
 
 }

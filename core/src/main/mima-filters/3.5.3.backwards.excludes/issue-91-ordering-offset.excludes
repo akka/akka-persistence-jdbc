@@ -1,0 +1,8 @@
+# #91 changing signature of messages and messagesWithBatch in JournalDaoWithReadMessages
+#     tuple (PersistentRepr, Long) to include the ordering number
+ProblemFilters.exclude[DirectMissingMethodProblem]("akka.persistence.jdbc.serialization.FlowPersistentReprSerializer.deserializeFlowWithoutTags")
+ProblemFilters.exclude[DirectMissingMethodProblem]("akka.persistence.jdbc.journal.dao.ByteArrayJournalSerializer.deserializeFlowWithoutTags")
+ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.query.scaladsl.JdbcReadJournal$ContinueDelayed$")
+ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.query.scaladsl.JdbcReadJournal$FlowControl")
+ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.query.scaladsl.JdbcReadJournal$Stop$")
+ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.query.scaladsl.JdbcReadJournal$Continue$")

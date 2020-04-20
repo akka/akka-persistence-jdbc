@@ -66,6 +66,7 @@ class JournalPluginConfig(config: Config) {
 class BaseByteArrayJournalDaoConfig(config: Config) {
   val bufferSize: Int = config.asInt("bufferSize", 1000)
   val batchSize: Int = config.asInt("batchSize", 400)
+  val replayBatchSize: Int = config.asInt("replayBatchSize", 400)
   val parallelism: Int = config.asInt("parallelism", 8)
   val logicalDelete: Boolean = config.asBoolean("logicalDelete", default = true)
   override def toString: String = s"BaseByteArrayJournalDaoConfig($bufferSize,$batchSize,$parallelism,$logicalDelete)"

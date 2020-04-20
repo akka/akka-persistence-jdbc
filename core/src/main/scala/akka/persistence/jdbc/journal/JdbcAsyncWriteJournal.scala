@@ -81,8 +81,18 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   private val writeInProgress: JMap[String, Future[_]] = new JHMap
 
   override def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] = {
-    val future = journalDao.asyncWriteMessages(messages)
-    val persistenceId = messages.head.persistenceId
+
+    // add timestamp to all payloads in all AtomicWrite messages
+    val timedMessages =
+      messages.map { atomWrt =>
+        // since they are all persisted atomically,
+        // all PersistentRepr on the same atomic batch gets the same timestamp
+        val now = System.currentTimeMillis()
+        atomWrt.copy(payload = atomWrt.payload.map(pr => pr.withTimestamp(now)))
+      }
+
+    val future = journalDao.asyncWriteMessages(timedMessages)
+    val persistenceId = timedMessages.head.persistenceId
     writeInProgress.put(persistenceId, future)
     future.onComplete(_ => self ! WriteFinished(persistenceId, future))
     future
@@ -109,7 +119,8 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   override def asyncReplayMessages(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long, max: Long)(
       recoveryCallback: (PersistentRepr) => Unit): Future[Unit] =
     journalDao
-      .messages(persistenceId, fromSequenceNr, toSequenceNr, max)
+      .messagesWithBatch(persistenceId, fromSequenceNr, toSequenceNr, journalConfig.daoConfig.replayBatchSize, None)
+      .take(max)
       .mapAsync(1)(deserializedRepr => Future.fromTry(deserializedRepr))
       .runForeach(recoveryCallback)
       .map(_ => ())

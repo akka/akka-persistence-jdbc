@@ -1,0 +1,9 @@
+# #322 Adding messagesWithBatch to Dao traits
+ProblemFilters.exclude[InheritedNewAbstractMethodProblem]("akka.persistence.jdbc.journal.dao.JournalDao.messagesWithBatch")
+ProblemFilters.exclude[InheritedNewAbstractMethodProblem]("akka.persistence.jdbc.journal.dao.H2JournalDao.messagesWithBatch")
+ProblemFilters.exclude[InheritedNewAbstractMethodProblem]("akka.persistence.jdbc.journal.dao.JournalDaoWithUpdates.messagesWithBatch")
+ProblemFilters.exclude[InheritedNewAbstractMethodProblem]("akka.persistence.jdbc.query.dao.BaseByteArrayReadJournalDao.ec")
+ProblemFilters.exclude[InheritedNewAbstractMethodProblem]("akka.persistence.jdbc.query.dao.BaseByteArrayReadJournalDao.mat")
+ProblemFilters.exclude[InheritedNewAbstractMethodProblem]("akka.persistence.jdbc.query.dao.H2ReadJournalDao.messagesWithBatch")
+ProblemFilters.exclude[InheritedNewAbstractMethodProblem]("akka.persistence.jdbc.query.dao.OracleReadJournalDao.messagesWithBatch")
+ProblemFilters.exclude[InheritedNewAbstractMethodProblem]("akka.persistence.jdbc.query.dao.ReadJournalDao.messagesWithBatch")

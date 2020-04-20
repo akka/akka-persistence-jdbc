@@ -9,14 +9,14 @@ object Dependencies {
   val Scala213 = "2.13.1"
   val ScalaVersions = Seq(Scala212, Scala213)
 
-  val AkkaVersion = if (Nightly) "2.6.0" else "2.5.25"
+  val AkkaVersion = if (Nightly) "2.6.0" else "2.5.29"
   val AkkaBinaryVersion = if (Nightly) "2.6" else "2.5"
 
   val SlickVersion = "3.3.2"
   val ScalaTestVersion = "3.0.8"
 
   val JdbcDrivers = Seq(
-    "org.postgresql" % "postgresql" % "42.2.11",
+    "org.postgresql" % "postgresql" % "42.2.12",
     "com.h2database" % "h2" % "1.4.200",
     "mysql" % "mysql-connector-java" % "8.0.19",
     "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8")
@@ -36,7 +36,7 @@ object Dependencies {
       "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Test)
 
   val Migration: Seq[ModuleID] = Seq(
-      "org.flywaydb" % "flyway-core" % "6.3.0",
+      "org.flywaydb" % "flyway-core" % "6.3.2",
       "com.typesafe" % "config" % "1.4.0",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       "org.testcontainers" % "postgresql" % "1.13.0" % Test,

@@ -22,11 +22,12 @@ import akka.util.Timeout
 import com.typesafe.config.Config
 import slick.jdbc.JdbcBackend._
 import slick.jdbc.JdbcProfile
-
 import scala.collection.immutable._
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
+
+import akka.actor.Scheduler
 import akka.persistence.jdbc.util.PluginVersionChecker
 
 object JdbcReadJournal {
@@ -118,71 +119,34 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
     adapter.fromJournal(repr.payload, repr.manifest).events.map(repr.withPayload)
   }
 
-  private def currentJournalEventsByPersistenceId(
-      persistenceId: String,
-      fromSequenceNr: Long,
-      toSequenceNr: Long,
-      max: Long): Source[PersistentRepr, NotUsed] =
-    readJournalDao
-      .messages(persistenceId, fromSequenceNr, toSequenceNr, max)
-      .mapAsync(1)(deserializedRepr => Future.fromTry(deserializedRepr))
-
   override def currentEventsByPersistenceId(
       persistenceId: String,
       fromSequenceNr: Long,
       toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
-    eventsByPersistenceIdSource(persistenceId, fromSequenceNr, toSequenceNr, currentEventsOnly = true)
+    eventsByPersistenceIdSource(persistenceId, fromSequenceNr, toSequenceNr, None)
 
   override def eventsByPersistenceId(
       persistenceId: String,
       fromSequenceNr: Long,
       toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
-    eventsByPersistenceIdSource(persistenceId, fromSequenceNr, toSequenceNr, currentEventsOnly = false)
+    eventsByPersistenceIdSource(
+      persistenceId,
+      fromSequenceNr,
+      toSequenceNr,
+      Some(readJournalConfig.refreshInterval -> system.scheduler))
 
   private def eventsByPersistenceIdSource(
       persistenceId: String,
       fromSequenceNr: Long,
       toSequenceNr: Long,
-      currentEventsOnly: Boolean): Source[EventEnvelope, NotUsed] = {
-    import JdbcReadJournal._
+      refreshInterval: Option[(FiniteDuration, Scheduler)]): Source[EventEnvelope, NotUsed] = {
     val batchSize = readJournalConfig.maxBufferSize
-
-    Source
-      .unfoldAsync[(Long, FlowControl), Seq[PersistentRepr]]((Math.max(1, fromSequenceNr), Continue)) {
-        case (from, control) =>
-          def retrieveNextBatch(): Future[Option[((Long, FlowControl), Seq[PersistentRepr])]] = {
-            for {
-              xs <- currentJournalEventsByPersistenceId(persistenceId, from, toSequenceNr, batchSize).runWith(Sink.seq)
-            } yield {
-              val hasMoreEvents = xs.size == batchSize
-              // Events are ordered by sequence number, therefore the last one is the largest)
-              val lastSeqNrInBatch: Option[Long] = xs.lastOption.map(_.sequenceNr)
-              val hasLastEvent = lastSeqNrInBatch.exists(_ >= toSequenceNr)
-              val nextControl: FlowControl =
-                if (hasLastEvent || from > toSequenceNr) Stop
-                else if (hasMoreEvents) Continue
-                else if (currentEventsOnly) Stop
-                else ContinueDelayed
-
-              val nextFrom: Long = lastSeqNrInBatch match {
-                // Continue querying from the last sequence number (the events are ordered)
-                case Some(lastSeqNr) => lastSeqNr + 1
-                case None            => from
-              }
-              Some((nextFrom, nextControl), xs)
-            }
-          }
-
-          control match {
-            case Stop     => Future.successful(None)
-            case Continue => retrieveNextBatch()
-            case ContinueDelayed =>
-              akka.pattern.after(readJournalConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
-          }
-      }
-      .mapConcat(identity)
+    readJournalDao
+      .messagesWithBatch(persistenceId, fromSequenceNr, toSequenceNr, batchSize, refreshInterval)
+      .mapAsync(1)(deserializedRepr => Future.fromTry(deserializedRepr))
       .mapConcat(adaptEvents)
-      .map(repr => EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload))
+      .map(repr =>
+        EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload, repr.timestamp))
   }
 
   /**
@@ -208,7 +172,8 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
     else {
       readJournalDao.eventsByTag(tag, offset, latestOrdering.maxOrdering, max).mapAsync(1)(Future.fromTry).mapConcat {
         case (repr, _, ordering) =>
-          adaptEvents(repr).map(r => EventEnvelope(Sequence(ordering), r.persistenceId, r.sequenceNr, r.payload))
+          adaptEvents(repr).map(r =>
+            EventEnvelope(Sequence(ordering), r.persistenceId, r.sequenceNr, r.payload, r.timestamp))
       }
     }
   }

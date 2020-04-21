@@ -113,7 +113,7 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
         val probe =
           messagesSrc
             .map {
-              case Success(repr) =>
+              case Success((repr, _)) =>
                 if (repr.sequenceNr % 100 == 0)
                   log.info(s"fetched: ${repr.persistenceId} - ${repr.sequenceNr}/${totalMessages}")
               case Failure(exception) =>

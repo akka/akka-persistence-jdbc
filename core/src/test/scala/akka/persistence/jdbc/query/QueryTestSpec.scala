@@ -178,6 +178,37 @@ class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)(
       .map(_.sum)
 }
 
+object QueryTestSpec {
+  implicit final class EventEnvelopeProbeOps(val probe: TestSubscriber.Probe[EventEnvelope]) extends AnyVal {
+    def expectNextEventEnvelope(
+        persistenceId: String,
+        sequenceNr: Long,
+        event: Any): TestSubscriber.Probe[EventEnvelope] = {
+      val env = probe.expectNext()
+      assertEnvelope(env, persistenceId, sequenceNr, event)
+      probe
+    }
+
+    def expectNextEventEnvelope(
+        timeout: FiniteDuration,
+        persistenceId: String,
+        sequenceNr: Long,
+        event: Any): TestSubscriber.Probe[EventEnvelope] = {
+      val env = probe.expectNext(timeout)
+      assertEnvelope(env, persistenceId, sequenceNr, event)
+      probe
+    }
+
+    private def assertEnvelope(env: EventEnvelope, persistenceId: String, sequenceNr: Long, event: Any): Unit = {
+      assert(
+        env.persistenceId == persistenceId,
+        s"expected persistenceId $persistenceId, found ${env.persistenceId}, in $env")
+      assert(env.sequenceNr == sequenceNr, s"expected sequenceNr $sequenceNr, found ${env.sequenceNr}, in $env")
+      assert(env.event == event, s"expected event $event, found ${env.event}, in $env")
+    }
+  }
+}
+
 abstract class QueryTestSpec(config: String, configOverrides: Map[String, ConfigValue] = Map.empty)
     extends SingleActorSystemPerTestSpec(config, configOverrides) {
   case class DeleteCmd(toSequenceNr: Long = Long.MaxValue) extends Serializable
@@ -270,6 +301,7 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
   }
 
   def withTags(payload: Any, tags: String*) = Tagged(payload, Set(tags: _*))
+
 }
 
 trait PostgresCleaner extends QueryTestSpec {

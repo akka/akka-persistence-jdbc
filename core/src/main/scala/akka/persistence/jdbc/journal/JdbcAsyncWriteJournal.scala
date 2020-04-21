@@ -121,8 +121,10 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
     journalDao
       .messagesWithBatch(persistenceId, fromSequenceNr, toSequenceNr, journalConfig.daoConfig.replayBatchSize, None)
       .take(max)
-      .mapAsync(1)(deserializedRepr => Future.fromTry(deserializedRepr))
-      .runForeach(recoveryCallback)
+      .mapAsync(1)(reprAndOrdNr => Future.fromTry(reprAndOrdNr))
+      .runForeach {
+        case (repr, _) => recoveryCallback(repr)
+      }
       .map(_ => ())
 
   override def postStop(): Unit = {

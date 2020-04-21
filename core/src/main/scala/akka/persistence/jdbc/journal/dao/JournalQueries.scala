@@ -83,4 +83,5 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
       .take(max)
 
   val messagesQuery = Compiled(_messagesQuery _)
+
 }

@@ -51,14 +51,14 @@ class TestProbeReadJournalDao(val probe: TestProbe) extends ReadJournalDao {
       persistenceId: String,
       fromSequenceNr: Long,
       toSequenceNr: Long,
-      max: Long): Source[Try[PersistentRepr], NotUsed] = ???
+      max: Long): Source[Try[(PersistentRepr, Long)], NotUsed] = ???
 
   override def messagesWithBatch(
       persistenceId: String,
       fromSequenceNr: Long,
       toSequenceNr: Long,
       batchSize: Int,
-      refreshInterval: Option[(FiniteDuration, Scheduler)]): Source[Try[PersistentRepr], NotUsed] = ???
+      refreshInterval: Option[(FiniteDuration, Scheduler)]): Source[Try[(PersistentRepr, Long)], NotUsed] = ???
 
   /**
    * @param offset Minimum value to retrieve

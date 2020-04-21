@@ -12,6 +12,7 @@ import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.query.JournalSequenceActor.{ GetMaxOrderingId, MaxOrderingId }
 import akka.persistence.jdbc.query.dao.ReadJournalDao
 import akka.persistence.jdbc.db.SlickExtension
+import akka.persistence.jdbc.journal.dao.FlowControl
 import akka.persistence.query.scaladsl._
 import akka.persistence.query.{ EventEnvelope, Offset, Sequence }
 import akka.persistence.{ Persistence, PersistentRepr }
@@ -32,20 +33,6 @@ import akka.persistence.jdbc.util.PluginVersionChecker
 
 object JdbcReadJournal {
   final val Identifier = "jdbc-read-journal"
-
-  private sealed trait FlowControl
-
-  /** Keep querying - used when we are sure that there is more events to fetch */
-  private case object Continue extends FlowControl
-
-  /**
-   * Keep querying with delay - used when we have consumed all events,
-   * but want to poll for future events
-   */
-  private case object ContinueDelayed extends FlowControl
-
-  /** Stop querying - used when we reach the desired offset  */
-  private case object Stop extends FlowControl
 }
 
 class JdbcReadJournal(config: Config, configPath: String)(implicit val system: ExtendedActorSystem)
@@ -97,9 +84,26 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
   private val delaySource =
     Source.tick(readJournalConfig.refreshInterval, 0.seconds, 0).take(1)
 
+  /**
+   * Same type of query as `persistenceIds` but the event stream
+   * is completed immediately when it reaches the end of the "result set". Events that are
+   * stored after the query is completed are not included in the event stream.
+   */
   override def currentPersistenceIds(): Source[String, NotUsed] =
     readJournalDao.allPersistenceIdsSource(Long.MaxValue)
 
+  /**
+   * `persistenceIds` is used to retrieve a stream of all `persistenceId`s as strings.
+   *
+   * The stream guarantees that a `persistenceId` is only emitted once and there are no duplicates.
+   * Order is not defined. Multiple executions of the same stream (even bounded) may emit different
+   * sequence of `persistenceId`s.
+   *
+   * The stream is not completed when it reaches the end of the currently known `persistenceId`s,
+   * but it continues to push new `persistenceId`s when new events are persisted.
+   * Corresponding query that is completed when it reaches the end of the currently
+   * known `persistenceId`s is provided by `currentPersistenceIds`.
+   */
   override def persistenceIds(): Source[String, NotUsed] =
     Source
       .repeat(0)
@@ -119,12 +123,45 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
     adapter.fromJournal(repr.payload, repr.manifest).events.map(repr.withPayload)
   }
 
+  /**
+   * Same type of query as `eventsByPersistenceId` but the event stream
+   * is completed immediately when it reaches the end of the "result set". Events that are
+   * stored after the query is completed are not included in the event stream.
+   */
   override def currentEventsByPersistenceId(
       persistenceId: String,
       fromSequenceNr: Long,
       toSequenceNr: Long): Source[EventEnvelope, NotUsed] =
     eventsByPersistenceIdSource(persistenceId, fromSequenceNr, toSequenceNr, None)
 
+  /**
+   * `eventsByPersistenceId` is used to retrieve a stream of events for a particular persistenceId.
+   *
+   * The `EventEnvelope` contains the event and provides `persistenceId` and `sequenceNr`
+   * for each event. The `sequenceNr` is the sequence number for the persistent actor with the
+   * `persistenceId` that persisted the event. The `persistenceId` + `sequenceNr` is an unique
+   * identifier for the event.
+   *
+   * `fromSequenceNr` and `toSequenceNr` can be specified to limit the set of returned events.
+   * The `fromSequenceNr` and `toSequenceNr` are inclusive.
+   *
+   * The `EventEnvelope` also provides the `offset` that corresponds to the `ordering` column in
+   * the Journal table. The `ordering` is a sequential id number that uniquely identifies the
+   * position of each event, also across different `persistenceId`. The `Offset` type is
+   * `akka.persistence.query.Sequence` with the `ordering` as the offset value. This is the
+   * same `ordering` number as is used in the offset of the `eventsByTag` query.
+   *
+   * The returned event stream is ordered by `sequenceNr`.
+   *
+   * Causality is guaranteed (`sequenceNr`s of events for a particular `persistenceId` are always ordered
+   * in a sequence monotonically increasing by one). Multiple executions of the same bounded stream are
+   * guaranteed to emit exactly the same stream of events.
+   *
+   * The stream is not completed when it reaches the end of the currently stored events,
+   * but it continues to push new events when new events are persisted.
+   * Corresponding query that is completed when it reaches the end of the currently
+   * stored events is provided by `currentEventsByPersistenceId`.
+   */
   override def eventsByPersistenceId(
       persistenceId: String,
       fromSequenceNr: Long,
@@ -143,22 +180,21 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
     val batchSize = readJournalConfig.maxBufferSize
     readJournalDao
       .messagesWithBatch(persistenceId, fromSequenceNr, toSequenceNr, batchSize, refreshInterval)
-      .mapAsync(1)(deserializedRepr => Future.fromTry(deserializedRepr))
-      .mapConcat(adaptEvents)
-      .map(repr =>
-        EventEnvelope(Sequence(repr.sequenceNr), repr.persistenceId, repr.sequenceNr, repr.payload, repr.timestamp))
+      .mapAsync(1)(reprAndOrdNr => Future.fromTry(reprAndOrdNr))
+      .mapConcat {
+        case (repr, ordNr) =>
+          adaptEvents(repr).map(_ -> ordNr)
+      }
+      .map {
+        case (repr, ordNr) =>
+          EventEnvelope(Sequence(ordNr), repr.persistenceId, repr.sequenceNr, repr.payload, repr.timestamp)
+      }
   }
 
   /**
-   * Same type of query as [[EventsByTagQuery#eventsByTag]] but the event stream
+   * Same type of query as `eventsByTag` but the event stream
    * is completed immediately when it reaches the end of the "result set". Events that are
    * stored after the query is completed are not included in the event stream.
-   *
-   * akka-persistence-jdbc has implemented this feature by using a LIKE %tag% query on the tags column.
-   * A consequence of this is that tag names must be chosen wisely: for example when querying the tag `User`,
-   * events with the tag `UserEmail` will also be returned (since User is a substring of UserEmail).
-   *
-   * The returned event stream is ordered by `offset`.
    */
   override def currentEventsByTag(tag: String, offset: Offset): Source[EventEnvelope, NotUsed] =
     currentEventsByTag(tag, offset.value)
@@ -189,7 +225,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
       offset: Long,
       terminateAfterOffset: Option[Long]): Source[EventEnvelope, NotUsed] = {
     import akka.pattern.ask
-    import JdbcReadJournal._
+    import FlowControl._
     implicit val askTimeout: Timeout = Timeout(readJournalConfig.journalSequenceRetrievalConfiguration.askTimeout)
     val batchSize = readJournalConfig.maxBufferSize
 
@@ -251,12 +287,20 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
    *
    * The consumer can keep track of its current position in the event stream by storing the
    * `offset` and restart the query from a given `offset` after a crash/restart.
+   * The offset is exclusive, i.e. the event corresponding to the given `offset` parameter is not
+   * included in the stream.
    *
    * For akka-persistence-jdbc the `offset` corresponds to the `ordering` column in the Journal table.
    * The `ordering` is a sequential id number that uniquely identifies the position of each event within
-   * the event stream.
+   * the event stream. The `Offset` type is `akka.persistence.query.Sequence` with the `ordering` as the
+   * offset value.
    *
    * The returned event stream is ordered by `offset`.
+   *
+   * In addition to the `offset` the `EventEnvelope` also provides `persistenceId` and `sequenceNr`
+   * for each event. The `sequenceNr` is the sequence number for the persistent actor with the
+   * `persistenceId` that persisted the event. The `persistenceId` + `sequenceNr` is an unique
+   * identifier for the event.
    *
    * The stream is not completed when it reaches the end of the currently stored events,
    * but it continues to push new events when new events are persisted.

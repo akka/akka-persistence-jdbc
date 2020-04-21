@@ -145,31 +145,19 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates with BaseJournalDaoW
       persistenceId: String,
       fromSequenceNr: Long,
       toSequenceNr: Long,
-      max: Long): Source[Try[PersistentRepr], NotUsed] =
+      max: Long): Source[Try[(PersistentRepr, Long)], NotUsed] =
     Source
       .fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
-      .via(serializer.deserializeFlowWithoutTags)
+      .via(serializer.deserializeFlow)
+      .map {
+        case Success((repr, _, ordering)) => Success(repr -> ordering)
+        case Failure(e)                   => Failure(e)
+      }
 
-}
-
-object BaseJournalDaoWithReadMessages {
-  private sealed trait FlowControl
-
-  /** Keep querying - used when we are sure that there is more events to fetch */
-  private case object Continue extends FlowControl
-
-  /**
-   * Keep querying with delay - used when we have consumed all events,
-   * but want to poll for future events
-   */
-  private case object ContinueDelayed extends FlowControl
-
-  /** Stop querying - used when we reach the desired offset  */
-  private case object Stop extends FlowControl
 }
 
 trait BaseJournalDaoWithReadMessages extends JournalDaoWithReadMessages {
-  import BaseJournalDaoWithReadMessages._
+  import FlowControl._
 
   implicit val ec: ExecutionContext
   implicit val mat: Materializer
@@ -179,21 +167,21 @@ trait BaseJournalDaoWithReadMessages extends JournalDaoWithReadMessages {
       fromSequenceNr: Long,
       toSequenceNr: Long,
       batchSize: Int,
-      refreshInterval: Option[(FiniteDuration, Scheduler)]): Source[Try[PersistentRepr], NotUsed] = {
+      refreshInterval: Option[(FiniteDuration, Scheduler)]): Source[Try[(PersistentRepr, Long)], NotUsed] = {
 
     Source
-      .unfoldAsync[(Long, FlowControl), Seq[Try[PersistentRepr]]]((Math.max(1, fromSequenceNr), Continue)) {
+      .unfoldAsync[(Long, FlowControl), Seq[Try[(PersistentRepr, Long)]]]((Math.max(1, fromSequenceNr), Continue)) {
         case (from, control) =>
-          def retrieveNextBatch(): Future[Option[((Long, FlowControl), Seq[Try[PersistentRepr]])]] = {
+          def retrieveNextBatch(): Future[Option[((Long, FlowControl), Seq[Try[(PersistentRepr, Long)]])]] = {
             for {
               xs <- messages(persistenceId, from, toSequenceNr, batchSize).runWith(Sink.seq)
             } yield {
               val hasMoreEvents = xs.size == batchSize
               // Events are ordered by sequence number, therefore the last one is the largest)
               val lastSeqNrInBatch: Option[Long] = xs.lastOption match {
-                case Some(Success(repr)) => Some(repr.sequenceNr)
-                case Some(Failure(e))    => throw e // fail the returned Future
-                case None                => None
+                case Some(Success((repr, _))) => Some(repr.sequenceNr)
+                case Some(Failure(e))         => throw e // fail the returned Future
+                case None                     => None
               }
               val hasLastEvent = lastSeqNrInBatch.exists(_ >= toSequenceNr)
               val nextControl: FlowControl =
@@ -221,6 +209,7 @@ trait BaseJournalDaoWithReadMessages extends JournalDaoWithReadMessages {
       }
       .mapConcat(identity)
   }
+
 }
 
 trait H2JournalDao extends JournalDao {
@@ -235,7 +224,7 @@ trait H2JournalDao extends JournalDao {
       persistenceId: String,
       fromSequenceNr: Long,
       toSequenceNr: Long,
-      max: Long): Source[Try[PersistentRepr], NotUsed] = {
+      max: Long): Source[Try[(PersistentRepr, Long)], NotUsed] = {
     super.messages(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max))
   }
 

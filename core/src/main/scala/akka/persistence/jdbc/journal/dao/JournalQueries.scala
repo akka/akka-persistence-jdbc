@@ -84,18 +84,4 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
 
   val messagesQuery = Compiled(_messagesQuery _)
 
-  private def _messagesByOrderingQuery(
-      persistenceId: Rep[String],
-      fromOrderingNr: Rep[Long],
-      toOrderingNr: Rep[Long],
-      max: ConstColumn[Long]) =
-    JournalTable
-      .filter(_.persistenceId === persistenceId)
-      .filter(_.deleted === false)
-      .filter(_.ordering > fromOrderingNr)
-      .filter(_.ordering <= toOrderingNr)
-      .sortBy(_.ordering.asc)
-      .take(max)
-
-  val messagesByOrderingQuery = Compiled(_messagesByOrderingQuery _)
 }

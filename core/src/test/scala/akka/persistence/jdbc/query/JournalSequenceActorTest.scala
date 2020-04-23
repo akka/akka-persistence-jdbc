@@ -18,9 +18,10 @@ import akka.stream.scaladsl.{ Sink, Source }
 import akka.testkit.TestProbe
 import org.slf4j.LoggerFactory
 import slick.jdbc.{ JdbcBackend, JdbcCapabilities }
-
 import scala.concurrent.Future
 import scala.concurrent.duration._
+
+import org.scalatest.time.Span
 
 abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
     extends QueryTestSpec(configFile)
@@ -33,6 +34,9 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
   import profile.api._
 
   implicit val askTimeout = 50.millis
+
+  implicit val patience: PatienceConfig =
+    PatienceConfig(10.seconds, Span(200, org.scalatest.time.Millis))
 
   def generateId: Int = 0
 
@@ -73,11 +77,10 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
 
           val startTime = System.currentTimeMillis()
           withJournalSequenceActor(db, maxTries = 100) { actor =>
-            val patienceConfig = PatienceConfig(10.seconds)
             eventually {
               val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
               currentMax shouldBe elements
-            }(patienceConfig, implicitly)
+            }
           }
           val timeTaken = System.currentTimeMillis() - startTime
           log.info(s"Recovered all events in $timeTaken ms")
@@ -108,11 +111,10 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
 
           withJournalSequenceActor(db, maxTries = 2) { actor =>
             // Should normally recover after `maxTries` seconds
-            val patienceConfig = PatienceConfig(10.seconds)
             eventually {
               val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
               currentMax shouldBe lastElement
-            }(patienceConfig, implicitly)
+            }
           }
         }
       }
@@ -149,7 +151,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
             eventually {
               val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
               currentMax shouldBe highestValue
-            }(patienceConfig, implicitly)
+            }
           }
         }
       }

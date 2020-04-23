@@ -10,9 +10,11 @@ import akka.persistence.jdbc.util.ClasspathResources
 import akka.testkit.TestProbe
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, ScalaFutures }
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 trait SimpleSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with Matchers
     with ScalaFutures
     with TryValues

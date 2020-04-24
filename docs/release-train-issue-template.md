@@ -17,7 +17,6 @@ Key links:
 ### ~ 1 week before the release
 
 - [ ] Check that open PRs and issues assigned to the milestone are reasonable
-- [ ] Notify depending projects (Lagom) about the upcoming release
 - [ ] Create a new milestone for the [next version](https://github.com/akka/akka-persistence-jdbc/milestones)
 - [ ] Check [closed issues without a milestone](https://github.com/akka/akka-persistence-jdbc/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20no%3Amilestone) and either assign them the 'upcoming' release milestone or `invalid/not release-bound`
 - [ ] Close the [$VERSION$ milestone](https://github.com/akka/akka-persistence-jdbc/milestones?direction=asc&sort=due_date)
@@ -45,25 +44,17 @@ Key links:
 
 - [ ] Check [API](https://doc.akka.io/api/akka-persistence-jdbc/$VERSION$/) documentation
 - [ ] Check [reference](https://doc.akka.io/docs/akka-persistence-jdbc/$VERSION$/) documentation
-- [ ] Check the release on [Maven central](http://central.maven.org/maven2/com/lightbend/akka/akka-persistence-jdbc_2.12/$VERSION$/)
+- [ ] Check the release on [Maven central](https://repo1.maven.org/maven2/com/lightbend/akka/akka-persistence-jdbc_2.12/$VERSION$/)
 
 ### When everything is on maven central
   - [ ] Log into `gustav.akka.io` as `akkarepo` 
-    - [ ] update the `current` links on `repo.akka.io` to point to the latest version with
-         ```
-         cd ~/www
-         # MINORVERSION=4.0
-         ln -nsf $VERSION$ docs/akka-persistence-jdbc/current
-         ln -nsf $VERSION$ api/akka-persistence-jdbc/current
-         ln -nsf $VERSION$ docs/akka-persistence-jdbc/$MINORVERSION
-         ln -nsf $VERSION$ api/akka-persistence-jdbc/$MINORVERSION
-         ```
-    - [ ] check changes and commit the new version to the local git repository
+    - [ ] If this updates the `current` version, run `./update-akka-persistence-jdbc.sh $VERSION$`
+    - [ ] otherwise check changes and commit the new version to the local git repository
          ```
          cd ~/www
          git status
-         git add docs/akka-persistence-jdbc/$MINORVERSION docs/akka-persistence-jdbc/current docs/akka-persistence-jdbc/$VERSION$
-         git add api/akka-persistence-jdbc/$MINORVERSION api/akka-persistence-jdbc/current api/akka-persistence-jdbc/$VERSION$
+         git add docs/akka-persistence-jdbc/current docs/akka-persistence-jdbc/$VERSION$
+         git add api/akka-persistence-jdbc/current api/akka-persistence-jdbc/$VERSION$
          git commit -m "Akka Persistence JDBC $VERSION$"
          ```
 
@@ -77,5 +68,5 @@ Key links:
 
 ### Afterwards
 
-- [ ] Update version for [Lightbend Supported Modules](https://developer.lightbend.com/docs/lightbend-platform/introduction/getting-help/build-dependencies.html) in [private project](https://github.com/lightbend/lightbend-platform-docs/blob/master/docs/modules/getting-help/examples/build.sbt)
+- [ ] Update version for [Lightbend Supported Modules](https://developer.lightbend.com/docs/lightbend-platform/introduction/getting-help/build-dependencies.html) in [private project](https://github.com/lightbend/lightbend-technology-intro-doc/blob/master/docs/modules/getting-help/examples/build.sbt)
 - Close this issue

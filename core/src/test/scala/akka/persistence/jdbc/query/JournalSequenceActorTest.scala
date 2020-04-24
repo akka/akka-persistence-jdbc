@@ -35,9 +35,6 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
 
   implicit val askTimeout = 50.millis
 
-  implicit val patience: PatienceConfig =
-    PatienceConfig(10.seconds, Span(200, org.scalatest.time.Millis))
-
   def generateId: Int = 0
 
   behavior.of("JournalSequenceActor")
@@ -77,10 +74,11 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
 
           val startTime = System.currentTimeMillis()
           withJournalSequenceActor(db, maxTries = 100) { actor =>
+            val patienceConfig = PatienceConfig(10.seconds, Span(200, org.scalatest.time.Millis))
             eventually {
               val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
               currentMax shouldBe elements
-            }
+            }(patienceConfig, implicitly, implicitly)
           }
           val timeTaken = System.currentTimeMillis() - startTime
           log.info(s"Recovered all events in $timeTaken ms")
@@ -111,10 +109,11 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
 
           withJournalSequenceActor(db, maxTries = 2) { actor =>
             // Should normally recover after `maxTries` seconds
+            val patienceConfig = PatienceConfig(10.seconds, Span(200, org.scalatest.time.Millis))
             eventually {
               val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
               currentMax shouldBe lastElement
-            }
+            }(patienceConfig, implicitly, implicitly)
           }
         }
       }
@@ -151,7 +150,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
             eventually {
               val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
               currentMax shouldBe highestValue
-            }
+            }(patienceConfig, implicitly, implicitly)
           }
         }
       }

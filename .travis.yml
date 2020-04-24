@@ -32,7 +32,7 @@ jobs:
     - stage: test
       env:
         - PRE_CMD="./scripts/launch-all.sh"
-        - CMD="++2.12.10 test"
+        - CMD="++2.12.11 test"
       name: "Run tests with Scala 2.12 and AdoptOpenJDK 8"
     - env:
         - PRE_CMD="./scripts/launch-all.sh"

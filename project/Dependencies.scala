@@ -5,15 +5,15 @@ object Dependencies {
   val Nightly = sys.env.get("TRAVIS_EVENT_TYPE").contains("cron")
 
   // Keep in sync with .travis.yml
-  val Scala212 = "2.12.10"
+  val Scala212 = "2.12.11"
   val Scala213 = "2.13.1"
   val ScalaVersions = Seq(Scala212, Scala213)
 
-  val AkkaVersion = if (Nightly) "2.6.0" else "2.5.29"
-  val AkkaBinaryVersion = if (Nightly) "2.6" else "2.5"
+  val AkkaVersion = "2.6.4"
+  val AkkaBinaryVersion = "2.6"
 
   val SlickVersion = "3.3.2"
-  val ScalaTestVersion = "3.0.8"
+  val ScalaTestVersion = "3.1.1"
 
   val JdbcDrivers = Seq(
     "org.postgresql" % "postgresql" % "42.2.12",

@@ -9,10 +9,12 @@ import java.sql.{ Connection, DriverManager }
 import java.util.Properties
 
 import com.typesafe.config.{ Config, ConfigFactory }
-import org.scalatest.{ BeforeAndAfterAll, FlatSpec, Matchers }
+import org.scalatest.BeforeAndAfterAll
 import org.testcontainers.containers.PostgreSQLContainer
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class PostgresSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
+class PostgresSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
 
   val postgres: PostgreSQLContainer[_] = {
     val c = new PostgreSQLContainer()

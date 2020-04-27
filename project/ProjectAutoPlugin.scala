@@ -24,7 +24,7 @@ object ProjectAutoPlugin extends AutoPlugin {
           "Contributors",
           "https://gitter.im/akka/dev",
           url("https://github.com/akka/akka-persistence-jdbc/graphs/contributors")),
-      licenses := Seq("Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0")),
+      licenses := Seq("Apache-2.0" -> url("https://opensource.org/licenses/Apache-2.0")),
       description := "A plugin for storing events in an event journal akka-persistence-jdbc",
       startYear := Some(2014))
 

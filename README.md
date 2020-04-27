@@ -2,7 +2,7 @@
 ## Use JDBC-compatible databases with Akka Persistence
 
 [![Build Status](https://travis-ci.org/akka/akka-persistence-jdbc.svg?branch=master)](https://travis-ci.org/akka/akka-persistence-jdbc)
-[![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
+[![License](https://img.shields.io/:license-Apache%202-red.svg)](https://www.apache.org/licenses/LICENSE-2.0.txt)
 
 akka-persistence-jdbc writes journal and snapshot entries to a configured JDBC store. It implements the full akka-persistence-query API and is therefore very useful for implementing DDD-style 
 application models using Akka for creating reactive applications.

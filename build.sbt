@@ -1,7 +1,6 @@
 import com.lightbend.paradox.apidoc.ApidocPlugin.autoImport.apidocRootPackage
 import com.typesafe.tools.mima.core._
 import com.typesafe.tools.mima.plugin.MimaKeys.mimaBinaryIssueFilters
-import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
 
 lazy val `akka-persistence-jdbc` = project
   .in(file("."))
@@ -12,12 +11,11 @@ lazy val `akka-persistence-jdbc` = project
 
 lazy val core = project
   .in(file("core"))
-  .enablePlugins(Publish)
+  .enablePlugins(MimaPlugin, Publish)
   .disablePlugins(SitePlugin)
   .settings(
     name := "akka-persistence-jdbc",
     libraryDependencies ++= Dependencies.Libraries,
-    mimaDefaultSettings,
     mimaBinaryIssueFilters ++= Seq(
         // in 3.6.0 we intentionally renamed package akka.persistence.jdbc.util to akka.persistence.jdbc.db
         ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.util.SlickDatabaseProvider"),
@@ -62,12 +60,16 @@ lazy val docs = project
     Paradox / siteSubdirName := s"docs/akka-persistence-jdbc/${if (isSnapshot.value) "snapshot" else version.value}",
     paradoxProperties ++= Map(
         "akka.version" -> Dependencies.AkkaVersion,
+        "slick.version" -> Dependencies.SlickVersion,
         "extref.github.base_url" -> s"https://github.com/akka/akka-persistence-jdbc/blob/${if (isSnapshot.value) "master"
         else "v" + version.value}/%s",
+        // Slick
+        "extref.slick.base_url" -> s"https://scala-slick.org/doc/${Dependencies.SlickVersion}/%s",
         // Akka
         "extref.akka.base_url" -> s"https://doc.akka.io/docs/akka/${Dependencies.AkkaBinaryVersion}/%s",
         "scaladoc.akka.base_url" -> s"https://doc.akka.io/api/akka/${Dependencies.AkkaBinaryVersion}/",
         "javadoc.akka.base_url" -> s"https://doc.akka.io/japi/akka/${Dependencies.AkkaBinaryVersion}/",
+        "javadoc.akka.link_style" -> "direct",
         // Java
         "javadoc.base_url" -> "https://docs.oracle.com/javase/8/docs/api/",
         // Scala

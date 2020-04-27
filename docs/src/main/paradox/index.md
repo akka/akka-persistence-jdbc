@@ -6,19 +6,26 @@ akka-persistence-jdbc writes journal and snapshot entries to a configured JDBC s
 
 ## Module info
 
-@@dependency [Maven,sbt,Gradle] {
+@@dependency [sbt,Maven,Gradle] {
   group=com.lightbend.akka
   artifact=akka-persistence-jdbc_$scala.binary.version$
   version=$project.version$
+  symbol2=AkkaVersion
+  value2=$akka.version$
+  group2=com.typesafe.akka
+  artifact2=akka-persistence-query_$scala.binary.version$
+  version2=AkkaVersion
+  symbol3=SlickVersion
+  value3=$slick.version$
+  group3=com.typesafe.slick
+  artifact3=slick_$scala.binary.version$
+  version3=SlickVersion
+  group4=com.typesafe.slick
+  artifact4=slick-hikaricp_$scala.binary.version$
+  version4=SlickVersion
 }
 
 @@project-info{ projectId="core" }
-
-## Release notes
-
-The release notes can be found [here](https://github.com/akka/akka-persistence-jdbc/releases).
-
-For change log prior to v3.2.0, visit [Version History Page (wiki)](https://github.com/akka/akka-persistence-jdbc/wiki/Version-History).
 
 ## Contribution policy
 
@@ -26,15 +33,15 @@ Contributions via GitHub pull requests are gladly accepted from their original a
 
 ## Code of Conduct
 
-Contributors all agree to follow the [Lightbend Community Code of Conduct][code-of-conduct].
+Contributors all agree to follow the [Lightbend Community Code of Conduct](https://www.lightbend.com/conduct).
 
 ## License
 
-This source code is made available under the [Apache 2.0 License][apache].
+This source code is made available under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0).
 
 ## Configuration
 
-The plugin relies on Slick to do create the SQL dialect for the database in use, therefore the following must be configured in `application.conf`
+The plugin relies on @extref[Slick](slick:) to do create the SQL dialect for the database in use, therefore the following must be configured in `application.conf`
 
 Configure `akka-persistence`:
 
@@ -52,11 +59,11 @@ Configure `slick`:
 
 ## Database Schema
 
-- @extref:[Postgres Schema](github:/src/test/resources/schema/postgres/postgres-schema.sql)
-- @extref:[MySQL Schema](github:/src/test/resources/schema/mysql/mysql-schema.sql)
-- @extref:[H2 Schema](github:/src/test/resources/schema/h2/h2-schema.sql)
-- @extref:[Oracle Schema](github:/src/test/resources/schema/oracle/oracle-schema.sql)
-- @extref:[SQL Server Schema](github:/src/test/resources/schema/sqlserver/sqlserver-schema.sql)
+- @extref:[Postgres Schema](github:/core/src/test/resources/schema/postgres/postgres-schema.sql)
+- @extref:[MySQL Schema](github:/core/src/test/resources/schema/mysql/mysql-schema.sql)
+- @extref:[H2 Schema](github:/core/src/test/resources/schema/h2/h2-schema.sql)
+- @extref:[Oracle Schema](github:/core/src/test/resources/schema/oracle/oracle-schema.sql)
+- @extref:[SQL Server Schema](github:/core/src/test/resources/schema/sqlserver/sqlserver-schema.sql)
 
 ## Reference Configuration
 
@@ -110,7 +117,7 @@ jdbc-snapshot-store {
 
 ### DataSource lookup by JNDI name
 
-The plugin uses `Slick` as the database access library. Slick [supports jndi][slick-jndi] for looking up [DataSource][ds]s.
+The plugin uses `Slick` as the database access library. Slick @extref[supports jndi](slick:database.html#using-a-jndi-name) for looking up @javadoc[DataSource](javax.sql.DataSource)s.
 
 To enable the JNDI lookup, you must add the following to your application.conf:
 
@@ -344,9 +351,3 @@ the APIs for customer DAOs if new capabilities must be added to to the traits.
 
 The plugin automatically shuts down the HikariCP connection pool when the ActorSystem is terminated.
 This is done using @apidoc[ActorSystem.registerOnTermination](ActorSystem).
-
-[slick]: http://slick.lightbend.com/
-[slick-jndi]: http://slick.typesafe.com/doc/3.3.0/database.html#using-a-jndi-name
-[apache]: http://www.apache.org/licenses/LICENSE-2.0
-[code-of-conduct]: https://www.lightbend.com/conduct
-[ds]: http://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html

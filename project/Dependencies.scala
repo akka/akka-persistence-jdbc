@@ -22,10 +22,7 @@ object Dependencies {
     "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8")
 
   val Libraries: Seq[ModuleID] = Seq(
-      "com.typesafe.akka" %% "akka-actor" % AkkaVersion,
-      "com.typesafe.akka" %% "akka-persistence" % AkkaVersion,
       "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
-      "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
       "com.typesafe.slick" %% "slick" % SlickVersion,
       "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
       "ch.qos.logback" % "logback-classic" % "1.2.3" % Test,

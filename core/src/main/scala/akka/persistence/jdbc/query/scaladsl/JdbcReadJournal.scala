@@ -281,10 +281,6 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
   /**
    * Query events that have a specific tag.
    *
-   * akka-persistence-jdbc has implemented this feature by using a LIKE %tag% query on the tags column.
-   * A consequence of this is that tag names must be chosen wisely: for example when querying the tag `User`,
-   * events with the tag `UserEmail` will also be returned (since User is a substring of UserEmail).
-   *
    * The consumer can keep track of its current position in the event stream by storing the
    * `offset` and restart the query from a given `offset` after a crash/restart.
    * The offset is exclusive, i.e. the event corresponding to the given `offset` parameter is not

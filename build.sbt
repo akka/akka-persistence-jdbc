@@ -58,9 +58,9 @@ lazy val docs = project
       else version.value}",
     Preprocess / sourceDirectory := (LocalRootProject / ScalaUnidoc / unidoc / target).value,
     Paradox / siteSubdirName := s"docs/akka-persistence-jdbc/${if (isSnapshot.value) "snapshot" else version.value}",
-    paradoxProperties ++= Map(
+    Compile / paradoxProperties ++= Map(
         "project.url" -> "https://doc.akka.io/docs/akka-persistence-jdbc/current/",
-        "canonical.base_url" -> "https://doc.akka.io/docs/akka-persistence-jdbc/current/",
+        "canonical.base_url" -> "https://doc.akka.io/docs/akka-persistence-jdbc/current",
         "akka.version" -> Dependencies.AkkaVersion,
         "slick.version" -> Dependencies.SlickVersion,
         "extref.github.base_url" -> s"https://github.com/akka/akka-persistence-jdbc/blob/${if (isSnapshot.value) "master"

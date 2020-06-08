@@ -36,6 +36,6 @@ object Dependencies {
       "org.flywaydb" % "flyway-core" % "6.4.2",
       "com.typesafe" % "config" % "1.4.0",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
-      "org.testcontainers" % "postgresql" % "1.14.1" % Test,
+      "org.testcontainers" % "postgresql" % "1.14.2" % Test,
       "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Provided)
 }

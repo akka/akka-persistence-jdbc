@@ -43,7 +43,7 @@ Key links:
 ### Check availability
 
 - [ ] Check [API](https://doc.akka.io/api/akka-persistence-jdbc/$VERSION$/) documentation
-- [ ] Check [reference](https://doc.akka.io/docs/akka-persistence-jdbc/$VERSION$/) documentation
+- [ ] Check [reference](https://doc.akka.io/docs/akka-persistence-jdbc/$VERSION$/) documentation. Check that the reference docs were deployed and show a version warning (see section below on how to fix the version warnning).
 - [ ] Check the release on [Maven central](https://repo1.maven.org/maven2/com/lightbend/akka/akka-persistence-jdbc_2.12/$VERSION$/)
 
 ### When everything is on maven central

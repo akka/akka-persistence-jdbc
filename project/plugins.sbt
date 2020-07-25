@@ -5,7 +5,7 @@ addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.7.0")
 addSbtPlugin("com.lightbend" % "sbt-whitesource" % "0.1.18")
 // release
 addSbtPlugin("org.foundweekends" % "sbt-bintray" % "0.5.6")
-addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.0.0")
+addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1")
 // docs
 addSbtPlugin("com.lightbend.akka" % "sbt-paradox-akka" % "0.33")
 addSbtPlugin("com.typesafe.sbt" % "sbt-site" % "1.4.0")

@@ -162,8 +162,8 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
    *                 (since the actor queries every second by default,
    *                 this is effectively the number of seconds after which events are assumed missing)
    */
-  def withJournalSequenceActor(db: JdbcBackend.Database, maxTries: Int)(f: ActorRef => Unit)(implicit
-      system: ActorSystem): Unit = {
+  def withJournalSequenceActor(db: JdbcBackend.Database, maxTries: Int)(f: ActorRef => Unit)(
+      implicit system: ActorSystem): Unit = {
     import system.dispatcher
     implicit val mat: ActorMaterializer = ActorMaterializer()
     val readJournalDao = new ByteArrayReadJournalDao(db, profile, readJournalConfig, SerializationExtension(system))

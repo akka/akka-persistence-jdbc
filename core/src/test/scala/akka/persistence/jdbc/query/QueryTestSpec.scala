@@ -103,8 +103,8 @@ class ScalaJdbcReadJournalOperations(readJournal: JdbcReadJournal)(implicit syst
       .map(_.sum)
 }
 
-class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)(implicit
-    system: ActorSystem,
+class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)(
+    implicit system: ActorSystem,
     mat: Materializer)
     extends ReadJournalOperations {
   def this(system: ActorSystem) =
@@ -285,15 +285,15 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
     system.actorOf(Props(new TestActor(persistenceId, replyToMessages)))
   }
 
-  def withTestActors(seq: Int = 1, replyToMessages: Boolean = false)(f: (ActorRef, ActorRef, ActorRef) => Unit)(implicit
-      system: ActorSystem): Unit = {
+  def withTestActors(seq: Int = 1, replyToMessages: Boolean = false)(f: (ActorRef, ActorRef, ActorRef) => Unit)(
+      implicit system: ActorSystem): Unit = {
     val refs = (seq until seq + 3).map(setupEmpty(_, replyToMessages)).toList
     try f(refs.head, refs.drop(1).head, refs.drop(2).head)
     finally killActors(refs: _*)
   }
 
-  def withManyTestActors(amount: Int, seq: Int = 1, replyToMessages: Boolean = false)(f: Seq[ActorRef] => Unit)(implicit
-      system: ActorSystem): Unit = {
+  def withManyTestActors(amount: Int, seq: Int = 1, replyToMessages: Boolean = false)(f: Seq[ActorRef] => Unit)(
+      implicit system: ActorSystem): Unit = {
     val refs = (seq until seq + amount).map(setupEmpty(_, replyToMessages)).toList
     try f(refs)
     finally killActors(refs: _*)

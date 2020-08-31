@@ -17,8 +17,8 @@ import scala.collection.immutable.NumericRange
 import scala.concurrent.duration.FiniteDuration
 
 object JournalSequenceActor {
-  def props(readJournalDao: ReadJournalDao, config: JournalSequenceRetrievalConfig)(implicit
-      materializer: Materializer): Props = Props(new JournalSequenceActor(readJournalDao, config))
+  def props(readJournalDao: ReadJournalDao, config: JournalSequenceRetrievalConfig)(
+      implicit materializer: Materializer): Props = Props(new JournalSequenceActor(readJournalDao, config))
 
   private case object QueryOrderingIds
   private case class NewOrderingIds(originalOffset: Long, elements: Seq[OrderingId])
@@ -56,8 +56,8 @@ object JournalSequenceActor {
  * This is required to guarantee the EventByTag does not skip any rows in case rows with a higher (ordering) id are
  * visible in the database before rows with a lower (ordering) id.
  */
-class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequenceRetrievalConfig)(implicit
-    materializer: Materializer)
+class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequenceRetrievalConfig)(
+    implicit materializer: Materializer)
     extends Actor
     with ActorLogging
     with Timers {

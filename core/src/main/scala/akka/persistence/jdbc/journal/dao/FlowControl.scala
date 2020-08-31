@@ -18,6 +18,6 @@ private[jdbc] object FlowControl {
    */
   case object ContinueDelayed extends FlowControl
 
-  /** Stop querying - used when we reach the desired offset  */
+  /** Stop querying - used when we reach the desired offset */
   case object Stop extends FlowControl
 }

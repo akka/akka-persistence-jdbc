@@ -27,12 +27,14 @@ class PostgresSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
 
   override def beforeAll(): Unit = {
     postgres.start()
-    migrationConfig = ConfigFactory.parseString(s"""migration {
+    migrationConfig = ConfigFactory
+      .parseString(s"""migration {
          |database-vendor = postgres
          |url = "${postgres.getJdbcUrl}"
          |user = "${postgres.getUsername}"
          |password = "${postgres.getPassword}"
-         |}""".stripMargin).getConfig("migration")
+         |}""".stripMargin)
+      .getConfig("migration")
 
     connectionProperties.put("user", postgres.getUsername);
     connectionProperties.put("password", postgres.getPassword);

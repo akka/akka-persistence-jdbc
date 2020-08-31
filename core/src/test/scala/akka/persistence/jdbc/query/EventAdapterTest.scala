@@ -27,20 +27,22 @@ object EventAdapterTest {
   case class EventRestored(value: String)
 
   class TestReadEventAdapter extends ReadEventAdapter {
-    override def fromJournal(event: Any, manifest: String): EventSeq = event match {
-      case e: EventAdapted => EventSeq.single(e.restored)
-    }
+    override def fromJournal(event: Any, manifest: String): EventSeq =
+      event match {
+        case e: EventAdapted => EventSeq.single(e.restored)
+      }
   }
 
   class TestWriteEventAdapter extends WriteEventAdapter {
     override def manifest(event: Any): String = ""
 
-    override def toJournal(event: Any): Any = event match {
-      case e: Event                        => e.adapted
-      case TaggedEvent(e: Event, tag)      => Tagged(e.adapted, Set(tag))
-      case TaggedAsyncEvent(e: Event, tag) => Tagged(e.adapted, Set(tag))
-      case _                               => event
-    }
+    override def toJournal(event: Any): Any =
+      event match {
+        case e: Event                        => e.adapted
+        case TaggedEvent(e: Event, tag)      => Tagged(e.adapted, Set(tag))
+        case TaggedAsyncEvent(e: Event, tag) => Tagged(e.adapted, Set(tag))
+        case _                               => event
+      }
   }
 }
 

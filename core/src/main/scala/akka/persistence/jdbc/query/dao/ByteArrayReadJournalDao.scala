@@ -96,10 +96,11 @@ trait OracleReadJournalDao extends ReadJournalDao {
 
   import profile.api._
 
-  private def isOracleDriver(profile: JdbcProfile): Boolean = profile match {
-    case slick.jdbc.OracleProfile => true
-    case _                        => false
-  }
+  private def isOracleDriver(profile: JdbcProfile): Boolean =
+    profile match {
+      case slick.jdbc.OracleProfile => true
+      case _                        => false
+    }
 
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] = {
     if (isOracleDriver(profile)) {
@@ -162,10 +163,11 @@ trait OracleReadJournalDao extends ReadJournalDao {
 trait H2ReadJournalDao extends ReadJournalDao {
   val profile: JdbcProfile
 
-  private def isH2Driver(profile: JdbcProfile): Boolean = profile match {
-    case slick.jdbc.H2Profile => true
-    case _                    => false
-  }
+  private def isH2Driver(profile: JdbcProfile): Boolean =
+    profile match {
+      case slick.jdbc.H2Profile => true
+      case _                    => false
+    }
 
   abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
     super.allPersistenceIdsSource(correctMaxForH2Driver(max))

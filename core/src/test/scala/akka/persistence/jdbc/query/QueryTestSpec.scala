@@ -62,20 +62,18 @@ class ScalaJdbcReadJournalOperations(readJournal: JdbcReadJournal)(implicit syst
     tp.within(within)(f(tp))
   }
 
-  def withCurrentEventsByPersistenceId(within: FiniteDuration)(
-      persistenceId: String,
-      fromSequenceNr: Long = 0,
-      toSequenceNr: Long = Long.MaxValue)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
+  def withCurrentEventsByPersistenceId(
+      within: FiniteDuration)(persistenceId: String, fromSequenceNr: Long = 0, toSequenceNr: Long = Long.MaxValue)(
+      f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
     val tp = readJournal
       .currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr)
       .runWith(TestSink.probe[EventEnvelope])
     tp.within(within)(f(tp))
   }
 
-  def withEventsByPersistenceId(within: FiniteDuration)(
-      persistenceId: String,
-      fromSequenceNr: Long,
-      toSequenceNr: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
+  def withEventsByPersistenceId(
+      within: FiniteDuration)(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long)(
+      f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
     val tp = readJournal
       .eventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr)
       .runWith(TestSink.probe[EventEnvelope])
@@ -105,8 +103,8 @@ class ScalaJdbcReadJournalOperations(readJournal: JdbcReadJournal)(implicit syst
       .map(_.sum)
 }
 
-class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)(
-    implicit system: ActorSystem,
+class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)(implicit
+    system: ActorSystem,
     mat: Materializer)
     extends ReadJournalOperations {
   def this(system: ActorSystem) =
@@ -129,19 +127,17 @@ class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)(
     tp.within(within)(f(tp))
   }
 
-  def withCurrentEventsByPersistenceId(within: FiniteDuration)(
-      persistenceId: String,
-      fromSequenceNr: Long = 0,
-      toSequenceNr: Long = Long.MaxValue)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
+  def withCurrentEventsByPersistenceId(
+      within: FiniteDuration)(persistenceId: String, fromSequenceNr: Long = 0, toSequenceNr: Long = Long.MaxValue)(
+      f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
     val sink: akka.stream.javadsl.Sink[EventEnvelope, TestSubscriber.Probe[EventEnvelope]] = JavaSink.probe(system)
     val tp = readJournal.currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).runWith(sink, mat)
     tp.within(within)(f(tp))
   }
 
-  def withEventsByPersistenceId(within: FiniteDuration)(
-      persistenceId: String,
-      fromSequenceNr: Long,
-      toSequenceNr: Long)(f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
+  def withEventsByPersistenceId(
+      within: FiniteDuration)(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long)(
+      f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
     val sink: akka.stream.javadsl.Sink[EventEnvelope, TestSubscriber.Probe[EventEnvelope]] = JavaSink.probe(system)
     val tp = readJournal.eventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).runWith(sink, mat)
     tp.within(within)(f(tp))
@@ -222,79 +218,82 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
 
     override def receiveCommand: Receive = idle
 
-    def idle: Receive = LoggingReceive {
-      case "state" =>
-        sender() ! state
+    def idle: Receive =
+      LoggingReceive {
+        case "state" =>
+          sender() ! state
 
-      case DeleteCmd(toSequenceNr) =>
-        deleteMessages(toSequenceNr)
-        if (replyToMessages) {
-          context.become(awaitingDeleting(sender()))
-        }
+        case DeleteCmd(toSequenceNr) =>
+          deleteMessages(toSequenceNr)
+          if (replyToMessages) {
+            context.become(awaitingDeleting(sender()))
+          }
 
-      case event: Int =>
-        persist(event) { (event: Int) =>
-          updateState(event)
-          if (replyToMessages) sender() ! akka.actor.Status.Success(event)
-        }
+        case event: Int =>
+          persist(event) { (event: Int) =>
+            updateState(event)
+            if (replyToMessages) sender() ! akka.actor.Status.Success(event)
+          }
 
-      case event @ Tagged(payload: Int, tags) =>
-        persist(event) { (event: Tagged) =>
-          updateState(payload)
-          if (replyToMessages) sender() ! akka.actor.Status.Success((payload, tags))
-        }
-      case event: Event =>
-        persist(event) { evt =>
-          if (replyToMessages) sender() ! akka.actor.Status.Success(evt)
-        }
+        case event @ Tagged(payload: Int, tags) =>
+          persist(event) { (event: Tagged) =>
+            updateState(payload)
+            if (replyToMessages) sender() ! akka.actor.Status.Success((payload, tags))
+          }
+        case event: Event =>
+          persist(event) { evt =>
+            if (replyToMessages) sender() ! akka.actor.Status.Success(evt)
+          }
 
-      case event @ TaggedEvent(payload: Event, tag) =>
-        persist(event) { evt =>
-          if (replyToMessages) sender() ! akka.actor.Status.Success((payload, tag))
-        }
-      case event @ TaggedAsyncEvent(payload: Event, tag) =>
-        persistAsync(event) { evt =>
-          if (replyToMessages) sender() ! akka.actor.Status.Success((payload, tag))
-        }
-    }
+        case event @ TaggedEvent(payload: Event, tag) =>
+          persist(event) { evt =>
+            if (replyToMessages) sender() ! akka.actor.Status.Success((payload, tag))
+          }
+        case event @ TaggedAsyncEvent(payload: Event, tag) =>
+          persistAsync(event) { evt =>
+            if (replyToMessages) sender() ! akka.actor.Status.Success((payload, tag))
+          }
+      }
 
-    def awaitingDeleting(origSender: ActorRef): Receive = LoggingReceive {
-      case DeleteMessagesSuccess(toSequenceNr) =>
-        origSender ! s"deleted-$toSequenceNr"
-        unstashAll()
-        context.become(idle)
+    def awaitingDeleting(origSender: ActorRef): Receive =
+      LoggingReceive {
+        case DeleteMessagesSuccess(toSequenceNr) =>
+          origSender ! s"deleted-$toSequenceNr"
+          unstashAll()
+          context.become(idle)
 
-      case DeleteMessagesFailure(ex, _) =>
-        origSender ! Status.Failure(ex)
-        unstashAll()
-        context.become(idle)
+        case DeleteMessagesFailure(ex, _) =>
+          origSender ! Status.Failure(ex)
+          unstashAll()
+          context.become(idle)
 
-      // stash whatever other messages
-      case _ => stash()
-    }
+        // stash whatever other messages
+        case _ => stash()
+      }
 
     def updateState(event: Int): Unit = {
       state = state + event
     }
 
-    override def receiveRecover: Receive = LoggingReceive {
-      case event: Int => updateState(event)
-    }
+    override def receiveRecover: Receive =
+      LoggingReceive {
+        case event: Int => updateState(event)
+      }
   }
 
   def setupEmpty(persistenceId: Int, replyToMessages: Boolean)(implicit system: ActorSystem): ActorRef = {
     system.actorOf(Props(new TestActor(persistenceId, replyToMessages)))
   }
 
-  def withTestActors(seq: Int = 1, replyToMessages: Boolean = false)(f: (ActorRef, ActorRef, ActorRef) => Unit)(
-      implicit system: ActorSystem): Unit = {
+  def withTestActors(seq: Int = 1, replyToMessages: Boolean = false)(f: (ActorRef, ActorRef, ActorRef) => Unit)(implicit
+      system: ActorSystem): Unit = {
     val refs = (seq until seq + 3).map(setupEmpty(_, replyToMessages)).toList
     try f(refs.head, refs.drop(1).head, refs.drop(2).head)
     finally killActors(refs: _*)
   }
 
-  def withManyTestActors(amount: Int, seq: Int = 1, replyToMessages: Boolean = false)(f: Seq[ActorRef] => Unit)(
-      implicit system: ActorSystem): Unit = {
+  def withManyTestActors(amount: Int, seq: Int = 1, replyToMessages: Boolean = false)(f: Seq[ActorRef] => Unit)(implicit
+      system: ActorSystem): Unit = {
     val refs = (seq until seq + amount).map(setupEmpty(_, replyToMessages)).toList
     try f(refs)
     finally killActors(refs: _*)

@@ -13,8 +13,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 class AkkaPersistenceConfigTest extends AnyFlatSpec with Matchers {
-  val config: Config = ConfigFactory.parseString(
-    """
+  val config: Config = ConfigFactory.parseString("""
       |jdbc-journal {
       |  class = "akka.persistence.jdbc.journal.JdbcAsyncWriteJournal"
       |

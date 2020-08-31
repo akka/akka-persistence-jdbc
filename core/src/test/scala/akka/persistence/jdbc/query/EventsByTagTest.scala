@@ -201,7 +201,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
       val msgCountPerActor = 20
       val numberOfActors = 100
       val totalNumberOfMessages = msgCountPerActor * numberOfActors
-      withManyTestActors(numberOfActors) { (actors) =>
+      withManyTestActors(numberOfActors) { actors =>
         val actorsWithIndexes = actors.zipWithIndex
         for {
           messageNumber <- 0 until msgCountPerActor

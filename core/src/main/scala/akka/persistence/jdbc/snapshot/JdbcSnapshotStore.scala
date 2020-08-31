@@ -22,9 +22,10 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
 object JdbcSnapshotStore {
-  def toSelectedSnapshot(tupled: (SnapshotMetadata, Any)): SelectedSnapshot = tupled match {
-    case (meta: SnapshotMetadata, snapshot: Any) => SelectedSnapshot(meta, snapshot)
-  }
+  def toSelectedSnapshot(tupled: (SnapshotMetadata, Any)): SelectedSnapshot =
+    tupled match {
+      case (meta: SnapshotMetadata, snapshot: Any) => SelectedSnapshot(meta, snapshot)
+    }
 }
 
 class JdbcSnapshotStore(config: Config) extends SnapshotStore {
@@ -80,17 +81,18 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
       _ <- snapshotDao.delete(metadata.persistenceId, metadata.sequenceNr)
     } yield ()
 
-  override def deleteAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Unit] = criteria match {
-    case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue, _, _) =>
-      snapshotDao.deleteAllSnapshots(persistenceId)
-    case SnapshotSelectionCriteria(Long.MaxValue, maxTimestamp, _, _) =>
-      snapshotDao.deleteUpToMaxTimestamp(persistenceId, maxTimestamp)
-    case SnapshotSelectionCriteria(maxSequenceNr, Long.MaxValue, _, _) =>
-      snapshotDao.deleteUpToMaxSequenceNr(persistenceId, maxSequenceNr)
-    case SnapshotSelectionCriteria(maxSequenceNr, maxTimestamp, _, _) =>
-      snapshotDao.deleteUpToMaxSequenceNrAndMaxTimestamp(persistenceId, maxSequenceNr, maxTimestamp)
-    case _ => Future.successful(())
-  }
+  override def deleteAsync(persistenceId: String, criteria: SnapshotSelectionCriteria): Future[Unit] =
+    criteria match {
+      case SnapshotSelectionCriteria(Long.MaxValue, Long.MaxValue, _, _) =>
+        snapshotDao.deleteAllSnapshots(persistenceId)
+      case SnapshotSelectionCriteria(Long.MaxValue, maxTimestamp, _, _) =>
+        snapshotDao.deleteUpToMaxTimestamp(persistenceId, maxTimestamp)
+      case SnapshotSelectionCriteria(maxSequenceNr, Long.MaxValue, _, _) =>
+        snapshotDao.deleteUpToMaxSequenceNr(persistenceId, maxSequenceNr)
+      case SnapshotSelectionCriteria(maxSequenceNr, maxTimestamp, _, _) =>
+        snapshotDao.deleteUpToMaxSequenceNrAndMaxTimestamp(persistenceId, maxSequenceNr, maxTimestamp)
+      case _ => Future.successful(())
+    }
 
   override def postStop(): Unit = {
     if (slickDb.allowShutdown) {

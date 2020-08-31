@@ -115,7 +115,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
           knownIds += id
           xs
         }
-        (id) => next(id)
+        id => next(id)
       }
 
   private def adaptEvents(repr: PersistentRepr): Seq[PersistentRepr] = {

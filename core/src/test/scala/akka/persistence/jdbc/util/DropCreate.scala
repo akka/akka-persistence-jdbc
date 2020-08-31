@@ -31,25 +31,27 @@ trait DropCreate extends ClasspathResources {
     """DROP PROCEDURE "reset_sequence"""",
     """DROP SEQUENCE "ordering_seq"""")
 
-  def dropOracle(): Unit = withStatement { stmt =>
-    listOfOracleDropQueries.foreach { ddl =>
-      try stmt.executeUpdate(ddl)
-      catch {
-        case t: java.sql.SQLException if t.getMessage contains "ORA-00942" => // suppress known error message in the test
-        case t: java.sql.SQLException if t.getMessage contains "ORA-04080" => // suppress known error message in the test
-        case t: java.sql.SQLException if t.getMessage contains "ORA-02289" => // suppress known error message in the test
-        case t: java.sql.SQLException if t.getMessage contains "ORA-04043" => // suppress known error message in the test
-        case t: java.sql.SQLException if t.getMessage contains "ORA-01418" => // suppress known error message in the test
+  def dropOracle(): Unit =
+    withStatement { stmt =>
+      listOfOracleDropQueries.foreach { ddl =>
+        try stmt.executeUpdate(ddl)
+        catch {
+          case t: java.sql.SQLException if t.getMessage contains "ORA-00942" => // suppress known error message in the test
+          case t: java.sql.SQLException if t.getMessage contains "ORA-04080" => // suppress known error message in the test
+          case t: java.sql.SQLException if t.getMessage contains "ORA-02289" => // suppress known error message in the test
+          case t: java.sql.SQLException if t.getMessage contains "ORA-04043" => // suppress known error message in the test
+          case t: java.sql.SQLException if t.getMessage contains "ORA-01418" => // suppress known error message in the test
+        }
       }
     }
-  }
 
-  def dropCreate(schemaType: SchemaType): Unit = schemaType match {
-    case Oracle(schema) =>
-      dropOracle()
-      create(schema, "/")
-    case s: SchemaType => create(s.schema)
-  }
+  def dropCreate(schemaType: SchemaType): Unit =
+    schemaType match {
+      case Oracle(schema) =>
+        dropOracle()
+        create(schema, "/")
+      case s: SchemaType => create(s.schema)
+    }
 
   def create(schema: String, separator: String = ";"): Unit =
     for {

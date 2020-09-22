@@ -67,7 +67,7 @@ Configure `slick`:
 
 ## Reference Configuration
 
-akka-persistence-jdbc provides the defaults as part of the @extref:[reference.conf](github:/src/main/resources/reference.conf). This file documents all the values which can be configured.
+akka-persistence-jdbc provides the defaults as part of the @extref:[reference.conf](github:core/src/main/resources/reference.conf). This file documents all the values which can be configured.
 
 There are several possible ways to configure loading your database connections. Options will be explained below.
 

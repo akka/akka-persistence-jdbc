@@ -67,7 +67,7 @@ Configure `slick`:
 
 ## Reference Configuration
 
-akka-persistence-jdbc provides the defaults as part of the @extref:[reference.conf](github:core/src/main/resources/reference.conf). This file documents all the values which can be configured.
+akka-persistence-jdbc provides the defaults as part of the @extref:[reference.conf](github:/core/src/main/resources/reference.conf). This file documents all the values which can be configured.
 
 There are several possible ways to configure loading your database connections. Options will be explained below.
 
@@ -77,21 +77,21 @@ There is the possibility to create a separate database connection pool per journ
 one pool for the snapshot-journal, and one pool for the read-journal). This is the default and the following example
 configuration shows how this is configured:
 
-- @extref:[Postgres](github:/src/test/resources/postgres-application.conf)
-- @extref:[MySQL](github:/src/test/resources/mysql-application.conf)
-- @extref:[H2](github:/src/test/resources/h2-application.conf)
-- @extref:[Oracle](github:/src/test/resources/oracle-application.conf)
-- @extref:[SQL Server](github:/src/test/resources/sqlserver-application.conf)
+- @extref:[Postgres](github:/core/src/test/resources/postgres-application.conf)
+- @extref:[MySQL](github:/core/src/test/resources/mysql-application.conf)
+- @extref:[H2](github:/core/src/test/resources/h2-application.conf)
+- @extref:[Oracle](github:/core/src/test/resources/oracle-application.conf)
+- @extref:[SQL Server](github:/core/src/test/resources/sqlserver-application.conf)
 
 ### Sharing the database connection pool between the journals
 
 In order to create only one connection pool which is shared between all journals the following configuration can be used:
 
-- @extref:[Postgres](github:/src/test/resources/postgres-shared-db-application.conf)
-- @extref:[MySQL](github:/src/test/resources/mysql-shared-db-application.conf)
-- @extref:[H2](github:/src/test/resources/h2-shared-db-application.conf)
-- @extref:[Oracle](github:/src/test/resources/oracle-shared-db-application.conf)
-- @extref:[SQL Server](github:/src/test/resources/sqlserver-shared-db-application.conf)
+- @extref:[Postgres](github:/core/src/test/resources/postgres-shared-db-application.conf)
+- @extref:[MySQL](github:/core/src/test/resources/mysql-shared-db-application.conf)
+- @extref:[H2](github:/core/src/test/resources/h2-shared-db-application.conf)
+- @extref:[Oracle](github:/core/src/test/resources/oracle-shared-db-application.conf)
+- @extref:[SQL Server](github:/core/src/test/resources/sqlserver-shared-db-application.conf)
 
 ### Customized loading of the db connection
 

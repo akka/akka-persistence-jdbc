@@ -55,11 +55,10 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates with BaseJournalDaoW
     .batchWeighted[(Seq[Promise[Unit]], Seq[JournalRow])](batchSize, _._2.size, tup => Vector(tup._1) -> tup._2) {
       case ((promises, rows), (newPromise, newRows)) => (promises :+ newPromise) -> (rows ++ newRows)
     }
-    .mapAsync(parallelism) {
-      case (promises, rows) =>
-        writeJournalRows(rows).map(unit => promises.foreach(_.success(unit))).recover {
-          case t => promises.foreach(_.failure(t))
-        }
+    .mapAsync(parallelism) { case (promises, rows) =>
+      writeJournalRows(rows).map(unit => promises.foreach(_.success(unit))).recover { case t =>
+        promises.foreach(_.failure(t))
+      }
     }
     .toMat(Sink.ignore)(Keep.left)
     .run()

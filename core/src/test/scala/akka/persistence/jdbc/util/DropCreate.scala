@@ -36,11 +36,16 @@ trait DropCreate extends ClasspathResources {
       listOfOracleDropQueries.foreach { ddl =>
         try stmt.executeUpdate(ddl)
         catch {
-          case t: java.sql.SQLException if t.getMessage contains "ORA-00942" => // suppress known error message in the test
-          case t: java.sql.SQLException if t.getMessage contains "ORA-04080" => // suppress known error message in the test
-          case t: java.sql.SQLException if t.getMessage contains "ORA-02289" => // suppress known error message in the test
-          case t: java.sql.SQLException if t.getMessage contains "ORA-04043" => // suppress known error message in the test
-          case t: java.sql.SQLException if t.getMessage contains "ORA-01418" => // suppress known error message in the test
+          case t: java.sql.SQLException
+              if t.getMessage contains "ORA-00942" => // suppress known error message in the test
+          case t: java.sql.SQLException
+              if t.getMessage contains "ORA-04080" => // suppress known error message in the test
+          case t: java.sql.SQLException
+              if t.getMessage contains "ORA-02289" => // suppress known error message in the test
+          case t: java.sql.SQLException
+              if t.getMessage contains "ORA-04043" => // suppress known error message in the test
+          case t: java.sql.SQLException
+              if t.getMessage contains "ORA-01418" => // suppress known error message in the test
         }
       }
     }
@@ -63,7 +68,8 @@ trait DropCreate extends ClasspathResources {
     } withStatement { stmt =>
       try stmt.executeUpdate(ddl)
       catch {
-        case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" => // suppress known error message in the test
+        case t: java.sql.SQLSyntaxErrorException
+            if t.getMessage contains "ORA-00942" => // suppress known error message in the test
       }
     }
 

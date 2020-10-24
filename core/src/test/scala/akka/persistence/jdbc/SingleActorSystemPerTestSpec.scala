@@ -22,8 +22,8 @@ abstract class SingleActorSystemPerTestSpec(val config: Config)
     with DropCreate
     with BeforeAndAfterEach {
   def this(config: String = "postgres-application.conf", configOverrides: Map[String, ConfigValue] = Map.empty) =
-    this(configOverrides.foldLeft(ConfigFactory.load(config)) {
-      case (conf, (path, configValue)) => conf.withValue(path, configValue)
+    this(configOverrides.foldLeft(ConfigFactory.load(config)) { case (conf, (path, configValue)) =>
+      conf.withValue(path, configValue)
     })
 
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 1.minute)

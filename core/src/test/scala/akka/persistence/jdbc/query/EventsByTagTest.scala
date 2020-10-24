@@ -142,14 +142,14 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
 
       journalOps.withEventsByTag()("number", Sequence(Long.MinValue)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF {
-          case ev @ EventEnvelope(Sequence(1), "my-1", 1, 1) => assertTimestamp(ev.timestamp, "my-1")
+        tp.expectNextPF { case ev @ EventEnvelope(Sequence(1), "my-1", 1, 1) =>
+          assertTimestamp(ev.timestamp, "my-1")
         }
-        tp.expectNextPF {
-          case ev @ EventEnvelope(Sequence(2), "my-2", 1, 2) => assertTimestamp(ev.timestamp, "my-2")
+        tp.expectNextPF { case ev @ EventEnvelope(Sequence(2), "my-2", 1, 2) =>
+          assertTimestamp(ev.timestamp, "my-2")
         }
-        tp.expectNextPF {
-          case ev @ EventEnvelope(Sequence(3), "my-3", 1, 3) => assertTimestamp(ev.timestamp, "my-3")
+        tp.expectNextPF { case ev @ EventEnvelope(Sequence(3), "my-3", 1, 3) =>
+          assertTimestamp(ev.timestamp, "my-3")
         }
         tp.cancel()
       }

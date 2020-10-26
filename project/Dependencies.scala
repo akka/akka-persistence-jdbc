@@ -34,7 +34,7 @@ object Dependencies {
 
   val Migration: Seq[ModuleID] = Seq(
       "org.flywaydb" % "flyway-core" % "6.5.7",
-      "com.typesafe" % "config" % "1.4.0",
+      "com.typesafe" % "config" % "1.4.1",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       "org.testcontainers" % "postgresql" % "1.14.3" % Test,
       "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Provided)

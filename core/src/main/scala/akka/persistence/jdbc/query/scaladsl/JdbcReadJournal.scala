@@ -52,7 +52,9 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
   val readJournalConfig = new ReadJournalConfig(config)
 
   private val writePluginId = config.getString("write-plugin")
-  private val eventAdapters = Persistence(system).adaptersFor(writePluginId)
+  // If 'config' is empty, or if the plugin reference is not found, then the write plugin will be resolved from the
+  // ActorSystem configuration. Otherwise, it will be resolved from the provided 'config'.
+  private val eventAdapters = Persistence(system).adaptersFor(writePluginId, config)
 
   val readJournalDao: ReadJournalDao = {
     val slickDb = SlickExtension(system).database(config)

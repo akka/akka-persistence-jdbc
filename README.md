@@ -9,6 +9,7 @@ application models using Akka for creating reactive applications.
 
 ## Documentation
 
+* [current Akka Persistence JDBC documentation](https://doc.akka.io/docs/akka-persistence-jdbc/current/)
 * [Akka Persistence JDBC 3.5.x documentation](https://doc.akka.io/docs/akka-persistence-jdbc/3.5/)
 * [Snapshot documentation](https://doc.akka.io/docs/akka-persistence-jdbc/snapshot/)
 

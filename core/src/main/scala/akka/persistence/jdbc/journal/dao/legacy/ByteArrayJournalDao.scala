@@ -1,80 +1,28 @@
-package akka.persistence.jdbc
-package journal.dao.legacy
+package akka.persistence.jdbc.journal.dao.legacy
 
 import akka.actor.Scheduler
-import akka.{ Done, NotUsed }
+import akka.persistence.jdbc.journal.dao.{
+  BaseDao,
+  BaseJournalDaoWithReadMessages,
+  FlowControl,
+  JournalDao,
+  JournalDaoWithReadMessages,
+  JournalDaoWithUpdates
+}
 import akka.persistence.jdbc.config.{ BaseDaoConfig, JournalConfig }
-import akka.persistence.jdbc.journal.dao.{ FlowControl, JournalDao, JournalDaoWithReadMessages, JournalDaoWithUpdates }
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.serialization.Serialization
-import akka.stream.scaladsl.{ Keep, Sink, Source, SourceQueueWithComplete }
-import akka.stream.{ Materializer, OverflowStrategy, QueueOfferResult }
+import akka.stream.Materializer
+import akka.stream.scaladsl.Source
 import akka.{ Done, NotUsed }
 import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.JdbcProfile
 
-import scala.collection.immutable.{ Nil, Seq, Vector }
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{ ExecutionContext, Future, Promise }
+import scala.collection.immutable.{ Nil, Seq }
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
-
-trait BaseJournalDaoWithReadMessages extends JournalDaoWithReadMessages {
-  import FlowControl._
-
-  implicit val ec: ExecutionContext
-  implicit val mat: Materializer
-
-  override def messagesWithBatch(
-      persistenceId: String,
-      fromSequenceNr: Long,
-      toSequenceNr: Long,
-      batchSize: Int,
-      refreshInterval: Option[(FiniteDuration, Scheduler)]): Source[Try[(PersistentRepr, Long)], NotUsed] = {
-
-    Source
-      .unfoldAsync[(Long, FlowControl), Seq[Try[(PersistentRepr, Long)]]]((Math.max(1, fromSequenceNr), Continue)) {
-        case (from, control) =>
-          def retrieveNextBatch(): Future[Option[((Long, FlowControl), Seq[Try[(PersistentRepr, Long)]])]] = {
-            for {
-              xs <- messages(persistenceId, from, toSequenceNr, batchSize).runWith(Sink.seq)
-            } yield {
-              val hasMoreEvents = xs.size == batchSize
-              // Events are ordered by sequence number, therefore the last one is the largest)
-              val lastSeqNrInBatch: Option[Long] = xs.lastOption match {
-                case Some(Success((repr, _))) => Some(repr.sequenceNr)
-                case Some(Failure(e))         => throw e // fail the returned Future
-                case None                     => None
-              }
-              val hasLastEvent = lastSeqNrInBatch.exists(_ >= toSequenceNr)
-              val nextControl: FlowControl =
-                if (hasLastEvent || from > toSequenceNr) Stop
-                else if (hasMoreEvents) Continue
-                else if (refreshInterval.isEmpty) Stop
-                else ContinueDelayed
-
-              val nextFrom: Long = lastSeqNrInBatch match {
-                // Continue querying from the last sequence number (the events are ordered)
-                case Some(lastSeqNr) => lastSeqNr + 1
-                case None            => from
-              }
-              Some((nextFrom, nextControl), xs)
-            }
-          }
-
-          control match {
-            case Stop     => Future.successful(None)
-            case Continue => retrieveNextBatch()
-            case ContinueDelayed =>
-              val (delay, scheduler) = refreshInterval.get
-              akka.pattern.after(delay, scheduler)(retrieveNextBatch())
-          }
-      }
-      .mapConcat(identity)
-  }
-
-}
 
 trait H2JournalDao extends JournalDao {
   val profile: JdbcProfile
@@ -112,45 +60,6 @@ class ByteArrayJournalDao(
   val serializer = new ByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator)
 }
 
-trait BaseDao[T] {
-  implicit val mat: Materializer
-  implicit val ec: ExecutionContext
-
-  def baseDaoConfig: BaseDaoConfig
-
-  lazy val writeQueue: SourceQueueWithComplete[(Promise[Unit], Seq[T])] = Source
-    .queue[(Promise[Unit], Seq[T])](baseDaoConfig.bufferSize, OverflowStrategy.dropNew)
-    .batchWeighted[(Seq[Promise[Unit]], Seq[T])](baseDaoConfig.batchSize, _._2.size, tup => Vector(tup._1) -> tup._2) {
-      case ((promises, rows), (newPromise, newRows)) => (promises :+ newPromise) -> (rows ++ newRows)
-    }
-    .mapAsync(baseDaoConfig.parallelism) {
-      case (promises, rows) =>
-        writeJournalRows(rows).map(unit => promises.foreach(_.success(unit))).recover {
-          case t => promises.foreach(_.failure(t))
-        }
-    }
-    .toMat(Sink.ignore)(Keep.left)
-    .run()
-
-  def writeJournalRows(xs: Seq[T]): Future[Unit]
-
-  def queueWriteJournalRows(xs: Seq[T]): Future[Unit] = {
-    val promise = Promise[Unit]()
-    writeQueue.offer(promise -> xs).flatMap {
-      case QueueOfferResult.Enqueued =>
-        promise.future
-      case QueueOfferResult.Failure(t) =>
-        Future.failed(new Exception("Failed to write journal row batch", t))
-      case QueueOfferResult.Dropped =>
-        Future.failed(new Exception(
-          s"Failed to enqueue journal row batch write, the queue buffer was full (${baseDaoConfig.bufferSize} elements) please check the jdbc-journal.bufferSize setting"))
-      case QueueOfferResult.QueueClosed =>
-        Future.failed(new Exception("Failed to enqueue journal row batch write, the queue was closed"))
-    }
-  }
-
-}
-
 /**
  * The DefaultJournalDao contains all the knowledge to persist and load serialized journal entries
  */
@@ -167,7 +76,7 @@ trait BaseByteArrayJournalDao
   implicit val ec: ExecutionContext
   implicit val mat: Materializer
 
-  import journalConfig.daoConfig.{ batchSize, bufferSize, logicalDelete, parallelism }
+  import journalConfig.daoConfig.logicalDelete
   import profile.api._
 
   val logger = LoggerFactory.getLogger(this.getClass)

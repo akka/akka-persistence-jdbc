@@ -116,6 +116,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.cancel()
         tp.expectNoMessage(NoMsgTime)
       }
+
     }
   }
 

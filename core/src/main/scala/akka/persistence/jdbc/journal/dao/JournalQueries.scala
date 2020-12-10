@@ -1,19 +1,31 @@
 package akka.persistence.jdbc.journal.dao
 
 import akka.persistence.jdbc.config.JournalTableConfiguration
-import akka.persistence.jdbc.journal.dao.JournalTables.JournalAkkaSerializationRow
+import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, TagRow }
 import slick.jdbc.JdbcProfile
 
-// TODO pull out a trait so more of the journals impl can be shared
+import scala.concurrent.ExecutionContext
+
 class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration)
     extends JournalTables {
 
   import profile.api._
 
-  private val JournalTableC = Compiled(JournalTable)
+  val insertAndReturn =
+    JournalTable.returning(JournalTable.map(_.ordering))
+  private val TagTableC = Compiled(TagTable)
 
-  def writeJournalRows(xs: Seq[JournalAkkaSerializationRow]) =
-    JournalTableC ++= xs.sortBy(_.sequenceNumber)
+  def writeJournalRows(xs: Seq[(JournalAkkaSerializationRow, Set[String])])(implicit ec: ExecutionContext) = {
+
+    def insert(row: JournalAkkaSerializationRow, tags: Set[String]) = {
+      for {
+        id <- insertAndReturn += row
+        _ <- TagTableC ++= tags.map(tag => TagRow(id, tag))
+      } yield ()
+    }
+
+    DBIO.sequence(xs.sortBy(event => event._1.sequenceNumber).map { case (row, tags) => insert(row, tags) })
+  }
 
   private def selectAllJournalForPersistenceIdDesc(persistenceId: Rep[String]) =
     selectAllJournalForPersistenceId(persistenceId).sortBy(_.sequenceNumber.desc)

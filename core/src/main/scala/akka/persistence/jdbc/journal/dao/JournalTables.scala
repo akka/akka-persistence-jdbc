@@ -1,15 +1,16 @@
 package akka.persistence.jdbc.journal.dao
 
 import akka.persistence.jdbc.config.JournalTableConfiguration
-import akka.persistence.jdbc.journal.dao.JournalTables.JournalAkkaSerializationRow
+import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, TagRow }
 
 object JournalTables {
   case class JournalAkkaSerializationRow(
       ordering: Long,
-      deleted: Boolean, // TODO, remove? Or do we need it for something
+      deleted: Boolean,
       persistenceId: String,
       sequenceNumber: Long,
       writer: String,
+      writeTimestamp: Long,
       eventManifest: String,
       eventPayload: Array[Byte],
       eventSerId: Int,
@@ -17,10 +18,12 @@ object JournalTables {
       metaPayload: Option[Array[Byte]],
       metaSerId: Option[Int],
       metaSerManifest: Option[String])
+
+  case class TagRow(eventId: Long, tag: String)
 }
 
 /**
- * For the schema dded in 5.0.0
+ * For the schema added in 5.0.0
  */
 trait JournalTables {
   val profile: slick.jdbc.JdbcProfile
@@ -29,7 +32,7 @@ trait JournalTables {
 
   def journalTableCfg: JournalTableConfiguration
 
-  class Journal(_tableTag: Tag)
+  class JournalEvents(_tableTag: Tag)
       extends Table[JournalAkkaSerializationRow](
         _tableTag,
         _schemaName = journalTableCfg.schemaName,
@@ -41,6 +44,7 @@ trait JournalTables {
         persistenceId,
         sequenceNumber,
         writer,
+        timestamp,
         eventManifest,
         eventPayload,
         eventSerId,
@@ -57,6 +61,7 @@ trait JournalTables {
 
     val writer: Rep[String] = column[String]("writer")
     val eventManifest: Rep[String] = column[String]("event_manifest")
+    val timestamp: Rep[Long] = column[Long]("write_timestamp")
 
     val eventPayload: Rep[Array[Byte]] = column[Array[Byte]]("event_payload")
     val eventSerId: Rep[Int] = column[Int]("event_ser_id")
@@ -70,5 +75,16 @@ trait JournalTables {
     val orderingIdx = index(s"${tableName}_ordering_idx", ordering, unique = true)
   }
 
-  lazy val JournalTable = new TableQuery(tag => new Journal(tag))
+  lazy val JournalTable = new TableQuery(tag => new JournalEvents(tag))
+
+  class EventTags(_tableTag: Tag) extends Table[TagRow](_tableTag, journalTableCfg.schemaName, "event_tag") {
+    override def * = (eventId, tag) <> (TagRow.tupled, TagRow.unapply)
+
+    val eventId: Rep[Long] = column[Long]("event_id")
+    val tag: Rep[String] = column[String]("tag")
+
+    def journalEvent = foreignKey("fk_journal_event", eventId, JournalTable)(_.ordering)
+  }
+
+  lazy val TagTable = new TableQuery(tag => new EventTags(tag))
 }

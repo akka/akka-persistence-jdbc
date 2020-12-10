@@ -18,11 +18,11 @@ import akka.stream.scaladsl.{ Sink, Source }
 import com.typesafe.config.{ ConfigValue, ConfigValueFactory }
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.slf4j.LoggerFactory
+
 import scala.collection.immutable
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success }
-
 import akka.stream.testkit.scaladsl.TestSink
 import org.scalatest.Matchers
 

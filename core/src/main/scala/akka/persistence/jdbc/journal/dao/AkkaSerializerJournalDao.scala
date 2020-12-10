@@ -1,27 +1,21 @@
 package akka.persistence.jdbc.journal.dao
-import java.nio.ByteBuffer
 
 import akka.NotUsed
-import akka.actor.Scheduler
 import akka.persistence.jdbc.config.{ BaseDaoConfig, JournalConfig }
 import akka.persistence.jdbc.journal.dao.AkkaSerializerJournalDao.AkkaSerialized
 import akka.persistence.jdbc.journal.dao.JournalTables.JournalAkkaSerializationRow
-import akka.persistence.jdbc.journal.dao.legacy.{ BaseDao, BaseJournalDaoWithReadMessages }
-import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.persistence.journal.Tagged
 import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.serialization.{ Serialization, Serializers }
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-import akka.util.OptionVal
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.JdbcProfile
 
 import scala.collection.immutable
 import scala.collection.immutable.{ Nil, Seq }
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.concurrent.duration.FiniteDuration
-import scala.util.{ Failure, Success, Try }
+import scala.util.Try
 
 object AkkaSerializerJournalDao {
   case class AkkaSerialized(serialized: Array[Byte], serManifest: String, serId: Int)
@@ -37,14 +31,14 @@ class AkkaSerializerJournalDao(
     val journalConfig: JournalConfig,
     serialization: Serialization)(implicit val ec: ExecutionContext, val mat: Materializer)
     extends JournalDao
-    with BaseDao[JournalAkkaSerializationRow]
+    with BaseDao[(JournalAkkaSerializationRow, Set[String])]
     with BaseJournalDaoWithReadMessages {
 
   import profile.api._
 
   override def baseDaoConfig: BaseDaoConfig = journalConfig.daoConfig
 
-  override def writeJournalRows(xs: immutable.Seq[JournalAkkaSerializationRow]): Future[Unit] = {
+  override def writeJournalRows(xs: immutable.Seq[(JournalAkkaSerializationRow, Set[String])]): Future[Unit] = {
     db.run(queries.writeJournalRows(xs).transactionally).map(_ => ())
   }
 
@@ -64,18 +58,15 @@ class AkkaSerializerJournalDao(
     for {
       maybeHighestSeqNo <- db.run(queries.highestSequenceNrForPersistenceId(persistenceId).result)
     } yield maybeHighestSeqNo.getOrElse(0L)
-
   }
 
   private def highestMarkedSequenceNr(persistenceId: String) =
     queries.highestMarkedSequenceNrForPersistenceId(persistenceId).result
 
   override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] = {
-
-    def serializeAtomicWrite(aw: AtomicWrite): Try[Seq[JournalAkkaSerializationRow]] = {
-      Try(aw.payload.map(serialize).map(_._1)) // FIXME don't throw away tags
+    def serializeAtomicWrite(aw: AtomicWrite): Try[Seq[(JournalAkkaSerializationRow, Set[String])]] = {
+      Try(aw.payload.map(serialize))
     }
-
     def serialize(pr: PersistentRepr): (JournalAkkaSerializationRow, Set[String]) = {
 
       def serializeWithAkkaSerialization(payload: Any): AkkaSerialized = {
@@ -100,6 +91,7 @@ class AkkaSerializerJournalDao(
           updatedPr.persistenceId,
           updatedPr.sequenceNr,
           updatedPr.writerUuid,
+          updatedPr.timestamp,
           updatedPr.manifest,
           serializedPayload.serialized,
           serializedPayload.serId,
@@ -111,9 +103,9 @@ class AkkaSerializerJournalDao(
         tags)
     }
 
-    val serializedTries: immutable.Seq[Try[Seq[JournalAkkaSerializationRow]]] = messages.map(serializeAtomicWrite)
+    val serializedTries: Seq[Try[Seq[(JournalAkkaSerializationRow, Set[String])]]] = messages.map(serializeAtomicWrite)
 
-    val rowsToWrite: Seq[JournalAkkaSerializationRow] = for {
+    val rowsToWrite: Seq[(JournalAkkaSerializationRow, Set[String])] = for {
       serializeTry <- serializedTries
       row <- serializeTry.getOrElse(Seq.empty)
     } yield row
@@ -121,7 +113,6 @@ class AkkaSerializerJournalDao(
     def resultWhenWriteComplete =
       if (serializedTries.forall(_.isSuccess)) Nil else serializedTries.map(_.map(_ => ()))
 
-    // FIXME, actually write the tags
     queueWriteJournalRows(rowsToWrite).map(_ => resultWhenWriteComplete)
   }
 
@@ -130,34 +121,8 @@ class AkkaSerializerJournalDao(
       fromSequenceNr: Long,
       toSequenceNr: Long,
       max: Long): Source[Try[(PersistentRepr, Long)], NotUsed] = {
-    // FIXME, also look up the tags and re-wrap if need be? Is that required? Or only in the events by tag query
-    val cats: Source[JournalAkkaSerializationRow, NotUsed] =
-      Source.fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
-
-    val dogs: Source[Try[(PersistentRepr, Long)], NotUsed] = cats.map { row =>
-      // FIXME deal with serialization exceptions
-
-      val payload: Any = serialization.deserialize(row.eventPayload, row.eventSerId, row.eventSerManifest).get
-
-      // FIXME metadata
-      val metadata: OptionVal[Any] = OptionVal.None
-      val repr = PersistentRepr(
-        payload,
-        row.sequenceNumber,
-        row.persistenceId,
-        row.eventManifest,
-        row.deleted,
-        sender = null,
-        writerUuid = row.writer)
-
-      val withMetaRepr = metadata match {
-        case OptionVal.None    => repr
-        case OptionVal.Some(m) => repr.withMetadata(m)
-      }
-
-      Try((withMetaRepr, row.ordering))
-    }
-
-    dogs
+    Source
+      .fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
+      .map(AkkaSerialization.fromRow(serialization))
   }
 }

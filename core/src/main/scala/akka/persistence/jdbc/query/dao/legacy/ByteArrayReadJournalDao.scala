@@ -3,31 +3,25 @@
  * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
  */
 
-package akka.persistence.jdbc
-package query.dao
+package akka.persistence.jdbc.query.dao.legacy
 
 import akka.NotUsed
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.config.ReadJournalConfig
-import akka.persistence.jdbc.journal.dao.legacy.{
-  BaseJournalDaoWithReadMessages,
-  ByteArrayJournalSerializer,
-  JournalRow
-}
-import akka.persistence.jdbc.query.dao.TagFilterFlow.perfectlyMatchTag
+import akka.persistence.jdbc.journal.dao.BaseJournalDaoWithReadMessages
+import akka.persistence.jdbc.journal.dao.legacy.{ ByteArrayJournalSerializer, JournalRow }
+import akka.persistence.jdbc.query.dao.ReadJournalDao
+import akka.persistence.jdbc.query.dao.legacy.TagFilterFlow.perfectlyMatchTag
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.{ Flow, Source }
-import slick.jdbc.JdbcProfile
-import slick.jdbc.GetResult
 import slick.jdbc.JdbcBackend._
+import slick.jdbc.{ GetResult, JdbcProfile }
 
 import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
 trait BaseByteArrayReadJournalDao extends ReadJournalDao with BaseJournalDaoWithReadMessages {
   def db: Database

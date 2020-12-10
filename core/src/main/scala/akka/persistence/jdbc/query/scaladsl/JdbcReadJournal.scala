@@ -10,7 +10,6 @@ import akka.NotUsed
 import akka.actor.ExtendedActorSystem
 import akka.persistence.jdbc.config.ReadJournalConfig
 import akka.persistence.jdbc.query.JournalSequenceActor.{ GetMaxOrderingId, MaxOrderingId }
-import akka.persistence.jdbc.query.dao.ReadJournalDao
 import akka.persistence.jdbc.db.SlickExtension
 import akka.persistence.jdbc.journal.dao.FlowControl
 import akka.persistence.query.scaladsl._
@@ -23,12 +22,13 @@ import akka.util.Timeout
 import com.typesafe.config.Config
 import slick.jdbc.JdbcBackend._
 import slick.jdbc.JdbcProfile
+
 import scala.collection.immutable._
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
-
 import akka.actor.Scheduler
+import akka.persistence.jdbc.query.dao.ReadJournalDao
 import akka.persistence.jdbc.util.PluginVersionChecker
 
 object JdbcReadJournal {

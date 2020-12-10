@@ -10,8 +10,9 @@ import akka.pattern.ask
 import akka.persistence.jdbc.config.JournalSequenceRetrievalConfig
 import akka.persistence.jdbc.journal.dao.legacy.{ JournalRow, JournalTables }
 import akka.persistence.jdbc.query.JournalSequenceActor.{ GetMaxOrderingId, MaxOrderingId }
-import akka.persistence.jdbc.query.dao.{ ByteArrayReadJournalDao, TestProbeReadJournalDao }
+import akka.persistence.jdbc.query.dao.TestProbeReadJournalDao
 import akka.persistence.jdbc.SharedActorSystemTestSpec
+import akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao
 import akka.serialization.SerializationExtension
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{ Sink, Source }

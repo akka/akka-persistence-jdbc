@@ -7,15 +7,15 @@ package akka.persistence.jdbc.query.dao
 
 import akka.NotUsed
 import akka.persistence.jdbc.query.dao.TestProbeReadJournalDao.JournalSequence
-import akka.persistence.{ jdbc, PersistentRepr }
+import akka.persistence.PersistentRepr
 import akka.stream.scaladsl.Source
 import akka.testkit.TestProbe
 import akka.util.Timeout
 import akka.pattern.ask
+
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.Try
-
 import akka.actor.Scheduler
 
 object TestProbeReadJournalDao {

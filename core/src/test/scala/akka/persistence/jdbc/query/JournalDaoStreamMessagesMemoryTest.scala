@@ -24,7 +24,7 @@ import scala.concurrent.duration._
 import scala.util.{ Failure, Success }
 
 import akka.stream.testkit.scaladsl.TestSink
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 object JournalDaoStreamMessagesMemoryTest {
 

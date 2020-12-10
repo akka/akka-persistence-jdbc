@@ -1,6 +1,4 @@
 import com.lightbend.paradox.apidoc.ApidocPlugin.autoImport.apidocRootPackage
-import com.typesafe.tools.mima.core._
-import com.typesafe.tools.mima.plugin.MimaKeys.mimaBinaryIssueFilters
 
 lazy val `akka-persistence-jdbc` = project
   .in(file("."))
@@ -16,26 +14,11 @@ lazy val core = project
   .settings(
     name := "akka-persistence-jdbc",
     libraryDependencies ++= Dependencies.Libraries,
-    mimaBinaryIssueFilters ++= Seq(
-        // in 3.6.0 we intentionally renamed package akka.persistence.jdbc.util to akka.persistence.jdbc.db
-        ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.util.SlickDatabaseProvider"),
-        ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.util.SlickDatabase$"),
-        ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.util.SlickDatabase"),
-        ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.util.EagerSlickDatabase"),
-        ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.util.SlickDriver$"),
-        ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.util.SlickExtension"),
-        ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.util.LazySlickDatabase"),
-        ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.util.SlickExtensionImpl"),
-        ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.util.SlickDriver"),
-        ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.util.EagerSlickDatabase$"),
-        ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.util.SlickExtension$"),
-        ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.util.DefaultSlickDatabaseProvider"),
-        ProblemFilters.exclude[IncompatibleResultTypeProblem](
-          "akka.persistence.jdbc.journal.JdbcAsyncWriteJournal.slickDb"),
-        ProblemFilters.exclude[IncompatibleResultTypeProblem](
-          "akka.persistence.jdbc.snapshot.JdbcSnapshotStore.slickDb")),
-    // special handling as we change organization id
-    mimaPreviousArtifacts := ProjectAutoPlugin.determineMimaPreviousArtifacts(scalaBinaryVersion.value))
+    mimaReportSignatureProblems := true,
+    mimaPreviousArtifacts := Set(
+      organization.value %% name.value % previousStableVersion.value
+        .getOrElse(throw new Error("Unable to determine previous version for MiMa"))
+    ))
 
 lazy val migration = project
   .in(file("migration"))

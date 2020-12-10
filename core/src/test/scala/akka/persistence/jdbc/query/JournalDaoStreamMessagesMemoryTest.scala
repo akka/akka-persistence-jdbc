@@ -11,7 +11,7 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.persistence.{ AtomicWrite, PersistentRepr }
-import akka.persistence.jdbc.journal.dao.{ ByteArrayJournalDao, JournalTables }
+import akka.persistence.jdbc.journal.dao.legacy.{ ByteArrayJournalDao, JournalTables }
 import akka.serialization.SerializationExtension
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{ Sink, Source }

@@ -63,13 +63,13 @@ class JournalPluginConfig(config: Config) {
   override def toString: String = s"JournalPluginConfig($tagSeparator,$dao)"
 }
 
-class BaseByteArrayJournalDaoConfig(config: Config) {
+class BaseDaoConfig(config: Config) {
   val bufferSize: Int = config.asInt("bufferSize", 1000)
   val batchSize: Int = config.asInt("batchSize", 400)
   val replayBatchSize: Int = config.asInt("replayBatchSize", 400)
   val parallelism: Int = config.asInt("parallelism", 8)
   val logicalDelete: Boolean = config.asBoolean("logicalDelete", default = true)
-  override def toString: String = s"BaseByteArrayJournalDaoConfig($bufferSize,$batchSize,$parallelism,$logicalDelete)"
+  override def toString: String = s"BaseDaoConfig($bufferSize,$batchSize,$parallelism,$logicalDelete)"
 }
 
 class ReadJournalPluginConfig(config: Config) {
@@ -88,7 +88,7 @@ class SnapshotPluginConfig(config: Config) {
 class JournalConfig(config: Config) {
   val journalTableConfiguration = new JournalTableConfiguration(config)
   val pluginConfig = new JournalPluginConfig(config)
-  val daoConfig = new BaseByteArrayJournalDaoConfig(config)
+  val daoConfig = new BaseDaoConfig(config)
   val useSharedDb: Option[String] = config.asOptionalNonEmptyString(ConfigKeys.useSharedDb)
   override def toString: String = s"JournalConfig($journalTableConfiguration,$pluginConfig,$useSharedDb)"
 }

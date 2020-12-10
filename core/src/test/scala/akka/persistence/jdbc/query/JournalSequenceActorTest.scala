@@ -8,19 +8,19 @@ package akka.persistence.jdbc.query
 import akka.actor.{ ActorRef, ActorSystem }
 import akka.pattern.ask
 import akka.persistence.jdbc.config.JournalSequenceRetrievalConfig
-import akka.persistence.jdbc.journal.dao.JournalTables
+import akka.persistence.jdbc.journal.dao.legacy.{ JournalRow, JournalTables }
 import akka.persistence.jdbc.query.JournalSequenceActor.{ GetMaxOrderingId, MaxOrderingId }
 import akka.persistence.jdbc.query.dao.{ ByteArrayReadJournalDao, TestProbeReadJournalDao }
-import akka.persistence.jdbc.{ JournalRow, SharedActorSystemTestSpec }
+import akka.persistence.jdbc.SharedActorSystemTestSpec
 import akka.serialization.SerializationExtension
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{ Sink, Source }
 import akka.testkit.TestProbe
 import org.slf4j.LoggerFactory
 import slick.jdbc.{ JdbcBackend, JdbcCapabilities }
+
 import scala.concurrent.Future
 import scala.concurrent.duration._
-
 import org.scalatest.time.Span
 
 abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)

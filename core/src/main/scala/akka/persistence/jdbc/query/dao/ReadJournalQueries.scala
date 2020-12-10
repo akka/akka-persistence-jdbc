@@ -7,7 +7,7 @@ package akka.persistence.jdbc
 package query.dao
 
 import akka.persistence.jdbc.config.{ JournalTableConfiguration, ReadJournalConfig }
-import akka.persistence.jdbc.journal.dao.JournalTables
+import akka.persistence.jdbc.journal.dao.legacy.{ JournalRow, JournalTables }
 import slick.jdbc.JdbcProfile
 
 class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJournalConfig) extends JournalTables {
@@ -58,6 +58,7 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
 
   val eventsByTag = Compiled(_eventsByTag _)
 
+  // FIXME
   def writeJournalRows(xs: Seq[JournalRow]) = JournalTable ++= xs.sortBy(_.sequenceNumber)
 
   private def _journalSequenceQuery(from: ConstColumn[Long], limit: ConstColumn[Long]) =

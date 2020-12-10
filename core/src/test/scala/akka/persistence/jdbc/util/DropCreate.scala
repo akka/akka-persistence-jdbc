@@ -12,7 +12,7 @@ import slick.jdbc.JdbcBackend.{ Database, Session }
 
 object Schema {
   sealed trait SchemaType { def schema: String }
-  final case class Postgres(schema: String = "schema/postgres/postgres-schema.sql") extends SchemaType
+  final case class Postgres(schema: String = "schema/postgres/postgres-schema-v5.sql") extends SchemaType
   final case class H2(schema: String = "schema/h2/h2-schema.sql") extends SchemaType
   final case class MySQL(schema: String = "schema/mysql/mysql-schema.sql") extends SchemaType
   final case class Oracle(schema: String = "schema/oracle/oracle-schema.sql") extends SchemaType

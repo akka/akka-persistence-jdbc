@@ -9,8 +9,11 @@ package query.dao
 import akka.NotUsed
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.config.ReadJournalConfig
-import akka.persistence.jdbc.journal.dao.BaseJournalDaoWithReadMessages
-import akka.persistence.jdbc.journal.dao.ByteArrayJournalSerializer
+import akka.persistence.jdbc.journal.dao.legacy.{
+  BaseJournalDaoWithReadMessages,
+  ByteArrayJournalSerializer,
+  JournalRow
+}
 import akka.persistence.jdbc.query.dao.TagFilterFlow.perfectlyMatchTag
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
@@ -19,6 +22,7 @@ import akka.stream.scaladsl.{ Flow, Source }
 import slick.jdbc.JdbcProfile
 import slick.jdbc.GetResult
 import slick.jdbc.JdbcBackend._
+
 import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Failure

@@ -1,18 +1,21 @@
-package akka.persistence.jdbc.journal.dao
+/*
+ * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
+ * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
+ */
+
+package akka.persistence.jdbc
+package journal.dao.legacy
 
 import akka.persistence.jdbc.config.JournalTableConfiguration
-import akka.persistence.jdbc.journal.dao.JournalTables.JournalAkkaSerializationRow
 import slick.jdbc.JdbcProfile
 
-// TODO pull out a trait so more of the journals impl can be shared
 class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration)
     extends JournalTables {
-
   import profile.api._
 
   private val JournalTableC = Compiled(JournalTable)
 
-  def writeJournalRows(xs: Seq[JournalAkkaSerializationRow]) =
+  def writeJournalRows(xs: Seq[JournalRow]) =
     JournalTableC ++= xs.sortBy(_.sequenceNumber)
 
   private def selectAllJournalForPersistenceIdDesc(persistenceId: Rep[String]) =
@@ -23,6 +26,16 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
 
   def delete(persistenceId: String, toSequenceNr: Long) = {
     JournalTable.filter(_.persistenceId === persistenceId).filter(_.sequenceNumber <= toSequenceNr).delete
+  }
+
+  /**
+   * Updates (!) a payload stored in a specific events row.
+   * Intended to be used sparingly, e.g. moving all events to their encrypted counterparts.
+   */
+  def update(persistenceId: String, seqNr: Long, replacement: Array[Byte]) = {
+    val baseQuery = JournalTable.filter(_.persistenceId === persistenceId).filter(_.sequenceNumber === seqNr)
+
+    baseQuery.map(_.message).update(replacement)
   }
 
   def markJournalMessagesAsDeleted(persistenceId: String, maxSequenceNr: Long) =

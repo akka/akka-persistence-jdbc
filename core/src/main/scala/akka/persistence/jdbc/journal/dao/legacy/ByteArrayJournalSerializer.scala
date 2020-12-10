@@ -4,7 +4,7 @@
  */
 
 package akka.persistence.jdbc
-package journal.dao
+package journal.dao.legacy
 
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer

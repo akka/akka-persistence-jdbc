@@ -27,6 +27,7 @@ CREATE UNIQUE INDEX journal_event_ordering_idx ON public.journal_event(ordering)
 CREATE TABLE IF NOT EXISTS public.event_tag(
     event_id BIGINT,
     tag VARCHAR(256),
+    PRIMARY KEY(event_id, tag),
     CONSTRAINT fk_journal_event
       FOREIGN KEY(event_id)
       REFERENCES journal_event(ordering)

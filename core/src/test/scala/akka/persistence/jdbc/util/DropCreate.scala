@@ -14,7 +14,7 @@ object Schema {
   sealed trait SchemaType { def schema: String }
   final case class Postgres(schema: String = "schema/postgres/postgres-schema-v5.sql") extends SchemaType
   final case class H2(schema: String = "schema/h2/h2-schema.sql") extends SchemaType
-  final case class MySQL(schema: String = "schema/mysql/mysql-schema.sql") extends SchemaType
+  final case class MySQL(schema: String = "schema/mysql/mysql-schema-v5.sql") extends SchemaType
   final case class Oracle(schema: String = "schema/oracle/oracle-schema.sql") extends SchemaType
   final case class SqlServer(schema: String = "schema/sqlserver/sqlserver-schema.sql") extends SchemaType
 }
@@ -53,7 +53,7 @@ trait DropCreate extends ClasspathResources {
       case s: SchemaType => create(s.schema)
     }
 
-  def create(schema: String, separator: String = ";"): Unit =
+  def create(schema: String, separator: String = ";"): Unit = {
     for {
       schema <- Option(fromClasspathAsString(schema))
       ddl <- for {
@@ -66,6 +66,7 @@ trait DropCreate extends ClasspathResources {
         case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" => // suppress known error message in the test
       }
     }
+  }
 
   def withDatabase[A](f: Database => A): A =
     f(db)

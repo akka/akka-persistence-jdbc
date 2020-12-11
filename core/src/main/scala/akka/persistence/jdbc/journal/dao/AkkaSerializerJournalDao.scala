@@ -40,6 +40,9 @@ class AkkaSerializerJournalDao(
 
   val queries = new JournalQueries(profile, journalConfig.journalTableConfiguration)
 
+  queries.JournalTable.schema.createIfNotExistsStatements.foreach(println)
+  queries.TagTable.schema.createIfNotExistsStatements.foreach(println)
+
   override def delete(persistenceId: String, maxSequenceNr: Long): Future[Unit] = {
     val actions: DBIOAction[Unit, NoStream, Effect.Write with Effect.Read] = for {
       _ <- queries.markJournalMessagesAsDeleted(persistenceId, maxSequenceNr)

@@ -10,7 +10,7 @@ import akka.dispatch.ExecutionContexts
 import akka.persistence.jdbc.journal.dao.AkkaSerialization
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.Try
+import scala.util.{ Success, Try }
 
 class AkkaSerializerSnapshotDao(
     db: JdbcBackend#Database,
@@ -22,13 +22,28 @@ class AkkaSerializerSnapshotDao(
   val queries = new SnapshotQueries(profile, snapshotConfig.snapshotTableConfiguration)
 
   private def toSnapshotData(row: SnapshotRow): Try[(SnapshotMetadata, Any)] = {
-    // TODO RES metadata
     val snapshot = serialization.deserialize(row.snapshotPayload, row.snapshotSerId, row.snapshotSerManifest)
-    snapshot.map(snapshot => (SnapshotMetadata(row.persistenceId, row.sequenceNumber, row.created), snapshot))
+
+    snapshot.flatMap { snapshot =>
+      val metadata = for {
+        mPayload <- row.metaPayload
+        mSerId <- row.metaSerId
+        mSerManifest <- row.metaSerManifest
+      } yield (mPayload, mSerId, mSerManifest)
+
+      metadata match {
+        case None =>
+          Success((SnapshotMetadata(row.persistenceId, row.sequenceNumber, row.created), snapshot))
+        case Some((payload, id, manifest)) =>
+          serialization.deserialize(payload, id, manifest).map { meta =>
+            (SnapshotMetadata(row.persistenceId, row.sequenceNumber, row.created, Some(meta)), snapshot)
+          }
+      }
+    }
   }
 
   private def serializeSnapshot(meta: SnapshotMetadata, snapshot: Any): Try[SnapshotRow] = {
-    // TODO RES metadata
+    val serializedMetadata = meta.metadata.flatMap(m => AkkaSerialization.serialize(serialization, m).toOption)
     AkkaSerialization
       .serialize(serialization, payload = snapshot)
       .map(
@@ -40,9 +55,9 @@ class AkkaSerializerSnapshotDao(
             serializedSnapshot.serId,
             serializedSnapshot.serManifest,
             serializedSnapshot.payload,
-            None,
-            None,
-            None))
+            serializedMetadata.map(_.serId),
+            serializedMetadata.map(_.serManifest),
+            serializedMetadata.map(_.payload)))
   }
 
   private def zeroOrOneSnapshot(rows: Seq[SnapshotRow]): Option[(SnapshotMetadata, Any)] =

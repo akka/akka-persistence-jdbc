@@ -4,7 +4,7 @@ import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.journal.dao.JournalTables.JournalAkkaSerializationRow
 import akka.serialization.{ Serialization, Serializers }
 
-import scala.util.Try
+import scala.util.{ Success, Try }
 
 object AkkaSerialization {
 
@@ -19,8 +19,14 @@ object AkkaSerialization {
   }
 
   def fromRow(serialization: Serialization)(row: JournalAkkaSerializationRow): Try[(PersistentRepr, Long)] = {
-    serialization.deserialize(row.eventPayload, row.eventSerId, row.eventSerManifest).map { payload =>
-      // TODO support metadata
+    serialization.deserialize(row.eventPayload, row.eventSerId, row.eventSerManifest).flatMap { payload =>
+
+      val metadata = for {
+        mPayload <- row.metaPayload
+        mSerId <- row.metaSerId
+        mSerManifest <- row.metaSerManifest
+      } yield (mPayload, mSerId, mSerManifest)
+
       val repr = PersistentRepr(
         payload,
         row.sequenceNumber,
@@ -30,7 +36,16 @@ object AkkaSerialization {
         sender = null,
         writerUuid = row.writer)
 
-      (repr.withTimestamp(row.writeTimestamp), row.ordering)
+      // This means that failure to deserialize the meta will fail the read, I think this is the correct to do
+      for {
+        withMeta <- metadata match {
+          case None => Success(repr)
+          case Some((payload, id, manifest)) =>
+            serialization.deserialize(payload, id, manifest).map { meta =>
+              repr.withMetadata(meta)
+            }
+        }
+      } yield (withMeta.withTimestamp(row.writeTimestamp), row.ordering)
     }
   }
 }

@@ -73,6 +73,7 @@ class AkkaSerializerJournalDao(
       }
 
       val serializedPayload = AkkaSerialization.serialize(serialization, updatedPr.payload).get
+      val serializedMetadata = updatedPr.metadata.flatMap(m => AkkaSerialization.serialize(serialization, m).toOption)
 
       (
         JournalAkkaSerializationRow(
@@ -86,10 +87,9 @@ class AkkaSerializerJournalDao(
           serializedPayload.payload,
           serializedPayload.serId,
           serializedPayload.serManifest,
-          None,
-          None,
-          None // FIXME, support metadata
-        ),
+          serializedMetadata.map(_.payload),
+          serializedMetadata.map(_.serId),
+          serializedMetadata.map(_.serManifest)),
         tags)
     }
 

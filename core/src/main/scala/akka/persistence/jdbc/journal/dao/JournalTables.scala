@@ -84,7 +84,7 @@ trait JournalTables {
     val tag: Rep[String] = column[String]("tag")
 
     val pk = primaryKey("event_tag_pk", (eventId, tag))
-    val journalEvent = foreignKey("fk_journal_event", eventId, JournalTable)(_.ordering)
+    val journalEvent = foreignKey("fk_event_journal", eventId, JournalTable)(_.ordering)
   }
 
   lazy val TagTable = new TableQuery(tag => new EventTags(tag))

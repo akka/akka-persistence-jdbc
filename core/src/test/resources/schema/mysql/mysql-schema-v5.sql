@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS event_tag;
-DROP TABLE IF EXISTS journal_event;
+DROP TABLE IF EXISTS event_journal;
 
-CREATE TABLE IF NOT EXISTS journal_event (
+CREATE TABLE IF NOT EXISTS event_journal(
     ordering SERIAL,
     deleted BOOLEAN DEFAULT false NOT NULL,
     persistence_id VARCHAR(255) NOT NULL,
@@ -17,14 +17,14 @@ CREATE TABLE IF NOT EXISTS journal_event (
     PRIMARY KEY(persistence_id,sequence_number)
 );
 
-CREATE UNIQUE INDEX journal_event_ordering_idx ON journal_event (ordering);
+CREATE UNIQUE INDEX event_journal_ordering_idx ON event_journal(ordering);
 
 CREATE TABLE IF NOT EXISTS event_tag (
     event_id BIGINT UNSIGNED NOT NULL,
     tag VARCHAR(255) NOT NULL,
     primary key(event_id, tag),
         FOREIGN KEY (event_id)
-        REFERENCES journal_event(ordering)
+        REFERENCES event_journal(ordering)
         ON DELETE CASCADE
     );
 

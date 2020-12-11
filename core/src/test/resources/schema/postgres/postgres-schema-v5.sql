@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS public.event_tag;
-DROP TABLE IF EXISTS public.journal_event;
+DROP TABLE IF EXISTS public.event_journal;
 
-CREATE TABLE IF NOT EXISTS public.journal_event (
+CREATE TABLE IF NOT EXISTS public.event_journal(
   ordering BIGSERIAL,
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
@@ -22,15 +22,15 @@ CREATE TABLE IF NOT EXISTS public.journal_event (
   PRIMARY KEY(persistence_id, sequence_number)
 );
 
-CREATE UNIQUE INDEX journal_event_ordering_idx ON public.journal_event(ordering);
+CREATE UNIQUE INDEX event_journal_ordering_idx ON public.event_journal(ordering);
 
 CREATE TABLE IF NOT EXISTS public.event_tag(
     event_id BIGINT,
     tag VARCHAR(256),
     PRIMARY KEY(event_id, tag),
-    CONSTRAINT fk_journal_event
+    CONSTRAINT fk_event_journal
       FOREIGN KEY(event_id)
-      REFERENCES journal_event(ordering)
+      REFERENCES event_journal(ordering)
       ON DELETE CASCADE
 );
 

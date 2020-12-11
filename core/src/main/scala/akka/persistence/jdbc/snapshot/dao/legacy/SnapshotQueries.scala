@@ -1,7 +1,12 @@
-package akka.persistence.jdbc.snapshot.dao
+/*
+ * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
+ * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
+ */
+
+package akka.persistence.jdbc.snapshot.dao.legacy
 
 import akka.persistence.jdbc.config.SnapshotTableConfiguration
-import akka.persistence.jdbc.snapshot.dao.SnapshotTables.SnapshotRow
+import akka.persistence.jdbc.snapshot.dao.legacy.SnapshotTables.SnapshotRow
 import slick.jdbc.JdbcProfile
 
 class SnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: SnapshotTableConfiguration)

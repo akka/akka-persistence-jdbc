@@ -3,7 +3,7 @@
  * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
  */
 
-package akka.persistence.jdbc.snapshot.dao
+package akka.persistence.jdbc.snapshot.dao.legacy
 
 import akka.persistence.jdbc.TablesTestSpec
 import slick.jdbc.JdbcProfile

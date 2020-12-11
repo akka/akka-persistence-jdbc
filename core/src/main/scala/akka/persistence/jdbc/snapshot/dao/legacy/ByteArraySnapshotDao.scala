@@ -3,15 +3,15 @@
  * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
  */
 
-package akka.persistence.jdbc.snapshot.dao
+package akka.persistence.jdbc.snapshot.dao.legacy
 
 import akka.persistence.SnapshotMetadata
 import akka.persistence.jdbc.config.SnapshotConfig
-import akka.persistence.jdbc.snapshot.dao.SnapshotTables.SnapshotRow
+import akka.persistence.jdbc.snapshot.dao.legacy.SnapshotTables.SnapshotRow
+import akka.persistence.jdbc.snapshot.dao.SnapshotDao
 import akka.serialization.Serialization
 import akka.stream.Materializer
-import slick.jdbc.JdbcProfile
-import slick.jdbc.JdbcBackend
+import slick.jdbc.{ JdbcBackend, JdbcProfile }
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }

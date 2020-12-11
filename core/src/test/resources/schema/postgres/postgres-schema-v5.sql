@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS public.event_tag(
     tag VARCHAR(256),
     CONSTRAINT fk_journal_event
       FOREIGN KEY(event_id)
-	  REFERENCES journal_event(ordering)
-	  ON DELETE CASCADE
+      REFERENCES journal_event(ordering)
+      ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS public.snapshot;
@@ -39,7 +39,15 @@ CREATE TABLE IF NOT EXISTS public.snapshot (
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
   created BIGINT NOT NULL,
-  snapshot BYTEA NOT NULL,
+
+  snapshot_ser_id INTEGER NOT NULL,
+  snapshot_ser_manifest VARCHAR(255) NOT NULL,
+  snapshot_payload BYTEA NOT NULL,
+
+  meta_ser_id INTEGER,
+  meta_ser_manifest VARCHAR(255),
+  meta_payload BYTEA,
+
   PRIMARY KEY(persistence_id, sequence_number)
 );
 

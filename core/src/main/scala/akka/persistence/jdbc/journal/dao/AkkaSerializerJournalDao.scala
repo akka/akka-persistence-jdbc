@@ -2,7 +2,7 @@ package akka.persistence.jdbc.journal.dao
 
 import akka.NotUsed
 import akka.persistence.jdbc.config.{ BaseDaoConfig, JournalConfig }
-import akka.persistence.jdbc.journal.dao.AkkaSerializerJournalDao.AkkaSerialized
+import akka.persistence.jdbc.journal.dao.AkkaSerialization.AkkaSerialized
 import akka.persistence.jdbc.journal.dao.JournalTables.JournalAkkaSerializationRow
 import akka.persistence.journal.Tagged
 import akka.persistence.{ AtomicWrite, PersistentRepr }
@@ -16,10 +16,6 @@ import scala.collection.immutable
 import scala.collection.immutable.{ Nil, Seq }
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
-
-object AkkaSerializerJournalDao {
-  case class AkkaSerialized(serialized: Array[Byte], serManifest: String, serId: Int)
-}
 
 /**
  * A [[JournalDao]] that uses Akka serialization to serialize the payload and store
@@ -64,25 +60,19 @@ class AkkaSerializerJournalDao(
     queries.highestMarkedSequenceNrForPersistenceId(persistenceId).result
 
   override def asyncWriteMessages(messages: immutable.Seq[AtomicWrite]): Future[immutable.Seq[Try[Unit]]] = {
+
     def serializeAtomicWrite(aw: AtomicWrite): Try[Seq[(JournalAkkaSerializationRow, Set[String])]] = {
       Try(aw.payload.map(serialize))
     }
-    def serialize(pr: PersistentRepr): (JournalAkkaSerializationRow, Set[String]) = {
 
-      def serializeWithAkkaSerialization(payload: Any): AkkaSerialized = {
-        val p2 = payload.asInstanceOf[AnyRef]
-        val serializer = serialization.findSerializerFor(p2)
-        val serManifest = Serializers.manifestFor(serializer, p2)
-        val metaBuf = serialization.serialize(p2).get
-        AkkaSerialized(metaBuf, serManifest, serializer.identifier)
-      }
+    def serialize(pr: PersistentRepr): (JournalAkkaSerializationRow, Set[String]) = {
 
       val (updatedPr, tags) = pr.payload match {
         case Tagged(payload, tags) => (pr.withPayload(payload), tags)
         case _                     => (pr, Set.empty[String])
       }
 
-      val serializedPayload = serializeWithAkkaSerialization(updatedPr.payload)
+      val serializedPayload = AkkaSerialization.serialize(serialization, updatedPr.payload).get
 
       (
         JournalAkkaSerializationRow(
@@ -93,7 +83,7 @@ class AkkaSerializerJournalDao(
           updatedPr.writerUuid,
           updatedPr.timestamp,
           updatedPr.manifest,
-          serializedPayload.serialized,
+          serializedPayload.payload,
           serializedPayload.serId,
           serializedPayload.serManifest,
           None,
@@ -103,7 +93,7 @@ class AkkaSerializerJournalDao(
         tags)
     }
 
-    val serializedTries: Seq[Try[Seq[(JournalAkkaSerializationRow, Set[String])]]] = messages.map(serializeAtomicWrite)
+    val serializedTries = messages.map(serializeAtomicWrite)
 
     val rowsToWrite: Seq[(JournalAkkaSerializationRow, Set[String])] = for {
       serializeTry <- serializedTries

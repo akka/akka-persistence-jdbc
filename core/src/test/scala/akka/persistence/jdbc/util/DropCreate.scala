@@ -15,7 +15,7 @@ object Schema {
   final case class Postgres(schema: String = "schema/postgres/postgres-schema-v5.sql") extends SchemaType
   final case class H2(schema: String = "schema/h2/h2-schema.sql") extends SchemaType
   final case class MySQL(schema: String = "schema/mysql/mysql-schema-v5.sql") extends SchemaType
-  final case class Oracle(schema: String = "schema/oracle/oracle-schema.sql") extends SchemaType
+  final case class Oracle(schema: String = "schema/oracle/oracle-schema-v5.sql") extends SchemaType
   final case class SqlServer(schema: String = "schema/sqlserver/sqlserver-schema-v5.sql") extends SchemaType
 }
 
@@ -25,11 +25,14 @@ trait DropCreate extends ClasspathResources {
   val listOfOracleDropQueries = List(
     """ALTER SESSION SET ddl_lock_timeout = 15""", // (ddl lock timeout in seconds) this allows tests which are still writing to the db to finish gracefully
     """DROP TABLE "journal" CASCADE CONSTRAINT""",
+    """DROP TABLE "event_journal" CASCADE CONSTRAINT""",
+    """DROP TABLE "event_tag" CASCADE CONSTRAINT""",
     """DROP TABLE "snapshot" CASCADE CONSTRAINT""",
     """DROP TABLE "deleted_to" CASCADE CONSTRAINT""",
     """DROP TRIGGER "ordering_seq_trigger"""",
     """DROP PROCEDURE "reset_sequence"""",
-    """DROP SEQUENCE "ordering_seq"""")
+    """DROP SEQUENCE "ordering_seq"""",
+    """DROP SEQUENCE "event_journal__ordering_seq"""")
 
   def dropOracle(): Unit =
     withStatement { stmt =>
@@ -63,7 +66,9 @@ trait DropCreate extends ClasspathResources {
     } withStatement { stmt =>
       try stmt.executeUpdate(ddl)
       catch {
-        case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" => // suppress known error message in the test
+        case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" =>
+          println("ignoring: " + t.getMessage)
+        // suppress known error message in the test
       }
     }
   }

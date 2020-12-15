@@ -10,12 +10,12 @@
         </encoder>
     </appender>
 
-    <!--<logger name="akka.persistence.jdbc" level="debug"/>-->
-    <!--<logger name="akka.persistence.jdbc.journal" level="info"/>-->
+<!--    <logger name="akka.persistence.jdbc" level="debug"/>-->
+<!--    <logger name="akka.persistence.jdbc.journal" level="info"/>-->
 
     <logger name="com.zaxxer.hikari" level="warn"/>
 
-    <!--<logger name="slick.backend.DatabaseComponent.action" level="debug"/>-->
+<!--    <logger name="slick.backend.DatabaseComponent.action" level="debug"/>-->
 
     <!-- Shows execution times for SQL statements. -->
     <!--<logger name="slick.jdbc.JdbcBackend.benchmark" level="debug"/>-->
@@ -30,10 +30,10 @@
     <!--<logger name="slick.jdbc.JdbcBackend.parameter" level="DEBUG"/>-->
 
     <!-- Logs SQL sent to the database -->
-    <!--<logger name="slick.jdbc.JdbcBackend.statement" level="DEBUG"/>-->
+    <logger name="slick.jdbc.JdbcBackend.statement" level="DEBUG"/>
 
     <!-- Logs the first few results of each query. -->
-    <!--<logger name="slick.jdbc.StatementInvoker.result" level="DEBUG"/>-->
+<!--    <logger name="slick.jdbc.StatementInvoker.result" level="DEBUG"/>-->
 
     <!--<logger name="slick.util.AsyncExecutor" level="DEBUG" />-->
 

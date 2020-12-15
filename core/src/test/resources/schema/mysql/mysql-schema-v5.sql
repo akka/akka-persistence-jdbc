@@ -22,8 +22,8 @@ CREATE UNIQUE INDEX event_journal_ordering_idx ON event_journal(ordering);
 CREATE TABLE IF NOT EXISTS event_tag (
     event_id BIGINT UNSIGNED NOT NULL,
     tag VARCHAR(255) NOT NULL,
-    primary key(event_id, tag),
-        FOREIGN KEY (event_id)
+    PRIMARY KEY(event_id, tag),
+    FOREIGN KEY (event_id)
         REFERENCES event_journal(ordering)
         ON DELETE CASCADE
     );

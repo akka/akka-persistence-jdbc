@@ -1,13 +1,18 @@
+/*
+ * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
+ * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
+ */
+
 package akka.persistence.jdbc.journal.dao.legacy
 
-import akka.persistence.jdbc.config.JournalTableConfiguration
+import akka.persistence.jdbc.config.LegacyJournalTableConfiguration
 
 trait JournalTables {
   val profile: slick.jdbc.JdbcProfile
 
   import profile.api._
 
-  def journalTableCfg: JournalTableConfiguration
+  def journalTableCfg: LegacyJournalTableConfiguration
 
   class Journal(_tableTag: Tag)
       extends Table[JournalRow](

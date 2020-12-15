@@ -24,7 +24,7 @@ class ByteArraySnapshotDao(
     extends SnapshotDao {
   import profile.api._
 
-  val queries = new SnapshotQueries(profile, snapshotConfig.snapshotTableConfiguration)
+  val queries = new SnapshotQueries(profile, snapshotConfig.legacySnapshotTableConfiguration)
 
   val serializer = new ByteArraySnapshotSerializer(serialization)
 

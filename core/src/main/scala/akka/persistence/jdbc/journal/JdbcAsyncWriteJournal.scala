@@ -81,10 +81,6 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
   private val writeInProgress: JMap[String, Future[_]] = new JHMap
 
   override def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] = {
-
-    println("MESSAGES")
-    println(messages)
-
     // add timestamp to all payloads in all AtomicWrite messages
     val timedMessages =
       messages.map { atomWrt =>

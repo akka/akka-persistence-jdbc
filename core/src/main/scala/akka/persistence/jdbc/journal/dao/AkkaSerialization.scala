@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
+ * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
+ */
+
 package akka.persistence.jdbc.journal.dao
 
 import akka.persistence.PersistentRepr
@@ -24,8 +29,7 @@ object AkkaSerialization {
       val metadata = for {
         mPayload <- row.metaPayload
         mSerId <- row.metaSerId
-        mSerManifest <- row.metaSerManifest
-      } yield (mPayload, mSerId, mSerManifest)
+      } yield (mPayload, mSerId)
 
       val repr = PersistentRepr(
         payload,
@@ -40,8 +44,8 @@ object AkkaSerialization {
       for {
         withMeta <- metadata match {
           case None => Success(repr)
-          case Some((payload, id, manifest)) =>
-            serialization.deserialize(payload, id, manifest).map { meta =>
+          case Some((payload, id)) =>
+            serialization.deserialize(payload, id, row.metaSerManifest.getOrElse("")).map { meta =>
               repr.withMetadata(meta)
             }
         }

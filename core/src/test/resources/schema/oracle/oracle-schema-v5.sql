@@ -1,50 +1,43 @@
-CREATE SEQUENCE "event_journal__ordering_seq" start with 1 increment by 1 NOMAXVALUE
+create table EVENT_JOURNAL (
+    ORDERING NUMBER(19) NOT NULL,
+    DELETED CHAR(1) DEFAULT 0 NOT NULL check (DELETED in (0, 1)),
+    PERSISTENCE_ID VARCHAR2(255) NOT NULL,
+    SEQUENCE_NUMBER NUMBER(19) NOT NULL,
+    WRITER VARCHAR2(254) NOT NULL,
+    WRITE_TIMESTAMP NUMBER(19) NOT NULL,
+    EVENT_MANIFEST VARCHAR2(254),
+    EVENT_PAYLOAD BLOB NOT NULL,
+    EVENT_SER_ID NUMBER(10) NOT NULL,
+    EVENT_SER_MANIFEST VARCHAR2(254),
+    META_PAYLOAD BLOB,
+    META_SER_ID NUMBER(10),
+    META_SER_MANIFEST VARCHAR2(254))
 /
 
-CREATE TABLE "event_journal" (
-    "ordering" NUMERIC,
-    "deleted" CHAR(1) DEFAULT 0 NOT NULL check ("deleted" in (0, 1)),
-    "persistence_id" VARCHAR(255) NOT NULL,
-    "sequence_number" NUMERIC NOT NULL,
-    "writer" VARCHAR(255) NOT NULL,
-    "write_timestamp" NUMBER(19) NOT NULL,
-    "event_manifest" VARCHAR(255) NOT NULL,
-    "event_payload" BLOB NOT NULL,
-    "event_ser_id" NUMERIC NOT NULL,
-    "event_ser_manifest" VARCHAR(255) NOT NULL,
-    "meta_payload" BLOB,
-    "meta_ser_id" NUMERIC,
-    "meta_ser_manifest" VARCHAR(255),
-    PRIMARY KEY("persistence_id", "sequence_number")
-    )
+alter table EVENT_JOURNAL add constraint EVENT_JOURNAL_PK primary key(PERSISTENCE_ID,SEQUENCE_NUMBER)
 /
 
-ALTER TABLE "event_journal" ADD CONSTRAINT "event_journal_ordering_idx" UNIQUE("ordering")
+ALTER TABLE EVENT_JOURNAL ADD CONSTRAINT EVENT_JOURNAL_ORDERING_IDX UNIQUE(ORDERING)
 /
 
-create or replace trigger "event_journal__ordering_trg"
-    before insert on "event_journal" referencing new as new for each row when (new."ordering" is null)
-    begin select "event_journal__ordering_seq".nextval into :new."ordering" from sys.dual; end;
+create sequence EVENT_JOURNAL__ORDERING_SEQ start with 1 increment by 1
 /
 
-CREATE TABLE "event_tag" (
-    "event_id" NUMERIC NOT NULL,
-    "tag" VARCHAR(255) NOT NULL
-    )
+create or replace trigger EVENT_JOURNAL__ORDERING_TRG before insert on EVENT_JOURNAL referencing new as new for each row when (new.ORDERING is null) begin select EVENT_JOURNAL__ORDERING_seq.nextval into :new.ORDERING from sys.dual; end;
 /
 
-alter table "event_tag" add constraint "event_tag_pk" primary key("event_id","tag")
+
+create table "SNAPSHOT" (
+    PERSISTENCE_ID VARCHAR(255) NOT NULL,
+    SEQUENCE_NUMBER NUMERIC NOT NULL,
+    CREATED NUMERIC NOT NULL,
+    SNAPSHOT_SER_ID NUMBER(10) NOT NULL,
+    SNAPSHOT_SER_MANIFEST VARCHAR(255),
+    SNAPSHOT_PAYLOAD BLOB NOT NULL,
+    META_SER_ID NUMBER(10),
+    META_SER_MANIFEST VARCHAR(255),
+    META_PAYLOAD BLOB)
 /
 
-alter table "event_tag" add constraint "fk_event_journal" foreign key("event_id") references "event_journal"("ordering")
+alter table "SNAPSHOT" add constraint "SNAPSHOT_pk" primary key(PERSISTENCE_ID,SEQUENCE_NUMBER)
 /
-
-CREATE TABLE "snapshot" (
-  "persistence_id" VARCHAR(255) NOT NULL,
-  "sequence_number" NUMERIC NOT NULL,
-  "created" NUMERIC NOT NULL,
-  "snapshot" BLOB NOT NULL,
-  PRIMARY KEY ("persistence_id", "sequence_number")
-)
-/
-

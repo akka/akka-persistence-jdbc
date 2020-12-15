@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
+ * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
+ */
+
 package akka.persistence.jdbc.journal.dao
 
 import akka.NotUsed
@@ -38,8 +43,10 @@ class AkkaSerializerJournalDao(
     db.run(queries.writeJournalRows(xs).transactionally).map(_ => ())
   }
 
-  val queries = new JournalQueries(profile, journalConfig.journalTableConfiguration)
+  val queries =
+    new JournalQueries(profile, journalConfig.eventJournalTableConfiguration, journalConfig.eventTagTableConfiguration)
 
+  // FIXME remove
   queries.JournalTable.schema.createIfNotExistsStatements.foreach(println)
   queries.TagTable.schema.createIfNotExistsStatements.foreach(println)
 
@@ -77,23 +84,22 @@ class AkkaSerializerJournalDao(
 
       val serializedPayload = AkkaSerialization.serialize(serialization, updatedPr.payload).get
       val serializedMetadata = updatedPr.metadata.flatMap(m => AkkaSerialization.serialize(serialization, m).toOption)
+      val row = JournalAkkaSerializationRow(
+        Long.MinValue,
+        updatedPr.deleted,
+        updatedPr.persistenceId,
+        updatedPr.sequenceNr,
+        updatedPr.writerUuid,
+        updatedPr.timestamp,
+        updatedPr.manifest,
+        serializedPayload.payload,
+        serializedPayload.serId,
+        serializedPayload.serManifest,
+        serializedMetadata.map(_.payload),
+        serializedMetadata.map(_.serId),
+        serializedMetadata.map(_.serManifest))
 
-      (
-        JournalAkkaSerializationRow(
-          Long.MinValue,
-          updatedPr.deleted,
-          updatedPr.persistenceId,
-          updatedPr.sequenceNr,
-          updatedPr.writerUuid,
-          updatedPr.timestamp,
-          updatedPr.manifest,
-          serializedPayload.payload,
-          serializedPayload.serId,
-          serializedPayload.serManifest,
-          serializedMetadata.map(_.payload),
-          serializedMetadata.map(_.serId),
-          serializedMetadata.map(_.serManifest)),
-        tags)
+      (row, tags)
     }
 
     val serializedTries = messages.map(serializeAtomicWrite)

@@ -235,13 +235,13 @@ class AkkaPersistenceConfigTest extends AnyFlatSpec with Matchers {
 
     cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao"
 
-    cfg.snapshotTableConfiguration.tableName shouldBe "snapshot"
-    cfg.snapshotTableConfiguration.schemaName shouldBe None
+    cfg.legacySnapshotTableConfiguration.tableName shouldBe "snapshot"
+    cfg.legacySnapshotTableConfiguration.schemaName shouldBe None
 
-    cfg.snapshotTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
-    cfg.snapshotTableConfiguration.columnNames.created shouldBe "created"
-    cfg.snapshotTableConfiguration.columnNames.sequenceNumber shouldBe "sequence_number"
-    cfg.snapshotTableConfiguration.columnNames.snapshot shouldBe "snapshot"
+    cfg.legacySnapshotTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
+    cfg.legacySnapshotTableConfiguration.columnNames.created shouldBe "created"
+    cfg.legacySnapshotTableConfiguration.columnNames.sequenceNumber shouldBe "sequence_number"
+    cfg.legacySnapshotTableConfiguration.columnNames.snapshot shouldBe "snapshot"
   }
 
   it should "parse ReadJournalConfig" in {
@@ -294,13 +294,12 @@ class AkkaPersistenceConfigTest extends AnyFlatSpec with Matchers {
 
     cfg.pluginConfig.dao shouldBe "akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao"
 
-    cfg.snapshotTableConfiguration.tableName shouldBe "snapshot"
-    cfg.snapshotTableConfiguration.schemaName shouldBe None
-
-    cfg.snapshotTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
-    cfg.snapshotTableConfiguration.columnNames.created shouldBe "created"
-    cfg.snapshotTableConfiguration.columnNames.sequenceNumber shouldBe "sequence_number"
-    cfg.snapshotTableConfiguration.columnNames.snapshot shouldBe "snapshot"
+    cfg.legacySnapshotTableConfiguration.tableName shouldBe "snapshot"
+    cfg.legacySnapshotTableConfiguration.schemaName shouldBe None
+    cfg.legacySnapshotTableConfiguration.columnNames.persistenceId shouldBe "persistence_id"
+    cfg.legacySnapshotTableConfiguration.columnNames.created shouldBe "created"
+    cfg.legacySnapshotTableConfiguration.columnNames.sequenceNumber shouldBe "sequence_number"
+    cfg.legacySnapshotTableConfiguration.columnNames.snapshot shouldBe "snapshot"
   }
 
   it should "parse ReadJournalConfig" in {

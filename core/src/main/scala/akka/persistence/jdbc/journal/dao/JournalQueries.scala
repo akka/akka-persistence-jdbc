@@ -1,12 +1,24 @@
+/*
+ * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
+ * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
+ */
+
 package akka.persistence.jdbc.journal.dao
 
-import akka.persistence.jdbc.config.JournalTableConfiguration
+import akka.persistence.jdbc.config.{
+  EventJournalTableConfiguration,
+  EventTagTableConfiguration,
+  LegacyJournalTableConfiguration
+}
 import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, TagRow }
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContext
 
-class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration)
+class JournalQueries(
+    val profile: JdbcProfile,
+    override val journalTableCfg: EventJournalTableConfiguration,
+    override val tagTableCfg: EventTagTableConfiguration)
     extends JournalTables {
 
   import profile.api._

@@ -9,7 +9,7 @@ import akka.persistence.jdbc.TablesTestSpec
 import slick.jdbc.JdbcProfile
 
 class SnapshotTablesTest extends TablesTestSpec {
-  val snapshotTableConfiguration = snapshotConfig.snapshotTableConfiguration
+  val snapshotTableConfiguration = snapshotConfig.legacySnapshotTableConfiguration
   object TestByteASnapshotTables extends SnapshotTables {
     override val profile: JdbcProfile = slick.jdbc.PostgresProfile
     override val snapshotTableCfg = snapshotTableConfiguration

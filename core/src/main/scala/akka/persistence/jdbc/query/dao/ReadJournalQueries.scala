@@ -1,12 +1,22 @@
+/*
+ * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
+ * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
+ */
+
 package akka.persistence.jdbc.query.dao
 
-import akka.persistence.jdbc.config.{ JournalTableConfiguration, ReadJournalConfig }
+import akka.persistence.jdbc.config.{
+  EventJournalTableConfiguration,
+  EventTagTableConfiguration,
+  LegacyJournalTableConfiguration,
+  ReadJournalConfig
+}
 import akka.persistence.jdbc.journal.dao.JournalTables
-import akka.persistence.jdbc.journal.dao.legacy.JournalRow
 import slick.jdbc.JdbcProfile
 
 class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJournalConfig) extends JournalTables {
-  override val journalTableCfg: JournalTableConfiguration = readJournalConfig.journalTableConfiguration
+  override val journalTableCfg: EventJournalTableConfiguration = readJournalConfig.eventJournalTableConfiguration
+  override def tagTableCfg: EventTagTableConfiguration = readJournalConfig.eventTagTableConfiguration
 
   import profile.api._
 
@@ -66,4 +76,5 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
   val maxJournalSequenceQuery = Compiled {
     JournalTable.map(_.ordering).max.getOrElse(0L)
   }
+
 }

@@ -5,7 +5,7 @@
 
 package akka.persistence.jdbc.snapshot.dao.legacy
 
-import akka.persistence.jdbc.config.SnapshotTableConfiguration
+import akka.persistence.jdbc.config.LegacySnapshotTableConfiguration
 import akka.persistence.jdbc.snapshot.dao.legacy.SnapshotTables.{ isOracleDriver, SnapshotRow }
 import akka.persistence.jdbc.util.InputStreamOps._
 import slick.jdbc.JdbcProfile
@@ -24,7 +24,7 @@ trait SnapshotTables {
 
   import profile.api._
 
-  def snapshotTableCfg: SnapshotTableConfiguration
+  def snapshotTableCfg: LegacySnapshotTableConfiguration
 
   class Snapshot(_tableTag: Tag)
       extends Table[SnapshotRow](

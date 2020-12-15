@@ -6,10 +6,10 @@
 package akka.persistence.jdbc
 package journal.dao.legacy
 
-import akka.persistence.jdbc.config.JournalTableConfiguration
+import akka.persistence.jdbc.config.LegacyJournalTableConfiguration
 import slick.jdbc.JdbcProfile
 
-class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration)
+class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: LegacyJournalTableConfiguration)
     extends JournalTables {
   import profile.api._
 

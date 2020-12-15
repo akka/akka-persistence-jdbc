@@ -5,11 +5,11 @@
 
 package akka.persistence.jdbc.snapshot.dao.legacy
 
-import akka.persistence.jdbc.config.SnapshotTableConfiguration
+import akka.persistence.jdbc.config.LegacySnapshotTableConfiguration
 import akka.persistence.jdbc.snapshot.dao.legacy.SnapshotTables.SnapshotRow
 import slick.jdbc.JdbcProfile
 
-class SnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: SnapshotTableConfiguration)
+class SnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: LegacySnapshotTableConfiguration)
     extends SnapshotTables {
   import profile.api._
 

@@ -24,15 +24,11 @@ trait DropCreate extends ClasspathResources {
 
   val listOfOracleDropQueries = List(
     """ALTER SESSION SET ddl_lock_timeout = 15""", // (ddl lock timeout in seconds) this allows tests which are still writing to the db to finish gracefully
-    """DROP TABLE "journal" CASCADE CONSTRAINT""",
-    """DROP TABLE "event_journal" CASCADE CONSTRAINT""",
-    """DROP TABLE "event_tag" CASCADE CONSTRAINT""",
-    """DROP TABLE "snapshot" CASCADE CONSTRAINT""",
-    """DROP TABLE "deleted_to" CASCADE CONSTRAINT""",
-    """DROP TRIGGER "ordering_seq_trigger"""",
-    """DROP PROCEDURE "reset_sequence"""",
-    """DROP SEQUENCE "ordering_seq"""",
-    """DROP SEQUENCE "event_journal__ordering_seq"""")
+    """DROP TABLE event_journal CASCADE CONSTRAINT""",
+    """DROP TABLE event_tag CASCADE CONSTRAINT""",
+    """DROP TABLE SNAPSHOT CASCADE CONSTRAINT""",
+    """DROP SEQUENCE event_journal__ordering_seq""",
+    """DROP TRIGGER event_journal__ordering_trg """)
 
   def dropOracle(): Unit =
     withStatement { stmt =>
@@ -67,7 +63,6 @@ trait DropCreate extends ClasspathResources {
       try stmt.executeUpdate(ddl)
       catch {
         case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" =>
-          println("ignoring: " + t.getMessage)
         // suppress known error message in the test
       }
     }

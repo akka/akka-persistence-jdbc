@@ -16,7 +16,7 @@ object Schema {
   final case class H2(schema: String = "schema/h2/h2-schema.sql") extends SchemaType
   final case class MySQL(schema: String = "schema/mysql/mysql-schema-v5.sql") extends SchemaType
   final case class Oracle(schema: String = "schema/oracle/oracle-schema.sql") extends SchemaType
-  final case class SqlServer(schema: String = "schema/sqlserver/sqlserver-schema.sql") extends SchemaType
+  final case class SqlServer(schema: String = "schema/sqlserver/sqlserver-schema-v5.sql") extends SchemaType
 }
 
 trait DropCreate extends ClasspathResources {

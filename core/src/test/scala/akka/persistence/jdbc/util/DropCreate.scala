@@ -7,24 +7,49 @@ package akka.persistence.jdbc.util
 
 import java.sql.Statement
 
+import akka.actor.ActorSystem
 import akka.persistence.jdbc.util.Schema.{ Oracle, SchemaType }
+import com.typesafe.config.Config
 import slick.jdbc.JdbcBackend.{ Database, Session }
 
 object Schema {
-  sealed trait SchemaType { def schema: String }
-  final case class Postgres(schema: String = "schema/postgres/postgres-schema-v5.sql") extends SchemaType
-  final case class H2(schema: String = "schema/h2/h2-schema-v5.sql") extends SchemaType
-  final case class MySQL(schema: String = "schema/mysql/mysql-schema-v5.sql") extends SchemaType
-  final case class Oracle(schema: String = "schema/oracle/oracle-schema-v5.sql") extends SchemaType
-  final case class SqlServer(schema: String = "schema/sqlserver/sqlserver-schema-v5.sql") extends SchemaType
+  sealed trait SchemaType {
+    def legacySchema: String
+    def schema: String
+  }
+  final case class Postgres(
+      legacySchema: String = "schema/postgres/postgres-schema.sql",
+      schema: String = "schema/postgres/postgres-schema-v5.sql")
+      extends SchemaType
+  final case class H2(
+      legacySchema: String = "schema/postgres/h2-schema.sql",
+      schema: String = "schema/h2/h2-schema-v5.sql")
+      extends SchemaType
+  final case class MySQL(
+      legacySchema: String = "schema/postgres/mysql-schema.sql",
+      schema: String = "schema/mysql/mysql-schema-v5.sql")
+      extends SchemaType
+  final case class Oracle(
+      legacySchema: String = "schema/postgres/oracle-schema.sql",
+      schema: String = "schema/oracle/oracle-schema-v5.sql")
+      extends SchemaType
+  final case class SqlServer(
+      legacySchema: String = "schema/postgres-sqlserver-schema.sql",
+      schema: String = "schema/sqlserver/sqlserver-schema-v5.sql")
+      extends SchemaType
 }
 
 trait DropCreate extends ClasspathResources {
   def db: Database
+  def config: Config
+
+  def newDao =
+    config.getString("jdbc-journal.dao") == "akka.persistence.jdbc.journal.dao.AkkaSerializerJournalDao"
 
   val listOfOracleDropQueries = List(
     """ALTER SESSION SET ddl_lock_timeout = 15""", // (ddl lock timeout in seconds) this allows tests which are still writing to the db to finish gracefully
     """DROP TABLE event_journal CASCADE CONSTRAINT""",
+    """DROP TABLE journal CASCADE CONSTRAINT""",
     """DROP TABLE event_tag CASCADE CONSTRAINT""",
     """DROP TABLE SNAPSHOT CASCADE CONSTRAINT""",
     """DROP SEQUENCE event_journal__ordering_seq""",
@@ -46,10 +71,10 @@ trait DropCreate extends ClasspathResources {
 
   def dropCreate(schemaType: SchemaType): Unit =
     schemaType match {
-      case Oracle(schema) =>
+      case Oracle(legacy, schema) =>
         dropOracle()
-        create(schema, "/")
-      case s: SchemaType => create(s.schema)
+        create(if (newDao) schema else legacy, "/")
+      case s: SchemaType => create(if (newDao) s.schema else s.legacySchema)
     }
 
   def create(schema: String, separator: String = ";"): Unit = {

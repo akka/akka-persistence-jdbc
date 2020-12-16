@@ -33,10 +33,6 @@ abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType)
 
   lazy val db = SlickDatabase.database(cfg, new SlickConfiguration(cfg.getConfig("slick")), "slick.db")
 
-  def newDao =
-    system.settings.config
-      .getString("jdbc-snapshot-store.dao") == "akka.persistence.jdbc.snapshot.dao.AkkaSerializerSnapshotDao"
-
   protected override def supportsSerialization: CapabilityFlag = newDao
   protected override def supportsMetadata: CapabilityFlag = newDao
 

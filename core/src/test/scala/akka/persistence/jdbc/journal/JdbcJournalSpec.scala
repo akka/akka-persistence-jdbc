@@ -36,9 +36,6 @@ abstract class JdbcJournalSpec(config: Config, schemaType: SchemaType)
 
   lazy val db = SlickExtension(system).database(cfg).database
 
-  def newDao =
-    system.settings.config.getString("jdbc-journal.dao") == "akka.persistence.jdbc.journal.dao.AkkaSerializerJournalDao"
-
   protected override def supportsSerialization: CapabilityFlag = newDao
   protected override def supportsMetadata: CapabilityFlag = newDao
 

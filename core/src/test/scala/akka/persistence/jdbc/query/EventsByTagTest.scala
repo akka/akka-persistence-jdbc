@@ -200,7 +200,6 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
     }
   }
 
-  // FIXME
   it should "find all events by tag even when lots of events are persisted concurrently" in withActorSystem {
     implicit system =>
       val journalOps = new ScalaJdbcReadJournalOperations(system)

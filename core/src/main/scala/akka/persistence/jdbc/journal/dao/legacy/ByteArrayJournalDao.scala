@@ -5,11 +5,11 @@
 
 package akka.persistence.jdbc.journal.dao.legacy
 
-import akka.actor.Scheduler
 import akka.persistence.jdbc.journal.dao.{
   BaseDao,
   BaseJournalDaoWithReadMessages,
   FlowControl,
+  H2Compat,
   JournalDao,
   JournalDaoWithReadMessages,
   JournalDaoWithUpdates
@@ -29,38 +29,12 @@ import scala.collection.immutable.{ Nil, Seq }
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
 
-trait H2JournalDao extends JournalDao {
-  val profile: JdbcProfile
-
-  private lazy val isH2Driver = profile match {
-    case slick.jdbc.H2Profile => true
-    case _                    => false
-  }
-
-  abstract override def messages(
-      persistenceId: String,
-      fromSequenceNr: Long,
-      toSequenceNr: Long,
-      max: Long): Source[Try[(PersistentRepr, Long)], NotUsed] = {
-    super.messages(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max))
-  }
-
-  private def correctMaxForH2Driver(max: Long): Long = {
-    if (isH2Driver) {
-      Math.min(max, Int.MaxValue) // H2 only accepts a LIMIT clause as an Integer
-    } else {
-      max
-    }
-  }
-}
-
 class ByteArrayJournalDao(
     val db: Database,
     val profile: JdbcProfile,
     val journalConfig: JournalConfig,
     serialization: Serialization)(implicit val ec: ExecutionContext, val mat: Materializer)
-    extends BaseByteArrayJournalDao
-    with H2JournalDao {
+    extends BaseByteArrayJournalDao {
   val queries = new JournalQueries(profile, journalConfig.journalTableConfiguration)
   val serializer = new ByteArrayJournalSerializer(serialization, journalConfig.pluginConfig.tagSeparator)
 }
@@ -71,7 +45,8 @@ class ByteArrayJournalDao(
 trait BaseByteArrayJournalDao
     extends JournalDaoWithUpdates
     with BaseJournalDaoWithReadMessages
-    with BaseDao[JournalRow] {
+    with BaseDao[JournalRow]
+    with H2Compat {
   val db: Database
   val profile: JdbcProfile
   val queries: JournalQueries
@@ -165,7 +140,9 @@ trait BaseByteArrayJournalDao
       toSequenceNr: Long,
       max: Long): Source[Try[(PersistentRepr, Long)], NotUsed] =
     Source
-      .fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
+      .fromPublisher(
+        db.stream(
+          queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max)).result))
       .via(serializer.deserializeFlow)
       .map {
         case Success((repr, _, ordering)) => Success(repr -> ordering)

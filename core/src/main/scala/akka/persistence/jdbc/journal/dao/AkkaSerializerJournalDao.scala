@@ -7,11 +7,10 @@ package akka.persistence.jdbc.journal.dao
 
 import akka.NotUsed
 import akka.persistence.jdbc.config.{ BaseDaoConfig, JournalConfig }
-import akka.persistence.jdbc.journal.dao.AkkaSerialization.AkkaSerialized
 import akka.persistence.jdbc.journal.dao.JournalTables.JournalAkkaSerializationRow
 import akka.persistence.journal.Tagged
 import akka.persistence.{ AtomicWrite, PersistentRepr }
-import akka.serialization.{ Serialization, Serializers }
+import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import slick.jdbc.JdbcBackend.Database
@@ -22,6 +21,8 @@ import scala.collection.immutable.{ Nil, Seq }
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
+object AkkaSerializerJournalDao {}
+
 /**
  * A [[JournalDao]] that uses Akka serialization to serialize the payload and store
  * the manifest and serializer id used.
@@ -31,9 +32,10 @@ class AkkaSerializerJournalDao(
     val profile: JdbcProfile,
     val journalConfig: JournalConfig,
     serialization: Serialization)(implicit val ec: ExecutionContext, val mat: Materializer)
-    extends JournalDao
-    with BaseDao[(JournalAkkaSerializationRow, Set[String])]
-    with BaseJournalDaoWithReadMessages {
+    extends BaseDao[(JournalAkkaSerializationRow, Set[String])]
+    with BaseJournalDaoWithReadMessages
+    with JournalDao
+    with H2Compat {
 
   import profile.api._
 
@@ -117,7 +119,9 @@ class AkkaSerializerJournalDao(
       toSequenceNr: Long,
       max: Long): Source[Try[(PersistentRepr, Long)], NotUsed] = {
     Source
-      .fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
+      .fromPublisher(
+        db.stream(
+          queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max)).result))
       .map(AkkaSerialization.fromRow(serialization))
   }
 }

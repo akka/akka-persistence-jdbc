@@ -7,7 +7,7 @@ package akka.persistence.jdbc.query.dao
 import akka.NotUsed
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.config.ReadJournalConfig
-import akka.persistence.jdbc.journal.dao.{ AkkaSerialization, BaseJournalDaoWithReadMessages }
+import akka.persistence.jdbc.journal.dao.{ AkkaSerialization, BaseJournalDaoWithReadMessages, H2Compat }
 import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
@@ -23,13 +23,14 @@ class AkkaSerializerReadJournalDao(
     val readJournalConfig: ReadJournalConfig,
     serialization: Serialization)(implicit val ec: ExecutionContext, val mat: Materializer)
     extends ReadJournalDao
-    with BaseJournalDaoWithReadMessages {
+    with BaseJournalDaoWithReadMessages
+    with H2Compat {
   import profile.api._
 
   val queries = new ReadJournalQueries(profile, readJournalConfig)
 
   override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
-    Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct(max).result))
+    Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct(correctMaxForH2Driver(max)).result))
 
   override def eventsByTag(
       tag: String,
@@ -39,7 +40,7 @@ class AkkaSerializerReadJournalDao(
 
     // This doesn't populate the tags. AFAICT they aren't used
     Source
-      .fromPublisher(db.stream(queries.eventsByTag(tag, offset, maxOffset, max).result))
+      .fromPublisher(db.stream(queries.eventsByTag(tag, offset, maxOffset, correctMaxForH2Driver(max)).result))
       .map(row =>
         AkkaSerialization.fromRow(serialization)(row).map { case (repr, ordering) => (repr, Set.empty, ordering) })
   }
@@ -56,7 +57,9 @@ class AkkaSerializerReadJournalDao(
       toSequenceNr: Long,
       max: Long): Source[Try[(PersistentRepr, Long)], NotUsed] =
     Source
-      .fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
+      .fromPublisher(
+        db.stream(
+          queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max)).result))
       .map(AkkaSerialization.fromRow(serialization))
 
 }

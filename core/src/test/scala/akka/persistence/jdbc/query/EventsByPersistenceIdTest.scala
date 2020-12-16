@@ -317,7 +317,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
       }
 
       val tag = "someTag"
-      val numberOfEvents = 10000
+      val numberOfEvents = 1000
       // send a batch with a large number of events
       val batch = sendMessagesWithTag(tag, numberOfEvents)
 

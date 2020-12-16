@@ -306,11 +306,8 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
 trait PostgresCleaner extends QueryTestSpec {
   import akka.persistence.jdbc.util.Schema.Postgres
 
-  val actionsClearPostgres =
-    DBIO.seq(sqlu"""TRUNCATE journal""", sqlu"""TRUNCATE snapshot""").transactionally
-
   def clearPostgres(): Unit =
-    withDatabase(_.run(actionsClearPostgres).futureValue)
+    tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
 
   override def beforeAll(): Unit = {
     dropCreate(Postgres())
@@ -326,11 +323,10 @@ trait PostgresCleaner extends QueryTestSpec {
 trait MysqlCleaner extends QueryTestSpec {
   import akka.persistence.jdbc.util.Schema.MySQL
 
-  val actionsClearMySQL =
-    DBIO.seq(sqlu"""TRUNCATE journal""", sqlu"""TRUNCATE snapshot""").transactionally
-
-  def clearMySQL(): Unit =
-    withDatabase(_.run(actionsClearMySQL).futureValue)
+  def clearMySQL(): Unit = {
+    tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
+    withStatement(stmt => stmt.executeUpdate(s"ALTER TABLE $journalTableName AUTO_INCREMENT = 1;"))
+  }
 
   override def beforeAll(): Unit = {
     dropCreate(MySQL())
@@ -351,8 +347,10 @@ trait OracleCleaner extends QueryTestSpec {
       .seq(sqlu"""DELETE FROM "journal"""", sqlu"""DELETE FROM "snapshot"""", sqlu"""BEGIN "reset_sequence"; END; """)
       .transactionally
 
-  def clearOracle(): Unit =
-    withDatabase(_.run(actionsClearOracle).futureValue)
+  def clearOracle(): Unit = {
+    tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
+    withStatement(stmt => stmt.executeUpdate("""BEGIN "reset_sequence"; END; """))
+  }
 
   override def beforeAll(): Unit = {
     dropCreate(Oracle())
@@ -368,16 +366,10 @@ trait OracleCleaner extends QueryTestSpec {
 trait SqlServerCleaner extends QueryTestSpec {
   import akka.persistence.jdbc.util.Schema.SqlServer
 
-  val actionsClearSqlServer =
-    DBIO
-      .seq(
-        sqlu"""TRUNCATE TABLE journal""",
-        sqlu"""TRUNCATE TABLE snapshot""",
-        sqlu"""DBCC CHECKIDENT('journal', RESEED, 1)""")
-      .transactionally
-
-  def clearSqlServer(): Unit =
-    withDatabase(_.run(actionsClearSqlServer).futureValue)
+  def clearSqlServer(): Unit = {
+    tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
+    withStatement(stmt => stmt.executeUpdate(s"DBCC CHECKIDENT('${journalTableName}', RESEED, 1)"))
+  }
 
   override def beforeAll() = {
     dropCreate(SqlServer())
@@ -398,11 +390,8 @@ trait SqlServerCleaner extends QueryTestSpec {
 trait H2Cleaner extends QueryTestSpec {
   import akka.persistence.jdbc.util.Schema.H2
 
-  val actionsClearH2 =
-    DBIO.seq(sqlu"""TRUNCATE TABLE journal""", sqlu"""TRUNCATE TABLE snapshot""").transactionally
-
   def clearH2(): Unit =
-    withDatabase(_.run(actionsClearH2).futureValue)
+    tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
 
   override def beforeEach(): Unit = {
     dropCreate(H2())

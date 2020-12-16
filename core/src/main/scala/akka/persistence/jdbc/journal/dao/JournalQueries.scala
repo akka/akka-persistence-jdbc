@@ -5,11 +5,7 @@
 
 package akka.persistence.jdbc.journal.dao
 
-import akka.persistence.jdbc.config.{
-  EventJournalTableConfiguration,
-  EventTagTableConfiguration,
-  LegacyJournalTableConfiguration
-}
+import akka.persistence.jdbc.config.{ EventJournalTableConfiguration, EventTagTableConfiguration }
 import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, TagRow }
 import slick.jdbc.JdbcProfile
 

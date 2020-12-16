@@ -15,9 +15,6 @@ class SnapshotQueries(val profile: JdbcProfile, override val snapshotTableCfg: S
 
   private val SnapshotTableC = Compiled(SnapshotTable)
 
-  // FIXME remove
-  SnapshotTable.schema.createIfNotExistsStatements.foreach(println)
-
   def insertOrUpdate(snapshotRow: SnapshotRow) =
     SnapshotTableC.insertOrUpdate(snapshotRow)
 

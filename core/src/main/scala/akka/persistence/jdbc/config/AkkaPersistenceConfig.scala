@@ -48,7 +48,7 @@ class EventJournalTableColumnNames(config: Config) {
 
   val metaPayload: String = cfg.as[String]("metaPayload", "meta_payload")
   val metaSerId: String = cfg.as[String]("metaSerId", "meta_ser_id")
-  val metaSerManifest: String = cfg.as[String]("metaSerManifest", "meta_manifest")
+  val metaSerManifest: String = cfg.as[String]("metaSerManifest", "meta_ser_manifest")
 }
 
 class EventTagTableColumnNames(config: Config) {

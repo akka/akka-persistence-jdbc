@@ -26,15 +26,15 @@ object Schema {
       schema: String = "schema/h2/h2-schema-v5.sql")
       extends SchemaType
   final case class MySQL(
-      legacySchema: String = "schema/postgres/mysql-schema.sql",
+      legacySchema: String = "schema/mysql/mysql-schema.sql",
       schema: String = "schema/mysql/mysql-schema-v5.sql")
       extends SchemaType
   final case class Oracle(
-      legacySchema: String = "schema/postgres/oracle-schema.sql",
+      legacySchema: String = "schema/mysql/oracle-schema.sql",
       schema: String = "schema/oracle/oracle-schema-v5.sql")
       extends SchemaType
   final case class SqlServer(
-      legacySchema: String = "schema/postgres-sqlserver-schema.sql",
+      legacySchema: String = "schema/sqlserver/sqlserver-schema.sql",
       schema: String = "schema/sqlserver/sqlserver-schema-v5.sql")
       extends SchemaType
 }

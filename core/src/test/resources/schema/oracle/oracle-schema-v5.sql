@@ -26,6 +26,17 @@ create sequence EVENT_JOURNAL__ORDERING_SEQ start with 1 increment by 1
 create or replace trigger EVENT_JOURNAL__ORDERING_TRG before insert on EVENT_JOURNAL referencing new as new for each row when (new.ORDERING is null) begin select EVENT_JOURNAL__ORDERING_seq.nextval into :new.ORDERING from sys.dual; end;
 /
 
+create or replace trigger EVENT_JOURNAL__ORDERING_TRG before insert on EVENT_JOURNAL referencing new as new for each row when (new.ORDERING is null) begin select EVENT_JOURNAL__ORDERING_seq.nextval into :new.ORDERING from sys.dual; end;
+/
+
+CREATE TABLE EVENT_TAG (
+    EVENT_ID NUMERIC NOT NULL,
+    TAG VARCHAR(255) NOT NULL,
+    PRIMARY KEY(EVENT_ID, TAG),
+    FOREIGN KEY(EVENT_ID) REFERENCES EVENT_JOURNAL(ORDERING)
+    ON DELETE CASCADE
+    )
+/
 
 create table "SNAPSHOT" (
     PERSISTENCE_ID VARCHAR(255) NOT NULL,
@@ -40,4 +51,15 @@ create table "SNAPSHOT" (
 /
 
 alter table "SNAPSHOT" add constraint "SNAPSHOT_pk" primary key(PERSISTENCE_ID,SEQUENCE_NUMBER)
+/
+
+CREATE OR REPLACE PROCEDURE "reset_sequence"
+IS
+  l_value NUMBER;
+BEGIN
+  EXECUTE IMMEDIATE 'SELECT EVENT_JOURNAL__ORDERING_SEQ.nextval FROM dual' INTO l_value;
+  EXECUTE IMMEDIATE 'ALTER SEQUENCE EVENT_JOURNAL__ORDERING_SEQ INCREMENT BY -' || l_value || ' MINVALUE 0';
+  EXECUTE IMMEDIATE 'SELECT EVENT_JOURNAL__ORDERING_SEQ.nextval FROM dual' INTO l_value;
+  EXECUTE IMMEDIATE 'ALTER SEQUENCE EVENT_JOURNAL__ORDERING_SEQ INCREMENT BY 1 MINVALUE 0';
+END;
 /

@@ -342,13 +342,10 @@ trait MysqlCleaner extends QueryTestSpec {
 trait OracleCleaner extends QueryTestSpec {
   import akka.persistence.jdbc.util.Schema.Oracle
 
-  val actionsClearOracle =
-    DBIO
-      .seq(sqlu"""DELETE FROM "journal"""", sqlu"""DELETE FROM "snapshot"""", sqlu"""BEGIN "reset_sequence"; END; """)
-      .transactionally
-
   def clearOracle(): Unit = {
-    tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
+    tables.foreach { name =>
+      withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name"))
+    }
     withStatement(stmt => stmt.executeUpdate("""BEGIN "reset_sequence"; END; """))
   }
 

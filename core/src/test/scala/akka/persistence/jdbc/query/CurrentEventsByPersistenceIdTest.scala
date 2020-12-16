@@ -172,6 +172,8 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
   }
 
   it should "allow updating events (for data migrations)" in withActorSystem { implicit system =>
+    if (newDao)
+      pending //https://github.com/akka/akka-persistence-jdbc/issues/469
     val journalOps = new JavaDslJdbcReadJournalOperations(system)
     val journal = Persistence(system).journalFor("")
 

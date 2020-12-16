@@ -52,6 +52,12 @@ jobs:
         - CMD="++2.13.1 test"
       name: "Run tests with Scala 2.13 and AdoptOpenJDK 11"
 
+    - env:
+        - PRE_CMD="./scripts/launch-all.sh"
+        - _JAVA_OPTIONS="-Djdbc-journal.dao=akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao -Djdbc-snapshot-store.dao=akka.persistence.jdbc.snapshot.dao.legacy.ByteArraySnapshotDao -Djdbc-read-journal.dao=akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao"
+        - CMD="++2.12.11 test"
+        name: "Run tests with the old DAO"
+
     - stage: whitesource
       script: git branch -f "$TRAVIS_BRANCH" && git checkout "$TRAVIS_BRANCH" && sbt whitesourceCheckPolicies whitesourceUpdate
       name: "Check licenses via WhiteSource"

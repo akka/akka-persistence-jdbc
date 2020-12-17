@@ -21,16 +21,14 @@ object Schema {
       legacySchema: String = "schema/postgres/postgres-schema.sql",
       schema: String = "schema/postgres/postgres-schema-v5.sql")
       extends SchemaType
-  final case class H2(
-      legacySchema: String = "schema/postgres/h2-schema.sql",
-      schema: String = "schema/h2/h2-schema-v5.sql")
+  final case class H2(legacySchema: String = "schema/h2/h2-schema.sql", schema: String = "schema/h2/h2-schema-v5.sql")
       extends SchemaType
   final case class MySQL(
       legacySchema: String = "schema/mysql/mysql-schema.sql",
       schema: String = "schema/mysql/mysql-schema-v5.sql")
       extends SchemaType
   final case class Oracle(
-      legacySchema: String = "schema/mysql/oracle-schema.sql",
+      legacySchema: String = "schema/oracle/oracle-schema.sql",
       schema: String = "schema/oracle/oracle-schema-v5.sql")
       extends SchemaType
   final case class SqlServer(
@@ -48,12 +46,15 @@ trait DropCreate extends ClasspathResources {
 
   val listOfOracleDropQueries = List(
     """ALTER SESSION SET ddl_lock_timeout = 15""", // (ddl lock timeout in seconds) this allows tests which are still writing to the db to finish gracefully
-    """DROP TABLE event_journal CASCADE CONSTRAINT""",
-    """DROP TABLE journal CASCADE CONSTRAINT""",
-    """DROP TABLE event_tag CASCADE CONSTRAINT""",
+    """DROP TABLE "journal" CASCADE CONSTRAINT""",
+    """DROP TABLE "snapshot" CASCADE CONSTRAINT""",
+    """DROP SEQUENCE "ordering_seq" """,
+    """DROP TABLE EVENT_JOURNAL CASCADE CONSTRAINT""",
     """DROP TABLE SNAPSHOT CASCADE CONSTRAINT""",
-    """DROP SEQUENCE event_journal__ordering_seq""",
-    """DROP TRIGGER event_journal__ordering_trg """)
+    """DROP TABLE EVENT_TAG CASCADE CONSTRAINT""",
+    """DROP TABLE SNAPSHOT CASCADE CONSTRAINT""",
+    """DROP SEQUENCE EVENT_JOURNAL__ORDERING_SEQ""",
+    """DROP TRIGGER EVENT_JOURNAL__ORDERING_TRG """)
 
   def dropOracle(): Unit =
     withStatement { stmt =>

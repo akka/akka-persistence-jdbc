@@ -26,8 +26,8 @@ abstract class SingleActorSystemPerTestSpec(val config: Config)
       case (conf, (path, configValue)) => conf.withValue(path, configValue)
     })
 
-  implicit val pc: PatienceConfig = PatienceConfig(timeout = 20.seconds)
-  implicit val timeout: Timeout = Timeout(20.seconds)
+  implicit val pc: PatienceConfig = PatienceConfig(timeout = 1.minute)
+  implicit val timeout: Timeout = Timeout(1.minute)
 
   val cfg = config.getConfig("jdbc-journal")
   val journalConfig = new JournalConfig(cfg)
@@ -37,7 +37,7 @@ abstract class SingleActorSystemPerTestSpec(val config: Config)
   val tables: Set[String] =
     if (newDao)
       Set(journalConfig.eventJournalTableConfiguration.tableName, journalConfig.eventTagTableConfiguration.tableName)
-    else Set(journalConfig.journalTableConfiguration.tableName)
+    else Set(s""" "${journalConfig.journalTableConfiguration.tableName}" """)
   val profile = if (cfg.hasPath("slick.profile")) {
     SlickDatabase.profile(cfg, "slick")
   } else SlickDatabase.profile(config, "akka-persistence-jdbc.shared-databases.slick")

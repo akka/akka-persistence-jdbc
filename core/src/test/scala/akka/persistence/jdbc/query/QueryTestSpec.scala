@@ -344,7 +344,7 @@ trait OracleCleaner extends QueryTestSpec {
 
   def clearOracle(): Unit = {
     tables.foreach { name =>
-      withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name"))
+      withStatement(stmt => stmt.executeUpdate(s"""DELETE FROM "$name" """))
     }
     withStatement(stmt => stmt.executeUpdate("""BEGIN "reset_sequence"; END; """))
   }

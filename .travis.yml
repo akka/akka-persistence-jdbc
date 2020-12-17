@@ -52,7 +52,7 @@ jobs:
       name: "Run tests with Scala 2.13 and AdoptOpenJDK 11"
 
     - stage: integration
-    - name: "MySQL integration tests with Scala 2.13 and AdoptOpenJDK 11"
+      name: "MySQL integration tests with Scala 2.13 and AdoptOpenJDK 11"
       env:
         - JDK="adopt@~1.11-0"
         - _JAVA_OPTIONS="-XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler"

@@ -21,9 +21,15 @@ import akka.stream.testkit.scaladsl.TestSink
 import akka.stream.{ Materializer, SystemMaterializer }
 import com.typesafe.config.ConfigValue
 import slick.jdbc.PostgresProfile.api._
-
 import scala.concurrent.Future
 import scala.concurrent.duration.{ FiniteDuration, _ }
+
+import akka.persistence.jdbc.testkit.internal.H2
+import akka.persistence.jdbc.testkit.internal.MySQL
+import akka.persistence.jdbc.testkit.internal.Oracle
+import akka.persistence.jdbc.testkit.internal.Postgres
+import akka.persistence.jdbc.testkit.internal.SchemaUtilsImpl
+import akka.persistence.jdbc.testkit.internal.SqlServer
 
 trait ReadJournalOperations {
   def withCurrentPersistenceIds(within: FiniteDuration = 60.second)(f: TestSubscriber.Probe[String] => Unit): Unit
@@ -304,7 +310,6 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
 }
 
 trait PostgresCleaner extends QueryTestSpec {
-  import akka.persistence.jdbc.util.Schema.Postgres
 
   val actionsClearPostgres =
     DBIO.seq(sqlu"""TRUNCATE journal""", sqlu"""TRUNCATE snapshot""").transactionally
@@ -313,18 +318,17 @@ trait PostgresCleaner extends QueryTestSpec {
     withDatabase(_.run(actionsClearPostgres).futureValue)
 
   override def beforeAll(): Unit = {
-    dropCreate(Postgres())
+    dropAndCreate(Postgres)
     super.beforeAll()
   }
 
   override def beforeEach(): Unit = {
-    dropCreate(Postgres())
+    dropAndCreate(Postgres)
     super.beforeEach()
   }
 }
 
 trait MysqlCleaner extends QueryTestSpec {
-  import akka.persistence.jdbc.util.Schema.MySQL
 
   val actionsClearMySQL =
     DBIO.seq(sqlu"""TRUNCATE journal""", sqlu"""TRUNCATE snapshot""").transactionally
@@ -333,7 +337,7 @@ trait MysqlCleaner extends QueryTestSpec {
     withDatabase(_.run(actionsClearMySQL).futureValue)
 
   override def beforeAll(): Unit = {
-    dropCreate(MySQL())
+    dropAndCreate(MySQL)
     super.beforeAll()
   }
 
@@ -344,7 +348,6 @@ trait MysqlCleaner extends QueryTestSpec {
 }
 
 trait OracleCleaner extends QueryTestSpec {
-  import akka.persistence.jdbc.util.Schema.Oracle
 
   val actionsClearOracle =
     DBIO
@@ -355,7 +358,7 @@ trait OracleCleaner extends QueryTestSpec {
     withDatabase(_.run(actionsClearOracle).futureValue)
 
   override def beforeAll(): Unit = {
-    dropCreate(Oracle())
+    dropAndCreate(Oracle)
     super.beforeAll()
   }
 
@@ -366,7 +369,6 @@ trait OracleCleaner extends QueryTestSpec {
 }
 
 trait SqlServerCleaner extends QueryTestSpec {
-  import akka.persistence.jdbc.util.Schema.SqlServer
 
   val actionsClearSqlServer =
     DBIO
@@ -380,12 +382,12 @@ trait SqlServerCleaner extends QueryTestSpec {
     withDatabase(_.run(actionsClearSqlServer).futureValue)
 
   override def beforeAll() = {
-    dropCreate(SqlServer())
+    dropAndCreate(SqlServer)
     super.beforeAll()
   }
 
   override def afterAll(): Unit = {
-    dropCreate(SqlServer())
+    dropAndCreate(SqlServer)
     super.afterAll()
   }
 
@@ -396,7 +398,6 @@ trait SqlServerCleaner extends QueryTestSpec {
 }
 
 trait H2Cleaner extends QueryTestSpec {
-  import akka.persistence.jdbc.util.Schema.H2
 
   val actionsClearH2 =
     DBIO.seq(sqlu"""TRUNCATE TABLE journal""", sqlu"""TRUNCATE TABLE snapshot""").transactionally
@@ -405,7 +406,7 @@ trait H2Cleaner extends QueryTestSpec {
     withDatabase(_.run(actionsClearH2).futureValue)
 
   override def beforeEach(): Unit = {
-    dropCreate(H2())
+    dropAndCreate(H2)
     super.beforeEach()
   }
 }

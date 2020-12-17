@@ -5,14 +5,17 @@
 
 package akka.persistence.jdbc.serialization
 
-import akka.actor.{ ActorRef, Props }
-import akka.event.LoggingReceive
-import akka.persistence.jdbc.SharedActorSystemTestSpec
-import akka.persistence.jdbc.util.Schema._
-import akka.persistence.{ PersistentActor, RecoveryCompleted }
-import akka.testkit.TestProbe
-
 import scala.concurrent.duration._
+
+import akka.actor.ActorRef
+import akka.actor.Props
+import akka.event.LoggingReceive
+import akka.persistence.PersistentActor
+import akka.persistence.RecoveryCompleted
+import akka.persistence.jdbc.SharedActorSystemTestSpec
+import akka.persistence.jdbc.testkit.internal.H2
+import akka.persistence.jdbc.testkit.internal.SchemaType
+import akka.testkit.TestProbe
 
 abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: SchemaType)
     extends SharedActorSystemTestSpec(config) {
@@ -54,7 +57,7 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
   }
 
   override def beforeAll(): Unit = {
-    dropCreate(schemaType)
+    dropAndCreate(schemaType)
     super.beforeAll()
   }
 
@@ -123,4 +126,4 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
   }
 }
 
-class H2StoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("h2-application.conf", H2())
+class H2StoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("h2-application.conf", H2)

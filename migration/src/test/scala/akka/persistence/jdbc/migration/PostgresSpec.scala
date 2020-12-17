@@ -17,7 +17,7 @@ import org.scalatest.matchers.should.Matchers
 class PostgresSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
 
   val postgres: PostgreSQLContainer[_] = {
-    val c = new PostgreSQLContainer()
+    val c = new PostgreSQLContainer("postgres:13.1")
     c.withDatabaseName("public")
     c.withInitScript("postgres/init.sql")
     c

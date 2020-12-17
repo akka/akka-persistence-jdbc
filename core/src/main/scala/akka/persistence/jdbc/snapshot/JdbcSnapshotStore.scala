@@ -12,7 +12,7 @@ import akka.persistence.jdbc.db.{ SlickDatabase, SlickExtension }
 import akka.persistence.snapshot.SnapshotStore
 import akka.persistence.{ SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria }
 import akka.serialization.{ Serialization, SerializationExtension }
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.stream.{ Materializer, SystemMaterializer }
 import com.typesafe.config.Config
 import slick.jdbc.JdbcProfile
 import slick.jdbc.JdbcBackend._
@@ -33,7 +33,7 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
 
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val system: ActorSystem = context.system
-  implicit val mat: Materializer = ActorMaterializer()
+  implicit val mat: Materializer = SystemMaterializer(system).materializer
   val snapshotConfig = new SnapshotConfig(config)
 
   val slickDb: SlickDatabase = SlickExtension(system).database(config)

@@ -13,7 +13,6 @@ import akka.actor.ActorSystem
 import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.persistence.jdbc.journal.dao.{ ByteArrayJournalDao, JournalTables }
 import akka.serialization.SerializationExtension
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{ Sink, Source }
 import com.typesafe.config.{ ConfigValue, ConfigValueFactory }
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
@@ -57,7 +56,6 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
   it should "stream events" in {
     withActorSystem { implicit system: ActorSystem =>
       withDatabase { db =>
-        implicit val mat: ActorMaterializer = ActorMaterializer()
         implicit val ec: ExecutionContextExecutor = system.dispatcher
 
         val persistenceId = UUID.randomUUID().toString

@@ -11,7 +11,6 @@ import akka.persistence.jdbc.query.javadsl.JdbcReadJournal
 import akka.persistence.jdbc.util.DropCreate
 import akka.persistence.jdbc.db.SlickExtension
 import akka.serialization.SerializationExtension
-import akka.stream.{ ActorMaterializer, Materializer }
 import akka.util.Timeout
 import com.typesafe.config.{ Config, ConfigFactory, ConfigValue }
 import org.scalatest.BeforeAndAfterAll
@@ -26,7 +25,6 @@ abstract class SharedActorSystemTestSpec(val config: Config) extends SimpleSpec 
     })
 
   implicit lazy val system: ActorSystem = ActorSystem("test", config)
-  implicit lazy val mat: Materializer = ActorMaterializer()
 
   implicit lazy val ec: ExecutionContext = system.dispatcher
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 1.minute)

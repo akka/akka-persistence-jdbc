@@ -123,16 +123,4 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
   }
 }
 
-class PostgresStoreOnlySerializableMessagesTest
-    extends StoreOnlySerializableMessagesTest("postgres-application.conf", Postgres())
-
-class MySQLStoreOnlySerializableMessagesTest
-    extends StoreOnlySerializableMessagesTest("mysql-application.conf", MySQL())
-
-class OracleStoreOnlySerializableMessagesTest
-    extends StoreOnlySerializableMessagesTest("oracle-application.conf", Oracle())
-
-class SqlServerStoreOnlySerializableMessagesTest
-    extends StoreOnlySerializableMessagesTest("sqlserver-application.conf", SqlServer())
-
 class H2StoreOnlySerializableMessagesTest extends StoreOnlySerializableMessagesTest("h2-application.conf", H2())

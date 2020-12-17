@@ -97,18 +97,4 @@ abstract class HardDeleteQueryTest(config: String) extends QueryTestSpec(config)
   }
 }
 
-class PostgresHardDeleteQueryTest
-    extends HardDeleteQueryTest("postgres-application-with-hard-delete.conf")
-    with PostgresCleaner
-
-class MySQLHardDeleteQueryTest extends HardDeleteQueryTest("mysql-application-with-hard-delete.conf") with MysqlCleaner
-
-class OracleHardDeleteQueryTest
-    extends HardDeleteQueryTest("oracle-application-with-hard-delete.conf")
-    with OracleCleaner
-
-class SqlServerHardDeleteQueryTest
-    extends HardDeleteQueryTest("sqlserver-application-with-hard-delete.conf")
-    with SqlServerCleaner
-
 class H2HardDeleteQueryTest extends HardDeleteQueryTest("h2-application-with-hard-delete.conf") with H2Cleaner

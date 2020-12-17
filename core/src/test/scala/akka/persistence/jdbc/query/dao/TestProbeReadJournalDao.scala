@@ -67,7 +67,7 @@ class TestProbeReadJournalDao(val probe: TestProbe) extends ReadJournalDao {
    */
   override def journalSequence(offset: Long, limit: Long): Source[Long, NotUsed] = {
     val f = probe.ref.ask(JournalSequence(offset, limit)).mapTo[scala.collection.immutable.Seq[Long]]
-    Source.fromFuture(f).mapConcat(identity)
+    Source.future(f).mapConcat(identity)
   }
 
   /**

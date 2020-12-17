@@ -363,9 +363,19 @@ trait OracleCleaner extends QueryTestSpec {
 trait SqlServerCleaner extends QueryTestSpec {
   import akka.persistence.jdbc.util.Schema.SqlServer
 
+  var initial = true
+
   def clearSqlServer(): Unit = {
-    tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
-    withStatement(stmt => stmt.executeUpdate(s"DBCC CHECKIDENT('${journalTableName}', RESEED, 1)"))
+    val reset = if (initial) {
+      initial = false
+      1
+    } else {
+      0
+    }
+    withStatement { stmt =>
+      tables.foreach { name => stmt.executeUpdate(s"DELETE FROM $name") }
+      stmt.executeUpdate(s"DBCC CHECKIDENT('${journalTableName}', RESEED, $reset)")
+    }
   }
 
   override def beforeAll() = {

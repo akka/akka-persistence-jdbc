@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS public.journal;
-
 CREATE TABLE IF NOT EXISTS public.journal (
   ordering BIGSERIAL,
   persistence_id VARCHAR(255) NOT NULL,
@@ -9,10 +7,7 @@ CREATE TABLE IF NOT EXISTS public.journal (
   message BYTEA NOT NULL,
   PRIMARY KEY(persistence_id, sequence_number)
 );
-
-CREATE UNIQUE INDEX journal_ordering_idx ON public.journal(ordering);
-
-DROP TABLE IF EXISTS public.snapshot;
+CREATE UNIQUE INDEX IF NOT EXISTS journal_ordering_idx ON public.journal(ordering);
 
 CREATE TABLE IF NOT EXISTS public.snapshot (
   persistence_id VARCHAR(255) NOT NULL,

@@ -6,15 +6,16 @@
 package akka.persistence.jdbc.snapshot
 
 import akka.persistence.jdbc.config._
-import akka.persistence.jdbc.util.Schema._
 import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate }
 import akka.persistence.jdbc.db.SlickDatabase
 import akka.persistence.snapshot.SnapshotStoreSpec
 import com.typesafe.config.{ Config, ConfigFactory }
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
-
 import scala.concurrent.duration._
+
+import akka.persistence.jdbc.testkit.internal.H2
+import akka.persistence.jdbc.testkit.internal.SchemaType
 
 abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType)
     extends SnapshotStoreSpec(config)
@@ -33,7 +34,7 @@ abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType)
   lazy val db = SlickDatabase.database(cfg, new SlickConfiguration(cfg.getConfig("slick")), "slick.db")
 
   override def beforeAll(): Unit = {
-    dropCreate(schemaType)
+    dropAndCreate(schemaType)
     super.beforeAll()
   }
 
@@ -42,4 +43,4 @@ abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType)
   }
 }
 
-class H2SnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("h2-application.conf"), H2())
+class H2SnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("h2-application.conf"), H2)

@@ -11,6 +11,8 @@ lazy val core = project
   .in(file("core"))
   .enablePlugins(MimaPlugin, Publish)
   .disablePlugins(SitePlugin)
+  .configs(IntegrationTest.extend(Test))
+  .settings(Defaults.itSettings)
   .settings(
     name := "akka-persistence-jdbc",
     libraryDependencies ++= Dependencies.Libraries,

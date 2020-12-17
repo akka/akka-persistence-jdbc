@@ -271,22 +271,6 @@ class MockDaoJournalSequenceActorTest extends SharedActorSystemTestSpec {
   }
 }
 
-class PostgresJournalSequenceActorTest
-    extends JournalSequenceActorTest("postgres-application.conf", isOracle = false)
-    with PostgresCleaner
-
-class MySQLJournalSequenceActorTest
-    extends JournalSequenceActorTest("mysql-application.conf", isOracle = false)
-    with MysqlCleaner
-
-class OracleJournalSequenceActorTest
-    extends JournalSequenceActorTest("oracle-application.conf", isOracle = true)
-    with OracleCleaner
-
-class SqlServerJournalSequenceActorTest
-    extends JournalSequenceActorTest("sqlserver-application.conf", isOracle = false)
-    with SqlServerCleaner
-
 class H2JournalSequenceActorTest
     extends JournalSequenceActorTest("h2-application.conf", isOracle = false)
     with H2Cleaner

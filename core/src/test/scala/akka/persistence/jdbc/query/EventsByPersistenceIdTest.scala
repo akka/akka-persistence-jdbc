@@ -332,18 +332,4 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
   }
 }
 
-class PostgresScalaEventsByPersistenceIdTest
-    extends EventsByPersistenceIdTest("postgres-application.conf")
-    with PostgresCleaner
-
-class MySQLScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("mysql-application.conf") with MysqlCleaner
-
-class OracleScalaEventsByPersistenceIdTest
-    extends EventsByPersistenceIdTest("oracle-application.conf")
-    with OracleCleaner
-
-class SqlServerScalaEventsByPersistenceIdTest
-    extends EventsByPersistenceIdTest("sqlserver-application.conf")
-    with SqlServerCleaner
-
 class H2ScalaEventsByPersistenceIdTest extends EventsByPersistenceIdTest("h2-application.conf") with H2Cleaner

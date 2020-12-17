@@ -1,3 +1,5 @@
+version: ~> 1.0
+
 language: scala
 sudo: true
 services:
@@ -20,36 +22,57 @@ script:
 jobs:
   include:
     - stage: check
-      env: CMD="verifyCodeStyle"
-      name: "Code style check. Run locally with: sbt verifyCodeStyle"
+      env: CMD="verifyCodeStyle; mimaReportBinaryIssues"
+      name: "Code style and binary compatibility check. Run locally with: sbt 'verifyCodeStyle; mimaReportBinaryIssues'"
     - env: CMD="+Test/compile"
       name: "Compile all code with Scala 2.12 and 2.13"
     - env: CMD="docs/paradox"
       name: "Create site with Paradox. Run locally with: `sbt docs/previewSite`"
-    - env: CMD="mimaReportBinaryIssues"
-      name: "Check binary compatibility. Run locally with: sbt mimaReportBinaryIssues"
 
     - stage: test
       env:
-        - PRE_CMD="./scripts/launch-all.sh"
+        - PRE_CMD=""
         - CMD="++2.12.11 test"
       name: "Run tests with Scala 2.12 and AdoptOpenJDK 8"
     - env:
-        - PRE_CMD="./scripts/launch-all.sh"
+        - PRE_CMD=""
         - CMD="++2.13.1 test"
       name: "Run tests with Scala 2.13 and AdoptOpenJDK 8"
     - env:
         - JDK="adopt@~1.11-0"
-        - _JAVA_OPTIONS="-XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler"
-        - PRE_CMD="./scripts/launch-all.sh"
+        - PRE_CMD=""
         - CMD="++2.12.10 test"
       name: "Run tests with Scala 2.12 and AdoptOpenJDK 11"
     - env:
         - JDK="adopt@~1.11-0"
-        - _JAVA_OPTIONS="-XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler"
-        - PRE_CMD="./scripts/launch-all.sh"
+        - PRE_CMD=""
         - CMD="++2.13.1 test"
       name: "Run tests with Scala 2.13 and AdoptOpenJDK 11"
+
+    - stage: integration
+      name: "MySQL integration tests with Scala 2.13 and AdoptOpenJDK 11"
+      env:
+        - JDK="adopt@~1.11-0"
+        - PRE_CMD="./scripts/launch-mysql.sh"
+        - CMD="++2.13.1 It/testOnly akka.persistence.jdbc.integration.MySQL*"
+
+    - name: "Oracle integration tests with Scala 2.13 and AdoptOpenJDK 11"
+      env:
+        - JDK="adopt@~1.11-0"
+        - PRE_CMD="./scripts/launch-oracle.sh"
+        - CMD="++2.13.1 It/testOnly akka.persistence.jdbc.integration.Oracle*"
+
+    - name: "PostgreSQL integration tests with Scala 2.13 and AdoptOpenJDK 11"
+      env:
+        - JDK="adopt@~1.11-0"
+        - PRE_CMD="./scripts/launch-postgres.sh"
+        - CMD="++2.13.1 It/testOnly akka.persistence.jdbc.integration.Postgres*"
+
+    - name: "SQL Server integration tests with Scala 2.13 and AdoptOpenJDK 11"
+      env:
+        - JDK="adopt@~1.11-0"
+        - PRE_CMD="./scripts/launch-sqlserver.sh"
+        - CMD="++2.13.1 It/testOnly akka.persistence.jdbc.integration.SqlServer*"
 
     - stage: whitesource
       script: git branch -f "$TRAVIS_BRANCH" && git checkout "$TRAVIS_BRANCH" && sbt whitesourceCheckPolicies whitesourceUpdate
@@ -70,6 +93,9 @@ stages:
 
   # runs on master commits and PRs
   - name: test
+    if: NOT tag =~ ^v
+
+  - name: integration
     if: NOT tag =~ ^v
 
   # runs on main repo master commits and version-tagged commits

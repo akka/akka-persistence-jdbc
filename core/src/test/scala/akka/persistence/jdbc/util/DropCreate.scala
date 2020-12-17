@@ -28,17 +28,9 @@ private[jdbc] trait DropCreate {
    */
   @InternalApi
   private[jdbc] def dropAndCreate(schemaType: SchemaType): Unit = {
-    drop(schemaType)
-    create(schemaType)
-  }
-  private def drop(schemaType: SchemaType): Unit = {
-    val (fileToLoad, separator) = SchemaUtilsImpl.dropScriptFor(schemaType)
-    SchemaUtilsImpl.applyScriptWithSlick(SchemaUtilsImpl.fromClasspathAsString(fileToLoad), separator, logger, db)
-  }
-
-  private def create(schemaType: SchemaType): Unit = {
-    val (fileToLoad, separator) = SchemaUtilsImpl.createScriptFor(schemaType)
-    SchemaUtilsImpl.applyScriptWithSlick(SchemaUtilsImpl.fromClasspathAsString(fileToLoad), separator, logger, db)
+    // blocking calls, usually done in our before test methods
+    SchemaUtilsImpl.dropWithSlick(schemaType, logger, db)
+    SchemaUtilsImpl.createWithSlick(schemaType, logger, db)
   }
 
   /**
@@ -47,5 +39,4 @@ private[jdbc] trait DropCreate {
   @InternalApi
   private[jdbc] def withDatabase[A](f: Database => A): A =
     f(db)
-
 }

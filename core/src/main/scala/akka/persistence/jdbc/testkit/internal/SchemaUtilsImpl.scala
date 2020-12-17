@@ -73,16 +73,23 @@ private[jdbc] object SchemaUtilsImpl {
 
   /**
    * INTERNAL API
-   *
-   * This method runs the passed script against the Slick database.
-   * This is a block operation.
    */
   @InternalApi
-  private[jdbc] def applyScriptWithSlick(
-      script: String,
-      separator: String,
-      logger: Logger,
-      database: Database): Done = {
+  private[jdbc] def dropWithSlick(schemaType: SchemaType, logger: Logger, db: Database): Done = {
+    val (fileToLoad, separator) = dropScriptFor(schemaType)
+    SchemaUtilsImpl.applyScriptWithSlick(SchemaUtilsImpl.fromClasspathAsString(fileToLoad), separator, logger, db)
+  }
+
+  /**
+   * INTERNAL API
+   */
+  @InternalApi
+  private[jdbc] def createWithSlick(schemaType: SchemaType, logger: Logger, db: Database): Done = {
+    val (fileToLoad, separator) = createScriptFor(schemaType)
+    SchemaUtilsImpl.applyScriptWithSlick(SchemaUtilsImpl.fromClasspathAsString(fileToLoad), separator, logger, db)
+  }
+
+  private def applyScriptWithSlick(script: String, separator: String, logger: Logger, database: Database): Done = {
 
     def withStatement(f: Statement => Unit): Done = {
       val session = database.createSession()
@@ -107,11 +114,7 @@ private[jdbc] object SchemaUtilsImpl {
     }
   }
 
-  /**
-   * INTERNAL API
-   */
-  @InternalApi
-  private[jdbc] def dropScriptFor(schemaType: SchemaType): (String, String) =
+  private def dropScriptFor(schemaType: SchemaType): (String, String) =
     schemaType match {
       case Postgres  => ("schema/postgres/postgres-drop-schema.sql", ";")
       case MySQL     => ("schema/mysql/mysql-drop-schema.sql", ";")
@@ -120,11 +123,7 @@ private[jdbc] object SchemaUtilsImpl {
       case H2        => ("schema/h2/h2-drop-schema.sql", ";")
     }
 
-  /**
-   * INTERNAL API
-   */
-  @InternalApi
-  private[jdbc] def createScriptFor(schemaType: SchemaType): (String, String) =
+  private def createScriptFor(schemaType: SchemaType): (String, String) =
     schemaType match {
       case Postgres  => ("schema/postgres/postgres-create-schema.sql", ";")
       case MySQL     => ("schema/mysql/mysql-create-schema.sql", ";")

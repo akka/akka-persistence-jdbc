@@ -41,6 +41,8 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
   behavior.of("JournalSequenceActor")
 
   it should "recover normally" in {
+    if (newDao)
+      pending
     withActorSystem { implicit system: ActorSystem =>
       withDatabase { db =>
         val numberOfRows = 15000
@@ -57,8 +59,10 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
 
   private def canForceInsert: Boolean = profile.capabilities.contains(JdbcCapabilities.forceInsert)
 
-  if (canForceInsert) {
+  if (canForceInsert && !newDao) {
     it should s"recover ${if (isOracle) "one hundred thousand" else "one million"} events quickly if no ids are missing" in {
+      if (newDao)
+        pending
       withActorSystem { implicit system: ActorSystem =>
         withDatabase { db =>
           implicit val materializer: ActorMaterializer = ActorMaterializer()
@@ -88,7 +92,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
     }
   }
 
-  if (!isOracle && canForceInsert) {
+  if (!isOracle && canForceInsert && !newDao) {
     // Note this test case cannot be executed for oracle, because forceInsertAll is not supported in the oracle driver.
     it should "recover after the specified max number if tries if the first event has a very high sequence number and lots of large gaps exist" in {
       withActorSystem { implicit system: ActorSystem =>
@@ -121,7 +125,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
     }
   }
 
-  if (canForceInsert) {
+  if (canForceInsert && !newDao) {
     it should s"assume that the max ordering id in the database on startup is the max after (queryDelay * maxTries)" in {
       withActorSystem { implicit system: ActorSystem =>
         withDatabase { db =>

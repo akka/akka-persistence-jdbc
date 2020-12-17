@@ -55,6 +55,8 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
   behavior.of("Replaying Persistence Actor")
 
   it should "stream events" in {
+    if (newDao)
+      pending
     withActorSystem { implicit system: ActorSystem =>
       withDatabase { db =>
         implicit val mat: ActorMaterializer = ActorMaterializer()

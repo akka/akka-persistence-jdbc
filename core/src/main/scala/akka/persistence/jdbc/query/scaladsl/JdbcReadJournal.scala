@@ -17,7 +17,7 @@ import akka.persistence.query.{ EventEnvelope, Offset, Sequence }
 import akka.persistence.{ Persistence, PersistentRepr }
 import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.scaladsl.{ Sink, Source }
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.stream.{ Materializer, SystemMaterializer }
 import akka.util.Timeout
 import com.typesafe.config.Config
 import slick.jdbc.JdbcBackend._
@@ -47,7 +47,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
   PluginVersionChecker.check()
 
   implicit val ec: ExecutionContext = system.dispatcher
-  implicit val mat: Materializer = ActorMaterializer()
+  implicit val mat: Materializer = SystemMaterializer(system).materializer
 
   val readJournalConfig = new ReadJournalConfig(config)
 
@@ -276,7 +276,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
   }
 
   def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    Source.fromFuture(readJournalDao.maxJournalSequence()).flatMapConcat { maxOrderingInDb =>
+    Source.future(readJournalDao.maxJournalSequence()).flatMapConcat { maxOrderingInDb =>
       eventsByTag(tag, offset, terminateAfterOffset = Some(maxOrderingInDb))
     }
 

@@ -7,15 +7,16 @@ package akka.persistence.jdbc.snapshot
 
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
-import akka.persistence.jdbc.util.Schema._
 import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate }
 import akka.persistence.jdbc.db.SlickDatabase
 import akka.persistence.snapshot.SnapshotStoreSpec
 import com.typesafe.config.{ Config, ConfigFactory }
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
-
 import scala.concurrent.duration._
+
+import akka.persistence.jdbc.testkit.internal.H2
+import akka.persistence.jdbc.testkit.internal.SchemaType
 
 abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType)
     extends SnapshotStoreSpec(config)
@@ -37,7 +38,7 @@ abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType)
   protected override def supportsMetadata: CapabilityFlag = newDao
 
   override def beforeAll(): Unit = {
-    dropCreate(schemaType)
+    dropAndCreate(schemaType)
     super.beforeAll()
   }
 
@@ -46,14 +47,4 @@ abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType)
   }
 }
 
-class PostgresSnapshotStoreSpec
-    extends JdbcSnapshotStoreSpec(ConfigFactory.load("postgres-application.conf"), Postgres())
-
-class MySQLSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("mysql-application.conf"), MySQL())
-
-class OracleSnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("oracle-application.conf"), Oracle())
-
-class SqlServerSnapshotStoreSpec
-    extends JdbcSnapshotStoreSpec(ConfigFactory.load("sqlserver-application.conf"), SqlServer())
-
-class H2SnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("h2-application.conf"), H2())
+class H2SnapshotStoreSpec extends JdbcSnapshotStoreSpec(ConfigFactory.load("h2-application.conf"), H2)

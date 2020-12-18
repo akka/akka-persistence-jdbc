@@ -1,6 +1,3 @@
-DROP TABLE IF EXISTS event_tag;
-DROP TABLE IF EXISTS event_journal;
-
 CREATE TABLE IF NOT EXISTS event_journal(
     ordering SERIAL,
     deleted BOOLEAN DEFAULT false NOT NULL,
@@ -27,8 +24,6 @@ CREATE TABLE IF NOT EXISTS event_tag (
         REFERENCES event_journal(ordering)
         ON DELETE CASCADE
     );
-
-DROP TABLE IF EXISTS snapshot;
 
 CREATE TABLE IF NOT EXISTS snapshot (
     persistence_id VARCHAR(255) NOT NULL,

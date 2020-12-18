@@ -1,0 +1,3 @@
+# https://github.com/akka/akka-persistence-jdbc/pull/401/files
+ProblemFilters.exclude[IncompatibleSignatureProblem]("akka.persistence.jdbc.journal.dao.JournalQueries.highestSequenceNrForPersistenceId")
+ProblemFilters.exclude[IncompatibleSignatureProblem]("akka.persistence.jdbc.journal.dao.JournalQueries.highestMarkedSequenceNrForPersistenceId")

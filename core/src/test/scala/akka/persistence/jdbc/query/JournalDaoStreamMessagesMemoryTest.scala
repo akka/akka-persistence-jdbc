@@ -13,7 +13,6 @@ import akka.actor.ActorSystem
 import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.persistence.jdbc.journal.dao.legacy.{ ByteArrayJournalDao, JournalTables }
 import akka.serialization.SerializationExtension
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{ Sink, Source }
 import com.typesafe.config.{ ConfigValue, ConfigValueFactory }
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
@@ -24,7 +23,7 @@ import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success }
 import akka.stream.testkit.scaladsl.TestSink
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 object JournalDaoStreamMessagesMemoryTest {
 
@@ -59,7 +58,6 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
       pending
     withActorSystem { implicit system: ActorSystem =>
       withDatabase { db =>
-        implicit val mat: ActorMaterializer = ActorMaterializer()
         implicit val ec: ExecutionContextExecutor = system.dispatcher
 
         val persistenceId = UUID.randomUUID().toString
@@ -143,19 +141,3 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
     }
   }
 }
-
-class PostgresJournalDaoStreamMessagesMemoryTest
-    extends JournalDaoStreamMessagesMemoryTest("postgres-application.conf")
-    with PostgresCleaner
-
-class MySQLJournalDaoStreamMessagesMemoryTest
-    extends JournalDaoStreamMessagesMemoryTest("mysql-application.conf")
-    with MysqlCleaner
-
-class OracleJournalDaoStreamMessagesMemoryTest
-    extends JournalDaoStreamMessagesMemoryTest("oracle-application.conf")
-    with OracleCleaner
-
-class SqlServerJournalDaoStreamMessagesMemoryTest
-    extends JournalDaoStreamMessagesMemoryTest("sqlserver-application.conf")
-    with SqlServerCleaner

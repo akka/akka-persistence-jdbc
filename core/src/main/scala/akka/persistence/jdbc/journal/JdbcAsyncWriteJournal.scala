@@ -16,7 +16,7 @@ import akka.persistence.jdbc.db.{ SlickDatabase, SlickExtension }
 import akka.persistence.journal.AsyncWriteJournal
 import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.serialization.{ Serialization, SerializationExtension }
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.stream.{ Materializer, SystemMaterializer }
 import com.typesafe.config.Config
 import slick.jdbc.JdbcProfile
 import slick.jdbc.JdbcBackend._
@@ -44,7 +44,7 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
 
   implicit val ec: ExecutionContext = context.dispatcher
   implicit val system: ActorSystem = context.system
-  implicit val mat: Materializer = ActorMaterializer()
+  implicit val mat: Materializer = SystemMaterializer(system).materializer
   val journalConfig = new JournalConfig(config)
 
   PluginVersionChecker.check()

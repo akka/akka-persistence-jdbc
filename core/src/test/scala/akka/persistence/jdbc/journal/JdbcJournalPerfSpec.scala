@@ -5,20 +5,27 @@
 
 package akka.persistence.jdbc.journal
 
+import scala.concurrent.duration._
+
 import akka.actor.Props
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
-import akka.persistence.jdbc.util.Schema._
-import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate }
 import akka.persistence.jdbc.db.SlickExtension
+import akka.persistence.jdbc.testkit.internal.H2
+import akka.persistence.jdbc.testkit.internal.SchemaType
+import akka.persistence.jdbc.util.ClasspathResources
+import akka.persistence.jdbc.util.DropCreate
 import akka.persistence.journal.JournalPerfSpec
-import akka.persistence.journal.JournalPerfSpec.{ BenchActor, Cmd, ResetCounter }
+import akka.persistence.journal.JournalPerfSpec.BenchActor
+import akka.persistence.journal.JournalPerfSpec.Cmd
+import akka.persistence.journal.JournalPerfSpec.ResetCounter
 import akka.testkit.TestProbe
-import com.typesafe.config.{ Config, ConfigFactory, ConfigValueFactory }
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigValueFactory
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
-
-import scala.concurrent.duration._
 
 abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType)
     extends JournalPerfSpec(config)
@@ -46,7 +53,7 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType)
   lazy val db = SlickExtension(system).database(cfg).database
 
   override def beforeAll(): Unit = {
-    dropCreate(schemaType)
+    dropAndCreate(schemaType)
     super.beforeAll()
   }
 
@@ -104,62 +111,9 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType)
   }
 }
 
-class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-application.conf"), Postgres()) {
-  override def eventsCount: Int = 100
-}
+class H2JournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("h2-application.conf"), H2)
 
-class PostgresJournalPerfSpecSharedDb
-    extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-shared-db-application.conf"), Postgres()) {
-  override def eventsCount: Int = 100
-}
-
-class PostgresJournalPerfSpecPhysicalDelete extends PostgresJournalPerfSpec {
-  this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
-}
-
-class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-application.conf"), MySQL()) {
-  override def eventsCount: Int = 100
-}
-
-class MySQLJournalPerfSpecSharedDb
-    extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-shared-db-application.conf"), MySQL()) {
-  override def eventsCount: Int = 100
-}
-
-class MySQLJournalPerfSpecPhysicalDelete extends MySQLJournalPerfSpec {
-  this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
-}
-
-class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-application.conf"), Oracle()) {
-  override def eventsCount: Int = 100
-}
-
-class OracleJournalPerfSpecSharedDb
-    extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-shared-db-application.conf"), Oracle()) {
-  override def eventsCount: Int = 100
-}
-
-class OracleJournalPerfSpecPhysicalDelete extends OracleJournalPerfSpec {
-  this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
-}
-
-class SqlServerJournalPerfSpec
-    extends JdbcJournalPerfSpec(ConfigFactory.load("sqlserver-application.conf"), SqlServer()) {
-  override def eventsCount: Int = 100
-}
-
-class SqlServerJournalPerfSpecSharedDb
-    extends JdbcJournalPerfSpec(ConfigFactory.load("sqlserver-shared-db-application.conf"), SqlServer()) {
-  override def eventsCount: Int = 100
-}
-
-class SqlServerJournalPerfSpecPhysicalDelete extends SqlServerJournalPerfSpec {
-  this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
-}
-
-class H2JournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("h2-application.conf"), H2())
-
-class H2JournalPerfSpecSharedDb extends JdbcJournalPerfSpec(ConfigFactory.load("h2-shared-db-application.conf"), H2())
+class H2JournalPerfSpecSharedDb extends JdbcJournalPerfSpec(ConfigFactory.load("h2-shared-db-application.conf"), H2)
 
 class H2JournalPerfSpecPhysicalDelete extends H2JournalPerfSpec {
   this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))

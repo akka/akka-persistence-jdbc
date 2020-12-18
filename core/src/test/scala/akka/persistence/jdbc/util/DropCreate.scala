@@ -7,95 +7,36 @@ package akka.persistence.jdbc.util
 
 import java.sql.Statement
 
-import akka.actor.ActorSystem
-import akka.persistence.jdbc.util.Schema.{ Oracle, SchemaType }
+import akka.annotation.InternalApi
+import akka.persistence.jdbc.testkit.internal.SchemaType
+import akka.persistence.jdbc.testkit.internal.SchemaUtilsImpl
 import com.typesafe.config.Config
-import slick.jdbc.JdbcBackend.{ Database, Session }
+import org.slf4j.LoggerFactory
+import slick.jdbc.JdbcBackend.Database
+import slick.jdbc.JdbcBackend.Session
 
-object Schema {
-  sealed trait SchemaType {
-    def legacySchema: String
-    def schema: String
-  }
-  final case class Postgres(
-      legacySchema: String = "schema/postgres/postgres-schema.sql",
-      schema: String = "schema/postgres/postgres-schema-v5.sql")
-      extends SchemaType
-  final case class H2(legacySchema: String = "schema/h2/h2-schema.sql", schema: String = "schema/h2/h2-schema-v5.sql")
-      extends SchemaType
-  final case class MySQL(
-      legacySchema: String = "schema/mysql/mysql-schema.sql",
-      schema: String = "schema/mysql/mysql-schema-v5.sql")
-      extends SchemaType
-  final case class Oracle(
-      legacySchema: String = "schema/oracle/oracle-schema.sql",
-      schema: String = "schema/oracle/oracle-schema-v5.sql")
-      extends SchemaType
-  final case class SqlServer(
-      legacySchema: String = "schema/sqlserver/sqlserver-schema.sql",
-      schema: String = "schema/sqlserver/sqlserver-schema-v5.sql")
-      extends SchemaType
-}
+/**
+ * INTERNAL API
+ */
+@InternalApi
+private[jdbc] trait DropCreate {
 
-trait DropCreate extends ClasspathResources {
+  private val logger = LoggerFactory.getLogger(this.getClass)
   def db: Database
   def config: Config
 
   def newDao =
     config.getString("jdbc-journal.dao") == "akka.persistence.jdbc.journal.dao.AkkaSerializerJournalDao"
 
-  val listOfOracleDropQueries = List(
-    """ALTER SESSION SET ddl_lock_timeout = 15""", // (ddl lock timeout in seconds) this allows tests which are still writing to the db to finish gracefully
-    """DROP TABLE "journal" CASCADE CONSTRAINT""",
-    """DROP TABLE "snapshot" CASCADE CONSTRAINT""",
-    """DROP SEQUENCE "ordering_seq" """,
-    """DROP TABLE EVENT_JOURNAL CASCADE CONSTRAINT""",
-    """DROP TABLE SNAPSHOT CASCADE CONSTRAINT""",
-    """DROP TABLE EVENT_TAG CASCADE CONSTRAINT""",
-    """DROP TABLE SNAPSHOT CASCADE CONSTRAINT""",
-    """DROP SEQUENCE EVENT_JOURNAL__ORDERING_SEQ""",
-    """DROP TRIGGER EVENT_JOURNAL__ORDERING_TRG """)
-
-  def dropOracle(): Unit =
-    withStatement { stmt =>
-      listOfOracleDropQueries.foreach { ddl =>
-        try stmt.executeUpdate(ddl)
-        catch {
-          case t: java.sql.SQLException if t.getMessage contains "ORA-00942" => // suppress known error message in the test
-          case t: java.sql.SQLException if t.getMessage contains "ORA-04080" => // suppress known error message in the test
-          case t: java.sql.SQLException if t.getMessage contains "ORA-02289" => // suppress known error message in the test
-          case t: java.sql.SQLException if t.getMessage contains "ORA-04043" => // suppress known error message in the test
-          case t: java.sql.SQLException if t.getMessage contains "ORA-01418" => // suppress known error message in the test
-        }
-      }
-    }
-
-  def dropCreate(schemaType: SchemaType): Unit =
-    schemaType match {
-      case Oracle(legacy, schema) =>
-        dropOracle()
-        create(if (newDao) schema else legacy, "/")
-      case s: SchemaType => create(if (newDao) s.schema else s.legacySchema)
-    }
-
-  def create(schema: String, separator: String = ";"): Unit = {
-    for {
-      schema <- Option(fromClasspathAsString(schema))
-      ddl <- for {
-        trimmedLine <- schema.split(separator).map(_.trim)
-        if trimmedLine.nonEmpty
-      } yield trimmedLine
-    } withStatement { stmt =>
-      try stmt.executeUpdate(ddl)
-      catch {
-        case t: java.sql.SQLSyntaxErrorException if t.getMessage contains "ORA-00942" =>
-        // suppress known error message in the test
-      }
-    }
+  /**
+   * INTERNAL API
+   */
+  @InternalApi
+  private[jdbc] def dropAndCreate(schemaType: SchemaType): Unit = {
+    // blocking calls, usually done in our before test methods
+    SchemaUtilsImpl.dropWithSlick(schemaType, logger, db)
+    SchemaUtilsImpl.createWithSlick(schemaType, logger, db)
   }
-
-  def withDatabase[A](f: Database => A): A =
-    f(db)
 
   def withSession[A](f: Session => A): A = {
     withDatabase { db =>
@@ -107,4 +48,11 @@ trait DropCreate extends ClasspathResources {
 
   def withStatement[A](f: Statement => A): A =
     withSession(session => session.withStatement()(f))
+
+  /**
+   * INTERNAL API
+   */
+  @InternalApi
+  private[jdbc] def withDatabase[A](f: Database => A): A =
+    f(db)
 }

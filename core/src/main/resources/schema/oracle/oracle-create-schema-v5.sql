@@ -1,4 +1,4 @@
-create table EVENT_JOURNAL (
+CREATE TABLE EVENT_JOURNAL (
     ORDERING NUMBER(19) NOT NULL,
     DELETED CHAR(1) DEFAULT 0 NOT NULL check (DELETED in (0, 1)),
     PERSISTENCE_ID VARCHAR2(255) NOT NULL,
@@ -14,19 +14,19 @@ create table EVENT_JOURNAL (
     META_SER_MANIFEST VARCHAR2(254))
 /
 
-alter table EVENT_JOURNAL add constraint EVENT_JOURNAL_PK primary key(PERSISTENCE_ID,SEQUENCE_NUMBER)
+ALTER TABLE EVENT_JOURNAL ADD CONSTRAINT EVENT_JOURNAL_PK PRIMARY KEY(PERSISTENCE_ID,SEQUENCE_NUMBER)
 /
 
 ALTER TABLE EVENT_JOURNAL ADD CONSTRAINT EVENT_JOURNAL_ORDERING_IDX UNIQUE(ORDERING)
 /
 
-create sequence EVENT_JOURNAL__ORDERING_SEQ start with 1 increment by 1
+CREATE SEQUENCE EVENT_JOURNAL__ORDERING_SEQ START WITH 1 INCREMENT BY 1
 /
 
-create or replace trigger EVENT_JOURNAL__ORDERING_TRG before insert on EVENT_JOURNAL referencing new as new for each row when (new.ORDERING is null) begin select EVENT_JOURNAL__ORDERING_seq.nextval into :new.ORDERING from sys.dual; end;
+CREATE OR REPLACE TRIGGER EVENT_JOURNAL__ORDERING_TRG before insert on EVENT_JOURNAL referencing new as new for each row when (new.ORDERING is null) begin select EVENT_JOURNAL__ORDERING_seq.nextval into :new.ORDERING from sys.dual; end;
 /
 
-create or replace trigger EVENT_JOURNAL__ORDERING_TRG before insert on EVENT_JOURNAL referencing new as new for each row when (new.ORDERING is null) begin select EVENT_JOURNAL__ORDERING_seq.nextval into :new.ORDERING from sys.dual; end;
+CREATE OR REPLACE TRIGGER EVENT_JOURNAL__ORDERING_TRG before insert on EVENT_JOURNAL referencing new as new for each row when (new.ORDERING is null) begin select EVENT_JOURNAL__ORDERING_seq.nextval into :new.ORDERING from sys.dual; end;
 /
 
 CREATE TABLE EVENT_TAG (
@@ -38,7 +38,7 @@ CREATE TABLE EVENT_TAG (
     )
 /
 
-create table "SNAPSHOT" (
+CREATE TABLE "SNAPSHOT" (
     PERSISTENCE_ID VARCHAR(255) NOT NULL,
     SEQUENCE_NUMBER NUMERIC NOT NULL,
     CREATED NUMERIC NOT NULL,
@@ -50,7 +50,7 @@ create table "SNAPSHOT" (
     META_PAYLOAD BLOB)
 /
 
-alter table "SNAPSHOT" add constraint "SNAPSHOT_pk" primary key(PERSISTENCE_ID,SEQUENCE_NUMBER)
+ALTER TABLE "SNAPSHOT" ADD CONSTRAINT "SNAPSHOT_pk" PRIMARY KEY(PERSISTENCE_ID,SEQUENCE_NUMBER)
 /
 
 CREATE OR REPLACE PROCEDURE "reset_sequence"

@@ -13,7 +13,7 @@ object Dependencies {
   val AkkaBinaryVersion = AkkaVersion.take(3)
 
   val SlickVersion = "3.3.3"
-  val ScalaTestVersion = "3.1.4"
+  val ScalaTestVersion = "3.2.3"
 
   val JdbcDrivers = Seq(
     "org.postgresql" % "postgresql" % "42.2.18",
@@ -36,6 +36,6 @@ object Dependencies {
       "org.flywaydb" % "flyway-core" % "6.5.7",
       "com.typesafe" % "config" % "1.4.1",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
-      "org.testcontainers" % "postgresql" % "1.14.3" % Test,
+      "org.testcontainers" % "postgresql" % "1.15.1" % Test,
       "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Provided)
 }

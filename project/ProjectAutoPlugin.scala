@@ -14,7 +14,7 @@ object ProjectAutoPlugin extends AutoPlugin {
       organization := "com.lightbend.akka",
       organizationName := "Lightbend Inc.",
       organizationHomepage := Some(url("https://www.lightbend.com/")),
-      homepage := Some(url("https://github.com/akka/akka-persistence-jdbc")),
+      homepage := Some(url("https://doc.akka.io/docs/akka-persistence-jdbc/current/")),
       scmInfo := Some(
           ScmInfo(
             url("https://github.com/akka/akka-persistence-jdbc"),
@@ -74,15 +74,4 @@ object ProjectAutoPlugin extends AutoPlugin {
            |""".stripMargin)),
     resolvers += Resolver.typesafeRepo("releases"),
     resolvers += Resolver.jcenterRepo)
-
-  def determineMimaPreviousArtifacts(scalaBinVersion: String): Set[ModuleID] = {
-    val compatVersions: Set[String] =
-      if (scalaBinVersion.startsWith("2.13")) Set("3.5.2")
-      else {
-        Set("3.5.0", "3.5.1", "3.5.2")
-      }
-    compatVersions.map { v =>
-      "com.github.dnvriend" % ("akka-persistence-jdbc_" + scalaBinVersion) % v
-    }
-  }
 }

@@ -97,12 +97,4 @@ abstract class LogicalDeleteQueryTest(config: String) extends QueryTestSpec(conf
   }
 }
 
-class PostgresLogicalDeleteQueryTest extends LogicalDeleteQueryTest("postgres-application.conf") with PostgresCleaner
-
-class MySQLLogicalDeleteQueryTest extends LogicalDeleteQueryTest("mysql-application.conf") with MysqlCleaner
-
-class OracleLogicalDeleteQueryTest extends LogicalDeleteQueryTest("oracle-application.conf") with OracleCleaner
-
-class SqlServerLogicalDeleteQueryTest extends LogicalDeleteQueryTest("sqlserver-application.conf") with SqlServerCleaner
-
 class H2LogicalDeleteQueryTest extends LogicalDeleteQueryTest("h2-application.conf") with H2Cleaner

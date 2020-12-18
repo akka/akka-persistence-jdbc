@@ -59,11 +59,34 @@ Configure `slick`:
 
 ## Database Schema
 
-- @extref:[Postgres Schema](github:/core/src/test/resources/schema/postgres/postgres-schema.sql)
-- @extref:[MySQL Schema](github:/core/src/test/resources/schema/mysql/mysql-schema.sql)
-- @extref:[H2 Schema](github:/core/src/test/resources/schema/h2/h2-schema.sql)
-- @extref:[Oracle Schema](github:/core/src/test/resources/schema/oracle/oracle-schema.sql)
-- @extref:[SQL Server Schema](github:/core/src/test/resources/schema/sqlserver/sqlserver-schema.sql)
+- @extref:[Postgres Schema](github:/core/src/main/resources/schema/postgres/postgres-create-schema.sql)
+- @extref:[MySQL Schema](github:/core/src/main/resources/schema/mysql/mysql-create-schema.sql)
+- @extref:[H2 Schema](github:/core/src/main/resources/schema/h2/h2-create-schema.sql)
+- @extref:[Oracle Schema](github:/core/src/main/resources/schema/oracle/oracle-create-schema.sql)
+- @extref:[SQL Server Schema](github:/core/src/main/resources/schema/sqlserver/sqlserver-create-schema.sql)
+
+For testing purposes the journal and snapshot tables can be created programmatically using the provided `SchemaUtils`.
+
+
+
+Scala
+:  ```scala
+import akka.persistence.jdbc.testkit.scaladsl.SchemaUtils
+implicit val system: ActorSystem = ActorSystem("example")
+val done: Future[Done] = SchemaUtils.createIfNotExists()
+```
+
+Java
+:  ```java
+import akka.persistence.jdbc.testkit.javadsl.SchemaUtils;
+ActorSystem actorSystem = ActorSystem.create("example");
+CompletionStage<Done> done = SchemaUtils.createIfNotExists(actorSystem);
+```
+
+A `dropIfExists` variant is also available.
+
+**Note**: `SchemaUtils` was introduced in version 4.0.1.
+
 
 ## Reference Configuration
 
@@ -159,8 +182,8 @@ val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcR
 The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery` extension:
 
 ```java
-import akka.persistence.query.PersistenceQuery
-import akka.persistence.jdbc.query.javadsl.JdbcReadJournal
+import akka.persistence.query.PersistenceQuery;
+import akka.persistence.jdbc.query.javadsl.JdbcReadJournal;
 
 final JdbcReadJournal readJournal = PersistenceQuery.get(system).getReadJournalFor(JdbcReadJournal.class, JdbcReadJournal.Identifier());
 ```

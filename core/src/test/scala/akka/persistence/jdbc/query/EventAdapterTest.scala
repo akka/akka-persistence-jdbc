@@ -178,12 +178,4 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
   }
 }
 
-class PostgresScalaEventAdapterTest extends EventAdapterTest("postgres-application.conf") with PostgresCleaner
-
-class MySQLScalaEventAdapterTest extends EventAdapterTest("mysql-application.conf") with MysqlCleaner
-
-class OracleScalaEventAdapterTest extends EventAdapterTest("oracle-application.conf") with OracleCleaner
-
-class SqlServerScalaEventAdapterTest extends EventAdapterTest("sqlserver-application.conf") with SqlServerCleaner
-
 class H2ScalaEventAdapterTest extends EventAdapterTest("h2-application.conf") with H2Cleaner

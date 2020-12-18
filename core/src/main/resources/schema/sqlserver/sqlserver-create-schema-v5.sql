@@ -1,6 +1,3 @@
-DROP TABLE IF EXISTS event_tag;
-DROP TABLE IF EXISTS event_journal;
-
 CREATE TABLE event_journal(
     "ordering" BIGINT IDENTITY(1,1) NOT NULL,
     "deleted" BIT DEFAULT 0 NOT NULL,
@@ -30,9 +27,7 @@ CREATE TABLE event_tag (
         on delete CASCADE
 );
 
-DROP TABLE IF EXISTS snapshot;
-
-create table "snapshot" (
+CREATE TABLE "snapshot" (
     "persistence_id" VARCHAR(255) NOT NULL,
     "sequence_number" NUMERIC(10,0) NOT NULL,
     "created" BIGINT NOT NULL,

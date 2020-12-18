@@ -421,14 +421,4 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
   }
 }
 
-class PostgresScalaEventsByTagTest extends EventsByTagTest("postgres-application.conf") with PostgresCleaner
-
-class MySQLScalaEventByTagTest extends EventsByTagTest("mysql-application.conf") with MysqlCleaner
-
-class OracleScalaEventByTagTest extends EventsByTagTest("oracle-application.conf") with OracleCleaner {
-  override def timeoutMultiplier: Int = 4
-}
-
-class SqlServerScalaEventByTagTest extends EventsByTagTest("sqlserver-application.conf") with SqlServerCleaner
-
 class H2ScalaEventsByTagTest extends EventsByTagTest("h2-application.conf") with H2Cleaner

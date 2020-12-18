@@ -18,12 +18,18 @@ import akka.stream.scaladsl.Sink
 import akka.stream.testkit.TestSubscriber
 import akka.stream.testkit.javadsl.{ TestSink => JavaSink }
 import akka.stream.testkit.scaladsl.TestSink
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.stream.{ Materializer, SystemMaterializer }
 import com.typesafe.config.ConfigValue
 import slick.jdbc.PostgresProfile.api._
-
 import scala.concurrent.Future
 import scala.concurrent.duration.{ FiniteDuration, _ }
+
+import akka.persistence.jdbc.testkit.internal.H2
+import akka.persistence.jdbc.testkit.internal.MySQL
+import akka.persistence.jdbc.testkit.internal.Oracle
+import akka.persistence.jdbc.testkit.internal.Postgres
+import akka.persistence.jdbc.testkit.internal.SchemaUtilsImpl
+import akka.persistence.jdbc.testkit.internal.SqlServer
 
 trait ReadJournalOperations {
   def withCurrentPersistenceIds(within: FiniteDuration = 60.second)(f: TestSubscriber.Probe[String] => Unit): Unit
@@ -48,7 +54,7 @@ class ScalaJdbcReadJournalOperations(readJournal: JdbcReadJournal)(implicit syst
   def this(system: ActorSystem) =
     this(PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier))(
       system,
-      ActorMaterializer()(system))
+      SystemMaterializer(system).materializer)
 
   import system.dispatcher
 
@@ -111,7 +117,7 @@ class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)(
     this(
       PersistenceQuery.get(system).getReadJournalFor(classOf[javadsl.JdbcReadJournal], JavaJdbcReadJournal.Identifier))(
       system,
-      ActorMaterializer()(system))
+      SystemMaterializer(system).materializer)
 
   import system.dispatcher
 
@@ -304,24 +310,22 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
 }
 
 trait PostgresCleaner extends QueryTestSpec {
-  import akka.persistence.jdbc.util.Schema.Postgres
 
   def clearPostgres(): Unit =
     tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
 
   override def beforeAll(): Unit = {
-    dropCreate(Postgres())
+    dropAndCreate(Postgres)
     super.beforeAll()
   }
 
   override def beforeEach(): Unit = {
-    dropCreate(Postgres())
+    dropAndCreate(Postgres)
     super.beforeEach()
   }
 }
 
 trait MysqlCleaner extends QueryTestSpec {
-  import akka.persistence.jdbc.util.Schema.MySQL
 
   def clearMySQL(): Unit = {
     tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
@@ -329,7 +333,7 @@ trait MysqlCleaner extends QueryTestSpec {
   }
 
   override def beforeAll(): Unit = {
-    dropCreate(MySQL())
+    dropAndCreate(MySQL)
     super.beforeAll()
   }
 
@@ -340,7 +344,6 @@ trait MysqlCleaner extends QueryTestSpec {
 }
 
 trait OracleCleaner extends QueryTestSpec {
-  import akka.persistence.jdbc.util.Schema.Oracle
 
   def clearOracle(): Unit = {
     tables.foreach { name =>
@@ -350,7 +353,7 @@ trait OracleCleaner extends QueryTestSpec {
   }
 
   override def beforeAll(): Unit = {
-    dropCreate(Oracle())
+    dropAndCreate(Oracle)
     super.beforeAll()
   }
 
@@ -361,7 +364,6 @@ trait OracleCleaner extends QueryTestSpec {
 }
 
 trait SqlServerCleaner extends QueryTestSpec {
-  import akka.persistence.jdbc.util.Schema.SqlServer
 
   var initial = true
 
@@ -379,12 +381,12 @@ trait SqlServerCleaner extends QueryTestSpec {
   }
 
   override def beforeAll() = {
-    dropCreate(SqlServer())
+    dropAndCreate(SqlServer)
     super.beforeAll()
   }
 
   override def afterAll(): Unit = {
-    dropCreate(SqlServer())
+    dropAndCreate(SqlServer)
     super.afterAll()
   }
 
@@ -395,13 +397,12 @@ trait SqlServerCleaner extends QueryTestSpec {
 }
 
 trait H2Cleaner extends QueryTestSpec {
-  import akka.persistence.jdbc.util.Schema.H2
 
   def clearH2(): Unit =
     tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
 
   override def beforeEach(): Unit = {
-    dropCreate(H2())
+    dropAndCreate(H2)
     super.beforeEach()
   }
 }

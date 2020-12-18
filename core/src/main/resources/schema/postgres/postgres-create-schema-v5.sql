@@ -1,6 +1,3 @@
-DROP TABLE IF EXISTS public.event_tag;
-DROP TABLE IF EXISTS public.event_journal;
-
 CREATE TABLE IF NOT EXISTS public.event_journal(
   ordering BIGSERIAL,
   persistence_id VARCHAR(255) NOT NULL,
@@ -33,8 +30,6 @@ CREATE TABLE IF NOT EXISTS public.event_tag(
       REFERENCES event_journal(ordering)
       ON DELETE CASCADE
 );
-
-DROP TABLE IF EXISTS public.snapshot;
 
 CREATE TABLE IF NOT EXISTS public.snapshot (
   persistence_id VARCHAR(255) NOT NULL,

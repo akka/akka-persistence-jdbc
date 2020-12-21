@@ -368,7 +368,7 @@ trait SqlServerCleaner extends QueryTestSpec {
   var initial = true
 
   def clearSqlServer(): Unit = {
-    val reset = if (!newDao || initial) {
+    val reset = if (initial) {
       initial = false
       1
     } else {

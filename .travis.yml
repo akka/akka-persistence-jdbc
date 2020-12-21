@@ -22,7 +22,7 @@ script:
 jobs:
   include:
     - stage: check
-      env: CMD="verifyCodeStyle" # Whitesource removed until 5.0 M0 created
+      env: CMD="verifyCodeStyle" # mima removed until 5.0 M0 created
       name: "Code style and binary compatibility check. Run locally with: sbt 'verifyCodeStyle; mimaReportBinaryIssues'"
 
     - env: CMD="+Test/compile"

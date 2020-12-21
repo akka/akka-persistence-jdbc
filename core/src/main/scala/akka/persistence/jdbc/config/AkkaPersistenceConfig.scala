@@ -40,11 +40,11 @@ class EventJournalTableColumnNames(config: Config) {
   val sequenceNumber: String = cfg.as[String]("sequenceNumber", "sequence_number")
   val writer: String = cfg.as[String]("writer", "writer")
   val writeTimestamp: String = cfg.as[String]("writeTimestamp", "write_timestamp")
-  val eventManifest: String = cfg.as[String]("eventManifest", "event_manifest")
+  val adapterManifest: String = cfg.as[String]("adapterManifest", "adapter_manifest")
 
   val eventPayload: String = cfg.as[String]("eventPayload", "event_payload")
   val eventSerId: String = cfg.as[String]("eventSerId", "event_ser_id")
-  val eventSerManifest: String = cfg.as[String]("eventSerManifest", "event_manifest")
+  val eventSerManifest: String = cfg.as[String]("eventSerManifest", "event_ser_manifest")
 
   val metaPayload: String = cfg.as[String]("metaPayload", "meta_payload")
   val metaSerId: String = cfg.as[String]("metaSerId", "meta_ser_id")

@@ -60,8 +60,6 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
 
   if (canForceInsert && !newDao) {
     it should s"recover ${if (isOracle) "one hundred thousand" else "one million"} events quickly if no ids are missing" in {
-      if (newDao)
-        pending
       withActorSystem { implicit system: ActorSystem =>
         withDatabase { db =>
           val elements = if (isOracle) 100000 else 1000000

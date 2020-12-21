@@ -35,7 +35,7 @@ object AkkaSerialization {
         payload,
         row.sequenceNumber,
         row.persistenceId,
-        row.eventManifest,
+        row.adapterManifest,
         row.deleted,
         sender = null,
         writerUuid = row.writer)

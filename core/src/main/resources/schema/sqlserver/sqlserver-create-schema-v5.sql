@@ -5,7 +5,7 @@ CREATE TABLE event_journal(
     "sequence_number" NUMERIC(10,0) NOT NULL,
     "writer" VARCHAR(255) NOT NULL,
     "write_timestamp" BIGINT NOT NULL,
-    "event_manifest" VARCHAR(MAX) NOT NULL,
+    "adapter_manifest" VARCHAR(MAX) NOT NULL,
     "event_payload" VARBINARY(MAX) NOT NULL,
     "event_ser_id" INTEGER NOT NULL,
     "event_ser_manifest" VARCHAR(MAX) NOT NULL,

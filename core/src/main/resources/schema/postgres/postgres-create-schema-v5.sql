@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS public.event_journal(
 
   writer VARCHAR(255) NOT NULL,
   write_timestamp BIGINT,
-  event_manifest VARCHAR(255),
+  adapter_manifest VARCHAR(255),
 
   event_ser_id INTEGER NOT NULL,
   event_ser_manifest VARCHAR(255) NOT NULL,

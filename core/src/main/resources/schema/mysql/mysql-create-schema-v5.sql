@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS event_journal(
     sequence_number BIGINT NOT NULL,
     writer TEXT NOT NULL,
     write_timestamp BIGINT NOT NULL,
-    event_manifest TEXT NOT NULL,
+    adapter_manifest TEXT NOT NULL,
     event_payload BLOB NOT NULL,
     event_ser_id INTEGER NOT NULL,
     event_ser_manifest TEXT NOT NULL,

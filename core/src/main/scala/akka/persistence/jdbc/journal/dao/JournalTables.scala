@@ -16,7 +16,7 @@ object JournalTables {
       sequenceNumber: Long,
       writer: String,
       writeTimestamp: Long,
-      eventManifest: String,
+      adapterManifest: String,
       eventPayload: Array[Byte],
       eventSerId: Int,
       eventSerManifest: String,
@@ -51,7 +51,7 @@ trait JournalTables {
         sequenceNumber,
         writer,
         timestamp,
-        eventManifest,
+        adapterManifest,
         eventPayload,
         eventSerId,
         eventSerManifest,
@@ -66,7 +66,7 @@ trait JournalTables {
     val deleted: Rep[Boolean] = column[Boolean](journalTableCfg.columnNames.deleted, O.Default(false))
 
     val writer: Rep[String] = column[String](journalTableCfg.columnNames.writer)
-    val eventManifest: Rep[String] = column[String](journalTableCfg.columnNames.eventManifest)
+    val adapterManifest: Rep[String] = column[String](journalTableCfg.columnNames.adapterManifest)
     val timestamp: Rep[Long] = column[Long](journalTableCfg.columnNames.writeTimestamp)
 
     val eventPayload: Rep[Array[Byte]] = column[Array[Byte]](journalTableCfg.columnNames.eventPayload)

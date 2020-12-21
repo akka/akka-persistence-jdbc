@@ -24,15 +24,12 @@ class JournalQueries(
   private val TagTableC = Compiled(TagTable)
 
   def writeJournalRows(xs: Seq[(JournalAkkaSerializationRow, Set[String])])(implicit ec: ExecutionContext) = {
-
-    def insert(row: JournalAkkaSerializationRow, tags: Set[String]) = {
-      for {
-        id <- insertAndReturn += row
-        _ <- TagTableC ++= tags.map(tag => TagRow(id, tag))
-      } yield ()
-    }
-
-    DBIO.sequence(xs.sortBy(event => event._1.sequenceNumber).map { case (row, tags) => insert(row, tags) })
+    val sorted = xs.sortBy((event => event._1.sequenceNumber))
+    for {
+      ids <- insertAndReturn ++= sorted.map(_._1)
+      tagInserts = ids.zip(sorted.map(_._2)).flatMap { case (id, tags) => tags.map(tag => TagRow(id, tag)) }
+      _ <- TagTableC ++= tagInserts
+    } yield ()
   }
 
   private def selectAllJournalForPersistenceIdDesc(persistenceId: Rep[String]) =

@@ -62,7 +62,6 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.cancel()
       }
 
-    /*
       journalOps.withEventsByTag()("number", NoOffset) { tp =>
         tp.request(Int.MaxValue)
         tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
@@ -117,10 +116,6 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.cancel()
         tp.expectNoMessage(NoMsgTime)
       }
-
-
-     */
-
     }
   }
 

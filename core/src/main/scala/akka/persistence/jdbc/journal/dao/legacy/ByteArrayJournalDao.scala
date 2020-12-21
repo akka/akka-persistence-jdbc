@@ -71,8 +71,7 @@ trait BaseByteArrayJournalDao
       "To disable it in this current version you must set the property 'akka-persistence-jdbc.logicalDeletion.enable' to false.")
   }
 
-  def writeJournalRows(xs: Seq[JournalRow]): Future[Unit] = {
-    // Write atomically without auto-commit
+  def writeJournalRows(xs: Seq[JournalRow]): Future[Unit] = { // Write atomically without auto-commit
     db.run(queries.writeJournalRows(xs).transactionally).map(_ => ())
   }
 

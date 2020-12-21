@@ -25,7 +25,7 @@ private[jdbc] trait DropCreate {
   def db: Database
   def config: Config
 
-  def newDao =
+  def newDao: Boolean =
     config.getString("jdbc-journal.dao") == "akka.persistence.jdbc.journal.dao.AkkaSerializerJournalDao"
 
   /**
@@ -34,8 +34,8 @@ private[jdbc] trait DropCreate {
   @InternalApi
   private[jdbc] def dropAndCreate(schemaType: SchemaType): Unit = {
     // blocking calls, usually done in our before test methods
-    SchemaUtilsImpl.dropWithSlick(schemaType, logger, db)
-    SchemaUtilsImpl.createWithSlick(schemaType, logger, db)
+    SchemaUtilsImpl.dropWithSlick(schemaType, logger, db, !newDao)
+    SchemaUtilsImpl.createWithSlick(schemaType, logger, db, !newDao)
   }
 
   def withSession[A](f: Session => A): A = {

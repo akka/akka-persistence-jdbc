@@ -79,11 +79,7 @@ private[jdbc] object SchemaUtilsImpl {
    * INTERNAL API
    */
   @InternalApi
-  private[jdbc] def dropWithSlick(
-      schemaType: SchemaType,
-      logger: Logger,
-      db: Database,
-      legacy: Boolean = false): Done = {
+  private[jdbc] def dropWithSlick(schemaType: SchemaType, logger: Logger, db: Database, legacy: Boolean): Done = {
     val (fileToLoad, separator) = dropScriptFor(schemaType, legacy)
     SchemaUtilsImpl.applyScriptWithSlick(SchemaUtilsImpl.fromClasspathAsString(fileToLoad), separator, logger, db)
   }
@@ -92,11 +88,7 @@ private[jdbc] object SchemaUtilsImpl {
    * INTERNAL API
    */
   @InternalApi
-  private[jdbc] def createWithSlick(
-      schemaType: SchemaType,
-      logger: Logger,
-      db: Database,
-      legacy: Boolean = false): Done = {
+  private[jdbc] def createWithSlick(schemaType: SchemaType, logger: Logger, db: Database, legacy: Boolean): Done = {
     val (fileToLoad, separator) = createScriptFor(schemaType, legacy)
     SchemaUtilsImpl.applyScriptWithSlick(SchemaUtilsImpl.fromClasspathAsString(fileToLoad), separator, logger, db)
   }

@@ -328,8 +328,11 @@ trait PostgresCleaner extends QueryTestSpec {
 trait MysqlCleaner extends QueryTestSpec {
 
   def clearMySQL(): Unit = {
-    tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
-    withStatement(stmt => stmt.executeUpdate(s"ALTER TABLE $journalTableName AUTO_INCREMENT = 1;"))
+    withStatement { stmt =>
+      stmt.execute("SET FOREIGN_KEY_CHECKS = 0")
+      tables.foreach { name => stmt.executeUpdate(s"TRUNCATE $name") }
+      stmt.execute("SET FOREIGN_KEY_CHECKS = 1")
+    }
   }
 
   override def beforeAll(): Unit = {

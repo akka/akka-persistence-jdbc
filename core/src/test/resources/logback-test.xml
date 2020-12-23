@@ -6,7 +6,7 @@
             <level>debug</level>
         </filter>
         <encoder>
-            <pattern>%date{ISO8601} - %logger -> %-5level[%thread] %logger{0} - %msg%n</pattern>
+            <pattern>%date{ISO8601} - %logger -> %-5level[%thread] [%X{akkaSource} %X{sourceActorSystem} %logger{0} - %msg%n</pattern>
         </encoder>
     </appender>
 

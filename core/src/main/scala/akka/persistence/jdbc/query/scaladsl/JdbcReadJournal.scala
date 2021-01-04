@@ -275,10 +275,13 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
       .mapConcat(identity)
   }
 
-  def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] =
-    Source.future(readJournalDao.maxJournalSequence()).flatMapConcat { maxOrderingInDb =>
-      eventsByTag(tag, offset, terminateAfterOffset = Some(maxOrderingInDb))
-    }
+  def currentEventsByTag(tag: String, offset: Long): Source[EventEnvelope, NotUsed] = {
+    Source
+      .futureSource(readJournalDao.maxJournalSequence().map { maxOrderingInDb =>
+        eventsByTag(tag, offset, terminateAfterOffset = Some(maxOrderingInDb))
+      })
+      .mapMaterializedValue(_ => NotUsed)
+  }
 
   /**
    * Query events that have a specific tag.

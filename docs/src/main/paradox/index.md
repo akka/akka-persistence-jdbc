@@ -1,6 +1,6 @@
 # Akka Persistence JDBC
 
-.
+The Akka Persistence JDBC plugin allows for using JDBC-compliant databases as backend for @extref:[Akka Persistence](akka:persistence.html) and @extref:[Akka Persistence Query](akka:persistence-query.html).
 
 @@toc { depth=2 }
 

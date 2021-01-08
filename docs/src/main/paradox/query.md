@@ -1,31 +1,14 @@
 # Persistence Query
 
-@@@ div { .group-scala }
-
-## How to get the ReadJournal using Scala
+## How to get the ReadJournal
 
 The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery` extension:
 
-```scala
-import akka.persistence.query.PersistenceQuery
-import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
+Scala
+:  @@snip[snip](/core/src/test/scala/akka/persistence/jdbc/ScaladslSnippets.scala) { #read-journal }
 
-val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
-```
-@@@
-
-@@@ div { .group-java }
-## How to get the ReadJournal using Java
-
-The `ReadJournal` is retrieved via the `akka.persistence.query.PersistenceQuery` extension:
-
-```java
-import akka.persistence.query.PersistenceQuery;
-import akka.persistence.jdbc.query.javadsl.JdbcReadJournal;
-
-final JdbcReadJournal readJournal = PersistenceQuery.get(system).getReadJournalFor(JdbcReadJournal.class, JdbcReadJournal.Identifier());
-```
-@@@
+Java
+: @@snip[snip](/core/src/test/java/akka/persistence/jdbc/JavadslSnippets.java) { #read-journal }
 
 ## Persistence Query
 
@@ -35,25 +18,12 @@ The plugin supports the following queries:
 
 `allPersistenceIds` and `currentPersistenceIds` are used for retrieving all persistenceIds of all persistent actors.
 
-```scala
-import akka.actor.ActorSystem
-import akka.stream.{Materializer, ActorMaterializer}
-import akka.stream.scaladsl.Source
-import akka.persistence.query.PersistenceQuery
-import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
-
-implicit val system: ActorSystem = ActorSystem()
-implicit val mat: Materializer = ActorMaterializer()(system)
-val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
-
-val willNotCompleteTheStream: Source[String, NotUsed] = readJournal.allPersistenceIds()
-
-val willCompleteTheStream: Source[String, NotUsed] = readJournal.currentPersistenceIds()
-```
+Scala
+:  @@snip[snip](/core/src/test/scala/akka/persistence/jdbc/ScaladslSnippets.scala) { #persistence-ids }
 
 The returned event stream is unordered and you can expect different order for multiple executions of the query.
 
-When using the `allPersistenceIds` query, the stream is not completed when it reaches the end of the currently used persistenceIds,
+When using the `persistenceIds` query, the stream is not completed when it reaches the end of the currently used persistenceIds,
 but it continues to push new persistenceIds when new persistent actors are created.
 
 When using the `currentPersistenceIds` query, the stream is completed when the end of the current list of persistenceIds is reached,

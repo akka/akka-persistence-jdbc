@@ -4,6 +4,8 @@ The Akka Persistence JDBC plugin allows for using JDBC-compliant databases as ba
 
 akka-persistence-jdbc writes journal and snapshot entries to a configured JDBC store. It implements the full akka-persistence-query API and is therefore very useful for implementing DDD-style application models using Akka and Scala for creating reactive applications.
 
+Akka Persistence JDBC requires Akka $akka.version$ or later. It uses extref:[Slick](slick:) $slick.version$ internally to access the database via JDBC, this does not require user code to make use of Slick.
+
 ## Module info
 
 @@dependency [sbt,Maven,Gradle] {

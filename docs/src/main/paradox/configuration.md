@@ -29,22 +29,14 @@ For testing purposes the journal and snapshot tables can be created programmatic
 
 
 Scala
-:  ```scala
-import akka.persistence.jdbc.testkit.scaladsl.SchemaUtils
-implicit val system: ActorSystem = ActorSystem("example")
-val done: Future[Done] = SchemaUtils.createIfNotExists()
-```
+:  @@snip[snip](/core/src/test/scala/akka/persistence/jdbc/ScaladslSnippets.scala) { #create }
 
 Java
-:  ```java
-import akka.persistence.jdbc.testkit.javadsl.SchemaUtils;
-ActorSystem actorSystem = ActorSystem.create("example");
-CompletionStage<Done> done = SchemaUtils.createIfNotExists(actorSystem);
-```
+:  @@snip[snip](/core/src/test/java/akka/persistence/jdbc/JavadslSnippets.java) { #create }
 
 A `dropIfExists` variant is also available.
 
-**Note**: `SchemaUtils` was introduced in version 4.0.1.
+**Note**: `SchemaUtils` was introduced in version 5.0.0.
 
 
 ## Reference Configuration
@@ -59,21 +51,39 @@ There is the possibility to create a separate database connection pool per journ
 one pool for the snapshot-journal, and one pool for the read-journal). This is the default and the following example
 configuration shows how this is configured:
 
-- @extref:[Postgres](github:/core/src/test/resources/postgres-application.conf)
-- @extref:[MySQL](github:/core/src/test/resources/mysql-application.conf)
-- @extref:[H2](github:/core/src/test/resources/h2-application.conf)
-- @extref:[Oracle](github:/core/src/test/resources/oracle-application.conf)
-- @extref:[SQL Server](github:/core/src/test/resources/sqlserver-application.conf)
+Postgres
+: @@snip[Postgres](/core/src/test/resources/postgres-application.conf)
+
+MySQL
+: @@snip[MySQL](/core/src/test/resources/mysql-application.conf)
+
+H2
+: @@snip[H2](/core/src/test/resources/h2-application.conf)
+
+Oracle
+: @@snip[Oracle](/core/src/test/resources/oracle-application.conf)
+
+SQL Server
+: @@snip[SQL Server](/core/src/test/resources/sqlserver-application.conf)
 
 ### Sharing the database connection pool between the journals
 
 In order to create only one connection pool which is shared between all journals the following configuration can be used:
 
-- @extref:[Postgres](github:/core/src/test/resources/postgres-shared-db-application.conf)
-- @extref:[MySQL](github:/core/src/test/resources/mysql-shared-db-application.conf)
-- @extref:[H2](github:/core/src/test/resources/h2-shared-db-application.conf)
-- @extref:[Oracle](github:/core/src/test/resources/oracle-shared-db-application.conf)
-- @extref:[SQL Server](github:/core/src/test/resources/sqlserver-shared-db-application.conf)
+Postgres
+: @@snip[Postgres](/core/src/test/resources/postgres-shared-db-application.conf)
+
+MySQL
+: @@snip[MySQL](/core/src/test/resources/mysql-shared-db-application.conf)
+
+H2
+: @@snip[H2](/core/src/test/resources/h2-shared-db-application.conf)
+
+Oracle
+: @@snip[Oracle](/core/src/test/resources/oracle-shared-db-application.conf)
+
+SQL Server
+: @@snip[SQL Server](/core/src/test/resources/sqlserver-shared-db-application.conf)
 
 ### Customized loading of the db connection
 

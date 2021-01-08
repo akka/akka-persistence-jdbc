@@ -83,7 +83,8 @@ class DefaultSnapshotDao(
   override def snapshotForMaxSequenceNr(
       persistenceId: String,
       maxSequenceNr: Long): Future[Option[(SnapshotMetadata, Any)]] =
-    db.run(queries.selectOneByPersistenceIdAndMaxSequenceNr((persistenceId, maxSequenceNr)).result).map(zeroOrOneSnapshot)
+    db.run(queries.selectOneByPersistenceIdAndMaxSequenceNr((persistenceId, maxSequenceNr)).result)
+      .map(zeroOrOneSnapshot)
 
   override def snapshotForMaxSequenceNrAndMaxTimestamp(
       persistenceId: String,
@@ -120,6 +121,8 @@ class DefaultSnapshotDao(
       maxSequenceNr: Long,
       maxTimestamp: Long): Future[Unit] =
     db.run(
-      queries.selectByPersistenceIdUpToMaxSequenceNrAndMaxTimestamp((persistenceId, maxSequenceNr, maxTimestamp)).delete)
+      queries
+        .selectByPersistenceIdUpToMaxSequenceNrAndMaxTimestamp((persistenceId, maxSequenceNr, maxTimestamp))
+        .delete)
       .map(_ => ())((ExecutionContexts.parasitic))
 }

@@ -110,15 +110,21 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 1, 1) { tp =>
-        tp.request(Int.MaxValue).expectNext(EventEnvelope(Sequence(1), "my-1", 1, EventRestored("1"), timestamp = 0L)).expectComplete()
+        tp.request(Int.MaxValue)
+          .expectNext(EventEnvelope(Sequence(1), "my-1", 1, EventRestored("1"), timestamp = 0L))
+          .expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 2, 2) { tp =>
-        tp.request(Int.MaxValue).expectNext(EventEnvelope(Sequence(2), "my-1", 2, EventRestored("2"), timestamp = 0L)).expectComplete()
+        tp.request(Int.MaxValue)
+          .expectNext(EventEnvelope(Sequence(2), "my-1", 2, EventRestored("2"), timestamp = 0L))
+          .expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 3, 3) { tp =>
-        tp.request(Int.MaxValue).expectNext(EventEnvelope(Sequence(3), "my-1", 3, EventRestored("3"), timestamp = 0L)).expectComplete()
+        tp.request(Int.MaxValue)
+          .expectNext(EventEnvelope(Sequence(3), "my-1", 3, EventRestored("3"), timestamp = 0L))
+          .expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 2, 3) { tp =>

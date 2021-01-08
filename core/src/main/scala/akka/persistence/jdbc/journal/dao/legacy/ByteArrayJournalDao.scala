@@ -5,12 +5,7 @@
 
 package akka.persistence.jdbc.journal.dao.legacy
 
-import akka.persistence.jdbc.journal.dao.{
-  BaseDao,
-  BaseJournalDaoWithReadMessages,
-  H2Compat,
-  JournalDaoWithUpdates
-}
+import akka.persistence.jdbc.journal.dao.{ BaseDao, BaseJournalDaoWithReadMessages, H2Compat, JournalDaoWithUpdates }
 import akka.persistence.jdbc.config.{ BaseDaoConfig, JournalConfig }
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.persistence.{ AtomicWrite, PersistentRepr }

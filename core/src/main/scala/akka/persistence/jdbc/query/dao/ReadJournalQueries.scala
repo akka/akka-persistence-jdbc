@@ -5,11 +5,7 @@
 
 package akka.persistence.jdbc.query.dao
 
-import akka.persistence.jdbc.config.{
-  EventJournalTableConfiguration,
-  EventTagTableConfiguration,
-  ReadJournalConfig
-}
+import akka.persistence.jdbc.config.{ EventJournalTableConfiguration, EventTagTableConfiguration, ReadJournalConfig }
 import akka.persistence.jdbc.journal.dao.JournalTables
 import slick.jdbc.JdbcProfile
 

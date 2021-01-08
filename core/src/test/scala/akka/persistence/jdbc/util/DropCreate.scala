@@ -25,8 +25,7 @@ private[jdbc] trait DropCreate {
   def db: Database
   def config: Config
 
-  def newDao: Boolean =
-    config.getString("jdbc-journal.dao") == "akka.persistence.jdbc.journal.dao.AkkaSerializerJournalDao"
+  def newDao: Boolean = !SchemaUtilsImpl.legacy(config)
 
   /**
    * INTERNAL API

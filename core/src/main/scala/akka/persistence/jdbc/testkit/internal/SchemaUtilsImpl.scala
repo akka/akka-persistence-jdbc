@@ -8,15 +8,14 @@ package akka.persistence.jdbc.testkit.internal
 import java.sql.Statement
 
 import scala.concurrent.Future
-
 import akka.Done
-import akka.actor.ClassicActorSystemProvider
+import akka.actor.{ ActorSystem, ClassicActorSystemProvider }
 import akka.annotation.InternalApi
 import akka.dispatch.Dispatchers
 import akka.persistence.jdbc.db.SlickDatabase
 import akka.persistence.jdbc.db.SlickExtension
+import com.typesafe.config.Config
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import slick.jdbc.H2Profile
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.JdbcProfile
@@ -31,18 +30,17 @@ import slick.jdbc.SQLServerProfile
 @InternalApi
 private[jdbc] object SchemaUtilsImpl {
 
-  private val logger = LoggerFactory.getLogger("akka.persistence.jdbc.testkit.internal.SchemaUtilsImpl")
+  def legacy(config: Config): Boolean =
+    config.getString("jdbc-journal.dao") != "akka.persistence.jdbc.journal.dao.DefaultJournalDao"
 
   /**
    * INTERNAL API
    */
   @InternalApi
   private[jdbc] def dropIfExists(logger: Logger)(implicit actorSystem: ClassicActorSystemProvider): Future[Done] = {
-
-    val legacy = actorSystem.classicSystem.settings.config
-        .getString("jdbc-journal.dao") != "akka.persistence.jdbc.journal.dao.AkkaSerializerJournalDao"
     val slickDb: SlickDatabase = loadSlickDatabase("jdbc-journal")
-    val (fileToLoad, separator) = dropScriptFor(slickProfileToSchemaType(slickDb.profile), legacy)
+    val (fileToLoad, separator) =
+      dropScriptFor(slickProfileToSchemaType(slickDb.profile), legacy(actorSystem.classicSystem.settings.config))
 
     val blockingEC = actorSystem.classicSystem.dispatchers.lookup(Dispatchers.DefaultBlockingDispatcherId)
     Future(applyScriptWithSlick(fromClasspathAsString(fileToLoad), separator, logger, slickDb.database))(blockingEC)
@@ -55,10 +53,9 @@ private[jdbc] object SchemaUtilsImpl {
   private[jdbc] def createIfNotExists(logger: Logger)(
       implicit actorSystem: ClassicActorSystemProvider): Future[Done] = {
 
-    val legacy = actorSystem.classicSystem.settings.config
-        .getString("jdbc-journal.dao") != "akka.persistence.jdbc.journal.dao.AkkaSerializerJournalDao"
     val slickDb: SlickDatabase = loadSlickDatabase("jdbc-journal")
-    val (fileToLoad, separator) = createScriptFor(slickProfileToSchemaType(slickDb.profile), legacy)
+    val (fileToLoad, separator) =
+      createScriptFor(slickProfileToSchemaType(slickDb.profile), legacy(actorSystem.classicSystem.settings.config))
 
     val blockingEC = actorSystem.classicSystem.dispatchers.lookup(Dispatchers.DefaultBlockingDispatcherId)
     Future(applyScriptWithSlick(fromClasspathAsString(fileToLoad), separator, logger, slickDb.database))(blockingEC)

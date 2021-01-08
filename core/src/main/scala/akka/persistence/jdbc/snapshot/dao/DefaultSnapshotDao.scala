@@ -17,7 +17,7 @@ import akka.persistence.jdbc.journal.dao.AkkaSerialization
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Success, Try }
 
-class AkkaSerializerSnapshotDao(
+class DefaultSnapshotDao(
     db: JdbcBackend#Database,
     profile: JdbcProfile,
     snapshotConfig: SnapshotConfig,

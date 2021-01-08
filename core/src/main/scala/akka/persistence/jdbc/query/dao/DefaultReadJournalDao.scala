@@ -17,7 +17,7 @@ import slick.jdbc.JdbcProfile
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
-class AkkaSerializerReadJournalDao(
+class DefaultReadJournalDao(
     val db: Database,
     val profile: JdbcProfile,
     val readJournalConfig: ReadJournalConfig,

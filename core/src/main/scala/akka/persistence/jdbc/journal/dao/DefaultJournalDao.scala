@@ -21,13 +21,11 @@ import scala.collection.immutable.{ Nil, Seq }
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
-object AkkaSerializerJournalDao {}
-
 /**
  * A [[JournalDao]] that uses Akka serialization to serialize the payload and store
  * the manifest and serializer id used.
  */
-class AkkaSerializerJournalDao(
+class DefaultJournalDao(
     val db: Database,
     val profile: JdbcProfile,
     val journalConfig: JournalConfig,

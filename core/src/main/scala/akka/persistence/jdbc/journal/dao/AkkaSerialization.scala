@@ -5,12 +5,17 @@
 
 package akka.persistence.jdbc.journal.dao
 
+import akka.annotation.InternalApi
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.journal.dao.JournalTables.JournalAkkaSerializationRow
 import akka.serialization.{ Serialization, Serializers }
 
 import scala.util.{ Success, Try }
 
+/**
+ * INTERNAL API
+ */
+@InternalApi
 object AkkaSerialization {
 
   case class AkkaSerialized(serId: Int, serManifest: String, payload: Array[Byte])

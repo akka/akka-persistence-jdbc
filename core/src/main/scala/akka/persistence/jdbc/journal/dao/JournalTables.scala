@@ -5,9 +5,14 @@
 
 package akka.persistence.jdbc.journal.dao
 
+import akka.annotation.InternalApi
 import akka.persistence.jdbc.config.{ EventJournalTableConfiguration, EventTagTableConfiguration }
 import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, TagRow }
 
+/**
+ * INTERNAL API
+ */
+@InternalApi
 object JournalTables {
   case class JournalAkkaSerializationRow(
       ordering: Long,
@@ -29,7 +34,9 @@ object JournalTables {
 
 /**
  * For the schema added in 5.0.0
+ * INTERNAL API
  */
+@InternalApi
 trait JournalTables {
   val profile: slick.jdbc.JdbcProfile
 

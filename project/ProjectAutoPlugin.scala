@@ -46,19 +46,19 @@ object ProjectAutoPlugin extends AutoPlugin {
         "-language:implicitConversions",
         "-target:jvm-1.8"),
     Compile / scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) =>
-        disciplineScalacOptions -- Set(
-          "-Ywarn-inaccessible",
-          "-Ywarn-infer-any",
-          "-Ywarn-nullary-override",
-          "-Ywarn-nullary-unit",
-          "-Ypartial-unification",
-          "-Yno-adapted-args")
-      case Some((2, 12)) =>
-        disciplineScalacOptions
-      case _ =>
-        Nil
-    }).toSeq,
+        case Some((2, 13)) =>
+          disciplineScalacOptions -- Set(
+            "-Ywarn-inaccessible",
+            "-Ywarn-infer-any",
+            "-Ywarn-nullary-override",
+            "-Ywarn-nullary-unit",
+            "-Ypartial-unification",
+            "-Yno-adapted-args")
+        case Some((2, 12)) =>
+          disciplineScalacOptions
+        case _ =>
+          Nil
+      }).toSeq,
     scalacOptions += "-Ydelambdafy:method",
     Compile / doc / scalacOptions := scalacOptions.value ++ Seq(
         "-doc-title",

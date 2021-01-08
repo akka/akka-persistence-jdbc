@@ -96,12 +96,12 @@ jobs:
         - PRE_CMD="./scripts/launch-postgres.sh"
         - CMD="++2.13.1 It/testOnly akka.persistence.jdbc.integration.Postgres*"
 
-   - name: "SQL Server integration tests with Scala 2.13 and AdoptOpenJDK 11 (old dao)"
-     env:
-       - JDK="adopt@~1.11-0"
-       - _JAVA_OPTIONS="-Djdbc-journal.dao=akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao -Djdbc-snapshot-store.dao=akka.persistence.jdbc.snapshot.dao.legacy.ByteArraySnapshotDao -Djdbc-read-journal.dao=akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao"
-       - PRE_CMD="./scripts/launch-sqlserver.sh"
-       - CMD="++2.13.1 It/testOnly akka.persistence.jdbc.integration.SqlServer*"
+    - name: "SQL Server integration tests with Scala 2.13 and AdoptOpenJDK 11 (old dao)"
+      env:
+        - JDK="adopt@~1.11-0"
+        - _JAVA_OPTIONS="-Djdbc-journal.dao=akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao -Djdbc-snapshot-store.dao=akka.persistence.jdbc.snapshot.dao.legacy.ByteArraySnapshotDao -Djdbc-read-journal.dao=akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao"
+        - PRE_CMD="./scripts/launch-sqlserver.sh"
+        - CMD="++2.13.1 It/testOnly akka.persistence.jdbc.integration.SqlServer*"
 
 
     - stage: whitesource

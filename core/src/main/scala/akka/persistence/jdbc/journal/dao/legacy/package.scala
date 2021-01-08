@@ -3,11 +3,19 @@
  * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
  */
 
-package akka.persistence.jdbc.journal
+package akka.persistence.jdbc.journal.dao
 
 import scala.collection.immutable.Set
 
-package object dao {
+package object legacy {
+  final case class JournalRow(
+      ordering: Long,
+      deleted: Boolean,
+      persistenceId: String,
+      sequenceNumber: Long,
+      message: Array[Byte],
+      tags: Option[String] = None)
+
   def encodeTags(tags: Set[String], separator: String): Option[String] =
     if (tags.isEmpty) None else Option(tags.mkString(separator))
 

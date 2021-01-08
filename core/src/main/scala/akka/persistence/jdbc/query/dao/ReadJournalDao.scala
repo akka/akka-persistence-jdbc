@@ -3,17 +3,16 @@
  * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
  */
 
-package akka.persistence.jdbc
-package query.dao
+package akka.persistence.jdbc.query.dao
 
 import akka.NotUsed
 import akka.persistence.PersistentRepr
+import akka.persistence.jdbc.journal.dao.JournalDaoWithReadMessages
 import akka.stream.scaladsl.Source
-import scala.collection.immutable._
+
+import scala.collection.immutable.Set
 import scala.concurrent.Future
 import scala.util.Try
-
-import akka.persistence.jdbc.journal.dao.JournalDaoWithReadMessages
 
 trait ReadJournalDao extends JournalDaoWithReadMessages {
 

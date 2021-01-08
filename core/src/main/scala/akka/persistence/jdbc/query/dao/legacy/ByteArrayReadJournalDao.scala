@@ -3,29 +3,27 @@
  * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
  */
 
-package akka.persistence.jdbc
-package query.dao
+package akka.persistence.jdbc.query.dao.legacy
 
 import akka.NotUsed
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.config.ReadJournalConfig
-import akka.persistence.jdbc.journal.dao.BaseJournalDaoWithReadMessages
-import akka.persistence.jdbc.journal.dao.ByteArrayJournalSerializer
-import akka.persistence.jdbc.query.dao.TagFilterFlow.perfectlyMatchTag
+import akka.persistence.jdbc.journal.dao.{ BaseJournalDaoWithReadMessages, H2Compat }
+import akka.persistence.jdbc.journal.dao.legacy.{ ByteArrayJournalSerializer, JournalRow }
+import akka.persistence.jdbc.query.dao.ReadJournalDao
+import akka.persistence.jdbc.query.dao.legacy.TagFilterFlow.perfectlyMatchTag
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.{ Flow, Source }
-import slick.jdbc.JdbcProfile
-import slick.jdbc.GetResult
 import slick.jdbc.JdbcBackend._
+import slick.jdbc.{ GetResult, JdbcProfile }
+
 import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
-trait BaseByteArrayReadJournalDao extends ReadJournalDao with BaseJournalDaoWithReadMessages {
+trait BaseByteArrayReadJournalDao extends ReadJournalDao with BaseJournalDaoWithReadMessages with H2Compat {
   def db: Database
   val profile: JdbcProfile
   def queries: ReadJournalQueries
@@ -35,7 +33,7 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao with BaseJournalDaoWith
   import profile.api._
 
   override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
-    Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct(max).result))
+    Source.fromPublisher(db.stream(queries.allPersistenceIdsDistinct(correctMaxForH2Driver(max)).result))
 
   override def eventsByTag(
       tag: String,
@@ -43,7 +41,7 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao with BaseJournalDaoWith
       maxOffset: Long,
       max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed] = {
 
-    val publisher = db.stream(queries.eventsByTag(s"%$tag%", offset, maxOffset, max).result)
+    val publisher = db.stream(queries.eventsByTag(s"%$tag%", offset, maxOffset, correctMaxForH2Driver(max)).result)
     // applies workaround for https://github.com/akka/akka-persistence-jdbc/issues/168
     Source
       .fromPublisher(publisher)
@@ -57,7 +55,9 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao with BaseJournalDaoWith
       toSequenceNr: Long,
       max: Long): Source[Try[(PersistentRepr, Long)], NotUsed] = {
     Source
-      .fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
+      .fromPublisher(
+        db.stream(
+          queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max)).result))
       .via(serializer.deserializeFlow)
       .map {
         case Success((repr, _, ordering)) => Success(repr -> ordering)
@@ -160,49 +160,13 @@ trait OracleReadJournalDao extends ReadJournalDao {
   }
 }
 
-trait H2ReadJournalDao extends ReadJournalDao {
-  val profile: JdbcProfile
-
-  private def isH2Driver(profile: JdbcProfile): Boolean =
-    profile match {
-      case slick.jdbc.H2Profile => true
-      case _                    => false
-    }
-
-  abstract override def allPersistenceIdsSource(max: Long): Source[String, NotUsed] =
-    super.allPersistenceIdsSource(correctMaxForH2Driver(max))
-
-  abstract override def eventsByTag(
-      tag: String,
-      offset: Long,
-      maxOffset: Long,
-      max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed] =
-    super.eventsByTag(tag, offset, maxOffset, correctMaxForH2Driver(max))
-
-  abstract override def messages(
-      persistenceId: String,
-      fromSequenceNr: Long,
-      toSequenceNr: Long,
-      max: Long): Source[Try[(PersistentRepr, Long)], NotUsed] =
-    super.messages(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max))
-
-  private def correctMaxForH2Driver(max: Long): Long = {
-    if (isH2Driver(profile)) {
-      Math.min(max, Int.MaxValue) // H2 only accepts a LIMIT clause as an Integer
-    } else {
-      max
-    }
-  }
-}
-
 class ByteArrayReadJournalDao(
     val db: Database,
     val profile: JdbcProfile,
     val readJournalConfig: ReadJournalConfig,
     serialization: Serialization)(implicit val ec: ExecutionContext, val mat: Materializer)
     extends BaseByteArrayReadJournalDao
-    with OracleReadJournalDao
-    with H2ReadJournalDao {
+    with OracleReadJournalDao {
   val queries = new ReadJournalQueries(profile, readJournalConfig)
   val serializer = new ByteArrayJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator)
 }

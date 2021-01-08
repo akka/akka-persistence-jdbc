@@ -41,6 +41,9 @@ abstract class JdbcJournalSpec(config: Config, schemaType: SchemaType)
 
   lazy val db = SlickExtension(system).database(cfg).database
 
+  protected override def supportsSerialization: CapabilityFlag = newDao
+  protected override def supportsMetadata: CapabilityFlag = newDao
+
   override def beforeAll(): Unit = {
     dropAndCreate(schemaType)
     super.beforeAll()

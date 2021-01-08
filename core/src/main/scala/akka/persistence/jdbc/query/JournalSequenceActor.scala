@@ -7,9 +7,9 @@ package akka.persistence.jdbc
 package query
 
 import akka.actor.{ Actor, ActorLogging, Props, Status, Timers }
-import akka.persistence.jdbc.query.dao.ReadJournalDao
 import akka.pattern.pipe
 import akka.persistence.jdbc.config.JournalSequenceRetrievalConfig
+import akka.persistence.jdbc.query.dao.ReadJournalDao
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 

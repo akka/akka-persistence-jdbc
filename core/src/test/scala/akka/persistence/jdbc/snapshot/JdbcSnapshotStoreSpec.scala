@@ -5,6 +5,7 @@
 
 package akka.persistence.jdbc.snapshot
 
+import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate }
 import akka.persistence.jdbc.db.SlickDatabase
@@ -32,6 +33,9 @@ abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType)
   lazy val journalConfig = new JournalConfig(cfg)
 
   lazy val db = SlickDatabase.database(cfg, new SlickConfiguration(cfg.getConfig("slick")), "slick.db")
+
+  protected override def supportsSerialization: CapabilityFlag = newDao
+  protected override def supportsMetadata: CapabilityFlag = newDao
 
   override def beforeAll(): Unit = {
     dropAndCreate(schemaType)

@@ -22,8 +22,9 @@ script:
 jobs:
   include:
     - stage: check
-      env: CMD="verifyCodeStyle; mimaReportBinaryIssues"
+      env: CMD="verifyCodeStyle" # mima removed until 5.0 M0 created
       name: "Code style and binary compatibility check. Run locally with: sbt 'verifyCodeStyle; mimaReportBinaryIssues'"
+
     - env: CMD="+Test/compile"
       name: "Compile all code with Scala 2.12 and 2.13"
     - env: CMD="docs/paradox"
@@ -73,6 +74,35 @@ jobs:
         - JDK="adopt@~1.11-0"
         - PRE_CMD="./scripts/launch-sqlserver.sh"
         - CMD="++2.13.1 It/testOnly akka.persistence.jdbc.integration.SqlServer*"
+
+    - name: "MySQL integration tests with Scala 2.13 and AdoptOpenJDK 11 (old dao)"
+      env:
+        - JDK="adopt@~1.11-0"
+        - _JAVA_OPTIONS="-Djdbc-journal.dao=akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao -Djdbc-snapshot-store.dao=akka.persistence.jdbc.snapshot.dao.legacy.ByteArraySnapshotDao -Djdbc-read-journal.dao=akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao"
+        - PRE_CMD="./scripts/launch-mysql.sh"
+        - CMD="++2.13.1 It/testOnly akka.persistence.jdbc.integration.MySQL*"
+
+    - name: "Oracle integration tests with Scala 2.13 and AdoptOpenJDK 11 (old dao)"
+      env:
+        - JDK="adopt@~1.11-0"
+        - _JAVA_OPTIONS="-Djdbc-journal.dao=akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao -Djdbc-snapshot-store.dao=akka.persistence.jdbc.snapshot.dao.legacy.ByteArraySnapshotDao -Djdbc-read-journal.dao=akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao"
+        - PRE_CMD="./scripts/launch-oracle.sh"
+        - CMD="++2.13.1 It/testOnly akka.persistence.jdbc.integration.Oracle*"
+
+    - name: "PostgreSQL integration tests with Scala 2.13 and AdoptOpenJDK 11 (old dao)"
+      env:
+        - JDK="adopt@~1.11-0"
+        - _JAVA_OPTIONS="-Djdbc-journal.dao=akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao -Djdbc-snapshot-store.dao=akka.persistence.jdbc.snapshot.dao.legacy.ByteArraySnapshotDao -Djdbc-read-journal.dao=akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao"
+        - PRE_CMD="./scripts/launch-postgres.sh"
+        - CMD="++2.13.1 It/testOnly akka.persistence.jdbc.integration.Postgres*"
+
+    - name: "SQL Server integration tests with Scala 2.13 and AdoptOpenJDK 11 (old dao)"
+      env:
+        - JDK="adopt@~1.11-0"
+        - _JAVA_OPTIONS="-Djdbc-journal.dao=akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao -Djdbc-snapshot-store.dao=akka.persistence.jdbc.snapshot.dao.legacy.ByteArraySnapshotDao -Djdbc-read-journal.dao=akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao"
+        - PRE_CMD="./scripts/launch-sqlserver.sh"
+        - CMD="++2.13.1 It/testOnly akka.persistence.jdbc.integration.SqlServer*"
+
 
     - stage: whitesource
       script: git branch -f "$TRAVIS_BRANCH" && git checkout "$TRAVIS_BRANCH" && sbt whitesourceCheckPolicies whitesourceUpdate

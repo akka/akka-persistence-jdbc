@@ -31,6 +31,13 @@ abstract class SingleActorSystemPerTestSpec(val config: Config)
 
   val cfg = config.getConfig("jdbc-journal")
   val journalConfig = new JournalConfig(cfg)
+  val journalTableName =
+    if (newDao) journalConfig.eventJournalTableConfiguration.tableName
+    else journalConfig.journalTableConfiguration.tableName
+  val tables =
+    if (newDao)
+      List(journalConfig.eventTagTableConfiguration.tableName, journalConfig.eventJournalTableConfiguration.tableName)
+    else List(journalConfig.journalTableConfiguration.tableName)
   val profile = if (cfg.hasPath("slick.profile")) {
     SlickDatabase.profile(cfg, "slick")
   } else SlickDatabase.profile(config, "akka-persistence-jdbc.shared-databases.slick")

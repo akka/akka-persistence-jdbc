@@ -11,17 +11,17 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.persistence.{ AtomicWrite, PersistentRepr }
-import akka.persistence.jdbc.journal.dao.{ ByteArrayJournalDao, JournalTables }
+import akka.persistence.jdbc.journal.dao.legacy.{ ByteArrayJournalDao, JournalTables }
 import akka.serialization.SerializationExtension
 import akka.stream.scaladsl.{ Sink, Source }
 import com.typesafe.config.{ ConfigValue, ConfigValueFactory }
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.slf4j.LoggerFactory
+
 import scala.collection.immutable
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success }
-
 import akka.stream.testkit.scaladsl.TestSink
 import org.scalatest.matchers.should.Matchers
 
@@ -54,6 +54,8 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
   behavior.of("Replaying Persistence Actor")
 
   it should "stream events" in {
+    if (newDao)
+      pending
     withActorSystem { implicit system: ActorSystem =>
       withDatabase { db =>
         implicit val ec: ExecutionContextExecutor = system.dispatcher

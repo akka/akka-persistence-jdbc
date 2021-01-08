@@ -15,14 +15,6 @@ import akka.testkit.TestProbe
 abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTestSpec(config) {
   import QueryTestSpec.EventEnvelopeProbeOps
 
-  it should "not find any events for unknown pid" in withActorSystem { implicit system =>
-    val journalOps = new ScalaJdbcReadJournalOperations(system)
-    journalOps.withCurrentEventsByPersistenceId()("unkown-pid", 0L, Long.MaxValue) { tp =>
-      tp.request(Int.MaxValue)
-      tp.expectComplete()
-    }
-  }
-
   it should "find events from sequenceNr" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors() { (actor1, actor2, actor3) =>
@@ -88,6 +80,14 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
         tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
         tp.expectComplete()
       }
+    }
+  }
+
+  it should "not find any events for unknown pid" in withActorSystem { implicit system =>
+    val journalOps = new ScalaJdbcReadJournalOperations(system)
+    journalOps.withCurrentEventsByPersistenceId()("unkown-pid", 0L, Long.MaxValue) { tp =>
+      tp.request(Int.MaxValue)
+      tp.expectComplete()
     }
   }
 
@@ -172,6 +172,8 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
   }
 
   it should "allow updating events (for data migrations)" in withActorSystem { implicit system =>
+    if (newDao)
+      pending //https://github.com/akka/akka-persistence-jdbc/issues/469
     val journalOps = new JavaDslJdbcReadJournalOperations(system)
     val journal = Persistence(system).journalFor("")
 

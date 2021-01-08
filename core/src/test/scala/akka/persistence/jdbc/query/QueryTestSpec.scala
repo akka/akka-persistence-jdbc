@@ -311,11 +311,8 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
 
 trait PostgresCleaner extends QueryTestSpec {
 
-  val actionsClearPostgres =
-    DBIO.seq(sqlu"""TRUNCATE journal""", sqlu"""TRUNCATE snapshot""").transactionally
-
   def clearPostgres(): Unit =
-    withDatabase(_.run(actionsClearPostgres).futureValue)
+    tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
 
   override def beforeAll(): Unit = {
     dropAndCreate(Postgres)
@@ -330,11 +327,13 @@ trait PostgresCleaner extends QueryTestSpec {
 
 trait MysqlCleaner extends QueryTestSpec {
 
-  val actionsClearMySQL =
-    DBIO.seq(sqlu"""TRUNCATE journal""", sqlu"""TRUNCATE snapshot""").transactionally
-
-  def clearMySQL(): Unit =
-    withDatabase(_.run(actionsClearMySQL).futureValue)
+  def clearMySQL(): Unit = {
+    withStatement { stmt =>
+      stmt.execute("SET FOREIGN_KEY_CHECKS = 0")
+      tables.foreach { name => stmt.executeUpdate(s"TRUNCATE $name") }
+      stmt.execute("SET FOREIGN_KEY_CHECKS = 1")
+    }
+  }
 
   override def beforeAll(): Unit = {
     dropAndCreate(MySQL)
@@ -349,13 +348,12 @@ trait MysqlCleaner extends QueryTestSpec {
 
 trait OracleCleaner extends QueryTestSpec {
 
-  val actionsClearOracle =
-    DBIO
-      .seq(sqlu"""DELETE FROM "journal"""", sqlu"""DELETE FROM "snapshot"""", sqlu"""BEGIN "reset_sequence"; END; """)
-      .transactionally
-
-  def clearOracle(): Unit =
-    withDatabase(_.run(actionsClearOracle).futureValue)
+  def clearOracle(): Unit = {
+    tables.foreach { name =>
+      withStatement(stmt => stmt.executeUpdate(s"""DELETE FROM "$name" """))
+    }
+    withStatement(stmt => stmt.executeUpdate("""BEGIN "reset_sequence"; END; """))
+  }
 
   override def beforeAll(): Unit = {
     dropAndCreate(Oracle)
@@ -370,16 +368,20 @@ trait OracleCleaner extends QueryTestSpec {
 
 trait SqlServerCleaner extends QueryTestSpec {
 
-  val actionsClearSqlServer =
-    DBIO
-      .seq(
-        sqlu"""TRUNCATE TABLE journal""",
-        sqlu"""TRUNCATE TABLE snapshot""",
-        sqlu"""DBCC CHECKIDENT('journal', RESEED, 1)""")
-      .transactionally
+  var initial = true
 
-  def clearSqlServer(): Unit =
-    withDatabase(_.run(actionsClearSqlServer).futureValue)
+  def clearSqlServer(): Unit = {
+    val reset = if (initial) {
+      initial = false
+      1
+    } else {
+      0
+    }
+    withStatement { stmt =>
+      tables.foreach { name => stmt.executeUpdate(s"DELETE FROM $name") }
+      stmt.executeUpdate(s"DBCC CHECKIDENT('${journalTableName}', RESEED, $reset)")
+    }
+  }
 
   override def beforeAll() = {
     dropAndCreate(SqlServer)
@@ -399,11 +401,8 @@ trait SqlServerCleaner extends QueryTestSpec {
 
 trait H2Cleaner extends QueryTestSpec {
 
-  val actionsClearH2 =
-    DBIO.seq(sqlu"""TRUNCATE TABLE journal""", sqlu"""TRUNCATE TABLE snapshot""").transactionally
-
   def clearH2(): Unit =
-    withDatabase(_.run(actionsClearH2).futureValue)
+    tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
 
   override def beforeEach(): Unit = {
     dropAndCreate(H2)

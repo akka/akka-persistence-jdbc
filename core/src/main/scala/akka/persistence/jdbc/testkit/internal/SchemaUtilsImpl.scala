@@ -8,15 +8,14 @@ package akka.persistence.jdbc.testkit.internal
 import java.sql.Statement
 
 import scala.concurrent.Future
-
 import akka.Done
-import akka.actor.ClassicActorSystemProvider
+import akka.actor.{ ActorSystem, ClassicActorSystemProvider }
 import akka.annotation.InternalApi
 import akka.dispatch.Dispatchers
 import akka.persistence.jdbc.db.SlickDatabase
 import akka.persistence.jdbc.db.SlickExtension
+import com.typesafe.config.Config
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import slick.jdbc.H2Profile
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.JdbcProfile
@@ -31,16 +30,17 @@ import slick.jdbc.SQLServerProfile
 @InternalApi
 private[jdbc] object SchemaUtilsImpl {
 
-  private val logger = LoggerFactory.getLogger("akka.persistence.jdbc.testkit.internal.SchemaUtilsImpl")
+  def legacy(config: Config): Boolean =
+    config.getString("jdbc-journal.dao") != "akka.persistence.jdbc.journal.dao.DefaultJournalDao"
 
   /**
    * INTERNAL API
    */
   @InternalApi
   private[jdbc] def dropIfExists(logger: Logger)(implicit actorSystem: ClassicActorSystemProvider): Future[Done] = {
-
     val slickDb: SlickDatabase = loadSlickDatabase("jdbc-journal")
-    val (fileToLoad, separator) = dropScriptFor(slickProfileToSchemaType(slickDb.profile))
+    val (fileToLoad, separator) =
+      dropScriptFor(slickProfileToSchemaType(slickDb.profile), legacy(actorSystem.classicSystem.settings.config))
 
     val blockingEC = actorSystem.classicSystem.dispatchers.lookup(Dispatchers.DefaultBlockingDispatcherId)
     Future(applyScriptWithSlick(fromClasspathAsString(fileToLoad), separator, logger, slickDb.database))(blockingEC)
@@ -54,7 +54,8 @@ private[jdbc] object SchemaUtilsImpl {
       implicit actorSystem: ClassicActorSystemProvider): Future[Done] = {
 
     val slickDb: SlickDatabase = loadSlickDatabase("jdbc-journal")
-    val (fileToLoad, separator) = createScriptFor(slickProfileToSchemaType(slickDb.profile))
+    val (fileToLoad, separator) =
+      createScriptFor(slickProfileToSchemaType(slickDb.profile), legacy(actorSystem.classicSystem.settings.config))
 
     val blockingEC = actorSystem.classicSystem.dispatchers.lookup(Dispatchers.DefaultBlockingDispatcherId)
     Future(applyScriptWithSlick(fromClasspathAsString(fileToLoad), separator, logger, slickDb.database))(blockingEC)
@@ -75,8 +76,8 @@ private[jdbc] object SchemaUtilsImpl {
    * INTERNAL API
    */
   @InternalApi
-  private[jdbc] def dropWithSlick(schemaType: SchemaType, logger: Logger, db: Database): Done = {
-    val (fileToLoad, separator) = dropScriptFor(schemaType)
+  private[jdbc] def dropWithSlick(schemaType: SchemaType, logger: Logger, db: Database, legacy: Boolean): Done = {
+    val (fileToLoad, separator) = dropScriptFor(schemaType, legacy)
     SchemaUtilsImpl.applyScriptWithSlick(SchemaUtilsImpl.fromClasspathAsString(fileToLoad), separator, logger, db)
   }
 
@@ -84,8 +85,8 @@ private[jdbc] object SchemaUtilsImpl {
    * INTERNAL API
    */
   @InternalApi
-  private[jdbc] def createWithSlick(schemaType: SchemaType, logger: Logger, db: Database): Done = {
-    val (fileToLoad, separator) = createScriptFor(schemaType)
+  private[jdbc] def createWithSlick(schemaType: SchemaType, logger: Logger, db: Database, legacy: Boolean): Done = {
+    val (fileToLoad, separator) = createScriptFor(schemaType, legacy)
     SchemaUtilsImpl.applyScriptWithSlick(SchemaUtilsImpl.fromClasspathAsString(fileToLoad), separator, logger, db)
   }
 
@@ -114,23 +115,27 @@ private[jdbc] object SchemaUtilsImpl {
     }
   }
 
-  private def dropScriptFor(schemaType: SchemaType): (String, String) =
+  private def dropScriptFor(schemaType: SchemaType, legacy: Boolean): (String, String) = {
+    val suffix = if (legacy) "-legacy" else ""
     schemaType match {
-      case Postgres  => ("schema/postgres/postgres-drop-schema.sql", ";")
-      case MySQL     => ("schema/mysql/mysql-drop-schema.sql", ";")
-      case Oracle    => ("schema/oracle/oracle-drop-schema.sql", "/")
-      case SqlServer => ("schema/sqlserver/sqlserver-drop-schema.sql", ";")
-      case H2        => ("schema/h2/h2-drop-schema.sql", ";")
+      case Postgres  => (s"schema/postgres/postgres-drop-schema$suffix.sql", ";")
+      case MySQL     => (s"schema/mysql/mysql-drop-schema$suffix.sql", ";")
+      case Oracle    => (s"schema/oracle/oracle-drop-schema$suffix.sql", "/")
+      case SqlServer => (s"schema/sqlserver/sqlserver-drop-schema$suffix.sql", ";")
+      case H2        => (s"schema/h2/h2-drop-schema$suffix.sql", ";")
     }
+  }
 
-  private def createScriptFor(schemaType: SchemaType): (String, String) =
+  private def createScriptFor(schemaType: SchemaType, legacy: Boolean): (String, String) = {
+    val suffix = if (legacy) "-legacy" else ""
     schemaType match {
-      case Postgres  => ("schema/postgres/postgres-create-schema.sql", ";")
-      case MySQL     => ("schema/mysql/mysql-create-schema.sql", ";")
-      case Oracle    => ("schema/oracle/oracle-create-schema.sql", "/")
-      case SqlServer => ("schema/sqlserver/sqlserver-create-schema.sql", ";")
-      case H2        => ("schema/h2/h2-create-schema.sql", ";")
+      case Postgres  => (s"schema/postgres/postgres-create-schema$suffix.sql", ";")
+      case MySQL     => (s"schema/mysql/mysql-create-schema$suffix.sql", ";")
+      case Oracle    => (s"schema/oracle/oracle-create-schema$suffix.sql", "/")
+      case SqlServer => (s"schema/sqlserver/sqlserver-create-schema$suffix.sql", ";")
+      case H2        => (s"schema/h2/h2-create-schema$suffix.sql", ";")
     }
+  }
 
   private def slickProfileToSchemaType(profile: JdbcProfile): SchemaType =
     profile match {

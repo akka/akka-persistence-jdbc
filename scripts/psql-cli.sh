@@ -14,4 +14,4 @@ echo "select gen_random_uuid();  : returns a random uuid (pgcrypto)"
 echo "select version();          : return the server version"
 echo "select current_date;       : returns the current date"
 echo "================================================================="
-docker exec -it postgres psql --dbname=docker --username=docker
+docker exec -it postgres-test psql --dbname=docker --username=docker

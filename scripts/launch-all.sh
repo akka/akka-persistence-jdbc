@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Copyright 2016 Dennis Vriend
 #
@@ -13,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#!/bin/bash
 export VM_HOST="${VM_HOST:-localhost}"
 
 # Wait for a certain service to become available

@@ -3,15 +3,20 @@
  * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
  */
 
-package akka.persistence.jdbc
-package query.dao
+package akka.persistence.jdbc.query.dao
 
-import akka.persistence.jdbc.config.{ JournalTableConfiguration, ReadJournalConfig }
+import akka.persistence.jdbc.config.{
+  EventJournalTableConfiguration,
+  EventTagTableConfiguration,
+  LegacyJournalTableConfiguration,
+  ReadJournalConfig
+}
 import akka.persistence.jdbc.journal.dao.JournalTables
 import slick.jdbc.JdbcProfile
 
 class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJournalConfig) extends JournalTables {
-  override val journalTableCfg: JournalTableConfiguration = readJournalConfig.journalTableConfiguration
+  override val journalTableCfg: EventJournalTableConfiguration = readJournalConfig.eventJournalTableConfiguration
+  override def tagTableCfg: EventTagTableConfiguration = readJournalConfig.eventTagTableConfiguration
 
   import profile.api._
 
@@ -27,6 +32,10 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
   private def baseTableQuery() =
     if (readJournalConfig.includeDeleted) JournalTable
     else JournalTable.filter(_.deleted === false)
+
+  private def baseTableWithTagsQuery() = {
+    baseTableQuery().join(TagTable).on(_.ordering === _.eventId)
+  }
 
   val allPersistenceIdsDistinct = Compiled(_allPersistenceIdsDistinct _)
 
@@ -49,16 +58,15 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
       offset: ConstColumn[Long],
       maxOffset: ConstColumn[Long],
       max: ConstColumn[Long]) = {
-    baseTableQuery()
-      .filter(_.tags.like(tag))
-      .sortBy(_.ordering.asc)
-      .filter(row => row.ordering > offset && row.ordering <= maxOffset)
+    baseTableWithTagsQuery()
+      .filter(_._2.tag === tag)
+      .sortBy(_._1.ordering.asc)
+      .filter(row => row._1.ordering > offset && row._1.ordering <= maxOffset)
       .take(max)
+      .map(_._1)
   }
 
   val eventsByTag = Compiled(_eventsByTag _)
-
-  def writeJournalRows(xs: Seq[JournalRow]) = JournalTable ++= xs.sortBy(_.sequenceNumber)
 
   private def _journalSequenceQuery(from: ConstColumn[Long], limit: ConstColumn[Long]) =
     JournalTable.filter(_.ordering > from).map(_.ordering).sorted.take(limit)
@@ -68,4 +76,5 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
   val maxJournalSequenceQuery = Compiled {
     JournalTable.map(_.ordering).max.getOrElse(0L)
   }
+
 }

@@ -8,18 +8,19 @@ package akka.persistence.jdbc.query
 import akka.actor.{ ActorRef, ActorSystem }
 import akka.pattern.ask
 import akka.persistence.jdbc.config.JournalSequenceRetrievalConfig
-import akka.persistence.jdbc.journal.dao.JournalTables
+import akka.persistence.jdbc.journal.dao.legacy.{ JournalRow, JournalTables }
 import akka.persistence.jdbc.query.JournalSequenceActor.{ GetMaxOrderingId, MaxOrderingId }
-import akka.persistence.jdbc.query.dao.{ ByteArrayReadJournalDao, TestProbeReadJournalDao }
-import akka.persistence.jdbc.{ JournalRow, SharedActorSystemTestSpec }
+import akka.persistence.jdbc.query.dao.TestProbeReadJournalDao
+import akka.persistence.jdbc.SharedActorSystemTestSpec
+import akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao
 import akka.serialization.SerializationExtension
 import akka.stream.scaladsl.{ Sink, Source }
 import akka.testkit.TestProbe
 import org.slf4j.LoggerFactory
 import slick.jdbc.{ JdbcBackend, JdbcCapabilities }
+
 import scala.concurrent.Future
 import scala.concurrent.duration._
-
 import org.scalatest.time.Span
 
 abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
@@ -39,6 +40,8 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
   behavior.of("JournalSequenceActor")
 
   it should "recover normally" in {
+    if (newDao)
+      pending
     withActorSystem { implicit system: ActorSystem =>
       withDatabase { db =>
         val numberOfRows = 15000
@@ -55,7 +58,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
 
   private def canForceInsert: Boolean = profile.capabilities.contains(JdbcCapabilities.forceInsert)
 
-  if (canForceInsert) {
+  if (canForceInsert && !newDao) {
     it should s"recover ${if (isOracle) "one hundred thousand" else "one million"} events quickly if no ids are missing" in {
       withActorSystem { implicit system: ActorSystem =>
         withDatabase { db =>
@@ -85,7 +88,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
     }
   }
 
-  if (!isOracle && canForceInsert) {
+  if (!isOracle && canForceInsert && !newDao) {
     // Note this test case cannot be executed for oracle, because forceInsertAll is not supported in the oracle driver.
     it should "recover after the specified max number if tries if the first event has a very high sequence number and lots of large gaps exist" in {
       withActorSystem { implicit system: ActorSystem =>
@@ -117,7 +120,7 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
     }
   }
 
-  if (canForceInsert) {
+  if (canForceInsert && !newDao) {
     it should s"assume that the max ordering id in the database on startup is the max after (queryDelay * maxTries)" in {
       withActorSystem { implicit system: ActorSystem =>
         withDatabase { db =>

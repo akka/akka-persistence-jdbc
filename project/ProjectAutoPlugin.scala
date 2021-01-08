@@ -34,7 +34,7 @@ object ProjectAutoPlugin extends AutoPlugin {
     crossVersion := CrossVersion.binary,
     crossScalaVersions := Dependencies.ScalaVersions,
     scalaVersion := Dependencies.Scala212,
-    Test / fork := true,
+    Test / fork := false,
     Test / parallelExecution := false,
     Test / logBuffered := true,
     scalacOptions ++= Seq(

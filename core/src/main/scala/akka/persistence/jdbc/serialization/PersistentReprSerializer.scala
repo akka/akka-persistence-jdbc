@@ -14,6 +14,7 @@ import scala.collection.immutable._
 
 import scala.util.Try
 
+@deprecated(since = "5.0.0")
 trait PersistentReprSerializer[T] {
 
   /**

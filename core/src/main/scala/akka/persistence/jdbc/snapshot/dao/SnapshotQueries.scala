@@ -5,7 +5,7 @@
 
 package akka.persistence.jdbc.snapshot.dao
 
-import akka.persistence.jdbc.config.SnapshotTableConfiguration
+import akka.persistence.jdbc.config.{ LegacySnapshotTableConfiguration, SnapshotTableConfiguration }
 import akka.persistence.jdbc.snapshot.dao.SnapshotTables.SnapshotRow
 import slick.jdbc.JdbcProfile
 

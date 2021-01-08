@@ -3,20 +3,35 @@
  * Copyright (C) 2019 - 2020 Lightbend Inc. <https://www.lightbend.com>
  */
 
-package akka.persistence.jdbc
-package journal.dao
+package akka.persistence.jdbc.journal.dao
 
-import akka.persistence.jdbc.config.JournalTableConfiguration
+import akka.persistence.jdbc.config.{ EventJournalTableConfiguration, EventTagTableConfiguration }
+import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, TagRow }
 import slick.jdbc.JdbcProfile
 
-class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: JournalTableConfiguration)
+import scala.concurrent.ExecutionContext
+
+class JournalQueries(
+    val profile: JdbcProfile,
+    override val journalTableCfg: EventJournalTableConfiguration,
+    override val tagTableCfg: EventTagTableConfiguration)
     extends JournalTables {
+
   import profile.api._
 
-  private val JournalTableC = Compiled(JournalTable)
+  val insertAndReturn =
+    JournalTable.returning(JournalTable.map(_.ordering))
+  private val TagTableC = Compiled(TagTable)
 
-  def writeJournalRows(xs: Seq[JournalRow]) =
-    JournalTableC ++= xs.sortBy(_.sequenceNumber)
+  def writeJournalRows(xs: Seq[(JournalAkkaSerializationRow, Set[String])])(implicit ec: ExecutionContext) = {
+    val sorted = xs.sortBy((event => event._1.sequenceNumber))
+    val (events, tags) = sorted.unzip
+    for {
+      ids <- insertAndReturn ++= events
+      tagInserts = ids.zip(tags).flatMap { case (id, tags) => tags.map(tag => TagRow(id, tag)) }
+      _ <- TagTableC ++= tagInserts
+    } yield ()
+  }
 
   private def selectAllJournalForPersistenceIdDesc(persistenceId: Rep[String]) =
     selectAllJournalForPersistenceId(persistenceId).sortBy(_.sequenceNumber.desc)
@@ -26,16 +41,6 @@ class JournalQueries(val profile: JdbcProfile, override val journalTableCfg: Jou
 
   def delete(persistenceId: String, toSequenceNr: Long) = {
     JournalTable.filter(_.persistenceId === persistenceId).filter(_.sequenceNumber <= toSequenceNr).delete
-  }
-
-  /**
-   * Updates (!) a payload stored in a specific events row.
-   * Intended to be used sparingly, e.g. moving all events to their encrypted counterparts.
-   */
-  def update(persistenceId: String, seqNr: Long, replacement: Array[Byte]) = {
-    val baseQuery = JournalTable.filter(_.persistenceId === persistenceId).filter(_.sequenceNumber === seqNr)
-
-    baseQuery.map(_.message).update(replacement)
   }
 
   def markJournalMessagesAsDeleted(persistenceId: String, maxSequenceNr: Long) =

@@ -25,9 +25,10 @@ class JournalQueries(
 
   def writeJournalRows(xs: Seq[(JournalAkkaSerializationRow, Set[String])])(implicit ec: ExecutionContext) = {
     val sorted = xs.sortBy((event => event._1.sequenceNumber))
+    val (events, tags) = sorted.unzip
     for {
-      ids <- insertAndReturn ++= sorted.map(_._1)
-      tagInserts = ids.zip(sorted.map(_._2)).flatMap { case (id, tags) => tags.map(tag => TagRow(id, tag)) }
+      ids <- insertAndReturn ++= events
+      tagInserts = ids.zip(tags).flatMap { case (id, tags) => tags.map(tag => TagRow(id, tag)) }
       _ <- TagTableC ++= tagInserts
     } yield ()
   }

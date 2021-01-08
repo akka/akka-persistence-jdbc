@@ -65,12 +65,14 @@ class DefaultSnapshotDao(
   }
 
   private def zeroOrOneSnapshot(rows: Seq[SnapshotRow]): Option[(SnapshotMetadata, Any)] =
-    // TODO maybe throw instead of toOption otherwise serialization errors will not be logged
-    rows.headOption.flatMap(row => toSnapshotData(row).toOption)
+    rows.headOption.map(row => toSnapshotData(row).get) // throw is from a future map
 
   override def latestSnapshot(persistenceId: String): Future[Option[(SnapshotMetadata, Any)]] =
-    db.run(queries.selectLatestByPersistenceId(persistenceId).result).map { rows =>
-      rows.headOption.flatMap(row => toSnapshotData(row).toOption)
+    db.run(queries.selectLatestByPersistenceId(persistenceId).result).flatMap { rows =>
+      rows.headOption match {
+        case Some(row) => Future.fromTry(toSnapshotData(row)).map(Option(_))
+        case None      => Future.successful(None)
+      }
     }
 
   override def snapshotForMaxTimestamp(

@@ -10,7 +10,7 @@ import akka.annotation.InternalApi
 /**
  * INTERNAL API
  */
-@InternalApi private[jdbc] sealed trait SchemaType {}
+@InternalApi private[jdbc] sealed trait SchemaType
 
 /**
  * INTERNAL API

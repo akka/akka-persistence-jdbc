@@ -59,11 +59,11 @@ Configure `slick`:
 
 ## Database Schema
 
-- @extref:[Postgres Schema](github:/core/src/main/resources/schema/postgres/postgres-create-schema.sql)
-- @extref:[MySQL Schema](github:/core/src/main/resources/schema/mysql/mysql-create-schema.sql)
-- @extref:[H2 Schema](github:/core/src/main/resources/schema/h2/h2-create-schema.sql)
-- @extref:[Oracle Schema](github:/core/src/main/resources/schema/oracle/oracle-create-schema.sql)
-- @extref:[SQL Server Schema](github:/core/src/main/resources/schema/sqlserver/sqlserver-create-schema.sql)
+- @extref:[Postgres Schema](github:/core/src/main/resources/schema/postgres/postgres-create-schema-legacy.sql)
+- @extref:[MySQL Schema](github:/core/src/main/resources/schema/mysql/mysql-create-schema-legacy.sql)
+- @extref:[H2 Schema](github:/core/src/main/resources/schema/h2/h2-create-schema-legacy.sql)
+- @extref:[Oracle Schema](github:/core/src/main/resources/schema/oracle/oracle-create-schema-legacy.sql)
+- @extref:[SQL Server Schema](github:/core/src/main/resources/schema/sqlserver/sqlserver-create-schema-legacy.sql)
 
 For testing purposes the journal and snapshot tables can be created programmatically using the provided `SchemaUtils`.
 

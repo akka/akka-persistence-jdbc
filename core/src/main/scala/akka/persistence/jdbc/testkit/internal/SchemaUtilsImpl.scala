@@ -119,7 +119,7 @@ private[jdbc] object SchemaUtilsImpl {
   }
 
   private def dropScriptFor(schemaType: SchemaType, legacy: Boolean): (String, String) = {
-    val suffix = if (legacy) "" else "-v5"
+    val suffix = if (legacy) "-legacy" else ""
     schemaType match {
       case Postgres  => (s"schema/postgres/postgres-drop-schema$suffix.sql", ";")
       case MySQL     => (s"schema/mysql/mysql-drop-schema$suffix.sql", ";")
@@ -130,7 +130,7 @@ private[jdbc] object SchemaUtilsImpl {
   }
 
   private def createScriptFor(schemaType: SchemaType, legacy: Boolean): (String, String) = {
-    val suffix = if (legacy) "" else "-v5"
+    val suffix = if (legacy) "-legacy" else ""
     schemaType match {
       case Postgres  => (s"schema/postgres/postgres-create-schema$suffix.sql", ";")
       case MySQL     => (s"schema/mysql/mysql-create-schema$suffix.sql", ";")

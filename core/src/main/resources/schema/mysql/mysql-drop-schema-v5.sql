@@ -1,3 +1,0 @@
-DROP TABLE IF EXISTS event_tag;
-DROP TABLE IF EXISTS event_journal;
-DROP TABLE IF EXISTS snapshot;

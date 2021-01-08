@@ -6,7 +6,7 @@
 package akka.persistence.jdbc.query.dao.legacy
 
 import akka.persistence.jdbc.config.{ LegacyJournalTableConfiguration, ReadJournalConfig }
-import akka.persistence.jdbc.journal.dao.legacy.{ JournalRow, JournalTables }
+import akka.persistence.jdbc.journal.dao.legacy.JournalTables
 import slick.jdbc.JdbcProfile
 
 class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJournalConfig) extends JournalTables {

@@ -43,14 +43,14 @@ class ByteArraySnapshotDao(
       persistenceId: String,
       maxTimestamp: Long): Future[Option[(SnapshotMetadata, Any)]] =
     for {
-      rows <- db.run(queries.selectOneByPersistenceIdAndMaxTimestamp(persistenceId, maxTimestamp).result)
+      rows <- db.run(queries.selectOneByPersistenceIdAndMaxTimestamp((persistenceId, maxTimestamp)).result)
     } yield rows.headOption.map(toSnapshotData)
 
   override def snapshotForMaxSequenceNr(
       persistenceId: String,
       maxSequenceNr: Long): Future[Option[(SnapshotMetadata, Any)]] =
     for {
-      rows <- db.run(queries.selectOneByPersistenceIdAndMaxSequenceNr(persistenceId, maxSequenceNr).result)
+      rows <- db.run(queries.selectOneByPersistenceIdAndMaxSequenceNr((persistenceId, maxSequenceNr)).result)
     } yield rows.headOption.map(toSnapshotData)
 
   override def snapshotForMaxSequenceNrAndMaxTimestamp(
@@ -60,7 +60,7 @@ class ByteArraySnapshotDao(
     for {
       rows <- db.run(
         queries
-          .selectOneByPersistenceIdAndMaxSequenceNrAndMaxTimestamp(persistenceId, maxSequenceNr, maxTimestamp)
+          .selectOneByPersistenceIdAndMaxSequenceNrAndMaxTimestamp((persistenceId, maxSequenceNr, maxTimestamp))
           .result)
     } yield rows.headOption.map(toSnapshotData)
 
@@ -71,7 +71,7 @@ class ByteArraySnapshotDao(
 
   override def delete(persistenceId: String, sequenceNr: Long): Future[Unit] =
     for {
-      _ <- db.run(queries.selectByPersistenceIdAndSequenceNr(persistenceId, sequenceNr).delete)
+      _ <- db.run(queries.selectByPersistenceIdAndSequenceNr((persistenceId, sequenceNr)).delete)
     } yield ()
 
   override def deleteAllSnapshots(persistenceId: String): Future[Unit] =
@@ -81,12 +81,12 @@ class ByteArraySnapshotDao(
 
   override def deleteUpToMaxSequenceNr(persistenceId: String, maxSequenceNr: Long): Future[Unit] =
     for {
-      _ <- db.run(queries.selectByPersistenceIdUpToMaxSequenceNr(persistenceId, maxSequenceNr).delete)
+      _ <- db.run(queries.selectByPersistenceIdUpToMaxSequenceNr((persistenceId, maxSequenceNr)).delete)
     } yield ()
 
   override def deleteUpToMaxTimestamp(persistenceId: String, maxTimestamp: Long): Future[Unit] =
     for {
-      _ <- db.run(queries.selectByPersistenceIdUpToMaxTimestamp(persistenceId, maxTimestamp).delete)
+      _ <- db.run(queries.selectByPersistenceIdUpToMaxTimestamp((persistenceId, maxTimestamp)).delete)
     } yield ()
 
   override def deleteUpToMaxSequenceNrAndMaxTimestamp(
@@ -96,7 +96,7 @@ class ByteArraySnapshotDao(
     for {
       _ <- db.run(
         queries
-          .selectByPersistenceIdUpToMaxSequenceNrAndMaxTimestamp(persistenceId, maxSequenceNr, maxTimestamp)
+          .selectByPersistenceIdUpToMaxSequenceNrAndMaxTimestamp((persistenceId, maxSequenceNr, maxTimestamp))
           .delete)
     } yield ()
 }

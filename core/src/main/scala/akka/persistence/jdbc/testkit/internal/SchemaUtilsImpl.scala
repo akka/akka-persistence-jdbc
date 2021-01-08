@@ -9,7 +9,7 @@ import java.sql.Statement
 
 import scala.concurrent.Future
 import akka.Done
-import akka.actor.{ ActorSystem, ClassicActorSystemProvider }
+import akka.actor.ClassicActorSystemProvider
 import akka.annotation.InternalApi
 import akka.dispatch.Dispatchers
 import akka.persistence.jdbc.db.SlickDatabase

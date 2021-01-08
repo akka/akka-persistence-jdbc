@@ -10,7 +10,6 @@ import akka.persistence.jdbc.query.scaladsl.{ JdbcReadJournal => ScalaJdbcReadJo
 import akka.persistence.query.{ EventEnvelope, Offset }
 import akka.persistence.query.javadsl._
 import akka.stream.javadsl.Source
-import akka.persistence.jdbc.util.PluginVersionChecker
 
 object JdbcReadJournal {
   final val Identifier = ScalaJdbcReadJournal.Identifier

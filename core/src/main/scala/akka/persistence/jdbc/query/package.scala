@@ -5,10 +5,7 @@
 
 package akka.persistence.jdbc
 
-import akka.NotUsed
 import akka.persistence.query._
-import akka.stream.scaladsl.Source
-import scala.language.implicitConversions
 
 package object query {
   implicit class OffsetOps(val that: Offset) extends AnyVal {

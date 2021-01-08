@@ -8,10 +8,7 @@ package akka.persistence.jdbc.journal.dao.legacy
 import akka.persistence.jdbc.journal.dao.{
   BaseDao,
   BaseJournalDaoWithReadMessages,
-  FlowControl,
   H2Compat,
-  JournalDao,
-  JournalDaoWithReadMessages,
   JournalDaoWithUpdates
 }
 import akka.persistence.jdbc.config.{ BaseDaoConfig, JournalConfig }
@@ -118,7 +115,7 @@ trait BaseByteArrayJournalDao
     val write = PersistentRepr(payload, sequenceNr, persistenceId)
     val serializedRow = serializer.serialize(write) match {
       case Success(t) => t
-      case Failure(ex) =>
+      case Failure(_) =>
         throw new IllegalArgumentException(
           s"Failed to serialize ${write.getClass} for update of [$persistenceId] @ [$sequenceNr]")
     }
@@ -141,7 +138,7 @@ trait BaseByteArrayJournalDao
     Source
       .fromPublisher(
         db.stream(
-          queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max)).result))
+          queries.messagesQuery((persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max))).result))
       .via(serializer.deserializeFlow)
       .map {
         case Success((repr, _, ordering)) => Success(repr -> ordering)

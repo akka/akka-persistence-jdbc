@@ -41,7 +41,7 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao with BaseJournalDaoWith
       maxOffset: Long,
       max: Long): Source[Try[(PersistentRepr, Set[String], Long)], NotUsed] = {
 
-    val publisher = db.stream(queries.eventsByTag(s"%$tag%", offset, maxOffset, correctMaxForH2Driver(max)).result)
+    val publisher = db.stream(queries.eventsByTag((s"%$tag%", offset, maxOffset, correctMaxForH2Driver(max))).result)
     // applies workaround for https://github.com/akka/akka-persistence-jdbc/issues/168
     Source
       .fromPublisher(publisher)
@@ -57,7 +57,7 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao with BaseJournalDaoWith
     Source
       .fromPublisher(
         db.stream(
-          queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max)).result))
+          queries.messagesQuery((persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max))).result))
       .via(serializer.deserializeFlow)
       .map {
         case Success((repr, _, ordering)) => Success(repr -> ordering)
@@ -66,7 +66,7 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao with BaseJournalDaoWith
   }
 
   override def journalSequence(offset: Long, limit: Long): Source[Long, NotUsed] =
-    Source.fromPublisher(db.stream(queries.journalSequenceQuery(offset, limit).result))
+    Source.fromPublisher(db.stream(queries.journalSequenceQuery((offset, limit)).result))
 
   override def maxJournalSequence(): Future[Long] = {
     db.run(queries.maxJournalSequenceQuery.result)

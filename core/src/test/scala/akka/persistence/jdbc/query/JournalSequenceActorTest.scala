@@ -184,7 +184,7 @@ class MockDaoJournalSequenceActorTest extends SharedActorSystemTestSpec {
 
     val almostQueryDelay = queryDelay - 50.millis
     val almostImmediately = 50.millis
-    withTestProbeJournalSequenceActor(batchSize, maxTries, queryDelay) { (daoProbe, actor) =>
+    withTestProbeJournalSequenceActor(batchSize, maxTries, queryDelay) { (daoProbe, _) =>
       daoProbe.expectMsg(almostImmediately, TestProbeReadJournalDao.JournalSequence(0, batchSize))
       val firstBatch = (1L to 40L) ++ (51L to 110L)
       daoProbe.reply(firstBatch)

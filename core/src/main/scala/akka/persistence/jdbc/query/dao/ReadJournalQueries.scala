@@ -8,7 +8,6 @@ package akka.persistence.jdbc.query.dao
 import akka.persistence.jdbc.config.{
   EventJournalTableConfiguration,
   EventTagTableConfiguration,
-  LegacyJournalTableConfiguration,
   ReadJournalConfig
 }
 import akka.persistence.jdbc.journal.dao.JournalTables

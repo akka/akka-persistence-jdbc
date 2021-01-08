@@ -119,7 +119,7 @@ class DefaultJournalDao(
     Source
       .fromPublisher(
         db.stream(
-          queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max)).result))
-      .map(AkkaSerialization.fromRow(serialization))
+          queries.messagesQuery((persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max))).result))
+      .map(AkkaSerialization.fromRow(serialization)(_))
   }
 }

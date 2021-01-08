@@ -20,7 +20,6 @@ import akka.stream.testkit.javadsl.{ TestSink => JavaSink }
 import akka.stream.testkit.scaladsl.TestSink
 import akka.stream.{ Materializer, SystemMaterializer }
 import com.typesafe.config.ConfigValue
-import slick.jdbc.PostgresProfile.api._
 import scala.concurrent.Future
 import scala.concurrent.duration.{ FiniteDuration, _ }
 
@@ -28,7 +27,6 @@ import akka.persistence.jdbc.testkit.internal.H2
 import akka.persistence.jdbc.testkit.internal.MySQL
 import akka.persistence.jdbc.testkit.internal.Oracle
 import akka.persistence.jdbc.testkit.internal.Postgres
-import akka.persistence.jdbc.testkit.internal.SchemaUtilsImpl
 import akka.persistence.jdbc.testkit.internal.SqlServer
 
 trait ReadJournalOperations {
@@ -242,7 +240,7 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
           }
 
         case event @ Tagged(payload: Int, tags) =>
-          persist(event) { (event: Tagged) =>
+          persist(event) { _ =>
             updateState(payload)
             if (replyToMessages) sender() ! akka.actor.Status.Success((payload, tags))
           }
@@ -252,11 +250,11 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
           }
 
         case event @ TaggedEvent(payload: Event, tag) =>
-          persist(event) { evt =>
+          persist(event) { _ =>
             if (replyToMessages) sender() ! akka.actor.Status.Success((payload, tag))
           }
         case event @ TaggedAsyncEvent(payload: Event, tag) =>
-          persistAsync(event) { evt =>
+          persistAsync(event) { _ =>
             if (replyToMessages) sender() ! akka.actor.Status.Success((payload, tag))
           }
       }

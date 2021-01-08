@@ -9,7 +9,7 @@ import akka.actor.ActorSystem
 import akka.persistence.jdbc.config.{ JournalConfig, ReadJournalConfig, SlickConfiguration }
 import akka.persistence.jdbc.query.javadsl.JdbcReadJournal
 import akka.persistence.jdbc.util.DropCreate
-import akka.persistence.jdbc.db.{ SlickDatabase, SlickDriver }
+import akka.persistence.jdbc.db.SlickDatabase
 import akka.util.Timeout
 import com.typesafe.config.{ Config, ConfigFactory, ConfigValue }
 import org.scalatest.BeforeAndAfterEach

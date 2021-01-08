@@ -7,7 +7,6 @@ package akka.persistence.jdbc
 package journal.dao.legacy
 
 import akka.persistence.{ AtomicWrite, PersistentRepr }
-import akka.serialization.SerializationExtension
 
 import scala.collection.immutable._
 

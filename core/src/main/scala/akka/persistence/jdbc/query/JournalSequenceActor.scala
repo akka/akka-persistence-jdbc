@@ -140,10 +140,10 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
 
     val (nextMax, _, missingElems) =
       // using the ordering elements that were fetched, we verify if there are any gaps
-      elements.foldLeft[(OrderingId, OrderingId, MissingElements)](
+      elements.foldLeft[(OrderingId, OrderingId, MissingElements)]((
         currentMaxOrdering,
         currentMaxOrdering,
-        MissingElements.empty) {
+        MissingElements.empty)) {
         case ((currentMax, previousElement, missing), currentElement) =>
           // we must decide if we move the cursor forward
           val newMax =

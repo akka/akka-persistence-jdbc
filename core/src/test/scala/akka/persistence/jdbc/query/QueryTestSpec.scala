@@ -280,8 +280,8 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
     }
 
     override def receiveRecover: Receive =
-      LoggingReceive {
-        case event: Int => updateState(event)
+      LoggingReceive { case event: Int =>
+        updateState(event)
       }
   }
 

@@ -121,8 +121,8 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
       .messagesWithBatch(persistenceId, fromSequenceNr, toSequenceNr, journalConfig.daoConfig.replayBatchSize, None)
       .take(max)
       .mapAsync(1)(reprAndOrdNr => Future.fromTry(reprAndOrdNr))
-      .runForeach {
-        case (repr, _) => recoveryCallback(repr)
+      .runForeach { case (repr, _) =>
+        recoveryCallback(repr)
       }
       .map(_ => ())
 

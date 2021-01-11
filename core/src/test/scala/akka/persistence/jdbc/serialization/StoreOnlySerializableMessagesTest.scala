@@ -28,15 +28,14 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
       persistFailureProbe: ActorRef,
       persistRejectedProbe: ActorRef)
       extends PersistentActor {
-    override val receiveRecover: Receive = LoggingReceive {
-      case msg => recoverProbe ! msg
+    override val receiveRecover: Receive = LoggingReceive { case msg =>
+      recoverProbe ! msg
     }
 
-    override val receiveCommand: Receive = LoggingReceive {
-      case msg =>
-        persist(msg) { _ =>
-          sender ! akka.actor.Status.Success("")
-        }
+    override val receiveCommand: Receive = LoggingReceive { case msg =>
+      persist(msg) { _ =>
+        sender ! akka.actor.Status.Success("")
+      }
     }
 
     override protected def onPersistFailure(cause: Throwable, event: Any, seqNr: Long): Unit =
@@ -88,8 +87,7 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
       tp.send(actor, new NotSerializable) // the NotSerializable class cannot be serialized
       tp.expectNoMessage(300.millis) // the handler should not have been called, because persist has failed
       // the actor should call the OnPersistRejected
-      rejected.expectMsgPF() {
-        case PersistRejected(_, _, _) =>
+      rejected.expectMsgPF() { case PersistRejected(_, _, _) =>
       }
     }
 
@@ -110,8 +108,7 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
       tp.send(actor, new NotSerializable) // the NotSerializable class cannot be serialized
       tp.expectNoMessage(300.millis) // the handler should not have been called, because persist has failed
       // the actor should call the OnPersistRejected
-      rejected.expectMsgPF() {
-        case PersistRejected(_, _, _) =>
+      rejected.expectMsgPF() { case PersistRejected(_, _, _) =>
       }
       rejected.expectNoMessage(100.millis)
     }

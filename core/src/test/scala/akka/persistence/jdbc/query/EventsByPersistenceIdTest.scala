@@ -190,24 +190,24 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
       journalOps.withEventsByPersistenceId()("my-1", 0, 1) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF {
-          case ev @ EventEnvelope(Sequence(1), "my-1", 1, 1) => assertTimestamp(ev.timestamp, "my-1")
+        tp.expectNextPF { case ev @ EventEnvelope(Sequence(1), "my-1", 1, 1) =>
+          assertTimestamp(ev.timestamp, "my-1")
         }
         tp.cancel()
       }
 
       journalOps.withEventsByPersistenceId()("my-2", 0, 1) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF {
-          case ev @ EventEnvelope(_, "my-2", 1, 2) => assertTimestamp(ev.timestamp, "my-2")
+        tp.expectNextPF { case ev @ EventEnvelope(_, "my-2", 1, 2) =>
+          assertTimestamp(ev.timestamp, "my-2")
         }
         tp.cancel()
       }
 
       journalOps.withEventsByPersistenceId()("my-3", 0, 1) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNextPF {
-          case ev @ EventEnvelope(_, "my-3", 1, 3) => assertTimestamp(ev.timestamp, "my-3")
+        tp.expectNextPF { case ev @ EventEnvelope(_, "my-3", 1, 3) =>
+          assertTimestamp(ev.timestamp, "my-3")
         }
         tp.cancel()
       }

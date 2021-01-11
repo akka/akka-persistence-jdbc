@@ -110,9 +110,9 @@ trait BaseByteArrayJournalDao
     val write = PersistentRepr(payload, sequenceNr, persistenceId)
     val serializedRow = serializer.serialize(write) match {
       case Success(t) => t
-      case Failure(_) =>
+      case Failure(cause) =>
         throw new IllegalArgumentException(
-          s"Failed to serialize ${write.getClass} for update of [$persistenceId] @ [$sequenceNr]")
+          s"Failed to serialize ${write.getClass} for update of [$persistenceId] @ [$sequenceNr]", cause)
     }
     db.run(queries.update(persistenceId, sequenceNr, serializedRow.message).map(_ => Done))
   }

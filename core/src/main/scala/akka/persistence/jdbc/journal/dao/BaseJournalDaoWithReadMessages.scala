@@ -55,7 +55,7 @@ trait BaseJournalDaoWithReadMessages extends JournalDaoWithReadMessages {
                 case Some(lastSeqNr) => lastSeqNr + 1
                 case None            => from
               }
-              Some((nextFrom, nextControl), xs)
+              Some(((nextFrom, nextControl), xs))
             }
           }
 
@@ -67,7 +67,7 @@ trait BaseJournalDaoWithReadMessages extends JournalDaoWithReadMessages {
               akka.pattern.after(delay, scheduler)(retrieveNextBatch())
           }
       }
-      .mapConcat(identity)
+      .mapConcat(identity(_))
   }
 
 }

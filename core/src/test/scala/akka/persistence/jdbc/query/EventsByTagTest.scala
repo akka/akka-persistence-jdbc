@@ -56,38 +56,38 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
 
       journalOps.withEventsByTag()("number", Sequence(Long.MinValue)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
-        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
-        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3, timestamp = 0L))
         tp.cancel()
       }
 
       journalOps.withEventsByTag()("number", NoOffset) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
-        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
-        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3, timestamp = 0L))
         tp.cancel()
       }
 
       journalOps.withEventsByTag()("number", Sequence(0)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
-        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
-        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3, timestamp = 0L))
         tp.cancel()
       }
 
       journalOps.withEventsByTag()("number", Sequence(1)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
-        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3, timestamp = 0L))
         tp.cancel()
       }
 
       journalOps.withEventsByTag()("number", Sequence(2)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3, timestamp = 0L))
         tp.cancel()
       }
 
@@ -100,19 +100,19 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
 
       journalOps.withEventsByTag()("number", NoOffset) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
-        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
-        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
 
         actor1 ? withTags(1, "number")
-        tp.expectNext(EventEnvelope(Sequence(4), "my-1", 2, 1))
+        tp.expectNext(EventEnvelope(Sequence(4), "my-1", 2, 1, timestamp = 0L))
 
         actor1 ? withTags(1, "number")
-        tp.expectNext(EventEnvelope(Sequence(5), "my-1", 3, 1))
+        tp.expectNext(EventEnvelope(Sequence(5), "my-1", 3, 1, timestamp = 0L))
 
         actor1 ? withTags(1, "number")
-        tp.expectNext(EventEnvelope(Sequence(6), "my-1", 4, 1))
+        tp.expectNext(EventEnvelope(Sequence(6), "my-1", 4, 1, timestamp = 0L))
         tp.cancel()
         tp.expectNoMessage(NoMsgTime)
       }
@@ -166,29 +166,29 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
 
       journalOps.withEventsByTag()("number", Sequence(Long.MinValue)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
-        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
-        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3, timestamp = 0L))
         tp.cancel()
       }
 
       journalOps.withEventsByTag()("sharded-1", Sequence(Long.MinValue)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
 
       journalOps.withEventsByTag()("sharded-10", Sequence(Long.MinValue)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
 
       journalOps.withEventsByTag()("sharded-100", Sequence(Long.MinValue)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
@@ -238,12 +238,12 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
 
       journalOps.withEventsByTag()("number", Sequence(1)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2))
-        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 3, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
 
         actor1 ? withTags(1, "number")
-        tp.expectNext(EventEnvelope(Sequence(4), "my-1", 2, 1))
+        tp.expectNext(EventEnvelope(Sequence(4), "my-1", 2, 1, timestamp = 0L))
         tp.cancel()
         tp.expectNoMessage(NoMsgTime)
       }
@@ -258,15 +258,15 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.expectNoMessage(NoMsgTime)
 
         actor1 ! withTags(1, "one") // 1
-        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
 
         actor2 ! withTags(1, "one") // 2
-        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 1, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
 
         actor3 ! withTags(1, "one") // 3
-        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, 1, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
 
         actor1 ! withTags(2, "two") // 4
@@ -279,15 +279,15 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
         tp.expectNoMessage(NoMsgTime)
 
         actor1 ! withTags(1, "one") // 7
-        tp.expectNext(EventEnvelope(Sequence(7), "my-1", 3, 1))
+        tp.expectNext(EventEnvelope(Sequence(7), "my-1", 3, 1, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
 
         actor2 ! withTags(1, "one") // 8
-        tp.expectNext(EventEnvelope(Sequence(8), "my-2", 3, 1))
+        tp.expectNext(EventEnvelope(Sequence(8), "my-2", 3, 1, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
 
         actor3 ! withTags(1, "one") // 9
-        tp.expectNext(EventEnvelope(Sequence(9), "my-3", 3, 1))
+        tp.expectNext(EventEnvelope(Sequence(9), "my-3", 3, 1, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
         tp.cancel()
         tp.expectNoMessage(NoMsgTime)
@@ -318,37 +318,37 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
 
       journalOps.withEventsByTag(10.seconds)("prime", NoOffset) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
-        tp.expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2))
-        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
-        tp.expectNext(EventEnvelope(Sequence(5), "my-1", 5, 5))
-        tp.expectNext(EventEnvelope(Sequence(6), "my-2", 1, 3))
-        tp.expectNext(EventEnvelope(Sequence(7), "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(5), "my-1", 5, 5, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(6), "my-2", 1, 3, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(7), "my-3", 1, 3, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
 
       journalOps.withEventsByTag(10.seconds)("three", NoOffset) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
-        tp.expectNext(EventEnvelope(Sequence(6), "my-2", 1, 3))
-        tp.expectNext(EventEnvelope(Sequence(7), "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(6), "my-2", 1, 3, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(7), "my-3", 1, 3, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
 
       journalOps.withEventsByTag(10.seconds)("3", NoOffset) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
-        tp.expectNext(EventEnvelope(Sequence(6), "my-2", 1, 3))
-        tp.expectNext(EventEnvelope(Sequence(7), "my-3", 1, 3))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(6), "my-2", 1, 3, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(7), "my-3", 1, 3, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
 
       journalOps.withEventsByTag(10.seconds)("one", NoOffset) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
         tp.cancel()
       }
@@ -362,7 +362,7 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
 
       journalOps.withEventsByTag(10.seconds)("five", NoOffset) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(5), "my-1", 5, 5))
+        tp.expectNext(EventEnvelope(Sequence(5), "my-1", 5, 5, timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
         tp.cancel()
         tp.expectNoMessage(NoMsgTime)

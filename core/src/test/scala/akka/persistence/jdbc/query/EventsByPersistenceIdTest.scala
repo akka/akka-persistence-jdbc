@@ -29,7 +29,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
   it should "find events from sequenceNr" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors() { (actor1, _, _) =>
       actor1 ! withTags(1, "number")
       actor1 ! withTags(2, "number")
       actor1 ! withTags(3, "number")
@@ -216,7 +216,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
   it should "find events for actor with pid 'my-1'" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors() { (actor1, _, _) =>
       journalOps.withEventsByPersistenceId()("my-1", 0) { tp =>
         tp.request(10)
         tp.expectNoMessage(100.millis)
@@ -236,7 +236,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
   it should "find events for actor with pid 'my-1' and persisting messages to other actor" in withActorSystem {
     implicit system =>
       val journalOps = new JavaDslJdbcReadJournalOperations(system)
-      withTestActors() { (actor1, actor2, actor3) =>
+      withTestActors() { (actor1, actor2, _) =>
         journalOps.withEventsByPersistenceId()("my-1", 0, Long.MaxValue) { tp =>
           tp.request(10)
           tp.expectNoMessage(100.millis)
@@ -266,7 +266,7 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
   it should "find events for actor with pid 'my-2'" in withActorSystem { implicit system =>
     val journalOps = new JavaDslJdbcReadJournalOperations(system)
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors() { (_, actor2, _) =>
       actor2 ! 1
       actor2 ! 2
       actor2 ! 3

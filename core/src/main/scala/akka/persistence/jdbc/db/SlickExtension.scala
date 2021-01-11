@@ -12,7 +12,6 @@ import com.typesafe.config.{ Config, ConfigObject }
 
 import scala.collection.JavaConverters._
 import scala.util.{ Failure, Success }
-import scala.util.control.NonFatal
 
 object SlickExtension extends ExtensionId[SlickExtensionImpl] with ExtensionIdProvider {
   override def lookup: SlickExtension.type = SlickExtension

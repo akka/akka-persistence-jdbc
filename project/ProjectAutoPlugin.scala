@@ -40,17 +40,25 @@ object ProjectAutoPlugin extends AutoPlugin {
     scalacOptions ++= Seq(
         "-encoding",
         "UTF-8",
-        "-deprecation",
-        "-feature",
         "-unchecked",
         "-Xlog-reflective-calls",
         "-language:higherKinds",
         "-language:implicitConversions",
         "-target:jvm-1.8"),
-    scalacOptions += {
-      if (scalaVersion.value.startsWith("2.13")) ""
-      else "-Ypartial-unification"
-    },
+    Compile / scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, 13)) =>
+          disciplineScalacOptions -- Set(
+            "-Ywarn-inaccessible",
+            "-Ywarn-infer-any",
+            "-Ywarn-nullary-override",
+            "-Ywarn-nullary-unit",
+            "-Ypartial-unification",
+            "-Yno-adapted-args")
+        case Some((2, 12)) =>
+          disciplineScalacOptions
+        case _ =>
+          Nil
+      }).toSeq,
     scalacOptions += "-Ydelambdafy:method",
     Compile / doc / scalacOptions := scalacOptions.value ++ Seq(
         "-doc-title",
@@ -74,4 +82,20 @@ object ProjectAutoPlugin extends AutoPlugin {
            |""".stripMargin)),
     resolvers += Resolver.typesafeRepo("releases"),
     resolvers += Resolver.jcenterRepo)
+
+  val disciplineScalacOptions = Set(
+//    "-Xfatal-warnings",
+    "-feature",
+    "-Yno-adapted-args",
+    "-deprecation",
+    "-Xlint",
+    "-Ywarn-dead-code",
+    "-Ywarn-inaccessible",
+    "-Ywarn-infer-any",
+    "-Ywarn-nullary-override",
+    "-Ywarn-nullary-unit",
+    "-Ywarn-unused:_",
+    "-Ypartial-unification",
+    "-Ywarn-extra-implicit")
+
 }

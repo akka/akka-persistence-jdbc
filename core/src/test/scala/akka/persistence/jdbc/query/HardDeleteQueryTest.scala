@@ -5,10 +5,8 @@
 
 package akka.persistence.jdbc.query
 
-import akka.persistence.query.{ EventEnvelope, NoOffset, Sequence }
+import akka.persistence.query.NoOffset
 import akka.pattern._
-import com.typesafe.config.ConfigFactory
-import org.scalactic.source.Position
 
 import scala.concurrent.duration._
 import org.scalatest.matchers.should.Matchers

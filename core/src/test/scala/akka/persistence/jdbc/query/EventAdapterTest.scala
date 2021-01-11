@@ -56,17 +56,17 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
 
   it should "apply event adapter when querying events for actor with pid 'my-1'" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors() { (actor1, _, _) =>
       journalOps.withEventsByPersistenceId()("my-1", 0) { tp =>
         tp.request(10)
         tp.expectNoMessage(100.millis)
 
         actor1 ! Event("1")
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, EventRestored("1")))
+        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(1), "my-1", 1, EventRestored("1"), timestamp = 0L))
         tp.expectNoMessage(100.millis)
 
         actor1 ! Event("2")
-        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, EventRestored("2")))
+        tp.expectNext(ExpectNextTimeout, EventEnvelope(Sequence(2), "my-1", 2, EventRestored("2"), timestamp = 0L))
         tp.expectNoMessage(100.millis)
         tp.cancel()
       }
@@ -86,12 +86,12 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
 
       journalOps.withEventsByTag(10.seconds)("event", Sequence(1)) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, EventRestored("2")))
-        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, EventRestored("3")))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, EventRestored("2"), timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-3", 1, EventRestored("3"), timestamp = 0L))
         tp.expectNoMessage(NoMsgTime)
 
         actor1 ? TaggedEvent(Event("1"), "event")
-        tp.expectNext(EventEnvelope(Sequence(4), "my-1", 2, EventRestored("1")))
+        tp.expectNext(EventEnvelope(Sequence(4), "my-1", 2, EventRestored("1"), timestamp = 0L))
         tp.cancel()
         tp.expectNoMessage(NoMsgTime)
       }
@@ -100,7 +100,7 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
 
   it should "apply event adapters when querying current events for actors" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors() { (actor1, _, _) =>
       actor1 ! Event("1")
       actor1 ! Event("2")
       actor1 ! Event("3")
@@ -110,21 +110,27 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 1, 1) { tp =>
-        tp.request(Int.MaxValue).expectNext(EventEnvelope(Sequence(1), "my-1", 1, EventRestored("1"))).expectComplete()
+        tp.request(Int.MaxValue)
+          .expectNext(EventEnvelope(Sequence(1), "my-1", 1, EventRestored("1"), timestamp = 0L))
+          .expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 2, 2) { tp =>
-        tp.request(Int.MaxValue).expectNext(EventEnvelope(Sequence(2), "my-1", 2, EventRestored("2"))).expectComplete()
+        tp.request(Int.MaxValue)
+          .expectNext(EventEnvelope(Sequence(2), "my-1", 2, EventRestored("2"), timestamp = 0L))
+          .expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 3, 3) { tp =>
-        tp.request(Int.MaxValue).expectNext(EventEnvelope(Sequence(3), "my-1", 3, EventRestored("3"))).expectComplete()
+        tp.request(Int.MaxValue)
+          .expectNext(EventEnvelope(Sequence(3), "my-1", 3, EventRestored("3"), timestamp = 0L))
+          .expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 2, 3) { tp =>
         tp.request(Int.MaxValue)
-          .expectNext(EventEnvelope(Sequence(2), "my-1", 2, EventRestored("2")))
-          .expectNext(EventEnvelope(Sequence(3), "my-1", 3, EventRestored("3")))
+          .expectNext(EventEnvelope(Sequence(2), "my-1", 2, EventRestored("2"), timestamp = 0L))
+          .expectNext(EventEnvelope(Sequence(3), "my-1", 3, EventRestored("3"), timestamp = 0L))
           .expectComplete()
       }
     }

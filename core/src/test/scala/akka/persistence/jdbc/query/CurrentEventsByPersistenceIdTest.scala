@@ -17,7 +17,7 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
 
   it should "find events from sequenceNr" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors() { (actor1, _, _) =>
       actor1 ! 1
       actor1 ! 2
       actor1 ! 3
@@ -35,49 +35,49 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 1, 1) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1, timestamp = 0L))
         tp.expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 1, 2) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
-        tp.expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2, timestamp = 0L))
         tp.expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 2, 2) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2, timestamp = 0L))
         tp.expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 2, 3) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2))
-        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3, timestamp = 0L))
         tp.expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 3, 3) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3, timestamp = 0L))
         tp.expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 0, 3) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
-        tp.expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2))
-        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3, timestamp = 0L))
         tp.expectComplete()
       }
 
       journalOps.withCurrentEventsByPersistenceId()("my-1", 1, 3) { tp =>
         tp.request(Int.MaxValue)
-        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1))
-        tp.expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2))
-        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3))
+        tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(2), "my-1", 2, 2, timestamp = 0L))
+        tp.expectNext(EventEnvelope(Sequence(3), "my-1", 3, 3, timestamp = 0L))
         tp.expectComplete()
       }
     }
@@ -141,7 +141,7 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
 
   it should "find events for actors" in withActorSystem { implicit system =>
     val journalOps = new JavaDslJdbcReadJournalOperations(system)
-    withTestActors() { (actor1, actor2, actor3) =>
+    withTestActors() { (actor1, _, _) =>
       actor1 ! 1
       actor1 ! 2
       actor1 ! 3

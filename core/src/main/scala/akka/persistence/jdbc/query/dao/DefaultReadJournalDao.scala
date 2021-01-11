@@ -40,13 +40,13 @@ class DefaultReadJournalDao(
 
     // This doesn't populate the tags. AFAICT they aren't used
     Source
-      .fromPublisher(db.stream(queries.eventsByTag(tag, offset, maxOffset, correctMaxForH2Driver(max)).result))
+      .fromPublisher(db.stream(queries.eventsByTag((tag, offset, maxOffset, correctMaxForH2Driver(max))).result))
       .map(row =>
         AkkaSerialization.fromRow(serialization)(row).map { case (repr, ordering) => (repr, Set.empty, ordering) })
   }
 
   override def journalSequence(offset: Long, limit: Long): Source[Long, NotUsed] =
-    Source.fromPublisher(db.stream(queries.journalSequenceQuery(offset, limit).result))
+    Source.fromPublisher(db.stream(queries.journalSequenceQuery((offset, limit)).result))
 
   override def maxJournalSequence(): Future[Long] =
     db.run(queries.maxJournalSequenceQuery.result)
@@ -59,7 +59,7 @@ class DefaultReadJournalDao(
     Source
       .fromPublisher(
         db.stream(
-          queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max)).result))
-      .map(AkkaSerialization.fromRow(serialization))
+          queries.messagesQuery((persistenceId, fromSequenceNr, toSequenceNr, correctMaxForH2Driver(max))).result))
+      .map(AkkaSerialization.fromRow(serialization)(_))
 
 }

@@ -72,7 +72,7 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
     }
 
     // the recover cycle
-    withActor("1") { actor => recover => failure => rejected =>
+    withActor("1") { _ => recover => failure => rejected =>
       recover.expectMsg("foo")
       recover.expectMsg(RecoveryCompleted)
       failure.expectNoMessage(100.millis)
@@ -82,7 +82,7 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
 
   it should "not persist a single non-serializable message" in {
     class NotSerializable
-    withActor("2") { actor => recover => failure => rejected =>
+    withActor("2") { actor => recover => _ => rejected =>
       val tp = TestProbe()
       recover.expectMsg(RecoveryCompleted)
       tp.send(actor, new NotSerializable) // the NotSerializable class cannot be serialized
@@ -94,7 +94,7 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
     }
 
     // the recover cycle, no message should be recovered
-    withActor("2") { actor => recover => failure => rejected =>
+    withActor("2") { _ => recover => _ => _ =>
       recover.expectMsg(RecoveryCompleted)
       recover.expectNoMessage(100.millis)
     }
@@ -102,7 +102,7 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
 
   it should "persist only serializable messages" in {
     class NotSerializable
-    withActor("3") { actor => recover => failure => rejected =>
+    withActor("3") { actor => recover => _ => rejected =>
       val tp = TestProbe()
       recover.expectMsg(RecoveryCompleted)
       tp.send(actor, "foo")
@@ -117,7 +117,7 @@ abstract class StoreOnlySerializableMessagesTest(config: String, schemaType: Sch
     }
 
     // recover cycle
-    withActor("3") { actor => recover => failure => rejected =>
+    withActor("3") { _ => recover => failure => rejected =>
       recover.expectMsg("foo")
       recover.expectMsg(RecoveryCompleted)
       failure.expectNoMessage(100.millis)

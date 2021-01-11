@@ -261,7 +261,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
                 // Continue querying from the largest offset
                 xs.map(_.offset.value).max
               }
-              Some((nextStartingOffset, nextControl), xs)
+              Some(((nextStartingOffset, nextControl), xs))
             }
           }
 

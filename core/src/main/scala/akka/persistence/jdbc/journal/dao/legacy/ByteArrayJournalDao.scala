@@ -112,7 +112,8 @@ trait BaseByteArrayJournalDao
       case Success(t) => t
       case Failure(cause) =>
         throw new IllegalArgumentException(
-          s"Failed to serialize ${write.getClass} for update of [$persistenceId] @ [$sequenceNr]", cause)
+          s"Failed to serialize ${write.getClass} for update of [$persistenceId] @ [$sequenceNr]",
+          cause)
     }
     db.run(queries.update(persistenceId, sequenceNr, serializedRow.message).map(_ => Done))
   }

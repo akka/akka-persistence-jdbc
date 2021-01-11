@@ -50,18 +50,17 @@ class DefaultSnapshotDao(
     val serializedMetadata = meta.metadata.flatMap(m => AkkaSerialization.serialize(serialization, m).toOption)
     AkkaSerialization
       .serialize(serialization, payload = snapshot)
-      .map(
-        serializedSnapshot =>
-          SnapshotRow(
-            meta.persistenceId,
-            meta.sequenceNr,
-            meta.timestamp,
-            serializedSnapshot.serId,
-            serializedSnapshot.serManifest,
-            serializedSnapshot.payload,
-            serializedMetadata.map(_.serId),
-            serializedMetadata.map(_.serManifest),
-            serializedMetadata.map(_.payload)))
+      .map(serializedSnapshot =>
+        SnapshotRow(
+          meta.persistenceId,
+          meta.sequenceNr,
+          meta.timestamp,
+          serializedSnapshot.serId,
+          serializedSnapshot.serManifest,
+          serializedSnapshot.payload,
+          serializedMetadata.map(_.serId),
+          serializedMetadata.map(_.serManifest),
+          serializedMetadata.map(_.payload)))
   }
 
   private def zeroOrOneSnapshot(rows: Seq[SnapshotRow]): Option[(SnapshotMetadata, Any)] =

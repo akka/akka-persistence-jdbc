@@ -10,7 +10,7 @@ Akka Persistence JDBC requires Akka $akka.version$ or later. It uses extref:[Sli
 
 | Description | Version | Akka version |
 |-------------|---------|--------------|
-| New database schema | [5.0.0](https://github.com/akka/akka-persistence-jdbc/releases) | Akka 2.6.+
+| New database schema, see @ref:[Migration](migration.md) | [5.0.0](https://github.com/akka/akka-persistence-jdbc/releases) | Akka 2.6.+ |
 | First release within the Akka organization | [4.0.0](https://github.com/akka/akka-persistence-jdbc/releases/tag/v4.0.0) | Akka 2.6.+ |
 | Requires Akka 2.5.0 | [3.5.3+](https://github.com/akka/akka-persistence-jdbc/releases/tag/v3.5.3) | Akka 2.5.23+ or 2.6.x |
 

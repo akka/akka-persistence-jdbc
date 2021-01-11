@@ -8,15 +8,15 @@ By means of configuration in `application.conf` a DAO can be configured, below t
 
 ```hocon
 jdbc-journal {
-  dao = "akka.persistence.jdbc.journal.dao.ByteArrayJournalDao"
+  dao = "akka.persistence.jdbc.journal.dao.DefaultJournalDao"
 }
 
 jdbc-snapshot-store {
-  dao = "akka.persistence.jdbc.snapshot.dao.ByteArraySnapshotDao"
+  dao = "akka.persistence.jdbc.snapshot.dao.DefaultSnapshotDao"
 }
 
 jdbc-read-journal {
-  dao = "akka.persistence.jdbc.query.dao.ByteArrayReadJournalDao"
+  dao = "akka.persistence.jdbc.query.dao.DefaultReadJournalDao"
 }
 ```
 

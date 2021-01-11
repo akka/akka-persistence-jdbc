@@ -21,6 +21,9 @@ The plugin supports the following queries:
 Scala
 :  @@snip[snip](/core/src/test/scala/akka/persistence/jdbc/ScaladslSnippets.scala) { #persistence-ids }
 
+Java
+:  @@snip[snip](/core/src/test/java/akka/persistence/jdbc/JavadslSnippets.java) { #persistence-ids }
+
 The returned event stream is unordered and you can expect different order for multiple executions of the query.
 
 When using the `persistenceIds` query, the stream is not completed when it reaches the end of the currently used persistenceIds,
@@ -36,21 +39,11 @@ The stream is completed with failure if there is a failure in executing the quer
 `eventsByPersistenceId` and `currentEventsByPersistenceId` is used for retrieving events for
 a specific PersistentActor identified by persistenceId.
 
-```scala
-import akka.actor.ActorSystem
-import akka.stream.{Materializer, ActorMaterializer}
-import akka.stream.scaladsl.Source
-import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
-import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
+Scala
+:  @@snip[snip](/core/src/test/scala/akka/persistence/jdbc/ScaladslSnippets.scala) { #events-by-persistence-id }
 
-implicit val system: ActorSystem = ActorSystem()
-implicit val mat: Materializer = ActorMaterializer()(system)
-val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
-
-val willNotCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.eventsByPersistenceId("some-persistence-id", 0L, Long.MaxValue)
-
-val willCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.currentEventsByPersistenceId("some-persistence-id", 0L, Long.MaxValue)
-```
+Java
+:  @@snip[snip](/core/src/test/java/akka/persistence/jdbc/JavadslSnippets.java) { #events-by-persistence-id }
 
 You can retrieve a subset of all events by specifying `fromSequenceNr` and `toSequenceNr` or use `0L` and `Long.MaxValue` respectively to retrieve all events. Note that the corresponding sequence number of each event is provided in the `EventEnvelope`, which makes it possible to resume the stream at a later point from a given sequence number.
 
@@ -63,18 +56,8 @@ The stream is completed with failure if there is a failure in executing the quer
 `eventsByTag` and `currentEventsByTag` are used for retrieving events that were marked with a given
 `tag`, e.g. all domain events of an Aggregate Root type.
 
-```scala
-import akka.actor.ActorSystem
-import akka.stream.{Materializer, ActorMaterializer}
-import akka.stream.scaladsl.Source
-import akka.persistence.query.{ PersistenceQuery, EventEnvelope }
-import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
+Scala
+:  @@snip[snip](/core/src/test/scala/akka/persistence/jdbc/ScaladslSnippets.scala) { #events-by-tag }
 
-implicit val system: ActorSystem = ActorSystem()
-implicit val mat: Materializer = ActorMaterializer()(system)
-val readJournal: JdbcReadJournal = PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
-
-val willNotCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.eventsByTag("apple", 0L)
-
-val willCompleteTheStream: Source[EventEnvelope, NotUsed] = readJournal.currentEventsByTag("apple", 0L)
-```
+Java
+:  @@snip[snip](/core/src/test/java/akka/persistence/jdbc/JavadslSnippets.java) { #events-by-tag }

@@ -13,7 +13,8 @@ import org.scalatest.matchers.should.Matchers
 abstract class TablesTestSpec extends AnyFlatSpec with Matchers {
   def toColumnName[A](tableName: String)(columnName: String): String = s"$tableName.$columnName"
 
-  val config = ConfigFactory.parseString("""
+  val config = ConfigFactory
+    .parseString("""
       |akka-persistence-jdbc.slick.db {
       |  host = <not used>
       |  port = <not used>

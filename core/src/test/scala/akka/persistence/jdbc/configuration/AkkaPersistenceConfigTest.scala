@@ -15,7 +15,8 @@ import org.scalatest.matchers.should.Matchers
 class AkkaPersistenceConfigTest extends AnyFlatSpec with Matchers {
   private val referenceConfig: Config = ConfigFactory.load("reference")
 
-  val config: Config = ConfigFactory.parseString("""
+  val config: Config = ConfigFactory
+    .parseString("""
       |akka-persistence-jdbc.slick.db {
       |  host = <not used>
       |  port = <not used>

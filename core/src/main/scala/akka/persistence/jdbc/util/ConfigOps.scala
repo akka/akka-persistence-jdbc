@@ -5,9 +5,10 @@
 
 package akka.persistence.jdbc.util
 
+import akka.ConfigurationException
+
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-
 import com.typesafe.config.{ Config, ConfigFactory }
 
 import scala.concurrent.duration.{ Duration, FiniteDuration }
@@ -20,23 +21,23 @@ object ConfigOps {
       Try(config.getAnyRef(key)).map(_.asInstanceOf[A])
 
     def as[A](key: String, default: A): A =
-      Try(config.getAnyRef(key)).map(_.asInstanceOf[A]).getOrElse(default)
+      Try(config.getAnyRef(key)).map(_.asInstanceOf[A]).getOrElse(noDefault(key))
 
     def asConfig(key: String, default: Config = ConfigFactory.empty) =
-      Try(config.getConfig(key)).getOrElse(default)
+      Try(config.getConfig(key)).getOrElse(noDefault(key))
 
     def asInt(key: String, default: Int): Int =
-      Try(config.getInt(key)).getOrElse(default)
+      Try(config.getInt(key)).getOrElse(noDefault(key))
 
     def asString(key: String, default: String): String =
-      Try(config.getString(key)).getOrElse(default)
+      Try(config.getString(key)).getOrElse(noDefault(key))
 
     def asOptionalNonEmptyString(key: String): Option[String] = {
       if (config.hasPath(key)) Some(config.getString(key)).filterNot(_.isEmpty) else None
     }
 
     def asBoolean(key: String, default: Boolean) =
-      Try(config.getBoolean(key)).getOrElse(default)
+      Try(config.getBoolean(key)).getOrElse(noDefault(key))
 
     def asFiniteDuration(key: String, default: FiniteDuration) =
       Try(FiniteDuration(config.getDuration(key).toMillis, TimeUnit.MILLISECONDS)).getOrElse(default)
@@ -55,9 +56,13 @@ object ConfigOps {
 
     def ?[A](key: String): Try[A] = as(key)
 
-    def ?:[A](key: String, default: A) = as(key, default)
+    def ?:[A](key: String, default: A) = as(key, noDefault(key))
 
     def withkey[A](key: String)(f: Config => A): A = f(config.getConfig(key))
+  }
+
+  private def noDefault(key: String) = {
+    throw new ConfigurationException(s"The [$key] setting relies on a default provided in code.")
   }
 
   implicit def TryToOption[A](t: Try[A]): Option[A] = t.toOption

@@ -15,132 +15,132 @@ object ConfigKeys {
 }
 
 class SlickConfiguration(config: Config) {
-  val jndiName: Option[String] = config.as[String]("jndiName").trim
-  val jndiDbName: Option[String] = config.as[String]("jndiDbName")
+  val jndiName: Option[String] = config.asOptionalNonEmptyString("jndiName")
+  val jndiDbName: Option[String] = config.asStringOption("jndiDbName")
   override def toString: String = s"SlickConfiguration($jndiName,$jndiDbName)"
 }
 
 class LegacyJournalTableColumnNames(config: Config) {
-  private val cfg = config.asConfig("tables.legacy_journal.columnNames")
-  val ordering: String = cfg.as[String]("ordering", "ordering")
-  val deleted: String = cfg.as[String]("deleted", "deleted")
-  val persistenceId: String = cfg.as[String]("persistenceId", "persistence_id")
-  val sequenceNumber: String = cfg.as[String]("sequenceNumber", "sequence_number")
-  val created: String = cfg.as[String]("created", "created")
-  val tags: String = cfg.as[String]("tags", "tags")
-  val message: String = cfg.as[String]("message", "message")
+  private val cfg = config.getConfig("tables.legacy_journal.columnNames")
+  val ordering: String = cfg.getString("ordering")
+  val deleted: String = cfg.getString("deleted")
+  val persistenceId: String = cfg.getString("persistenceId")
+  val sequenceNumber: String = cfg.getString("sequenceNumber")
+  val created: String = cfg.getString("created")
+  val tags: String = cfg.getString("tags")
+  val message: String = cfg.getString("message")
   override def toString: String = s"JournalTableColumnNames($persistenceId,$sequenceNumber,$created,$tags,$message)"
 }
 
 class EventJournalTableColumnNames(config: Config) {
-  private val cfg = config.asConfig("tables.event_journal.columnNames")
-  val ordering: String = cfg.as[String]("ordering", "ordering")
-  val deleted: String = cfg.as[String]("deleted", "deleted")
-  val persistenceId: String = cfg.as[String]("persistenceId", "persistence_id")
-  val sequenceNumber: String = cfg.as[String]("sequenceNumber", "sequence_number")
-  val writer: String = cfg.as[String]("writer", "writer")
-  val writeTimestamp: String = cfg.as[String]("writeTimestamp", "write_timestamp")
-  val adapterManifest: String = cfg.as[String]("adapterManifest", "adapter_manifest")
+  private val cfg = config.getConfig("tables.event_journal.columnNames")
+  val ordering: String = cfg.getString("ordering")
+  val deleted: String = cfg.getString("deleted")
+  val persistenceId: String = cfg.getString("persistenceId")
+  val sequenceNumber: String = cfg.getString("sequenceNumber")
+  val writer: String = cfg.getString("writer")
+  val writeTimestamp: String = cfg.getString("writeTimestamp")
+  val adapterManifest: String = cfg.getString("adapterManifest")
 
-  val eventPayload: String = cfg.as[String]("eventPayload", "event_payload")
-  val eventSerId: String = cfg.as[String]("eventSerId", "event_ser_id")
-  val eventSerManifest: String = cfg.as[String]("eventSerManifest", "event_ser_manifest")
+  val eventPayload: String = cfg.getString("eventPayload")
+  val eventSerId: String = cfg.getString("eventSerId")
+  val eventSerManifest: String = cfg.getString("eventSerManifest")
 
-  val metaPayload: String = cfg.as[String]("metaPayload", "meta_payload")
-  val metaSerId: String = cfg.as[String]("metaSerId", "meta_ser_id")
-  val metaSerManifest: String = cfg.as[String]("metaSerManifest", "meta_ser_manifest")
+  val metaPayload: String = cfg.getString("metaPayload")
+  val metaSerId: String = cfg.getString("metaSerId")
+  val metaSerManifest: String = cfg.getString("metaSerManifest")
 }
 
 class EventTagTableColumnNames(config: Config) {
-  private val cfg = config.asConfig("tables.event_tag.columnNames")
-  val eventId: String = cfg.as[String]("eventId", "event_id")
-  val tag: String = cfg.as[String]("tag", "tag")
+  private val cfg = config.getConfig("tables.event_tag.columnNames")
+  val eventId: String = cfg.getString("eventId")
+  val tag: String = cfg.getString("tag")
 }
 
 class LegacyJournalTableConfiguration(config: Config) {
-  private val cfg = config.asConfig("tables.legacy_journal")
-  val tableName: String = cfg.as[String]("tableName", "journal")
-  val schemaName: Option[String] = cfg.as[String]("schemaName").trim
+  private val cfg = config.getConfig("tables.legacy_journal")
+  val tableName: String = cfg.getString("tableName")
+  val schemaName: Option[String] = cfg.asOptionalNonEmptyString("schemaName")
   val columnNames: LegacyJournalTableColumnNames = new LegacyJournalTableColumnNames(config)
   override def toString: String = s"LegacyJournalTableConfiguration($tableName,$schemaName,$columnNames)"
 }
 
 class EventJournalTableConfiguration(config: Config) {
-  private val cfg = config.asConfig("tables.event_journal")
-  val tableName: String = cfg.as[String]("tableName", "event_journal")
-  val schemaName: Option[String] = cfg.as[String]("schemaName").trim
+  private val cfg = config.getConfig("tables.event_journal")
+  val tableName: String = cfg.getString("tableName")
+  val schemaName: Option[String] = cfg.asOptionalNonEmptyString("schemaName")
   val columnNames: EventJournalTableColumnNames = new EventJournalTableColumnNames(config)
   override def toString: String = s"EventJournalTableConfiguration($tableName,$schemaName,$columnNames)"
 }
 class EventTagTableConfiguration(config: Config) {
-  private val cfg = config.asConfig("tables.event_tag")
-  val tableName: String = cfg.as[String]("tableName", "event_tag")
-  val schemaName: Option[String] = cfg.as[String]("schemaName").trim
+  private val cfg = config.getConfig("tables.event_tag")
+  val tableName: String = cfg.getString("tableName")
+  val schemaName: Option[String] = cfg.asOptionalNonEmptyString("schemaName")
   val columnNames: EventTagTableColumnNames = new EventTagTableColumnNames(config)
 }
 class LegacySnapshotTableColumnNames(config: Config) {
-  private val cfg = config.asConfig("tables.legacy_snapshot.columnNames")
-  val persistenceId: String = cfg.as[String]("persistenceId", "persistence_id")
-  val sequenceNumber: String = cfg.as[String]("sequenceNumber", "sequence_number")
-  val created: String = cfg.as[String]("created", "created")
-  val snapshot: String = cfg.as[String]("snapshot", "snapshot")
+  private val cfg = config.getConfig("tables.legacy_snapshot.columnNames")
+  val persistenceId: String = cfg.getString("persistenceId")
+  val sequenceNumber: String = cfg.getString("sequenceNumber")
+  val created: String = cfg.getString("created")
+  val snapshot: String = cfg.getString("snapshot")
   override def toString: String = s"SnapshotTableColumnNames($persistenceId,$sequenceNumber,$created,$snapshot)"
 }
 
 class SnapshotTableColumnNames(config: Config) {
-  private val cfg = config.asConfig("tables.snapshot.columnNames")
-  val persistenceId: String = cfg.as[String]("persistenceId", "persistence_id")
-  val sequenceNumber: String = cfg.as[String]("sequenceNumber", "sequence_number")
-  val created: String = cfg.as[String]("created", "created")
+  private val cfg = config.getConfig("tables.snapshot.columnNames")
+  val persistenceId: String = cfg.getString("persistenceId")
+  val sequenceNumber: String = cfg.getString("sequenceNumber")
+  val created: String = cfg.getString("created")
 
-  val snapshotPayload: String = cfg.as[String]("snapshotPayload", "snapshot_payload")
-  val snapshotSerId: String = cfg.as[String]("snapshotSerId", "snapshot_ser_id")
-  val snapshotSerManifest: String = cfg.as[String]("snapshotSerManifest", "snapshot_manifest")
+  val snapshotPayload: String = cfg.getString("snapshotPayload")
+  val snapshotSerId: String = cfg.getString("snapshotSerId")
+  val snapshotSerManifest: String = cfg.getString("snapshotSerManifest")
 
-  val metaPayload: String = cfg.as[String]("metaPayload", "meta_payload")
-  val metaSerId: String = cfg.as[String]("metaSerId", "meta_ser_id")
-  val metaSerManifest: String = cfg.as[String]("metaSerManifest", "meta_manifest")
+  val metaPayload: String = cfg.getString("metaPayload")
+  val metaSerId: String = cfg.getString("metaSerId")
+  val metaSerManifest: String = cfg.getString("metaSerManifest")
 }
 
 class LegacySnapshotTableConfiguration(config: Config) {
-  private val cfg = config.asConfig("tables.legacy_snapshot")
-  val tableName: String = cfg.as[String]("tableName", "snapshot")
-  val schemaName: Option[String] = cfg.as[String]("schemaName").trim
+  private val cfg = config.getConfig("tables.legacy_snapshot")
+  val tableName: String = cfg.getString("tableName")
+  val schemaName: Option[String] = cfg.asOptionalNonEmptyString("schemaName")
   val columnNames: LegacySnapshotTableColumnNames = new LegacySnapshotTableColumnNames(config)
   override def toString: String = s"LegacySnapshotTableConfiguration($tableName,$schemaName,$columnNames)"
 }
 
 class SnapshotTableConfiguration(config: Config) {
-  private val cfg = config.asConfig("tables.snapshot")
-  val tableName: String = cfg.as[String]("tableName", "snapshot")
-  val schemaName: Option[String] = cfg.as[String]("schemaName").trim
+  private val cfg = config.getConfig("tables.snapshot")
+  val tableName: String = cfg.getString("tableName")
+  val schemaName: Option[String] = cfg.asOptionalNonEmptyString("schemaName")
   val columnNames: SnapshotTableColumnNames = new SnapshotTableColumnNames(config)
   override def toString: String = s"SnapshotTableConfiguration($tableName,$schemaName,$columnNames)"
 }
 
 class JournalPluginConfig(config: Config) {
-  val tagSeparator: String = config.as[String]("tagSeparator", ",")
-  val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.journal.ByteArrayJournalDao")
+  val tagSeparator: String = config.getString("tagSeparator")
+  val dao: String = config.getString("dao")
   override def toString: String = s"JournalPluginConfig($tagSeparator,$dao)"
 }
 
 class BaseDaoConfig(config: Config) {
-  val bufferSize: Int = config.asInt("bufferSize", 1000)
-  val batchSize: Int = config.asInt("batchSize", 400)
-  val replayBatchSize: Int = config.asInt("replayBatchSize", 400)
-  val parallelism: Int = config.asInt("parallelism", 8)
-  val logicalDelete: Boolean = config.asBoolean("logicalDelete", default = true)
+  val bufferSize: Int = config.getInt("bufferSize")
+  val batchSize: Int = config.getInt("batchSize")
+  val replayBatchSize: Int = config.getInt("replayBatchSize")
+  val parallelism: Int = config.getInt("parallelism")
+  val logicalDelete: Boolean = config.getBoolean("logicalDelete")
   override def toString: String = s"BaseDaoConfig($bufferSize,$batchSize,$parallelism,$logicalDelete)"
 }
 
 class ReadJournalPluginConfig(config: Config) {
-  val tagSeparator: String = config.as[String]("tagSeparator", ",")
-  val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.readjournal.ByteArrayReadJournalDao")
+  val tagSeparator: String = config.getString("tagSeparator")
+  val dao: String = config.getString("dao")
   override def toString: String = s"ReadJournalPluginConfig($tagSeparator,$dao)"
 }
 
 class SnapshotPluginConfig(config: Config) {
-  val dao: String = config.as[String]("dao", "akka.persistence.jdbc.dao.bytea.snapshot.ByteArraySnapshotDao")
+  val dao: String = config.getString("dao")
   override def toString: String = s"SnapshotPluginConfig($dao)"
 }
 
@@ -167,11 +167,11 @@ class SnapshotConfig(config: Config) {
 object JournalSequenceRetrievalConfig {
   def apply(config: Config): JournalSequenceRetrievalConfig =
     JournalSequenceRetrievalConfig(
-      batchSize = config.asInt("journal-sequence-retrieval.batch-size", 10000),
-      maxTries = config.asInt("journal-sequence-retrieval.max-tries", 10),
-      queryDelay = config.asFiniteDuration("journal-sequence-retrieval.query-delay", 1.second),
-      maxBackoffQueryDelay = config.asFiniteDuration("journal-sequence-retrieval.max-backoff-query-delay", 1.minute),
-      askTimeout = config.asFiniteDuration("journal-sequence-retrieval.ask-timeout", 1.second))
+      batchSize = config.getInt("journal-sequence-retrieval.batch-size"),
+      maxTries = config.getInt("journal-sequence-retrieval.max-tries"),
+      queryDelay = config.asFiniteDuration("journal-sequence-retrieval.query-delay"),
+      maxBackoffQueryDelay = config.asFiniteDuration("journal-sequence-retrieval.max-backoff-query-delay"),
+      askTimeout = config.asFiniteDuration("journal-sequence-retrieval.ask-timeout"))
 }
 case class JournalSequenceRetrievalConfig(
     batchSize: Int,
@@ -186,10 +186,10 @@ class ReadJournalConfig(config: Config) {
   val eventTagTableConfiguration = new EventTagTableConfiguration(config)
   val journalSequenceRetrievalConfiguration = JournalSequenceRetrievalConfig(config)
   val pluginConfig = new ReadJournalPluginConfig(config)
-  val refreshInterval: FiniteDuration = config.asFiniteDuration("refresh-interval", 1.second)
-  val maxBufferSize: Int = config.as[String]("max-buffer-size", "500").toInt
-  val addShutdownHook: Boolean = config.asBoolean("add-shutdown-hook", true)
-  val includeDeleted: Boolean = config.as[Boolean]("includeLogicallyDeleted", true)
+  val refreshInterval: FiniteDuration = config.asFiniteDuration("refresh-interval")
+  val maxBufferSize: Int = config.getInt("max-buffer-size")
+  val addShutdownHook: Boolean = config.getBoolean("add-shutdown-hook")
+  val includeDeleted: Boolean = config.getBoolean("includeLogicallyDeleted")
 
   override def toString: String =
     s"ReadJournalConfig($journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook,$includeDeleted)"

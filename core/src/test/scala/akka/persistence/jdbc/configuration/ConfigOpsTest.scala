@@ -11,63 +11,21 @@ import ConfigOps._
 import com.typesafe.config.ConfigFactory
 
 class ConfigOpsTest extends SimpleSpec {
-  it should "parse field values to Try[A]" in {
+  it should "parse field values to Options" in {
     val cfg = ConfigFactory.parseString("""
         | person {
         |   firstName = "foo"
         |   lastName = "bar"
-        |   age = 25
-        |   hasCar = true
-        |   hasGirlfriend = false
+        |   pet = ""
+        |   car = " "
         | }
       """.stripMargin)
 
-    cfg.as[String]("person.firstName").success.value shouldBe "foo"
-    cfg.as[String]("person.lastName").success.value shouldBe "bar"
-    cfg.as[Int]("person.age").success.value shouldBe 25
-    cfg.as[Boolean]("person.hasCar").success.value shouldBe true
-    cfg.as[Boolean]("person.hasGirlfriend").success.value shouldBe false
-  }
-
-  it should "parse field values with default values with empty config" in {
-    val cfg = ConfigFactory.parseString("")
-    cfg.as[String]("person.firstName", "john") shouldBe "john"
-    cfg.as[String]("person.lastName", "doe") shouldBe "doe"
-    cfg.as[Int]("person.age", 35) shouldBe 35
-    cfg.as[Boolean]("person.hasCar", false) shouldBe false
-    cfg.as[Boolean]("person.hasGirlfriend", false) shouldBe false
-  }
-
-  it should "parse field values with default values for wrong config" in {
-    val cfg = ConfigFactory.parseString("""
-        | RedShirt {
-        |   firstName = "red"
-        |   lastName = "shirt"
-        |   age = 25
-        |   hasSpaceship = true
-        |   hasGirlfriend = true
-        | }
-      """.stripMargin)
-
-    cfg.as[String]("person.firstName", "john") shouldBe "john"
-    cfg.as[String]("person.lastName", "doe") shouldBe "doe"
-    cfg.as[Int]("person.age", 35) shouldBe 35
-    cfg.as[Boolean]("person.hasCar", false) shouldBe false
-    cfg.as[Boolean]("person.hasGirlfriend", false) shouldBe false
-  }
-
-  it should "parse field values to with defaults" in {
-    val cfg = ConfigFactory.parseString("""
-        | person {
-        |   age = 25
-        |   hasGirlfriend = true
-        | }
-      """.stripMargin)
-
-    cfg.as[String]("person.firstName", "john") shouldBe "john"
-    cfg.as[String]("person.lastName", "doe") shouldBe "doe"
-    cfg.as[Int]("person.age", 35) shouldBe 25
-    cfg.as[Boolean]("person.hasCar", false) shouldBe false
-    cfg.as[Boolean]("person.hasGirlfriend", false) shouldBe true
+    cfg.asStringOption("person.firstName").get shouldBe "foo"
+    cfg.asStringOption("person.lastName").get shouldBe "bar"
+    cfg.asStringOption("person.pet") shouldBe None
+    cfg.asStringOption("person.car") shouldBe None
+    cfg.asStringOption("person.bike") shouldBe None
+    cfg.asStringOption("person.bike") shouldBe None
   }
 }

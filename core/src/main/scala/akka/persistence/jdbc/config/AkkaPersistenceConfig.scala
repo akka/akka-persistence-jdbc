@@ -15,7 +15,7 @@ object ConfigKeys {
 }
 
 class SlickConfiguration(config: Config) {
-  val jndiName: Option[String] = config.asOptionalNonEmptyString("jndiName")
+  val jndiName: Option[String] = config.asStringOption("jndiName")
   val jndiDbName: Option[String] = config.asStringOption("jndiDbName")
   override def toString: String = s"SlickConfiguration($jndiName,$jndiDbName)"
 }
@@ -60,7 +60,7 @@ class EventTagTableColumnNames(config: Config) {
 class LegacyJournalTableConfiguration(config: Config) {
   private val cfg = config.getConfig("tables.legacy_journal")
   val tableName: String = cfg.getString("tableName")
-  val schemaName: Option[String] = cfg.asOptionalNonEmptyString("schemaName")
+  val schemaName: Option[String] = cfg.asStringOption("schemaName")
   val columnNames: LegacyJournalTableColumnNames = new LegacyJournalTableColumnNames(config)
   override def toString: String = s"LegacyJournalTableConfiguration($tableName,$schemaName,$columnNames)"
 }
@@ -68,14 +68,14 @@ class LegacyJournalTableConfiguration(config: Config) {
 class EventJournalTableConfiguration(config: Config) {
   private val cfg = config.getConfig("tables.event_journal")
   val tableName: String = cfg.getString("tableName")
-  val schemaName: Option[String] = cfg.asOptionalNonEmptyString("schemaName")
+  val schemaName: Option[String] = cfg.asStringOption("schemaName")
   val columnNames: EventJournalTableColumnNames = new EventJournalTableColumnNames(config)
   override def toString: String = s"EventJournalTableConfiguration($tableName,$schemaName,$columnNames)"
 }
 class EventTagTableConfiguration(config: Config) {
   private val cfg = config.getConfig("tables.event_tag")
   val tableName: String = cfg.getString("tableName")
-  val schemaName: Option[String] = cfg.asOptionalNonEmptyString("schemaName")
+  val schemaName: Option[String] = cfg.asStringOption("schemaName")
   val columnNames: EventTagTableColumnNames = new EventTagTableColumnNames(config)
 }
 class LegacySnapshotTableColumnNames(config: Config) {
@@ -105,7 +105,7 @@ class SnapshotTableColumnNames(config: Config) {
 class LegacySnapshotTableConfiguration(config: Config) {
   private val cfg = config.getConfig("tables.legacy_snapshot")
   val tableName: String = cfg.getString("tableName")
-  val schemaName: Option[String] = cfg.asOptionalNonEmptyString("schemaName")
+  val schemaName: Option[String] = cfg.asStringOption("schemaName")
   val columnNames: LegacySnapshotTableColumnNames = new LegacySnapshotTableColumnNames(config)
   override def toString: String = s"LegacySnapshotTableConfiguration($tableName,$schemaName,$columnNames)"
 }
@@ -113,7 +113,7 @@ class LegacySnapshotTableConfiguration(config: Config) {
 class SnapshotTableConfiguration(config: Config) {
   private val cfg = config.getConfig("tables.snapshot")
   val tableName: String = cfg.getString("tableName")
-  val schemaName: Option[String] = cfg.asOptionalNonEmptyString("schemaName")
+  val schemaName: Option[String] = cfg.asStringOption("schemaName")
   val columnNames: SnapshotTableColumnNames = new SnapshotTableColumnNames(config)
   override def toString: String = s"SnapshotTableConfiguration($tableName,$schemaName,$columnNames)"
 }
@@ -152,7 +152,7 @@ class JournalConfig(config: Config) {
   val eventTagTableConfiguration = new EventTagTableConfiguration(config)
   val pluginConfig = new JournalPluginConfig(config)
   val daoConfig = new BaseDaoConfig(config)
-  val useSharedDb: Option[String] = config.asOptionalNonEmptyString(ConfigKeys.useSharedDb)
+  val useSharedDb: Option[String] = config.asStringOption(ConfigKeys.useSharedDb)
   override def toString: String = s"JournalConfig($journalTableConfiguration,$pluginConfig,$useSharedDb)"
 }
 
@@ -160,7 +160,7 @@ class SnapshotConfig(config: Config) {
   val legacySnapshotTableConfiguration = new LegacySnapshotTableConfiguration(config)
   val snapshotTableConfiguration = new SnapshotTableConfiguration(config)
   val pluginConfig = new SnapshotPluginConfig(config)
-  val useSharedDb: Option[String] = config.asOptionalNonEmptyString(ConfigKeys.useSharedDb)
+  val useSharedDb: Option[String] = config.asStringOption(ConfigKeys.useSharedDb)
   override def toString: String = s"SnapshotConfig($snapshotTableConfiguration,$pluginConfig,$useSharedDb)"
 }
 

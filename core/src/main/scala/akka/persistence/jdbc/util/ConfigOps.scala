@@ -14,11 +14,11 @@ object ConfigOps {
 
   implicit class ConfigOperations(val config: Config) extends AnyVal {
     def asStringOption(key: String): Option[String] =
-      if (config.hasPath(key)) Some(config.getString(key))
-      else None
-
-    def asOptionalNonEmptyString(key: String): Option[String] =
-      asStringOption(key).map(_.trim).filterNot(_.isEmpty)
+      if (config.hasPath(key)) {
+        val value = config.getString(key).trim
+        if (value.isEmpty) None
+        else Some(value)
+      } else None
 
     def asFiniteDuration(key: String): FiniteDuration =
       FiniteDuration(config.getDuration(key).toMillis, TimeUnit.MILLISECONDS)

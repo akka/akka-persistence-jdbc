@@ -23,9 +23,9 @@ class ConfigOpsTest extends SimpleSpec {
 
     cfg.asStringOption("person.firstName").get shouldBe "foo"
     cfg.asStringOption("person.lastName").get shouldBe "bar"
-    cfg.asOptionalNonEmptyString("person.pet") shouldBe None
-    cfg.asOptionalNonEmptyString("person.car") shouldBe None
+    cfg.asStringOption("person.pet") shouldBe None
+    cfg.asStringOption("person.car") shouldBe None
     cfg.asStringOption("person.bike") shouldBe None
-    cfg.asOptionalNonEmptyString("person.bike") shouldBe None
+    cfg.asStringOption("person.bike") shouldBe None
   }
 }

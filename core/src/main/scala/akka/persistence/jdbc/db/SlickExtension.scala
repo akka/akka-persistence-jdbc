@@ -77,7 +77,7 @@ class DefaultSlickDatabaseProvider(system: ActorSystem) extends SlickDatabasePro
         s"No shared database is configured under akka-persistence-jdbc.shared-databases.$sharedDbName"))
 
   def database(config: Config): SlickDatabase = {
-    config.asOptionalNonEmptyString(ConfigKeys.useSharedDb) match {
+    config.asStringOption(ConfigKeys.useSharedDb) match {
       case None => SlickDatabase.initializeEagerly(config, new SlickConfiguration(config.getConfig("slick")), "slick")
       case Some(sharedDbName) =>
         getSharedDbOrThrow(sharedDbName)

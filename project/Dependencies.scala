@@ -5,8 +5,8 @@ object Dependencies {
   val Nightly = sys.env.get("TRAVIS_EVENT_TYPE").contains("cron")
 
   // Keep in sync with .travis.yml
-  val Scala212 = "2.12.11"
-  val Scala213 = "2.13.1"
+  val Scala212 = "2.12.13"
+  val Scala213 = "2.13.4"
   val ScalaVersions = Seq(Scala212, Scala213)
 
   val AkkaVersion = "2.6.10"

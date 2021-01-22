@@ -1,5 +1,8 @@
 import com.lightbend.paradox.apidoc.ApidocPlugin.autoImport.apidocRootPackage
 
+// TODO: remove this once 5.0.0 are published in Maven Central
+resolvers in ThisBuild += Resolver.bintrayRepo("akka", "maven")
+
 lazy val `akka-persistence-jdbc` = project
   .in(file("."))
   .enablePlugins(ScalaUnidocPlugin)

@@ -31,7 +31,7 @@ object ProjectAutoPlugin extends AutoPlugin {
   override val projectSettings: Seq[Setting[_]] = Seq(
     crossVersion := CrossVersion.binary,
     crossScalaVersions := Dependencies.ScalaVersions,
-    scalaVersion := Dependencies.Scala212,
+    scalaVersion := Dependencies.Scala213,
     Test / fork := false,
     Test / parallelExecution := false,
     Test / logBuffered := true,

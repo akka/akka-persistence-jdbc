@@ -4,7 +4,7 @@ lazy val `akka-persistence-jdbc` = project
   .in(file("."))
   .enablePlugins(ScalaUnidocPlugin)
   .disablePlugins(MimaPlugin, SitePlugin)
-  .aggregate(core, migration, docs)
+  .aggregate(core, migration, docs, `schema-utils`)
   .settings(publish / skip := true)
 
 lazy val core = project
@@ -29,6 +29,16 @@ lazy val migration = project
     name := "akka-persistence-jdbc-migration",
     libraryDependencies ++= Dependencies.Migration,
     publish / skip := true)
+
+lazy val `schema-utils` = project
+  .in(file("schema-utils"))
+  .enablePlugins(Publish)
+  .disablePlugins(SitePlugin, MimaPlugin)
+  .settings(
+    name := "akka-persistence-jdbc-schema-utils",
+    libraryDependencies ++= Dependencies.Migration ++ Dependencies.Libraries,
+    publish / skip := true)
+  .dependsOn(core)
 
 lazy val docs = project
   .enablePlugins(ProjectAutoPlugin, AkkaParadoxPlugin, ParadoxSitePlugin, PreprocessPlugin, PublishRsyncPlugin)

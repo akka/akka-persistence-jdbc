@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
+ * Copyright (C) 2019 - 2021 Lightbend Inc. <https://www.lightbend.com>
+ */
+
 package akka.persistence.jdbc.tools
 
 import com.typesafe.config.Config
@@ -37,7 +42,7 @@ final case class SchemasUtil(config: Config) {
    *
    * @return the list of migration versions run
    */
-  def run(): Seq[String] = {
+  def createIfNotExists(): Seq[String] = {
     val flywayConfig: FluentConfiguration = Flyway.configure
       .dataSource(url, user, password)
       .table("apj_schema_history")
@@ -50,11 +55,11 @@ final case class SchemasUtil(config: Config) {
 
     val flyway: Flyway = flywayConfig.load
     flyway.baseline()
+
     // running the migration
     val result: MigrateResult = flyway.migrate()
 
     // let us return the sequence of migration versions applied sorted in a descending order
     result.migrations.asScala.toSeq.map(_.version).sortWith(_ > _)
   }
-
 }

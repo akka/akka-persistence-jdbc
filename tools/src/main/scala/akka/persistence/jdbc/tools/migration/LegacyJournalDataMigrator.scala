@@ -44,7 +44,7 @@ final case class LegacyJournalDataMigrator(config: Config)(implicit system: Acto
         legacyReadJournalDao
           .messagesWithBatch(persistenceId, 0L, Long.MaxValue, readJournalConfig.maxBufferSize, None)
           .mapAsync(1)(reprAndOrdNr => Future.fromTry(reprAndOrdNr))
-          .mapConcat { case (repr, _) =>
+          .mapConcat { case (repr: PersistentRepr, _) =>
             adaptEvents(repr)
           }
       })
@@ -54,7 +54,7 @@ final case class LegacyJournalDataMigrator(config: Config)(implicit system: Acto
    * write all legacy events into the new journal tables applying the proper serialization
    */
   def migrate(): Source[Seq[Try[Unit]], NotUsed] = {
-    allEvents().mapAsync(1) { pr =>
+    allEvents().mapAsync(1) { pr: PersistentRepr =>
       defaultJournalDao.asyncWriteMessages(immutable.Seq(AtomicWrite(pr)))
     }
   }

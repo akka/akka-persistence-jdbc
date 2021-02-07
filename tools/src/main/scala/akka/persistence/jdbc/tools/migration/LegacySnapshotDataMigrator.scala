@@ -32,7 +32,7 @@ case class LegacySnapshotDataMigrator(config: Config)(implicit system: ActorSyst
       legacySnapshotDao
         .latestSnapshot(persistenceId)
         .map((o: Option[(SnapshotMetadata, Any)]) => {
-          o.map(result => {
+          o.map((result: (SnapshotMetadata, Any)) => {
             val (meta, data) = result
             defaultSnapshotDao.save(meta, data)
           })

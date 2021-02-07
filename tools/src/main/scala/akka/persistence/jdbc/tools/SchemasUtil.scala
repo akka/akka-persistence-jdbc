@@ -11,7 +11,7 @@ import org.flywaydb.core.api.Location
 import org.flywaydb.core.api.configuration.FluentConfiguration
 import org.flywaydb.core.api.output.MigrateResult
 
-import scala.jdk.CollectionConverters.{ CollectionHasAsScala, MapHasAsJava }
+import scala.collection.JavaConverters.{ collectionAsScalaIterableConverter, mapAsJavaMapConverter }
 
 /**
  * executes the database migration

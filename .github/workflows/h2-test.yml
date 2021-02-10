@@ -1,9 +1,11 @@
 name: H2 Unit Tests
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types: [ completed ]
+  pull_request:
+  push:
+    branches:
+      - master
+    tags-ignore: [ v.* ]
 
 jobs:
   test:

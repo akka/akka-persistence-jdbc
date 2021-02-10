@@ -9,9 +9,8 @@ on:
 
 jobs:
    integration-test:
-    name: Integration Test ${{ matrix.name }}
+    name: Integration Tests
     runs-on: ubuntu-18.04
-    needs: [check-code-style, check-code-compililation, check-docs]
     strategy:
       fail-fast: false
       matrix:

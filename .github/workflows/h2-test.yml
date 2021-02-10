@@ -1,11 +1,9 @@
 name: H2 Unit Tests
 
-
 on:
   workflow_run:
     workflows: ["CI"]
-    types: 
-      - completed
+    types: [ completed ]
 
 jobs:
   test:

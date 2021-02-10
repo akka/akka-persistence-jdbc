@@ -1,0 +1,47 @@
+name: H2 Unit Tests
+
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: 
+      - completed
+
+jobs:
+  test:
+    name: Build and Test
+    runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { java-version: adopt@1.8,      scala-version: 2.12.13, sbt-opts: '' }
+          - { java-version: adopt@1.8,      scala-version: 2.13.4,  sbt-opts: '' }
+          - { java-version: adopt@1.11.0-9, scala-version: 2.12.13, sbt-opts: '-J-XX:+UnlockExperimentalVMOptions -J-XX:+UseJVMCICompiler' }
+          - { java-version: adopt@1.11.0-9, scala-version: 2.13.4,  sbt-opts: '-J-XX:+UnlockExperimentalVMOptions -J-XX:+UseJVMCICompiler' }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Checkout GitHub merge
+        if: github.event.pull_request
+        run: |-
+          git fetch origin pull/${{ github.event.pull_request.number }}/merge:scratch
+          git checkout scratch
+
+      - name: Setup JDK ${{ matrix.java-version }}
+        uses: olafurpg/setup-scala@v10
+        with:
+          java-version: ${{ matrix.java-version }}
+
+      - name: Cache Coursier cache
+        uses: coursier/cache-action@v5
+
+      - name: Run tests with Scala ${{ matrix.scala-version }} and Java ${{ matrix.java-version }}
+        run: sbt "++${{ matrix.scala-version }} test" ${{ matrix.sbt-opts }}
+
+      - name: Print logs on failure
+        if: ${{ failure() }}
+        run: find . -name "*.log" -exec ./scripts/cat-log.sh {} \;

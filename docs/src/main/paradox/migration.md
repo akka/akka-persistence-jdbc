@@ -4,7 +4,7 @@
 
 **Release `5.0.0` introduces a new schema and serialization that is not compatible with older versions.** 
 
-The previous version was wrapping the event payload with Akka's `PersistentRepr`, while in 5.0.0 the serialized event payload is persisted directly into the column. In order to migrate to the new schema, a migration tool capable of reading the serialized representation of `PersistentRepr` is required. That tool doesn't exist yet, therefore, the new schema can only be used with new applications.
+The previous version was wrapping the event payload with Akka's `PersistentRepr`, while in 5.0.0 the serialized event payload is persisted directly into the column. In order to migrate to the new schema, a migration tool capable of reading the serialized representation of `PersistentRepr` is required. That [tool doesn't exist yet](https://github.com/akka/akka-persistence-jdbc/issues/317), therefore, the new schema can only be used with new applications.
 
 If you have existing data override the DAO to continue using the old schema:
 
@@ -23,3 +23,8 @@ jdbc-read-journal {
   dao = "akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao"
 }
 ```
+
+If you have re-configured the `schemaName`, `tableName` and `columnNames` through configuration settings, you will need to move them a new key.
+
+* key `jdbc-journal.tables.journal` becomes `jdbc-journal.tables.legacy_journal`
+* key `jdbc-journal.tables.snapshot` becomes `jdbc-journal.tables.legacy_snapshot`

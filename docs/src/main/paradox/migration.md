@@ -27,4 +27,5 @@ jdbc-read-journal {
 If you have re-configured the `schemaName`, `tableName` and `columnNames` through configuration settings, you will need to move them a new key.
 
 * key `jdbc-journal.tables.journal` becomes `jdbc-journal.tables.legacy_journal`
-* key `jdbc-journal.tables.snapshot` becomes `jdbc-journal.tables.legacy_snapshot`
+* key `jdbc-snapshot-store.tables.snapshot` becomes `jdbc-snapshot-store.tables.legacy_snapshot`
+* key `jdbc-read-journal.tables.journal` becomes `jdbc-read-journal.tables.legacy_journal`

@@ -1,0 +1,49 @@
+name: SqlServer Integration Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+    tags-ignore: [ v.* ]
+
+jobs:
+   integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: "SqlServer", extraOpts: '' }
+          - { name: "SqlServer (old dao)", extraOpts: ' -Djdbc-journal.dao=akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao -Djdbc-snapshot-store.dao=akka.persistence.jdbc.snapshot.dao.legacy.ByteArraySnapshotDao -Djdbc-read-journal.dao=akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao' }
+          
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Checkout GitHub merge
+        if: github.event.pull_request
+        run: |-
+          git fetch origin pull/${{ github.event.pull_request.number }}/merge:scratch
+          git checkout scratch
+
+      - name: Set up JDK adopt@1.11.0-9
+        uses: olafurpg/setup-scala@v10
+        with:
+          java-version: adopt@1.11.0-9
+
+      - name: Cache Coursier cache
+        uses: coursier/cache-action@v5
+
+      - name: Start docker
+        run: ./scripts/launch-sqlserver.sh
+
+      - name: Run Integration tests for  ${{ matrix.name }}
+        run: sbt "++2.13.4 It/testOnly akka.persistence.jdbc.integration.SqlServer*"  ${{ matrix.extraOpts }} -J-XX:+UnlockExperimentalVMOptions -J-XX:+UseJVMCICompiler
+
+      - name: Print logs on failure
+        if: ${{ failure() }}
+        run: find . -name "*.log" -exec ./scripts/cat-log.sh {} \;

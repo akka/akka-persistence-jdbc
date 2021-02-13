@@ -35,7 +35,7 @@ lazy val migrator = project
   .enablePlugins(Publish)
   .disablePlugins(SitePlugin, MimaPlugin)
   .settings(
-    name := "akka-persistence-jdbc-schema-utils",
+    name := "akka-persistence-jdbc-migrator",
     libraryDependencies ++= Dependencies.Migration ++ Dependencies.Libraries,
     publish / skip := true)
   .dependsOn(core)

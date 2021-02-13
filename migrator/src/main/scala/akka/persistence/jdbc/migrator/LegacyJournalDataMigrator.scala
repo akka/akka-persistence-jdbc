@@ -82,8 +82,8 @@ final case class LegacyJournalDataMigrator(config: Config)(implicit system: Acto
    * write all legacy events into the new journal tables applying the proper serialization
    */
   def migrate(): Source[Seq[Try[Unit]], NotUsed] = {
-    allEvents().mapAsync(1) { pr: Seq[PersistentRepr] =>
-      defaultJournalDao.asyncWriteMessages(immutable.Seq(AtomicWrite(pr)))
+    allEvents().mapAsync(1) { list: Seq[PersistentRepr] =>
+      defaultJournalDao.asyncWriteMessages(immutable.Seq(AtomicWrite(collection.immutable.Seq(list: _*))))
     }
   }
 }

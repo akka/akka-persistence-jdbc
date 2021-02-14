@@ -15,14 +15,13 @@ import akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalSerializer
 import akka.persistence.jdbc.query.dao.legacy.ReadJournalQueries
 import akka.persistence.journal.EventAdapter
 import akka.serialization.SerializationExtension
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{ Sink, Source }
 import com.typesafe.config.Config
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
 import scala.collection.immutable
 import scala.concurrent.Future
-import scala.util.Try
 
 /**
  * This will help migrate the legacy journal data onto the new journal schema with the
@@ -40,7 +39,7 @@ final case class LegacyJournalDataMigrator(config: Config)(implicit system: Acto
 
   import profile.api._
 
-  private val eventAdapters = Persistence(system).adaptersFor("", config)
+  private val eventAdapters = Persistence(system).adaptersFor("jdbc-journal", config)
 
   private def adaptEvents(repr: PersistentRepr): Seq[PersistentRepr] = {
     val adapter: EventAdapter = eventAdapters.get(repr.payload.getClass)
@@ -81,9 +80,13 @@ final case class LegacyJournalDataMigrator(config: Config)(implicit system: Acto
   /**
    * write all legacy events into the new journal tables applying the proper serialization
    */
-  def migrate(): Source[Seq[Try[Unit]], NotUsed] = {
-    allEvents().mapAsync(1) { list: Seq[PersistentRepr] =>
-      defaultJournalDao.asyncWriteMessages(immutable.Seq(AtomicWrite(collection.immutable.Seq(list: _*))))
-    }
+  def migrate(): Future[Unit] = {
+    allEvents()
+      .mapAsync(1) { list: Seq[PersistentRepr] =>
+        defaultJournalDao.asyncWriteMessages(immutable.Seq(AtomicWrite(collection.immutable.Seq(list: _*))))
+      }
+      .limit(Long.MaxValue)
+      .runWith(Sink.seq) // FIXME for performance
+      .map(_ => ())
   }
 }

@@ -59,22 +59,25 @@ case class LegacySnapshotDataMigrator(config: Config)(implicit system: ActorSyst
   /**
    * migrate all the legacy snapshot schema data into the new snapshot schema
    */
-  def migrateAll(): Future[Option[Future[Unit]]] = {
+  def migrateAll(): Future[Seq[Future[Unit]]] = {
     for {
       rows <- snapshotdb.run(queries.SnapshotTable.sortBy(_.sequenceNumber.desc).result)
-    } yield rows.headOption.map(toSnapshotData).map { case (metadata, value) =>
+    } yield rows.map(toSnapshotData).map { case (metadata, value) =>
       defaultSnapshotDao.save(metadata, value)
     }
   }
 
-  /**
-   * migrate the last N legacy snapshot data into the the new snapshot schema
-   *
-   * @param lastN the last N snapshots data
-   */
-  def migrateLatest(lastN: Int): Future[Option[Future[Unit]]] = {
+  def migrate(offset: Int, limit: Int): Future[Seq[Future[Unit]]] = {
     for {
-      rows <- snapshotdb.run(queries.SnapshotTable.sortBy(_.sequenceNumber.desc).take(lastN).result)
+      rows <- snapshotdb.run(queries.SnapshotTable.sortBy(_.sequenceNumber.desc).drop(offset).take(limit).result)
+    } yield rows.map(toSnapshotData).map { case (metadata, value) =>
+      defaultSnapshotDao.save(metadata, value)
+    }
+  }
+
+  def migrateLatest(): Future[Option[Future[Unit]]] = {
+    for {
+      rows <- snapshotdb.run(queries.SnapshotTable.sortBy(_.sequenceNumber.desc).take(1).result)
     } yield rows.headOption.map(toSnapshotData).map { case (metadata, value) =>
       defaultSnapshotDao.save(metadata, value)
     }

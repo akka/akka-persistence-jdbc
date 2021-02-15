@@ -67,9 +67,14 @@ case class LegacySnapshotDataMigrator(config: Config)(implicit system: ActorSyst
     }
   }
 
-  /**
-   * migrate the latest snapshot data into the the new snapshot schema
-   */
+  def migrate(offset: Int, limit: Int): Future[Seq[Future[Unit]]] = {
+    for {
+      rows <- snapshotdb.run(queries.SnapshotTable.sortBy(_.sequenceNumber.desc).drop(offset).take(limit).result)
+    } yield rows.map(toSnapshotData).map { case (metadata, value) =>
+      defaultSnapshotDao.save(metadata, value)
+    }
+  }
+
   def migrateLatest(): Future[Option[Future[Unit]]] = {
     for {
       rows <- snapshotdb.run(queries.SnapshotTable.sortBy(_.sequenceNumber.desc).take(1).result)

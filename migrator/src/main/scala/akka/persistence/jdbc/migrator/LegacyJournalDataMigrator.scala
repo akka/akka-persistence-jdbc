@@ -7,7 +7,7 @@ package akka.persistence.jdbc.migrator
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.persistence.{ AtomicWrite, Persistence, PersistentRepr }
+import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.persistence.jdbc.config.{ JournalConfig, ReadJournalConfig }
 import akka.persistence.jdbc.db.SlickExtension
 import akka.persistence.jdbc.journal.dao.DefaultJournalDao
@@ -38,13 +38,6 @@ final case class LegacyJournalDataMigrator(config: Config)(implicit system: Acto
   protected val profile: JdbcProfile = DatabaseConfig.forConfig[JdbcProfile]("slick").profile
 
   import profile.api._
-
-  private val eventAdapters = Persistence(system).adaptersFor("jdbc-journal", config)
-
-  /*  private def adaptEvents(repr: PersistentRepr): Seq[PersistentRepr] = {
-    val adapter: EventAdapter = eventAdapters.get(repr.payload.getClass)
-    adapter.fromJournal(repr.payload, repr.manifest).events.map(repr.withPayload)
-  }*/
 
   // get the various configurations
   private val journalConfig = new JournalConfig(config.getConfig("jdbc-journal"))

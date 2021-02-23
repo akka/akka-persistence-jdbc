@@ -13,7 +13,7 @@ import akka.persistence.jdbc.db.SlickExtension
 import akka.persistence.jdbc.journal.dao.DefaultJournalDao
 import akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalSerializer
 import akka.persistence.jdbc.query.dao.legacy.ReadJournalQueries
-import akka.persistence.journal.{ EventAdapter, Tagged }
+import akka.persistence.journal.Tagged
 import akka.serialization.SerializationExtension
 import akka.stream.scaladsl.{ Sink, Source }
 import com.typesafe.config.Config
@@ -41,10 +41,10 @@ final case class LegacyJournalDataMigrator(config: Config)(implicit system: Acto
 
   private val eventAdapters = Persistence(system).adaptersFor("jdbc-journal", config)
 
-  private def adaptEvents(repr: PersistentRepr): Seq[PersistentRepr] = {
+  /*  private def adaptEvents(repr: PersistentRepr): Seq[PersistentRepr] = {
     val adapter: EventAdapter = eventAdapters.get(repr.payload.getClass)
     adapter.fromJournal(repr.payload, repr.manifest).events.map(repr.withPayload)
-  }
+  }*/
 
   // get the various configurations
   private val journalConfig = new JournalConfig(config.getConfig("jdbc-journal"))

@@ -13,15 +13,15 @@ import akka.persistence.jdbc.db.SlickExtension
 import akka.persistence.jdbc.journal.dao.DefaultJournalDao
 import akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalSerializer
 import akka.persistence.jdbc.query.dao.legacy.ReadJournalQueries
-import akka.persistence.journal.EventAdapter
+import akka.persistence.journal.{ EventAdapter, Tagged }
 import akka.serialization.SerializationExtension
 import akka.stream.scaladsl.{ Sink, Source }
 import com.typesafe.config.Config
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
-import scala.collection.immutable
 import scala.concurrent.Future
+import scala.util.Try
 
 /**
  * This will help migrate the legacy journal data onto the new journal schema with the
@@ -67,24 +67,24 @@ final case class LegacyJournalDataMigrator(config: Config)(implicit system: Acto
    *
    * @return
    */
-  def allEvents(): Source[Seq[PersistentRepr], NotUsed] = {
+  private def events(): Source[PersistentRepr, NotUsed] = {
     Source
       .fromPublisher(journaldb.stream(journalQueries.JournalTable.sortBy(_.sequenceNumber).result))
       .via(serializer.deserializeFlow)
-      .mapAsync(1)(reprAndOrdNr => Future.fromTry(reprAndOrdNr))
-      .map({ case (repr: PersistentRepr, _, _) =>
-        adaptEvents(repr)
-      })
+      .mapAsync(1)((reprAndOrdNr: Try[(PersistentRepr, Set[String], Long)]) => Future.fromTry(reprAndOrdNr))
+      .map { case (repr, tags, _) =>
+        repr.withPayload(Tagged(repr.payload, tags))
+      }
   }
 
   /**
    * write all legacy events into the new journal tables applying the proper serialization
    */
-  def migrate(): Future[Unit] = {
-    allEvents()
-      .mapAsync(1) { list: Seq[PersistentRepr] =>
-        defaultJournalDao.asyncWriteMessages(immutable.Seq(AtomicWrite(collection.immutable.Seq(list: _*))))
-      }
+  def migrate(): Unit = {
+    events()
+      .mapAsync(1)((repr: PersistentRepr) => {
+        defaultJournalDao.asyncWriteMessages(Seq(AtomicWrite(Seq(repr))))
+      })
       .limit(Long.MaxValue)
       .runWith(Sink.seq) // FIXME for performance
       .map(_ => ())

@@ -7,13 +7,15 @@ package akka.persistence.jdbc.migrator
 
 import akka.actor.ActorSystem
 import akka.persistence.SnapshotMetadata
-import akka.persistence.jdbc.config.SnapshotConfig
+import akka.persistence.jdbc.config.{ ReadJournalConfig, SnapshotConfig }
 import akka.persistence.jdbc.db.SlickExtension
+import akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao
 import akka.persistence.jdbc.snapshot.dao.DefaultSnapshotDao
 import akka.persistence.jdbc.snapshot.dao.legacy.{ ByteArraySnapshotSerializer, SnapshotQueries }
 import akka.persistence.jdbc.snapshot.dao.legacy.SnapshotTables.SnapshotRow
 import akka.serialization.SerializationExtension
-import com.typesafe.config.Config
+import akka.stream.scaladsl.{ Sink, Source }
+import akka.Done
 import slick.basic.DatabaseConfig
 import slick.jdbc
 import slick.jdbc.JdbcProfile
@@ -25,10 +27,9 @@ import scala.util.{ Failure, Success }
  * This will help migrate the legacy snapshot data onto the new snapshot schema with the
  * appropriate serialization
  *
- * @param config the application config
  * @param system the actor system
  */
-case class LegacySnapshotDataMigrator(config: Config)(implicit system: ActorSystem) {
+case class LegacySnapshotDataMigrator()(implicit system: ActorSystem) {
 
   import system.dispatcher
 
@@ -37,10 +38,14 @@ case class LegacySnapshotDataMigrator(config: Config)(implicit system: ActorSyst
 
   import profile.api._
 
-  private val snapshotConfig = new SnapshotConfig(config.getConfig("jdbc-snapshot-store"))
+  private val snapshotConfig = new SnapshotConfig(system.settings.config.getConfig("jdbc-snapshot-store"))
+  private val readJournalConfig = new ReadJournalConfig(system.settings.config.getConfig("jdbc-read-journal"))
 
-  val snapshotdb: jdbc.JdbcBackend.Database =
-    SlickExtension(system).database(config.getConfig("jdbc-snapshot-store")).database
+  private val snapshotdb: jdbc.JdbcBackend.Database =
+    SlickExtension(system).database(system.settings.config.getConfig("jdbc-snapshot-store")).database
+
+  private val journaldb =
+    SlickExtension(system).database(system.settings.config.getConfig("jdbc-read-journal")).database
 
   private val serialization = SerializationExtension(system)
   private val queries = new SnapshotQueries(profile, snapshotConfig.legacySnapshotTableConfiguration)
@@ -50,6 +55,10 @@ case class LegacySnapshotDataMigrator(config: Config)(implicit system: ActorSyst
   private val defaultSnapshotDao: DefaultSnapshotDao =
     new DefaultSnapshotDao(snapshotdb, profile, snapshotConfig, serialization)
 
+  // get the instance of the legacy journal DAO
+  private val legacyJournalDao: ByteArrayReadJournalDao =
+    new ByteArrayReadJournalDao(journaldb, profile, readJournalConfig, SerializationExtension(system))
+
   private def toSnapshotData(row: SnapshotRow): (SnapshotMetadata, Any) =
     serializer.deserialize(row) match {
       case Success(deserialized) => deserialized
@@ -57,29 +66,34 @@ case class LegacySnapshotDataMigrator(config: Config)(implicit system: ActorSyst
     }
 
   /**
+   * migrate the latest snapshot data
+   */
+  def migrateLatest(): Future[Done] = {
+    legacyJournalDao
+      .allPersistenceIdsSource(Long.MaxValue)
+      .map(persistenceId => {
+        // let us fetch the latest snapshot for each persistenceId
+        snapshotdb
+          .run(queries.selectLatestByPersistenceId(persistenceId).result)
+          .map(rows => {
+            rows.headOption.map(toSnapshotData).map { case (metadata, value) =>
+              defaultSnapshotDao.save(metadata, value)
+            }
+          })
+      })
+      .runWith(Sink.ignore)
+  }
+
+  /**
    * migrate all the legacy snapshot schema data into the new snapshot schema
    */
-  def migrateAll(): Future[Seq[Future[Unit]]] = {
-    for {
-      rows <- snapshotdb.run(queries.SnapshotTable.sortBy(_.sequenceNumber.desc).result)
-    } yield rows.map(toSnapshotData).map { case (metadata, value) =>
-      defaultSnapshotDao.save(metadata, value)
-    }
-  }
-
-  def migrate(offset: Int, limit: Int): Future[Seq[Future[Unit]]] = {
-    for {
-      rows <- snapshotdb.run(queries.SnapshotTable.sortBy(_.sequenceNumber.desc).drop(offset).take(limit).result)
-    } yield rows.map(toSnapshotData).map { case (metadata, value) =>
-      defaultSnapshotDao.save(metadata, value)
-    }
-  }
-
-  def migrateLatest(): Future[Option[Future[Unit]]] = {
-    for {
-      rows <- snapshotdb.run(queries.SnapshotTable.sortBy(_.sequenceNumber.desc).take(1).result)
-    } yield rows.headOption.map(toSnapshotData).map { case (metadata, value) =>
-      defaultSnapshotDao.save(metadata, value)
-    }
+  def migrateAll(): Future[Done] = {
+    Source
+      .fromPublisher(snapshotdb.stream(queries.SnapshotTable.result))
+      .map((record: SnapshotRow) => {
+        val (metadata, value) = toSnapshotData(record)
+        defaultSnapshotDao.save(metadata, value)
+      })
+      .runWith(Sink.ignore)
   }
 }

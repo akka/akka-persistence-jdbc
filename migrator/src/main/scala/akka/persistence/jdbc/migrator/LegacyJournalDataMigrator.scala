@@ -5,9 +5,9 @@
 
 package akka.persistence.jdbc.migrator
 
-import akka.{ Done, NotUsed }
+import akka.Done
 import akka.actor.ActorSystem
-import akka.persistence.{ AtomicWrite, PersistentRepr }
+import akka.persistence.AtomicWrite
 import akka.persistence.jdbc.config.{ JournalConfig, ReadJournalConfig }
 import akka.persistence.jdbc.db.SlickExtension
 import akka.persistence.jdbc.journal.dao.DefaultJournalDao
@@ -55,11 +55,9 @@ final case class LegacyJournalDataMigrator()(implicit system: ActorSystem) {
   private val serializer = new ByteArrayJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator)
 
   /**
-   * reads all the current events in the legacy journal
-   *
-   * @return
+   * write all legacy events into the new journal tables applying the proper serialization
    */
-  private def allEvents: Source[PersistentRepr, NotUsed] = {
+  def migrate(): Future[Done] = {
     Source
       .fromPublisher(journaldb.stream(journalQueries.JournalTable.sortBy(_.sequenceNumber).result))
       .via(serializer.deserializeFlow)
@@ -69,14 +67,6 @@ final case class LegacyJournalDataMigrator()(implicit system: ActorSystem) {
           repr.withPayload(Tagged(repr, tags)) // only wrap in `Tagged` if needed
         case Success((repr, _, _)) => repr
       }
-
-  }
-
-  /**
-   * write all legacy events into the new journal tables applying the proper serialization
-   */
-  def migrate(): Future[Done] = {
-    allEvents
       .map(repr => {
         defaultJournalDao.asyncWriteMessages(Seq(AtomicWrite(Seq(repr))))
       })

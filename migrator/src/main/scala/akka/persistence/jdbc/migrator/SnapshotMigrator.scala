@@ -29,7 +29,7 @@ import scala.util.{ Failure, Success }
  *
  * @param system the actor system
  */
-case class LegacySnapshotDataMigrator()(implicit system: ActorSystem) {
+case class SnapshotMigrator()(implicit system: ActorSystem) {
 
   import system.dispatcher
 

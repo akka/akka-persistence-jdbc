@@ -2,6 +2,7 @@
  * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
  * Copyright (C) 2019 - 2021 Lightbend Inc. <https://www.lightbend.com>
  */
+
 package akka.persistence.jdbc.migrator
 
 import akka.persistence.jdbc.config.JournalConfig

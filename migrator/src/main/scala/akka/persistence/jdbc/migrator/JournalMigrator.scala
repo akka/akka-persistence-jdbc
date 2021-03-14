@@ -14,7 +14,6 @@ import akka.persistence.jdbc.journal.dao.{ legacy, AkkaSerialization, JournalQue
 import akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalSerializer
 import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, TagRow }
 import akka.persistence.jdbc.query.dao.legacy.ReadJournalQueries
-import akka.persistence.jdbc.testkit.internal._
 import akka.persistence.journal.Tagged
 import akka.serialization.SerializationExtension
 import akka.stream.scaladsl.{ Sink, Source }
@@ -31,7 +30,7 @@ import scala.util.{ Failure, Success }
  *
  * @param system the actor system
  */
-final case class JournalMigrator(schemaType: SchemaType)(implicit system: ActorSystem) {
+final case class JournalMigrator(databaseType: DatabaseType)(implicit system: ActorSystem) {
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   // get the Jdbc Profile
   protected val profile: JdbcProfile = DatabaseConfig.forConfig[JdbcProfile]("slick").profile
@@ -59,12 +58,12 @@ final case class JournalMigrator(schemaType: SchemaType)(implicit system: ActorS
   private val parallelism: Int = journalConfig.daoConfig.parallelism
 
   // get the journal ordering based upon the schema type used
-  private val journalOrdering: JournalOrdering = schemaType match {
-    case Postgres  => PostgresOrdering(journalConfig, newJournalQueries, journaldb)
-    case MySQL     => MySQLOrdering(journalConfig, newJournalQueries, journaldb)
-    case SqlServer => SqlServerOrdering(journalConfig, newJournalQueries, journaldb)
-    case Oracle    => OracleOrdering(journalConfig, newJournalQueries, journaldb)
-    case H2        => ???
+  private val journalOrdering: JournalOrdering = databaseType match {
+    case Postgres  => Postgres(journalConfig, newJournalQueries, journaldb)
+    case H2        => MySQL(journalConfig, newJournalQueries, journaldb)
+    case MySQL     => SqlServer(journalConfig, newJournalQueries, journaldb)
+    case Oracle    => Oracle(journalConfig, newJournalQueries, journaldb)
+    case SqlServer => H2(journalConfig, newJournalQueries, journaldb)
   }
 
   /**
@@ -102,7 +101,7 @@ final case class JournalMigrator(schemaType: SchemaType)(implicit system: ActorS
     // run the data migration and set the next ordering value
     for {
       _ <- eventualDone
-      _ <- journalOrdering.setVal()
+      _ <- journalOrdering.setSequenceVal()
     } yield ()
   }
 

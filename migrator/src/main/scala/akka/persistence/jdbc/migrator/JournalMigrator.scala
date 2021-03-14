@@ -82,8 +82,12 @@ final case class JournalMigrator(schemaType: SchemaType)(implicit system: ActorS
     val eventualDone: Future[Done] = Source
       .fromPublisher(journaldb.stream(query))
       .via(serializer.deserializeFlow)
-      .mapAsync(parallelism)(reprAndOrdNr => Future.fromTry(reprAndOrdNr))
-      .map { case (repr, tags, ordering) => repr.withPayload(Tagged(repr, tags)) -> ordering }
+      .map {
+        case Success((repr, tags, ordering)) if tags.nonEmpty =>
+          repr.withPayload(Tagged(repr, tags)) -> ordering // only wrap in `Tagged` if needed
+        case Success((repr, _, ordering)) => repr -> ordering // noops map
+        case Failure(exception)           => throw exception // blow-up on failure
+      }
       // since the write is done one at a time we can at least enhance throughput by
       // spawning more actors to execute the db write
       .mapAsync(parallelism) { case (repr, ordering) =>

@@ -161,7 +161,9 @@ final case class JournalMigrator(schemaType: SchemaType)(implicit system: ActorS
   private def writeJournalRows(journalSerializedRow: JournalAkkaSerializationRow, tags: Set[String]): Future[Unit] = {
     val journalInsert: DBIO[Long] = newJournalQueries.JournalTable
       .returning(newJournalQueries.JournalTable.map(_.ordering))
-      .forceInsert(journalSerializedRow)
+      .forceInsert(
+        journalSerializedRow
+      ) // here we force the insertion of the auto-inc value to maintain the old ordering
 
     val tagInserts: FixedSqlAction[Option[Int], NoStream, Effect.Write] =
       newJournalQueries.TagTable ++= tags.map(tag => TagRow(journalSerializedRow.ordering, tag)).toSeq

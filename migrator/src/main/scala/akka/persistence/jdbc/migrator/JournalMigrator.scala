@@ -90,6 +90,7 @@ final case class JournalMigrator(schemaType: SchemaType)(implicit system: ActorS
       }
       // since the write is done one at a time we can at least enhance throughput by
       // spawning more actors to execute the db write
+      // FIXME we can figure out a way to do some batch inserts because the ordering of insertion does not matter any longer
       .mapAsync(parallelism) { case (repr, ordering) =>
         // serializing the PersistentRepr using the same ordering received from the old journal
         val (row, tags): (JournalAkkaSerializationRow, Set[String]) = serialize(repr, ordering)

@@ -63,8 +63,8 @@ final case class JournalMigrator(schemaType: SchemaType)(implicit system: ActorS
     case Postgres  => PostgresOrdering(journalConfig, newJournalQueries, journaldb)
     case MySQL     => MySQLOrdering(journalConfig, newJournalQueries, journaldb)
     case SqlServer => SqlServerOrdering(journalConfig, newJournalQueries, journaldb)
+    case Oracle    => OracleOrdering(journalConfig, newJournalQueries, journaldb)
     case H2        => ???
-    case Oracle    => ???
   }
 
   /**

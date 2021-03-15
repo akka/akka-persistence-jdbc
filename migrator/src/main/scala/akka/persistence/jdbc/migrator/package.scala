@@ -7,23 +7,43 @@ package akka.persistence.jdbc
 
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.journal.dao.JournalQueries
-import slick.jdbc.JdbcBackend
+import slick.jdbc.{
+  H2Profile,
+  JdbcBackend,
+  JdbcProfile,
+  MySQLProfile,
+  OracleProfile,
+  PostgresProfile,
+  SQLServerProfile
+}
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 package object migrator {
 
-  sealed trait DatabaseType
+  sealed trait DatabaseType {
+    def profile: JdbcProfile
+  }
 
-  case object Postgres extends DatabaseType
+  case object Postgres extends DatabaseType {
+    override def profile = PostgresProfile
+  }
 
-  case object MySQL extends DatabaseType
+  case object MySQL extends DatabaseType {
+    override def profile = MySQLProfile
+  }
 
-  case object SqlServer extends DatabaseType
+  case object SqlServer extends DatabaseType {
+    override def profile = SQLServerProfile
+  }
 
-  case object H2 extends DatabaseType
+  case object H2 extends DatabaseType {
+    override def profile = H2Profile
+  }
 
-  case object Oracle extends DatabaseType
+  case object Oracle extends DatabaseType {
+    override def profile = OracleProfile
+  }
 
   /**
    * helps set the new journal ordering value after the data migration is done.

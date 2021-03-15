@@ -10,16 +10,15 @@ import akka.actor.ActorSystem
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.config.{ JournalConfig, ReadJournalConfig }
 import akka.persistence.jdbc.db.SlickExtension
-import akka.persistence.jdbc.journal.dao.{ legacy, AkkaSerialization, JournalQueries }
+import akka.persistence.jdbc.journal.dao.{ AkkaSerialization, JournalQueries }
 import akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalSerializer
 import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, TagRow }
 import akka.persistence.jdbc.query.dao.legacy.ReadJournalQueries
 import akka.persistence.journal.Tagged
-import akka.serialization.SerializationExtension
-import akka.stream.scaladsl.{ Sink, Source }
-import slick.basic.DatabaseConfig
-import slick.jdbc.{ JdbcProfile, ResultSetConcurrency, ResultSetType }
-import slick.sql.FixedSqlAction
+import akka.serialization.{ Serialization, SerializationExtension }
+import akka.stream.scaladsl.Source
+import org.slf4j.{ Logger, LoggerFactory }
+import slick.jdbc.{ JdbcBackend, JdbcProfile, ResultSetConcurrency, ResultSetType }
 
 import scala.concurrent.{ ExecutionContextExecutor, Future }
 import scala.util.{ Failure, Success }
@@ -31,18 +30,20 @@ import scala.util.{ Failure, Success }
  * @param system the actor system
  */
 final case class JournalMigrator(databaseType: DatabaseType)(implicit system: ActorSystem) {
+  val log: Logger = LoggerFactory.getLogger(getClass)
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   // get the Jdbc Profile
-  protected val profile: JdbcProfile = DatabaseConfig.forConfig[JdbcProfile]("slick").profile
+  protected val profile: JdbcProfile = databaseType.profile
 
   import profile.api._
 
   // get the various configurations
-  private val journalConfig = new JournalConfig(system.settings.config.getConfig("jdbc-journal"))
-  private val readJournalConfig = new ReadJournalConfig(system.settings.config.getConfig("jdbc-read-journal"))
+  private val journalConfig: JournalConfig = new JournalConfig(system.settings.config.getConfig("jdbc-journal"))
+  private val readJournalConfig: ReadJournalConfig = new ReadJournalConfig(
+    system.settings.config.getConfig("jdbc-read-journal"))
 
   // the journal database
-  private val journaldb =
+  private val journaldb: JdbcBackend.Database =
     SlickExtension(system).database(system.settings.config.getConfig("jdbc-read-journal")).database
 
   // get an instance of the new journal queries
@@ -50,12 +51,12 @@ final case class JournalMigrator(databaseType: DatabaseType)(implicit system: Ac
     new JournalQueries(profile, journalConfig.eventJournalTableConfiguration, journalConfig.eventTagTableConfiguration)
 
   // let us get the journal reader
-  private val serialization = SerializationExtension(system)
-  private val legacyJournalQueries = new ReadJournalQueries(profile, readJournalConfig)
-  private val serializer = new ByteArrayJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator)
+  private val serialization: Serialization = SerializationExtension(system)
+  private val legacyJournalQueries: ReadJournalQueries = new ReadJournalQueries(profile, readJournalConfig)
+  private val serializer: ByteArrayJournalSerializer =
+    new ByteArrayJournalSerializer(serialization, readJournalConfig.pluginConfig.tagSeparator)
 
   private val bufferSize: Int = journalConfig.daoConfig.bufferSize
-  private val parallelism: Int = journalConfig.daoConfig.parallelism
 
   // get the journal ordering based upon the schema type used
   private val journalOrdering: JournalOrdering = databaseType match {
@@ -69,8 +70,8 @@ final case class JournalMigrator(databaseType: DatabaseType)(implicit system: Ac
   /**
    * write all legacy events into the new journal tables applying the proper serialization
    */
-  def migrate(): Future[Unit] = {
-    val query: DBIOAction[Seq[legacy.JournalRow], Streaming[legacy.JournalRow], Effect.Read with Effect.Transactional] =
+  def migrate(): Future[Done] = {
+    val query =
       legacyJournalQueries.JournalTable.result
         .withStatementParameters(
           rsType = ResultSetType.ForwardOnly,
@@ -87,22 +88,30 @@ final case class JournalMigrator(databaseType: DatabaseType)(implicit system: Ac
         case Success((repr, _, ordering)) => repr -> ordering // noops map
         case Failure(exception)           => throw exception // blow-up on failure
       }
-      // since the write is done one at a time we can at least enhance throughput by
-      // spawning more actors to execute the db write
-      // FIXME we can figure out a way to do some batch inserts because the ordering of insertion does not matter any longer
-      .mapAsync(parallelism) { case (repr, ordering) =>
-        // serializing the PersistentRepr using the same ordering received from the old journal
-        val (row, tags): (JournalAkkaSerializationRow, Set[String]) = serialize(repr, ordering)
-        // persist the data
-        writeJournalRows(row, tags)
-      }
-      .runWith(Sink.ignore)
+      .map { case (repr, ordering) => serialize(repr, ordering) }
+      // get pages of many records at once
+      .grouped(bufferSize)
+      .mapAsync(1)(records => {
+        val stmt: DBIO[Unit] = records
+          // get all the sql statements for this record as an option
+          .map({ case (newRepr, newTags) =>
+            log.debug(s"migrating event for PersistenceID: ${newRepr.persistenceId} with tags ${newTags.mkString(",")}")
+            writeJournalRowsStatements(newRepr, newTags)
+          })
+          // reduce to 1 statement
+          .foldLeft[DBIO[Unit]](DBIO.successful[Unit] {})((priorStmt, nextStmt) => {
+            priorStmt.andThen(nextStmt)
+          })
+
+        journaldb.run(stmt)
+      })
+      .run()
 
     // run the data migration and set the next ordering value
     for {
       _ <- eventualDone
-      _ <- journalOrdering.setSequenceVal()
-    } yield ()
+      _ <- journalOrdering.setSequenceVal() // reset the event_journal ordering to avoid collision
+    } yield Done
   }
 
   /**
@@ -156,22 +165,16 @@ final case class JournalMigrator(databaseType: DatabaseType)(implicit system: Ac
     (row, tags)
   }
 
-  /**
-   * inserts a serialized journal row with the mapping tags
-   *
-   * @param journalSerializedRow the serialized journal row
-   * @param tags                 the set of tags
-   */
-  private def writeJournalRows(journalSerializedRow: JournalAkkaSerializationRow, tags: Set[String]): Future[Unit] = {
+  private def writeJournalRowsStatements(
+      journalSerializedRow: JournalAkkaSerializationRow,
+      tags: Set[String]): DBIO[Unit] = {
     val journalInsert: DBIO[Long] = newJournalQueries.JournalTable
       .returning(newJournalQueries.JournalTable.map(_.ordering))
-      .forceInsert(
-        journalSerializedRow
-      ) // here we force the insertion of the auto-inc value to maintain the old ordering
+      .forceInsert(journalSerializedRow)
 
-    val tagInserts: FixedSqlAction[Option[Int], NoStream, Effect.Write] =
+    val tagInserts =
       newJournalQueries.TagTable ++= tags.map(tag => TagRow(journalSerializedRow.ordering, tag)).toSeq
 
-    journaldb.run(DBIO.seq(journalInsert, tagInserts).withPinnedSession.transactionally)
+    journalInsert.flatMap(_ => tagInserts.asInstanceOf[DBIO[Unit]])
   }
 }

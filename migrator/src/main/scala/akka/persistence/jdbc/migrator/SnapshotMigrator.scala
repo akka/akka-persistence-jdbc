@@ -13,12 +13,12 @@ import akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao
 import akka.persistence.jdbc.snapshot.dao.DefaultSnapshotDao
 import akka.persistence.jdbc.snapshot.dao.legacy.{ ByteArraySnapshotSerializer, SnapshotQueries }
 import akka.persistence.jdbc.snapshot.dao.legacy.SnapshotTables.SnapshotRow
-import akka.serialization.SerializationExtension
+import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.scaladsl.{ Sink, Source }
 import akka.Done
-import slick.basic.DatabaseConfig
+import org.slf4j.{ Logger, LoggerFactory }
 import slick.jdbc
-import slick.jdbc.JdbcProfile
+import slick.jdbc.{ JdbcBackend, JdbcProfile }
 
 import scala.concurrent.Future
 import scala.util.{ Failure, Success }
@@ -29,27 +29,29 @@ import scala.util.{ Failure, Success }
  *
  * @param system the actor system
  */
-case class SnapshotMigrator()(implicit system: ActorSystem) {
-
+case class SnapshotMigrator(databaseType: DatabaseType)(implicit system: ActorSystem) {
+  val log: Logger = LoggerFactory.getLogger(getClass)
   import system.dispatcher
 
   // get the Jdbc Profile
-  protected val profile: JdbcProfile = DatabaseConfig.forConfig[JdbcProfile]("slick").profile
+  protected val profile: JdbcProfile = databaseType.profile
 
   import profile.api._
 
-  private val snapshotConfig = new SnapshotConfig(system.settings.config.getConfig("jdbc-snapshot-store"))
-  private val readJournalConfig = new ReadJournalConfig(system.settings.config.getConfig("jdbc-read-journal"))
+  private val snapshotConfig: SnapshotConfig = new SnapshotConfig(
+    system.settings.config.getConfig("jdbc-snapshot-store"))
+  private val readJournalConfig: ReadJournalConfig = new ReadJournalConfig(
+    system.settings.config.getConfig("jdbc-read-journal"))
 
   private val snapshotdb: jdbc.JdbcBackend.Database =
     SlickExtension(system).database(system.settings.config.getConfig("jdbc-snapshot-store")).database
 
-  private val journaldb =
+  private val journaldb: JdbcBackend.Database =
     SlickExtension(system).database(system.settings.config.getConfig("jdbc-read-journal")).database
 
-  private val serialization = SerializationExtension(system)
-  private val queries = new SnapshotQueries(profile, snapshotConfig.legacySnapshotTableConfiguration)
-  private val serializer = new ByteArraySnapshotSerializer(serialization)
+  private val serialization: Serialization = SerializationExtension(system)
+  private val queries: SnapshotQueries = new SnapshotQueries(profile, snapshotConfig.legacySnapshotTableConfiguration)
+  private val serializer: ByteArraySnapshotSerializer = new ByteArraySnapshotSerializer(serialization)
 
   // get the instance if the default snapshot dao
   private val defaultSnapshotDao: DefaultSnapshotDao =
@@ -77,6 +79,8 @@ case class SnapshotMigrator()(implicit system: ActorSystem) {
           .run(queries.selectLatestByPersistenceId(persistenceId).result)
           .map(rows => {
             rows.headOption.map(toSnapshotData).map { case (metadata, value) =>
+              log.debug(s"migrating snapshot for ${metadata.toString}")
+
               defaultSnapshotDao.save(metadata, value)
             }
           })
@@ -87,13 +91,12 @@ case class SnapshotMigrator()(implicit system: ActorSystem) {
   /**
    * migrate all the legacy snapshot schema data into the new snapshot schema
    */
-  def migrateAll(): Future[Done] = {
-    Source
-      .fromPublisher(snapshotdb.stream(queries.SnapshotTable.result))
-      .map((record: SnapshotRow) => {
-        val (metadata, value) = toSnapshotData(record)
-        defaultSnapshotDao.save(metadata, value)
-      })
-      .runWith(Sink.ignore)
-  }
+  def migrateAll(): Future[Done] = Source
+    .fromPublisher(snapshotdb.stream(queries.SnapshotTable.result))
+    .mapAsync(1)(record => {
+      val (metadata, value) = toSnapshotData(record)
+      log.debug(s"migrating snapshot for ${metadata.toString}")
+      defaultSnapshotDao.save(metadata, value)
+    })
+    .run()
 }

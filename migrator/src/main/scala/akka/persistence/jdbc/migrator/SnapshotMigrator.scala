@@ -73,7 +73,7 @@ case class SnapshotMigrator(databaseType: DatabaseType)(implicit system: ActorSy
   def migrateLatest(): Future[Done] = {
     legacyJournalDao
       .allPersistenceIdsSource(Long.MaxValue)
-      .map(persistenceId => {
+      .mapAsync(1)(persistenceId => {
         // let us fetch the latest snapshot for each persistenceId
         snapshotdb
           .run(queries.selectLatestByPersistenceId(persistenceId).result)

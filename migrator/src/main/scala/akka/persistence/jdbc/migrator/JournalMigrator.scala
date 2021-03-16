@@ -83,12 +83,10 @@ final case class JournalMigrator(databaseType: DatabaseType)(implicit system: Ac
       .fromPublisher(journaldb.stream(query))
       .via(serializer.deserializeFlow)
       .map {
-        case Success((repr, tags, ordering)) if tags.nonEmpty =>
-          repr.withPayload(Tagged(repr, tags)) -> ordering // only wrap in `Tagged` if needed
-        case Success((repr, _, ordering)) => repr -> ordering // noops map
-        case Failure(exception)           => throw exception // blow-up on failure
+        case Success((repr, tags, ordering)) => (repr, tags, ordering)
+        case Failure(exception)              => throw exception // blow-up on failure
       }
-      .map { case (repr, ordering) => serialize(repr, ordering) }
+      .map { case (repr, tags, ordering) => serialize(repr, tags, ordering) }
       // get pages of many records at once
       .grouped(bufferSize)
       .mapAsync(1)(records => {
@@ -134,10 +132,10 @@ final case class JournalMigrator(databaseType: DatabaseType)(implicit system: Ac
    * @param ordering the ordering of the PersistentRepr
    * @return the tuple of JournalAkkaSerializationRow and set of tags
    */
-  private def serialize(pr: PersistentRepr, ordering: Long): (JournalAkkaSerializationRow, Set[String]) = {
-
-    // let us unpack the PersistentRepr
-    val (repr, tags) = unpackPersistentRepr(pr)
+  private def serialize(
+      repr: PersistentRepr,
+      tags: Set[String],
+      ordering: Long): (JournalAkkaSerializationRow, Set[String]) = {
 
     val serializedPayload: AkkaSerialization.AkkaSerialized =
       AkkaSerialization.serialize(serialization, repr.payload) match {

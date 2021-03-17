@@ -24,10 +24,9 @@ abstract class BaseJournalMigratorSpec(config: String) extends SingleActorSystem
   def nextOrderingValue(journaldb: JdbcBackend.Database)(implicit ec: ExecutionContext)
 
   private def journalRows(serialization: Serialization, numRows: Int): Seq[legacy.JournalRow] = {
-    val rows = Seq.empty[legacy.JournalRow]
-    for (i <- 0 to numRows) {
-      val persistenceId = UUID.randomUUID.toString
-      rows :+ legacy.JournalRow(
+    (1 to numRows).foldLeft(Seq.empty[legacy.JournalRow])((s, i) => {
+      val persistenceId: String = UUID.randomUUID.toString
+      s :+ legacy.JournalRow(
         ordering = i,
         deleted = false,
         persistenceId = persistenceId,
@@ -35,14 +34,13 @@ abstract class BaseJournalMigratorSpec(config: String) extends SingleActorSystem
         message = serialization
           .serialize(
             PersistentRepr(
-              payload = AccountOpened(accountId = s"account-$i", openingBalance = 100 * i),
+              payload = AccountOpened(accountId = s"account-$i", openingBalance = 200 * i),
               sequenceNr = i,
               persistenceId = persistenceId,
               deleted = false))
           .getOrElse(Seq.empty[Byte].toArray), // to avoid scalastyle yelling
         tags = Some(s"tag-$i"))
-    }
-    rows
+    })
   }
 
   def seedLegacyJournal(

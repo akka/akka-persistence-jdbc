@@ -30,7 +30,7 @@ lazy val migrator = project
     libraryDependencies ++= Dependencies.Migration ++ Dependencies.Libraries,
     // TODO remove this when ready to publish it
     publish / skip := true)
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val docs = project
   .enablePlugins(ProjectAutoPlugin, AkkaParadoxPlugin, ParadoxSitePlugin, PreprocessPlugin, PublishRsyncPlugin)

@@ -29,13 +29,9 @@ import scala.util.{ Failure, Success }
  *
  * @param system the actor system
  */
-case class SnapshotMigrator(databaseType: DatabaseType)(implicit system: ActorSystem) {
+case class SnapshotMigrator(profile: JdbcProfile)(implicit system: ActorSystem) {
   val log: Logger = LoggerFactory.getLogger(getClass)
   import system.dispatcher
-
-  // get the Jdbc Profile
-  protected val profile: JdbcProfile = databaseType.profile
-
   import profile.api._
 
   private val snapshotConfig: SnapshotConfig = new SnapshotConfig(

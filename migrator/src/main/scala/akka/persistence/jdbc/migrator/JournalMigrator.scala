@@ -18,7 +18,17 @@ import akka.persistence.journal.Tagged
 import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.scaladsl.Source
 import org.slf4j.{ Logger, LoggerFactory }
-import slick.jdbc.{ JdbcBackend, JdbcProfile, ResultSetConcurrency, ResultSetType }
+import slick.jdbc.{
+  H2Profile,
+  JdbcBackend,
+  JdbcProfile,
+  MySQLProfile,
+  OracleProfile,
+  PostgresProfile,
+  ResultSetConcurrency,
+  ResultSetType,
+  SQLServerProfile
+}
 
 import scala.concurrent.{ ExecutionContextExecutor, Future }
 import scala.util.{ Failure, Success }
@@ -29,13 +39,12 @@ import scala.util.{ Failure, Success }
  *
  * @param system the actor system
  */
-final case class JournalMigrator(databaseType: DatabaseType)(implicit system: ActorSystem) {
-  val log: Logger = LoggerFactory.getLogger(getClass)
+final case class JournalMigrator(profile: JdbcProfile)(implicit system: ActorSystem) {
   implicit val ec: ExecutionContextExecutor = system.dispatcher
-  // get the Jdbc Profile
-  protected val profile: JdbcProfile = databaseType.profile
 
   import profile.api._
+
+  val log: Logger = LoggerFactory.getLogger(getClass)
 
   // get the various configurations
   private val journalConfig: JournalConfig = new JournalConfig(system.settings.config.getConfig("jdbc-journal"))
@@ -59,12 +68,12 @@ final case class JournalMigrator(databaseType: DatabaseType)(implicit system: Ac
   private val bufferSize: Int = journalConfig.daoConfig.bufferSize
 
   // get the journal ordering based upon the schema type used
-  private val journalOrdering: JournalOrdering = databaseType match {
-    case Postgres  => Postgres(journalConfig, newJournalQueries, journaldb)
-    case H2        => MySQL(journalConfig, newJournalQueries, journaldb)
-    case MySQL     => SqlServer(journalConfig, newJournalQueries, journaldb)
-    case Oracle    => Oracle(journalConfig, newJournalQueries, journaldb)
-    case SqlServer => H2(journalConfig, newJournalQueries, journaldb)
+  private val journalOrdering: JournalOrdering = profile match {
+    case _: MySQLProfile     => MySQL(journalConfig, newJournalQueries, journaldb)
+    case _: PostgresProfile  => Postgres(journalConfig, newJournalQueries, journaldb)
+    case _: OracleProfile    => Oracle(journalConfig, newJournalQueries, journaldb)
+    case _: H2Profile        => H2(journalConfig, newJournalQueries, journaldb)
+    case _: SQLServerProfile => SqlServer(journalConfig, newJournalQueries, journaldb)
   }
 
   /**

@@ -15,7 +15,7 @@ object SnapshotTables {
   def isOracleDriver(profile: JdbcProfile): Boolean =
     profile match {
       case _: slick.jdbc.OracleProfile => true
-      case _                        => false
+      case _                           => false
     }
 }
 

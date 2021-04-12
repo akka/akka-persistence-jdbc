@@ -9,7 +9,7 @@ lazy val `akka-persistence-jdbc` = project
 
 lazy val core = project
   .in(file("core"))
-  .enablePlugins(MimaPlugin, Publish)
+  .enablePlugins(MimaPlugin)
   .disablePlugins(SitePlugin)
   .configs(IntegrationTest.extend(Test))
   .settings(Defaults.itSettings)
@@ -23,7 +23,6 @@ lazy val core = project
 
 lazy val migration = project
   .in(file("migration"))
-  .enablePlugins(Publish)
   .disablePlugins(SitePlugin, MimaPlugin)
   .settings(
     name := "akka-persistence-jdbc-migration",

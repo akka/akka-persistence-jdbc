@@ -36,9 +36,7 @@ Key links:
 
 - [ ] Wait until [master build finished](https://travis-ci.com/akka/akka-persistence-jdbc/builds/) after merging the latest PR
 - [ ] Update the [draft release](https://github.com/akka/akka-persistence-jdbc/releases) with the next tag version `v$VERSION$`, title and release description linking to announcement and milestone
-- [ ] Check that Travis CI release build has executed successfully (Travis will start a [CI build](https://travis-ci.com/akka/akka-persistence-jdbc/builds) for the new tag and publish artifacts to Bintray and documentation to Gustav)
-- [ ] Go to [Bintray](https://bintray.com/akka/maven/akka-persistence-jdbc) and select the just released version
-- [ ] Go to the Maven Central tab, check the *Close and release repository when done* checkbox and sync with Sonatype (using your Sonatype TOKEN key and password)
+- [ ] Check that GitHub Actions release build has executed successfully (GitHub Actions will start a [CI build](https://github.com/akka/akka-persistence-jdbc/actions) for the new tag and publish artifacts to Sonatype)
 
 ### Check availability
 

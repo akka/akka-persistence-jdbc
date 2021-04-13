@@ -48,4 +48,4 @@ The [snapshot documentation](https://doc.akka.io/docs/akka-persistence-jdbc/snap
 
 Latest published snapshot version is [![snapshots-badge][]][snapshots]
 
-The snapshot repository is cleaned from time to time with no further notice. Check [Sonatype snapshots Akka Projection files](https://oss.sonatype.org/content/repositories/snapshots/com/lightbend/akka/akka-persistence-jdbc_2.13) to see what versions are currently available.
+The snapshot repository is cleaned from time to time with no further notice. Check [Sonatype snapshots Akka Projection files](https://oss.sonatype.org/content/repositories/snapshots/com/lightbend/akka/akka-persistence-jdbc_2.13/) to see what versions are currently available.

@@ -1,13 +1,15 @@
+import com.geirsson.CiReleasePlugin
 import de.heikoseeberger.sbtheader.HeaderPlugin
 import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.{ headerLicense, HeaderLicense }
 import sbt.Keys._
 import sbt._
 import sbt.plugins.JvmPlugin
+import xerial.sbt.Sonatype.autoImport.sonatypeProfileName
 
 object ProjectAutoPlugin extends AutoPlugin {
   object autoImport {}
 
-  override val requires = JvmPlugin && HeaderPlugin
+  override val requires = JvmPlugin && HeaderPlugin && CiReleasePlugin
 
   override def globalSettings =
     Seq(
@@ -79,7 +81,8 @@ object ProjectAutoPlugin extends AutoPlugin {
            |Copyright (C) 2019 - 2021 Lightbend Inc. <https://www.lightbend.com>
            |""".stripMargin)),
     resolvers += Resolver.typesafeRepo("releases"),
-    resolvers += Resolver.jcenterRepo)
+    resolvers += Resolver.jcenterRepo,
+    sonatypeProfileName := "com.lightbend")
 
   val disciplineScalacOptions = Set(
 //    "-Xfatal-warnings",

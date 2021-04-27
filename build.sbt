@@ -21,10 +21,8 @@ lazy val core = project
       organization.value %% name.value % previousStableVersion.value.getOrElse(
         throw new Error("Unable to determine previous version for MiMa"))))
 
-
 lazy val migrator = project
   .in(file("migrator"))
-  .enablePlugins(Publish)
   .disablePlugins(SitePlugin, MimaPlugin)
   .settings(
     name := "akka-persistence-jdbc-migrator",

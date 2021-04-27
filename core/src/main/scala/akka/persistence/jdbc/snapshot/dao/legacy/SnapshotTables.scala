@@ -14,8 +14,8 @@ object SnapshotTables {
   case class SnapshotRow(persistenceId: String, sequenceNumber: Long, created: Long, snapshot: Array[Byte])
   def isOracleDriver(profile: JdbcProfile): Boolean =
     profile match {
-      case slick.jdbc.OracleProfile => true
-      case _                        => false
+      case _: slick.jdbc.OracleProfile => true
+      case _                           => false
     }
 }
 

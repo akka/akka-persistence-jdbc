@@ -52,10 +52,10 @@ class JournalQueries(
       .update(true)
 
   private def _highestSequenceNrForPersistenceId(persistenceId: Rep[String]): Rep[Option[Long]] =
-    selectAllJournalForPersistenceId(persistenceId).map(_.sequenceNumber).max
+    selectAllJournalForPersistenceId(persistenceId).take(1).map(_.sequenceNumber).max
 
   private def _highestMarkedSequenceNrForPersistenceId(persistenceId: Rep[String]): Rep[Option[Long]] =
-    selectAllJournalForPersistenceId(persistenceId).filter(_.deleted === true).map(_.sequenceNumber).max
+    selectAllJournalForPersistenceId(persistenceId).filter(_.deleted === true).take(1).map(_.sequenceNumber).max
 
   val highestSequenceNrForPersistenceId = Compiled(_highestSequenceNrForPersistenceId _)
 

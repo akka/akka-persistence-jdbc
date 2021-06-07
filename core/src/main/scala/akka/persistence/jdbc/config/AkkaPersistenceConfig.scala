@@ -194,3 +194,42 @@ class ReadJournalConfig(config: Config) {
   override def toString: String =
     s"ReadJournalConfig($journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook,$includeDeleted)"
 }
+
+class DurableStateTableColumnNames(config: Config) {
+  private val cfg = config.getConfig("tables.state.columnNames")
+  val globalOffset: String = cfg.getString("globalOffset")
+  val persistenceId: String = cfg.getString("persistenceId")
+  val statePayload: String = cfg.getString("statePayload")
+  val tag: String = cfg.getString("tag")
+  val revision: String = cfg.getString("revision")
+  val stateSerId: String = cfg.getString("stateSerId")
+  val stateSerManifest: String = cfg.getString("stateSerManifest")
+  val stateTimestamp: String = cfg.getString("stateTimestamp")
+}
+
+class DurableStateTableConfiguration(config: Config) {
+  private val cfg = config.getConfig("tables.state")
+  val refreshInterval: FiniteDuration = config.asFiniteDuration("refreshInterval")
+  val batchSize: Int = config.getInt("batchSize")
+  val tableName: String = cfg.getString("tableName")
+  val schemaName: Option[String] = cfg.asStringOption("schemaName")
+  val columnNames: DurableStateTableColumnNames = new DurableStateTableColumnNames(config)
+  val stateSequenceConfig = DurableStateSequenceRetrievalConfig(config)
+  override def toString: String = s"DurableStateTableConfiguration($tableName,$schemaName,$columnNames)"
+}
+
+object DurableStateSequenceRetrievalConfig {
+  def apply(config: Config): DurableStateSequenceRetrievalConfig =
+    DurableStateSequenceRetrievalConfig(
+      batchSize = config.getInt("durable-state-sequence-retrieval.batch-size"),
+      maxTries = config.getInt("durable-state-sequence-retrieval.max-tries"),
+      queryDelay = config.asFiniteDuration("durable-state-sequence-retrieval.query-delay"),
+      maxBackoffQueryDelay = config.asFiniteDuration("durable-state-sequence-retrieval.max-backoff-query-delay"),
+      askTimeout = config.asFiniteDuration("durable-state-sequence-retrieval.ask-timeout"))
+}
+case class DurableStateSequenceRetrievalConfig(
+    batchSize: Int,
+    maxTries: Int,
+    queryDelay: FiniteDuration,
+    maxBackoffQueryDelay: FiniteDuration,
+    askTimeout: FiniteDuration)

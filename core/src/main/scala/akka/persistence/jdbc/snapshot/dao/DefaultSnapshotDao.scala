@@ -12,7 +12,7 @@ import akka.serialization.Serialization
 import akka.stream.Materializer
 import SnapshotTables._
 import akka.dispatch.ExecutionContexts
-import akka.persistence.jdbc.journal.dao.AkkaSerialization
+import akka.persistence.jdbc.AkkaSerialization
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Success, Try }

@@ -6,6 +6,7 @@
 package akka.persistence.jdbc.journal.dao
 
 import akka.NotUsed
+import akka.persistence.jdbc.AkkaSerialization
 import akka.persistence.jdbc.config.{ BaseDaoConfig, JournalConfig }
 import akka.persistence.jdbc.journal.dao.JournalTables.JournalAkkaSerializationRow
 import akka.persistence.journal.Tagged

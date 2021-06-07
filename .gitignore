@@ -9,3 +9,4 @@ target
 .project
 .worksheet
 .bsp
+*.code-workspace

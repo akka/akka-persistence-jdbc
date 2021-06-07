@@ -1,0 +1,45 @@
+package akka.persistence.jdbc.state.scaladsl
+
+import scala.concurrent.{ ExecutionContext, Future }
+import slick.jdbc.{ JdbcBackend, JdbcProfile }
+import akka.Done
+import akka.persistence.state.scaladsl.{ DurableStateUpdateStore, GetObjectResult }
+import akka.serialization.Serialization
+import akka.persistence.jdbc.state.{ AkkaSerialization, DurableStateQueries }
+import akka.persistence.jdbc.config.DurableStateTableConfiguration
+import akka.persistence.jdbc.state.DurableStateTables
+import akka.dispatch.ExecutionContexts
+
+class DurableStateStore[A](
+    db: JdbcBackend#Database,
+    profile: JdbcProfile,
+    durableStateConfigConfig: DurableStateTableConfiguration,
+    serialization: Serialization)(implicit ec: ExecutionContext)
+    extends DurableStateUpdateStore[A] {
+  import profile.api._
+
+  val queries = new DurableStateQueries(profile, durableStateConfigConfig)
+
+  def getObject(persistenceId: String): Future[GetObjectResult[A]] =
+    db.run(queries._selectByPersistenceId(persistenceId).result).map { rows =>
+      rows.headOption match {
+        case Some(row) =>
+          GetObjectResult(AkkaSerialization.fromRow(serialization)(row).toOption.asInstanceOf[Option[A]], 0)
+
+        case None =>
+          throw new Exception(s"State object creation failed during fetch from store: persistenceId $persistenceId")
+      }
+    }
+
+  def upsertObject(persistenceId: String, seqNr: Long, value: A, tag: String): Future[Done] = {
+    val row =
+      AkkaSerialization.serialize(serialization, value).map { serialized =>
+        DurableStateTables.DurableStateRow(persistenceId, serialized.payload, serialized.serId, serialized.serManifest)
+      }
+
+    Future.fromTry(row).map(queries._upsertDurableState).flatMap(db.run).map(_ => Done)(ExecutionContexts.parasitic)
+  }
+
+  def deleteObject(persistenceId: String): Future[Done] =
+    db.run(queries._delete(persistenceId)).map(_ => Done)(ExecutionContexts.parasitic)
+}

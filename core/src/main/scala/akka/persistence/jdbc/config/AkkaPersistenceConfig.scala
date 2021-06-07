@@ -194,3 +194,19 @@ class ReadJournalConfig(config: Config) {
   override def toString: String =
     s"ReadJournalConfig($journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook,$includeDeleted)"
 }
+
+class DurableStateTableColumnNames(config: Config) {
+  private val cfg = config.getConfig("tables.state.columnNames")
+  val persistenceId: String = cfg.getString("persistenceId")
+  val statePayload: String = cfg.getString("statePayload")
+  val stateSerId: String = cfg.getString("stateSerId")
+  val stateSerManifest: String = cfg.getString("stateSerManifest")
+}
+
+class DurableStateTableConfiguration(config: Config) {
+  private val cfg = config.getConfig("tables.state")
+  val tableName: String = cfg.getString("tableName")
+  val schemaName: Option[String] = cfg.asStringOption("schemaName")
+  val columnNames: DurableStateTableColumnNames = new DurableStateTableColumnNames(config)
+  override def toString: String = s"DurableStateTableConfiguration($tableName,$schemaName,$columnNames)"
+}

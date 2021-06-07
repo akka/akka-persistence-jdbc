@@ -9,7 +9,7 @@ object Dependencies {
   val Scala213 = "2.13.4"
   val ScalaVersions = Seq(Scala212, Scala213)
 
-  val AkkaVersion = "2.6.10"
+  val AkkaVersion = "2.6.14+76-4f721341" // "2.6.14+75-26f8eba4" // "2.6.14+73-9637bb2f" // "2.6.10"
   val AkkaBinaryVersion = AkkaVersion.take(3)
 
   val SlickVersion = "3.3.3"

@@ -6,6 +6,7 @@ object DurableStateTables {
   case class DurableStateRow(
       persistenceId: String,
       statePayload: Array[Byte],
+      seqNumber: Long,
       stateSerId: Int,
       stateSerManifest: String)
 }
@@ -24,11 +25,13 @@ trait DurableStateTables {
         _tableName = durableStateTableCfg.tableName) {
 
     def * =
-      (persistenceId, statePayload, stateSerId, stateSerManifest).<>(DurableStateRow.tupled, DurableStateRow.unapply)
+      (persistenceId, statePayload, seqNumber, stateSerId, stateSerManifest)
+        .<>(DurableStateRow.tupled, DurableStateRow.unapply)
 
     val persistenceId: Rep[String] =
       column[String](durableStateTableCfg.columnNames.persistenceId, O.PrimaryKey, O.Length(255, varying = true))
     val statePayload: Rep[Array[Byte]] = column[Array[Byte]](durableStateTableCfg.columnNames.statePayload)
+    val seqNumber: Rep[Long] = column[Long](durableStateTableCfg.columnNames.seqNumber)
     val stateSerId: Rep[Int] = column[Int](durableStateTableCfg.columnNames.stateSerId)
     val stateSerManifest: Rep[String] = column[String](durableStateTableCfg.columnNames.stateSerManifest)
   }

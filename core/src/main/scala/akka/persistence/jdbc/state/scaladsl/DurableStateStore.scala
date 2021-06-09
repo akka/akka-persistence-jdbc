@@ -13,12 +13,12 @@ import akka.dispatch.ExecutionContexts
 class DurableStateStore[A](
     db: JdbcBackend#Database,
     profile: JdbcProfile,
-    durableStateConfigConfig: DurableStateTableConfiguration,
+    durableStateConfig: DurableStateTableConfiguration,
     serialization: Serialization)(implicit ec: ExecutionContext)
     extends DurableStateUpdateStore[A] {
   import profile.api._
 
-  val queries = new DurableStateQueries(profile, durableStateConfigConfig)
+  val queries = new DurableStateQueries(profile, durableStateConfig)
 
   def getObject(persistenceId: String): Future[GetObjectResult[A]] =
     db.run(queries._selectByPersistenceId(persistenceId).result).map { rows =>
@@ -35,8 +35,10 @@ class DurableStateStore[A](
     require(seqNr > 0)
     val row =
       AkkaSerialization.serialize(serialization, value).map { serialized =>
+        println(s"serialized: ${serialized.serId}, ${serialized.serManifest}")
         DurableStateTables
-          .DurableStateRow(persistenceId, serialized.payload, seqNr, serialized.serId, serialized.serManifest)
+          .DurableStateRow(persistenceId, serialized.payload, seqNr, serialized.serId, 
+            (if (serialized.serManifest.isEmpty()) None else Some(serialized.serManifest)))
       }
 
     Future.fromTry(row).map(queries._upsertDurableState).flatMap(db.run).map(_ => Done)(ExecutionContexts.parasitic)

@@ -27,6 +27,6 @@ object AkkaSerialization {
   }
 
   def fromRow(serialization: Serialization)(row: DurableStateTables.DurableStateRow): Try[AnyRef] = {
-    serialization.deserialize(row.statePayload, row.stateSerId, row.stateSerManifest)
+    serialization.deserialize(row.statePayload, row.stateSerId, row.stateSerManifest.getOrElse(""))
   }
 }

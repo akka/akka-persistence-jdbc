@@ -39,3 +39,13 @@ CREATE TABLE IF NOT EXISTS "snapshot" (
     PRIMARY KEY("persistence_id","sequence_number")
     );
 
+CREATE TABLE IF NOT EXISTS "state" (
+    "persistence_id" VARCHAR(255) NOT NULL,
+    "state_payload" BLOB NOT NULL,
+    "sequence_number" BIGINT NOT NULL,
+    "state_serial_id" INTEGER NOT NULL,
+    "state_serial_manifest" VARCHAR,
+    PRIMARY KEY("persistence_id")
+    );
+
+

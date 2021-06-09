@@ -36,9 +36,12 @@ class DurableStateStore[A](
     val row =
       AkkaSerialization.serialize(serialization, value).map { serialized =>
         println(s"serialized: ${serialized.serId}, ${serialized.serManifest}")
-        DurableStateTables
-          .DurableStateRow(persistenceId, serialized.payload, seqNr, serialized.serId, 
-            (if (serialized.serManifest.isEmpty()) None else Some(serialized.serManifest)))
+        DurableStateTables.DurableStateRow(
+          persistenceId,
+          serialized.payload,
+          seqNr,
+          serialized.serId,
+          (if (serialized.serManifest.isEmpty()) None else Some(serialized.serManifest)))
       }
 
     Future.fromTry(row).map(queries._upsertDurableState).flatMap(db.run).map(_ => Done)(ExecutionContexts.parasitic)

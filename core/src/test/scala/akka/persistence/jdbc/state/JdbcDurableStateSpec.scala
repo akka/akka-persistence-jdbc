@@ -13,7 +13,7 @@ import akka.testkit._
 import akka.persistence.jdbc.db.SlickDatabase
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.state.scaladsl.DurableStateStore
-import akka.persistence.jdbc.testkit.internal.{ SchemaType, H2 }
+import akka.persistence.jdbc.testkit.internal.{ H2, SchemaType }
 import akka.persistence.jdbc.util.DropCreate
 import akka.serialization.SerializationExtension
 
@@ -29,7 +29,8 @@ abstract class JdbcDurableStateSpec(conf: Config, schemaType: SchemaType)
   implicit lazy val ec = system.dispatcher
   val config = conf
 
-  lazy val cfg = system.settings.config.getConfig("jdbc-durable-state-store")
+  lazy val cfg = system.settings.config
+    .getConfig("jdbc-durable-state-store")
     .withFallback(config.getConfig("jdbc-durable-state-store"))
 
   lazy val db = SlickDatabase.database(cfg, new SlickConfiguration(cfg.getConfig("slick")), "slick.db")
@@ -51,8 +52,8 @@ abstract class JdbcDurableStateSpec(conf: Config, schemaType: SchemaType)
     "not load a state given an invalid persistenceId" in {
       whenReady {
         stateStoreString.getObject("InvalidPersistenceId").failed
-      } { e => 
-        e shouldBe an [java.lang.Exception]
+      } { e =>
+        e shouldBe an[java.lang.Exception]
       }
     }
     "add a valid state successfully" in {
@@ -88,8 +89,8 @@ abstract class JdbcDurableStateSpec(conf: Config, schemaType: SchemaType)
         v shouldBe akka.Done
         whenReady {
           stateStoreString.getObject("p123").failed
-        } { e => 
-          e shouldBe an [java.lang.Exception]
+        } { e =>
+          e shouldBe an[java.lang.Exception]
         }
       }
     }
@@ -109,5 +110,6 @@ abstract class JdbcDurableStateSpec(conf: Config, schemaType: SchemaType)
 }
 
 class H2DurableStateSpec extends JdbcDurableStateSpec(ConfigFactory.load("h2-application.conf"), H2) {
-  final val stateStoreString = new DurableStateStore[String](db, slick.jdbc.H2Profile, durableStateConfig, serialization)
+  final val stateStoreString =
+    new DurableStateStore[String](db, slick.jdbc.H2Profile, durableStateConfig, serialization)
 }

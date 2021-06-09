@@ -35,7 +35,8 @@ trait DurableStateTables {
     val statePayload: Rep[Array[Byte]] = column[Array[Byte]](durableStateTableCfg.columnNames.statePayload)
     val seqNumber: Rep[Long] = column[Long](durableStateTableCfg.columnNames.seqNumber)
     val stateSerId: Rep[Int] = column[Int](durableStateTableCfg.columnNames.stateSerId)
-    val stateSerManifest: Rep[Option[String]] = column[Option[String]](durableStateTableCfg.columnNames.stateSerManifest)
+    val stateSerManifest: Rep[Option[String]] =
+      column[Option[String]](durableStateTableCfg.columnNames.stateSerManifest)
   }
   lazy val durableStateTable = new TableQuery(new DurableState(_))
 }

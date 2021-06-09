@@ -35,7 +35,6 @@ class DurableStateStore[A](
     require(seqNr > 0)
     val row =
       AkkaSerialization.serialize(serialization, value).map { serialized =>
-        println(s"serialized: ${serialized.serId}, ${serialized.serManifest}")
         DurableStateTables.DurableStateRow(
           persistenceId,
           serialized.payload,

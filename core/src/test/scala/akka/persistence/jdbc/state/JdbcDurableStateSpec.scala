@@ -4,12 +4,11 @@ import com.typesafe.config.{ Config, ConfigFactory }
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatest.concurrent.ScalaFutures
 
 import akka.actor._
-import akka.testkit._
+import akka.persistence.PluginSpec
 import akka.persistence.jdbc.db.SlickDatabase
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.state.scaladsl.DurableStateStore
@@ -17,8 +16,8 @@ import akka.persistence.jdbc.testkit.internal.{ H2, SchemaType }
 import akka.persistence.jdbc.util.DropCreate
 import akka.serialization.SerializationExtension
 
-abstract class JdbcDurableStateSpec(conf: Config, schemaType: SchemaType)
-    extends TestKitBase
+abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
+    extends PluginSpec(config)
     with AnyWordSpecLike
     with BeforeAndAfterAll
     with BeforeAndAfterEach
@@ -27,17 +26,30 @@ abstract class JdbcDurableStateSpec(conf: Config, schemaType: SchemaType)
     with DropCreate {
 
   implicit lazy val ec = system.dispatcher
-  val config = conf
+
+  val customSerializers = ConfigFactory.parseString("""
+      akka.actor {
+        serializers {
+          my-payload = "akka.persistence.jdbc.state.MyPayloadSerializer"
+        }
+        serialization-bindings {
+          "akka.persistence.jdbc.state.MyPayload" = my-payload
+        }
+      }
+    """)
 
   lazy val cfg = system.settings.config
     .getConfig("jdbc-durable-state-store")
     .withFallback(config.getConfig("jdbc-durable-state-store"))
+    .withFallback(customSerializers.getConfig("akka.actor"))
 
   lazy val db = SlickDatabase.database(cfg, new SlickConfiguration(cfg.getConfig("slick")), "slick.db")
   lazy val durableStateConfig = new DurableStateTableConfiguration(cfg)
-  implicit lazy val system: ActorSystem = ActorSystem("JdbcDurableStateSpec")
+  implicit lazy val system: ActorSystem = ActorSystem("JdbcDurableStateSpec", config.withFallback(customSerializers))
   lazy val serialization = SerializationExtension(system)
+
   val stateStoreString: DurableStateStore[String]
+  val stateStorePayload: DurableStateStore[MyPayload]
 
   override def beforeAll(): Unit = {
     dropAndCreate(schemaType)
@@ -58,31 +70,29 @@ abstract class JdbcDurableStateSpec(conf: Config, schemaType: SchemaType)
     }
     "add a valid state successfully" in {
       whenReady {
-        // upsert
         stateStoreString.upsertObject("p123", 1, "a valid string", "t123")
       } { v =>
         v shouldBe akka.Done
-        whenReady {
-          // first time : value should be inserted
-          stateStoreString.getObject("p123")
-        } { v =>
-          v.value shouldBe Some("a valid string")
-        }
-        whenReady {
-          // again upsert for the same persistenceId
-          stateStoreString.upsertObject("p123", 2, "updated valid string", "t123")
-        } { v =>
-          v shouldBe akka.Done
-          // value should be updated
-          whenReady {
-            stateStoreString.getObject("p123")
-          } { v =>
-            v.value shouldBe Some("updated valid string")
-          }
-        }
       }
     }
-    "delete an exsiting state" in {
+    "support composite upsert-fetch-repeat loop" in {
+      whenReady {
+        for {
+
+          n <- stateStoreString.upsertObject("p234", 1, "a valid string", "t123")
+          _ = n shouldBe akka.Done
+          g <- stateStoreString.getObject("p234")
+          _ = g.value shouldBe Some("a valid string")
+          u <- stateStoreString.upsertObject("p234", 2, "updated valid string", "t123")
+          _ = u shouldBe akka.Done
+          h <- stateStoreString.getObject("p234")
+
+        } yield h
+      } { v =>
+        v.value shouldBe Some("updated valid string")
+      }
+    }
+    "delete an existing state" in {
       whenReady {
         stateStoreString.deleteObject("p123")
       } { v =>
@@ -94,16 +104,50 @@ abstract class JdbcDurableStateSpec(conf: Config, schemaType: SchemaType)
         }
       }
     }
-    "handle composite operations" in {
+  }
+
+  "A durable state store with payload that needs custom serializer" must {
+    "not load a state given an invalid persistenceId" in {
+      whenReady {
+        stateStorePayload.getObject("InvalidPersistenceId").failed
+      } { e =>
+        e shouldBe an[java.lang.Exception]
+      }
+    }
+    "add a valid state successfully" in {
+      whenReady {
+        stateStorePayload.upsertObject("p123", 1, MyPayload("a valid string"), "t123")
+      } { v =>
+        v shouldBe akka.Done
+      }
+    }
+    "support composite upsert-fetch-repeat loop" in {
       whenReady {
         for {
-          _ <- stateStoreString.upsertObject("p234", 1, "valid string state", "tag-123")
-          _ <- stateStoreString.getObject("p234")
-          _ <- stateStoreString.upsertObject("p234", 1, "another valid string state", "tag-123")
-          w <- stateStoreString.getObject("p234")
-        } yield w
+
+          n <- stateStorePayload.upsertObject("p234", 1, MyPayload("a valid string"), "t123")
+          _ = n shouldBe akka.Done
+          g <- stateStorePayload.getObject("p234")
+          _ = g.value shouldBe Some(MyPayload("a valid string"))
+          u <- stateStorePayload.upsertObject("p234", 2, MyPayload("updated valid string"), "t123")
+          _ = u shouldBe akka.Done
+          h <- stateStorePayload.getObject("p234")
+
+        } yield h
       } { v =>
-        v.value shouldBe Some("another valid string state")
+        v.value shouldBe Some(MyPayload("updated valid string"))
+      }
+    }
+    "delete an existing state" in {
+      whenReady {
+        stateStorePayload.deleteObject("p123")
+      } { v =>
+        v shouldBe akka.Done
+        whenReady {
+          stateStorePayload.getObject("p123").failed
+        } { e =>
+          e shouldBe an[java.lang.Exception]
+        }
       }
     }
   }
@@ -112,4 +156,6 @@ abstract class JdbcDurableStateSpec(conf: Config, schemaType: SchemaType)
 class H2DurableStateSpec extends JdbcDurableStateSpec(ConfigFactory.load("h2-application.conf"), H2) {
   final val stateStoreString =
     new DurableStateStore[String](db, slick.jdbc.H2Profile, durableStateConfig, serialization)
+  final val stateStorePayload =
+    new DurableStateStore[MyPayload](db, slick.jdbc.H2Profile, durableStateConfig, serialization)
 }

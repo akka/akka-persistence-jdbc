@@ -10,6 +10,18 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
   def _selectByPersistenceId(persistenceId: Rep[String]) =
     durableStateTable.filter(_.persistenceId === persistenceId)
 
+  def _insertDurableState(row: DurableStateTables.DurableStateRow) =
+    durableStateTable += row
+
+  def _updateDurableState(row: DurableStateTables.DurableStateRow) = {
+    durableStateTable
+      .filter(r =>
+        r.persistenceId === row.persistenceId &&
+        r.seqNumber === row.seqNumber - 1)
+      .map(r => (r.statePayload, r.stateSerId, r.stateSerManifest))
+      .update((row.statePayload, row.stateSerId, row.stateSerManifest))
+  }
+
   def _upsertDurableState(row: DurableStateTables.DurableStateRow) =
     durableStateTable.insertOrUpdate(row)
 

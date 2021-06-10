@@ -10,7 +10,7 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
 import akka.persistence.jdbc.state.DurableStateTables
 import akka.dispatch.ExecutionContexts
 
-class DurableStateStore[A](
+class JdbcDurableStateStore[A](
     db: JdbcBackend#Database,
     profile: JdbcProfile,
     durableStateConfig: DurableStateTableConfiguration,
@@ -27,7 +27,7 @@ class DurableStateStore[A](
           GetObjectResult(AkkaSerialization.fromRow(serialization)(row).toOption.asInstanceOf[Option[A]], row.seqNumber)
 
         case None =>
-          throw new Exception(s"State object creation failed during fetch from store: persistenceId $persistenceId")
+          GetObjectResult(None, 0)
       }
     }
 
@@ -37,15 +37,36 @@ class DurableStateStore[A](
       AkkaSerialization.serialize(serialization, value).map { serialized =>
         DurableStateTables.DurableStateRow(
           persistenceId,
-          serialized.payload,
           seqNr,
+          serialized.payload,
+          if (tag.isEmpty()) None else Some(tag),
           serialized.serId,
-          (if (serialized.serManifest.isEmpty()) None else Some(serialized.serManifest)))
+          if (serialized.serManifest.isEmpty()) None else Some(serialized.serManifest))
       }
 
-    Future.fromTry(row).map(queries._upsertDurableState).flatMap(db.run).map(_ => Done)(ExecutionContexts.parasitic)
+    if (seqNr == 1) {
+      // this insert will fail if any record exists in the table with the same persistence id
+      // in case concurrent users try to insert, one will fail because the transactions will be serializable
+      // and we have a primary key on persistence_id - hence fail with integrity constraints violation
+      // on primary key constraints
+      Future
+        .fromTry(row)
+        .flatMap(r => db.run(queries._insertDurableState(r)))
+        .map(_ => Done)(ExecutionContexts.parasitic)
+    } else {
+      // if seqNr > 1 we always try update and if that fails (returns 0 affected rows) we throw
+      Future
+        .fromTry(row)
+        .flatMap(r => db.run(queries._updateDurableState(r)))
+        .map { rowsAffected =>
+          if (rowsAffected == 0)
+            throw new Exception(
+              s"Incorrect sequence number $seqNr provided: $seqNr has to be 1 more than the value existing in the database for this $persistenceId")
+          else Done
+        }(ExecutionContexts.parasitic)
+    }
   }
 
   def deleteObject(persistenceId: String): Future[Done] =
-    db.run(queries._delete(persistenceId)).map(_ => Done)(ExecutionContexts.parasitic)
+    db.run(queries._delete(persistenceId).map(_ => Done))
 }

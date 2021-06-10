@@ -10,13 +10,13 @@ import akka.persistence.state.javadsl.{ DurableStateUpdateStore, GetObjectResult
 import akka.persistence.jdbc.state.DurableStateQueries
 import akka.persistence.jdbc.config.DurableStateTableConfiguration
 
-class DurableStateStore[A](
+class JdbcDurableStateStore[A](
     profile: JdbcProfile,
-    durableStateConfigConfig: DurableStateTableConfiguration,
-    scalaStore: akka.persistence.jdbc.state.scaladsl.DurableStateStore[A])(implicit ec: ExecutionContext)
+    durableStateConfig: DurableStateTableConfiguration,
+    scalaStore: akka.persistence.jdbc.state.scaladsl.JdbcDurableStateStore[A])(implicit ec: ExecutionContext)
     extends DurableStateUpdateStore[A] {
 
-  val queries = new DurableStateQueries(profile, durableStateConfigConfig)
+  val queries = new DurableStateQueries(profile, durableStateConfig)
 
   def getObject(persistenceId: String): CompletionStage[GetObjectResult[A]] =
     toJava(

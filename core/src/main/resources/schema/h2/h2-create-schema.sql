@@ -41,11 +41,13 @@ CREATE TABLE IF NOT EXISTS "snapshot" (
 
 CREATE TABLE IF NOT EXISTS "state" (
     "persistence_id" VARCHAR(255) NOT NULL,
-    "state_payload" BLOB NOT NULL,
     "sequence_number" BIGINT NOT NULL,
+    "state_payload" BLOB NOT NULL,
     "state_serial_id" INTEGER NOT NULL,
     "state_serial_manifest" VARCHAR,
+    "tag" VARCHAR,
     PRIMARY KEY("persistence_id")
     );
+CREATE INDEX "state_tag_idx" on "state" ("tag");
 
 

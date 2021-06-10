@@ -11,7 +11,7 @@ import akka.actor._
 import akka.persistence.PluginSpec
 import akka.persistence.jdbc.db.SlickDatabase
 import akka.persistence.jdbc.config._
-import akka.persistence.jdbc.state.scaladsl.DurableStateStore
+import akka.persistence.jdbc.state.scaladsl.JdbcDurableStateStore
 import akka.persistence.jdbc.testkit.internal.{ H2, SchemaType }
 import akka.persistence.jdbc.util.DropCreate
 import akka.serialization.SerializationExtension
@@ -48,10 +48,15 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
   implicit lazy val system: ActorSystem = ActorSystem("JdbcDurableStateSpec", config.withFallback(customSerializers))
   lazy val serialization = SerializationExtension(system)
 
-  val stateStoreString: DurableStateStore[String]
-  val stateStorePayload: DurableStateStore[MyPayload]
+  val stateStoreString: JdbcDurableStateStore[String]
+  val stateStorePayload: JdbcDurableStateStore[MyPayload]
 
   override def beforeAll(): Unit = {
+    dropAndCreate(schemaType)
+    super.beforeAll()
+  }
+
+  override def beforeEach(): Unit = {
     dropAndCreate(schemaType)
     super.beforeAll()
   }
@@ -63,9 +68,9 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
   "A durable state store" must {
     "not load a state given an invalid persistenceId" in {
       whenReady {
-        stateStoreString.getObject("InvalidPersistenceId").failed
-      } { e =>
-        e shouldBe an[java.lang.Exception]
+        stateStoreString.getObject("InvalidPersistenceId")
+      } { v =>
+        v.value shouldBe None
       }
     }
     "add a valid state successfully" in {
@@ -92,15 +97,30 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
         v.value shouldBe Some("updated valid string")
       }
     }
+    "fail inserting incorrect sequence number" in {
+      whenReady {
+        (for {
+
+          n <- stateStoreString.upsertObject("p345", 1, "a valid string", "t123")
+          _ = n shouldBe akka.Done
+          g <- stateStoreString.getObject("p345")
+          _ = g.value shouldBe Some("a valid string")
+          u <- stateStoreString.upsertObject("p345", 1, "updated valid string", "t123")
+
+        } yield u).failed
+      } { e =>
+        e shouldBe an[org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException]
+      }
+    }
     "delete an existing state" in {
       whenReady {
         stateStoreString.deleteObject("p123")
       } { v =>
         v shouldBe akka.Done
         whenReady {
-          stateStoreString.getObject("p123").failed
-        } { e =>
-          e shouldBe an[java.lang.Exception]
+          stateStoreString.getObject("p123")
+        } { v =>
+          v.value shouldBe None
         }
       }
     }
@@ -109,9 +129,9 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
   "A durable state store with payload that needs custom serializer" must {
     "not load a state given an invalid persistenceId" in {
       whenReady {
-        stateStorePayload.getObject("InvalidPersistenceId").failed
-      } { e =>
-        e shouldBe an[java.lang.Exception]
+        stateStorePayload.getObject("InvalidPersistenceId")
+      } { v =>
+        v.value shouldBe None
       }
     }
     "add a valid state successfully" in {
@@ -140,13 +160,13 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
     }
     "delete an existing state" in {
       whenReady {
-        stateStorePayload.deleteObject("p123")
+        stateStorePayload.deleteObject("p234")
       } { v =>
         v shouldBe akka.Done
         whenReady {
-          stateStorePayload.getObject("p123").failed
-        } { e =>
-          e shouldBe an[java.lang.Exception]
+          stateStorePayload.getObject("p234")
+        } { v =>
+          v.value shouldBe None
         }
       }
     }
@@ -155,7 +175,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
 
 class H2DurableStateSpec extends JdbcDurableStateSpec(ConfigFactory.load("h2-application.conf"), H2) {
   final val stateStoreString =
-    new DurableStateStore[String](db, slick.jdbc.H2Profile, durableStateConfig, serialization)
+    new JdbcDurableStateStore[String](db, slick.jdbc.H2Profile, durableStateConfig, serialization)
   final val stateStorePayload =
-    new DurableStateStore[MyPayload](db, slick.jdbc.H2Profile, durableStateConfig, serialization)
+    new JdbcDurableStateStore[MyPayload](db, slick.jdbc.H2Profile, durableStateConfig, serialization)
 }

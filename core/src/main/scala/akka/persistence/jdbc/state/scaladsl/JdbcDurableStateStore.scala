@@ -60,8 +60,8 @@ class JdbcDurableStateStore[A](
         .flatMap(r => db.run(queries._updateDurableState(r)))
         .map { rowsAffected =>
           if (rowsAffected == 0)
-            throw new IllegalArgumentException(
-              s"Incorrect sequence number [$seqNr] provided: It has to be 1 more than the value existing in the database for persistenceId $persistenceId")
+            throw new IllegalStateException(
+              s"Incorrect sequence number [$seqNr] provided: It has to be 1 more than the value existing in the database for persistenceId [$persistenceId]")
           else Done
         }(ExecutionContexts.parasitic)
     }

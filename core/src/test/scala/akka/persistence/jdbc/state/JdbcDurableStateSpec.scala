@@ -116,7 +116,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
       whenReady {
         stateStoreString.upsertObject("p234", 2, "another valid string", "t123").failed
       } { e =>
-        e shouldBe an[IllegalArgumentException]
+        e shouldBe an[IllegalStateException]
       }
     }
     "delete an existing state" in {

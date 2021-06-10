@@ -22,9 +22,6 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
       .update((row.statePayload, row.stateSerId, row.stateSerManifest))
   }
 
-  def _upsertDurableState(row: DurableStateTables.DurableStateRow) =
-    durableStateTable.insertOrUpdate(row)
-
   def _delete(persistenceId: String) = {
     durableStateTable.filter(_.persistenceId === persistenceId).delete
   }

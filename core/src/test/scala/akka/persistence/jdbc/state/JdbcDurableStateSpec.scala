@@ -112,6 +112,13 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
         e shouldBe an[org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException]
       }
     }
+    "fail inserting an already existing sequence number" in {
+      whenReady {
+        stateStoreString.upsertObject("p234", 2, "another valid string", "t123").failed
+      } { e =>
+        e shouldBe an[IllegalArgumentException]
+      }
+    }
     "delete an existing state" in {
       whenReady {
         stateStoreString.deleteObject("p123")

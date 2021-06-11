@@ -4,20 +4,20 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
 
 object DurableStateTables {
   case class DurableStateRow(
+      ordering: Long,
       persistenceId: String,
       seqNumber: Long,
       statePayload: Array[Byte],
       tag: Option[String],
       stateSerId: Int,
-      stateSerManifest: Option[String])
+      stateSerManifest: Option[String],
+      stateTimestamp: Long)
 }
 
 trait DurableStateTables {
   val profile: slick.jdbc.JdbcProfile
   import profile.api._
   def durableStateTableCfg: DurableStateTableConfiguration
-  // TODO:
-  // def tagTableCfg: DurableStateTagTableConfiguration
 
   import DurableStateTables._
 
@@ -28,9 +28,10 @@ trait DurableStateTables {
         _tableName = durableStateTableCfg.tableName) {
 
     def * =
-      (persistenceId, seqNumber, statePayload, tag, stateSerId, stateSerManifest)
+      (ordering, persistenceId, seqNumber, statePayload, tag, stateSerId, stateSerManifest, stateTimestamp)
         .<>(DurableStateRow.tupled, DurableStateRow.unapply)
 
+    val ordering: Rep[Long] = column[Long](durableStateTableCfg.columnNames.ordering, O.AutoInc)
     val persistenceId: Rep[String] =
       column[String](durableStateTableCfg.columnNames.persistenceId, O.PrimaryKey, O.Length(255, varying = true))
     val seqNumber: Rep[Long] = column[Long](durableStateTableCfg.columnNames.seqNumber)
@@ -39,6 +40,9 @@ trait DurableStateTables {
     val stateSerId: Rep[Int] = column[Int](durableStateTableCfg.columnNames.stateSerId)
     val stateSerManifest: Rep[Option[String]] =
       column[Option[String]](durableStateTableCfg.columnNames.stateSerManifest)
+    val stateTimestamp: Rep[Long] = column[Long](durableStateTableCfg.columnNames.stateTimestamp)
+
+    val orderingIdx = index(s"${tableName}_ordering_idx", ordering, unique = true)
   }
   lazy val durableStateTable = new TableQuery(new DurableState(_))
 }

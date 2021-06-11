@@ -36,12 +36,14 @@ class JdbcDurableStateStore[A](
     val row =
       AkkaSerialization.serialize(serialization, value).map { serialized =>
         DurableStateTables.DurableStateRow(
+          0, // insert 0 for autoinc columns
           persistenceId,
           seqNr,
           serialized.payload,
-          if (tag.isEmpty()) None else Some(tag),
+          Option(tag).filter(_.trim.nonEmpty),
           serialized.serId,
-          if (serialized.serManifest.isEmpty()) None else Some(serialized.serManifest))
+          Option(serialized.serManifest).filter(_.trim.nonEmpty),
+          System.currentTimeMillis)
       }
 
     if (seqNr == 1) {

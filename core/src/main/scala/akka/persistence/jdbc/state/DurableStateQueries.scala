@@ -10,6 +10,16 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
   def _selectByPersistenceId(persistenceId: Rep[String]) =
     durableStateTable.filter(_.persistenceId === persistenceId)
 
+  def _selectByTag(tag: Rep[Option[String]], offset: Option[Long]) = {
+    offset
+      .map { o =>
+        durableStateTable.filter(r => r.tag === tag && r.ordering > o)
+      }
+      .getOrElse {
+        durableStateTable.filter(r => r.tag === tag)
+      }
+  }
+
   def _insertDurableState(row: DurableStateTables.DurableStateRow) =
     durableStateTable += row
 
@@ -18,8 +28,8 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
       .filter(r =>
         r.persistenceId === row.persistenceId &&
         r.seqNumber === row.seqNumber - 1)
-      .map(r => (r.statePayload, r.stateSerId, r.stateSerManifest))
-      .update((row.statePayload, row.stateSerId, row.stateSerManifest))
+      .map(r => (r.statePayload, r.stateSerId, r.stateSerManifest, r.tag, r.stateTimestamp))
+      .update((row.statePayload, row.stateSerId, row.stateSerManifest, row.tag, System.currentTimeMillis()))
   }
 
   def _delete(persistenceId: String) = {

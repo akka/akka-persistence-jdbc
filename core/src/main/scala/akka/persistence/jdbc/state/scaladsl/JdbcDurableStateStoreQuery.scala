@@ -1,6 +1,6 @@
 package akka.persistence.jdbc.state.scaladsl
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 import akka.NotUsed
 import akka.persistence.query.scaladsl.DurableStateStoreQuery
@@ -9,8 +9,10 @@ import akka.persistence.query.{ Offset, Sequence => APSequence, NoOffset }
 import akka.persistence.query.DurableStateChange
 import akka.persistence.jdbc.config.DurableStateTableConfiguration
 import akka.persistence.jdbc.state.{ AkkaSerialization, DurableStateQueries, DurableStateTables }
+import akka.persistence.jdbc.journal.dao.FlowControl
 import akka.serialization.Serialization
-import akka.stream.scaladsl.Source
+import akka.stream.Materializer
+import akka.stream.scaladsl.{ Sink, Source }
 import slick.jdbc.{ JdbcBackend, JdbcProfile }
 
 class JdbcDurableStateStoreQuery[A](
@@ -18,8 +20,9 @@ class JdbcDurableStateStoreQuery[A](
     db: JdbcBackend#Database,
     profile: JdbcProfile,
     durableStateConfig: DurableStateTableConfiguration,
-    serialization: Serialization)
+    serialization: Serialization)(implicit m: Materializer, e: ExecutionContext)
     extends DurableStateStoreQuery[A] {
+  import FlowControl._
   import profile.api._
 
   val queries = new DurableStateQueries(profile, durableStateConfig)
@@ -30,7 +33,29 @@ class JdbcDurableStateStoreQuery[A](
     case _             => ??? // should not reach here
   }
 
-  def changes(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] = ???
+  def changes(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] = {
+
+    Source
+      .unfoldAsync[(Offset, FlowControl), Seq[DurableStateChange[A]]]((offset, Continue)) { case (from, control) =>
+        def retrieveNextBatch() = {
+          /* get all records from the specified offset */
+          currentChanges(tag, from).runWith(Sink.seq).map { chgs =>
+            val nextStartOffset: Long = chgs.map { chg =>
+              chg.offset match {
+                case NoOffset      => 0
+                case APSequence(l) => l
+                case _             => 0 // should not reach here
+              }
+            }.max
+            /* if retrieved set is empty, then wait else continue */
+            val nextControl = if (chgs.isEmpty) ContinueDelayed else Continue
+            Some(((Offset.sequence(nextStartOffset), nextControl), chgs))
+          }
+        }
+        retrieveNextBatch()
+      }
+      .mapConcat(identity)
+  }
 
   def getObject(persistenceId: String): Future[GetObjectResult[A]] = stateStore.getObject(persistenceId)
 

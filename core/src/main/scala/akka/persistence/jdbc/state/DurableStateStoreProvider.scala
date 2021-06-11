@@ -11,6 +11,8 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
 import akka.persistence.state.scaladsl.DurableStateStore
 import akka.persistence.state.javadsl.{ DurableStateStore => JDurableStateStore }
 import akka.serialization.Serialization
+import akka.stream.{ Materializer, SystemMaterializer }
+import akka.actor.ExtendedActorSystem
 
 import scala.concurrent.ExecutionContext
 
@@ -18,8 +20,11 @@ class JdbcDurableStateStoreProvider[A](
     db: JdbcBackend#Database,
     profile: JdbcProfile,
     durableStateConfig: DurableStateTableConfiguration,
-    serialization: Serialization)(implicit ec: ExecutionContext)
+    serialization: Serialization)(implicit val system: ExtendedActorSystem)
     extends DurableStateStoreProvider {
+
+  implicit val ec: ExecutionContext = system.dispatcher
+  implicit val mat: Materializer = SystemMaterializer(system).materializer
 
   override def scaladslDurableStateStore(): DurableStateStore[Any] =
     new scaladsl.JdbcDurableStateStore[Any](db, profile, durableStateConfig, serialization)

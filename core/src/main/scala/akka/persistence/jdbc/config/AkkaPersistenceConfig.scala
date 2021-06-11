@@ -209,6 +209,7 @@ class DurableStateTableColumnNames(config: Config) {
 
 class DurableStateTableConfiguration(config: Config) {
   private val cfg = config.getConfig("tables.state")
+  val refreshInterval: FiniteDuration = config.asFiniteDuration("refreshInterval")
   val tableName: String = cfg.getString("tableName")
   val schemaName: Option[String] = cfg.asStringOption("schemaName")
   val columnNames: DurableStateTableColumnNames = new DurableStateTableColumnNames(config)

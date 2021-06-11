@@ -32,7 +32,7 @@ class JdbcDurableStateStore[A](
 
   val queries = new DurableStateQueries(profile, durableStateConfig)
 
-  def getObject(persistenceId: String): Future[GetObjectResult[A]] =
+  def getObject(persistenceId: String): Future[GetObjectResult[A]] = {
     db.run(queries._selectByPersistenceId(persistenceId).result).map { rows =>
       rows.headOption match {
         case Some(row) =>
@@ -42,6 +42,7 @@ class JdbcDurableStateStore[A](
           GetObjectResult(None, 0)
       }
     }
+  }
 
   def upsertObject(persistenceId: String, seqNr: Long, value: A, tag: String): Future[Done] = {
     require(seqNr > 0)

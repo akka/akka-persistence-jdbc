@@ -20,16 +20,17 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
       }
   }
 
-  def _insertDurableState(row: DurableStateTables.DurableStateRow) =
+  def _insertDurableState(row: DurableStateTables.DurableStateRow) = 
     durableStateTable += row
 
   def _updateDurableState(row: DurableStateTables.DurableStateRow) = {
-    durableStateTable
-      .filter(r =>
-        r.persistenceId === row.persistenceId &&
-        r.seqNumber === row.seqNumber - 1)
-      .map(r => (r.statePayload, r.stateSerId, r.stateSerManifest, r.tag, r.stateTimestamp))
-      .update((row.statePayload, row.stateSerId, row.stateSerManifest, row.tag, System.currentTimeMillis()))
+    val q = 
+      durableStateTable
+        .filter(r =>
+          r.persistenceId === row.persistenceId &&
+          r.seqNumber === row.seqNumber - 1)
+        .map(r => (r.statePayload, r.seqNumber, r.stateSerId, r.stateSerManifest, r.tag, r.stateTimestamp))
+    q.update((row.statePayload, row.seqNumber, row.stateSerId, row.stateSerManifest, row.tag, System.currentTimeMillis()))
   }
 
   def _delete(persistenceId: String) = {

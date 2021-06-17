@@ -7,8 +7,8 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
     extends DurableStateTables {
   import profile.api._
 
-  implicit val uuidSetter = SetParameter[Array[Byte]] {
-    case (bytes, params) => params.setBytes(bytes)    
+  implicit val uuidSetter = SetParameter[Array[Byte]] { case (bytes, params) =>
+    params.setBytes(bytes)
   }
 
   private[jdbc] def _selectByPersistenceId(persistenceId: Rep[String]) =
@@ -28,25 +28,25 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
     durableStateTable += row
 
   /**
-    * ; create a sequence
-    * CREATE SEQUENCE state_ordering_seq;
-    *
-    * ; use the sequence for autoinc of id column
-    * CREATE TABLE state (
-    *   id integer NOT NULL DEFAULT nextval('state_ordering_seq'),
-    *   ..
-    * );
-    *
-    * During insert I have no issue, the column `id` gets populated automatically through the sequence
-    * 
-    * ; during update set the id column to the current value of the sequence
-    * UPDATE state
-    * SET id = (SELECT currval(pg_get_serial_sequence('state', 'id')) + 1)
-    * WHERE ...
-    * 
-    * ; change the next value of the sequence so that we don't have a problem with the next insert
-    * SELECT setval('state_ordering_seq', select max(id) from state, true)
-    */
+   * ; create a sequence
+   * CREATE SEQUENCE state_ordering_seq;
+   *
+   * ; use the sequence for autoinc of id column
+   * CREATE TABLE state (
+   *   id integer NOT NULL DEFAULT nextval('state_ordering_seq'),
+   *   ..
+   * );
+   *
+   * During insert I have no issue, the column `id` gets populated automatically through the sequence
+   *
+   * ; during update set the id column to the current value of the sequence
+   * UPDATE state
+   * SET id = (SELECT currval(pg_get_serial_sequence('state', 'id')) + 1)
+   * WHERE ...
+   *
+   * ; change the next value of the sequence so that we don't have a problem with the next insert
+   * SELECT setval('state_ordering_seq', select max(id) from state, true)
+   */
   private[jdbc] def _updateDurableState(row: DurableStateTables.DurableStateRow, seqName: String) = {
     val sanitized = sanitizeSequenceName(seqName)
     sqlu"""UPDATE state 
@@ -64,7 +64,7 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
 
   // H2 dependent (https://stackoverflow.com/questions/36244641/h2-equivalent-of-postgres-serial-or-bigserial-column)
   private[jdbc] def _getSequenceName() = {
-      sql"""SELECT COLUMN_DEFAULT
+    sql"""SELECT COLUMN_DEFAULT
             FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_NAME = 'state'
             AND COLUMN_NAME = 'global_offset'

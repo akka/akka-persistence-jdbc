@@ -86,17 +86,17 @@ class JdbcDurableStateStore[A](
   def deleteObject(persistenceId: String): Future[Done] =
     db.run(queries._delete(persistenceId).map(_ => Done))
 
-  def currentChanges(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] = (offset match {
+  def currentChanges(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] = offset match {
     case NoOffset      => makeSourceFromStateQuery(tag, None)
     case APSequence(l) => makeSourceFromStateQuery(tag, Some(l))
     case _             => ??? // should not reach here
-  })
+  }
 
   def changes(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] = {
 
-    // a collection to store the start offsets for every iteration 
+    // a collection to store the start offsets for every iteration
     val lastStartOffsets = collection.mutable.ListBuffer.empty[Long]
-    val stopAfterEmptyFetchIterations = durableStateConfig.stopAfterEmptyFetchIterations 
+    val stopAfterEmptyFetchIterations = durableStateConfig.stopAfterEmptyFetchIterations
     Source
       .unfoldAsync[(Offset, FlowControl), Seq[DurableStateChange[A]]]((offset, Continue)) { case (from, control) =>
         def retrieveNextBatch() = {
@@ -115,11 +115,15 @@ class JdbcDurableStateStore[A](
               // check if we have reached `stopAfterEmptyFetchIterations` empty fetch cycles
               // Stop if we have else ContinueDelayed
               if (stopAfterEmptyFetchIterations > 0) {
-                val tailOffsetsUnchanged = lastStartOffsets.slice(lastStartOffsets.size - stopAfterEmptyFetchIterations, lastStartOffsets.size)
-                if (tailOffsetsUnchanged.size == stopAfterEmptyFetchIterations && tailOffsetsUnchanged.forall(_ == tailOffsetsUnchanged.head)) Stop
+                val tailOffsetsUnchanged =
+                  lastStartOffsets.slice(lastStartOffsets.size - stopAfterEmptyFetchIterations, lastStartOffsets.size)
+                if (
+                  tailOffsetsUnchanged.size == stopAfterEmptyFetchIterations && tailOffsetsUnchanged.forall(
+                    _ == tailOffsetsUnchanged.head)
+                ) Stop
                 else ContinueDelayed
               } else ContinueDelayed
-            } 
+            }
 
             val nextStartOffset: Long =
               if (offsets.nonEmpty) {
@@ -136,7 +140,7 @@ class JdbcDurableStateStore[A](
         }
 
         control match {
-          case Stop     => Future.successful(None) 
+          case Stop     => Future.successful(None)
           case Continue => retrieveNextBatch()
           case ContinueDelayed =>
             akka.pattern.after(durableStateConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
@@ -146,11 +150,9 @@ class JdbcDurableStateStore[A](
   }
 
   private def makeSourceFromStateQuery(tag: String, offset: Option[Long]): Source[DurableStateChange[A], NotUsed] = {
-    Source
-      .fromPublisher(db.stream(queries._selectByTag(Some(tag), offset).result))
-      .mapAsync(1) { row =>
-        Future.fromTry(toDurableStateChange(row)) 
-      }
+    Source.fromPublisher(db.stream(queries._selectByTag(Some(tag), offset).result)).mapAsync(1) { row =>
+      Future.fromTry(toDurableStateChange(row))
+    }
   }
 
   private def toDurableStateChange(row: DurableStateTables.DurableStateRow): Try[DurableStateChange[A]] = {

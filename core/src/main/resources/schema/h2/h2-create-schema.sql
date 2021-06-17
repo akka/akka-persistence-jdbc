@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS "snapshot" (
     );
 
 CREATE TABLE IF NOT EXISTS "state" (
-    "ordering" BIGINT NOT NULL AUTO_INCREMENT,
+    "global_offset" BIGINT NOT NULL AUTO_INCREMENT,
     "persistence_id" VARCHAR(255) NOT NULL,
     "sequence_number" BIGINT NOT NULL,
     "state_payload" BLOB NOT NULL,

@@ -197,7 +197,7 @@ class ReadJournalConfig(config: Config) {
 
 class DurableStateTableColumnNames(config: Config) {
   private val cfg = config.getConfig("tables.state.columnNames")
-  val ordering: String = cfg.getString("ordering")
+  val globalOffset: String = cfg.getString("globalOffset")
   val persistenceId: String = cfg.getString("persistenceId")
   val statePayload: String = cfg.getString("statePayload")
   val tag: String = cfg.getString("tag")
@@ -210,6 +210,7 @@ class DurableStateTableColumnNames(config: Config) {
 class DurableStateTableConfiguration(config: Config) {
   private val cfg = config.getConfig("tables.state")
   val refreshInterval: FiniteDuration = config.asFiniteDuration("refreshInterval")
+  val stopAfterEmptyFetchIterations: Int = config.getInt("stopAfterEmptyFetchIterations")
   val tableName: String = cfg.getString("tableName")
   val schemaName: Option[String] = cfg.asStringOption("schemaName")
   val columnNames: DurableStateTableColumnNames = new DurableStateTableColumnNames(config)

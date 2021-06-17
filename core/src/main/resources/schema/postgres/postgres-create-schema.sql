@@ -47,3 +47,15 @@ CREATE TABLE IF NOT EXISTS public.snapshot (
   PRIMARY KEY(persistence_id, sequence_number)
 );
 
+CREATE TABLE IF NOT EXISTS "state" (
+    "global_offset" BIGSERIAL,
+    "persistence_id" VARCHAR(255) NOT NULL,
+    "sequence_number" BIGINT NOT NULL,
+    "state_payload" BYTEA NOT NULL,
+    "state_serial_id" INTEGER NOT NULL,
+    "state_serial_manifest" VARCHAR(255),
+    "tag" VARCHAR,
+    "state_timestamp" BIGINT NOT NULL,
+    PRIMARY KEY("persistence_id")
+    );
+CREATE INDEX "state_tag_idx" on "state" ("tag");

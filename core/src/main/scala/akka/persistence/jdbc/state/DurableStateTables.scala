@@ -4,7 +4,7 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
 
 object DurableStateTables {
   case class DurableStateRow(
-      ordering: Long,
+      globalOffset: Long,
       persistenceId: String,
       seqNumber: Long,
       statePayload: Array[Byte],
@@ -28,10 +28,10 @@ trait DurableStateTables {
         _tableName = durableStateTableCfg.tableName) {
 
     def * =
-      (ordering, persistenceId, seqNumber, statePayload, tag, stateSerId, stateSerManifest, stateTimestamp)
+      (globalOffset, persistenceId, seqNumber, statePayload, tag, stateSerId, stateSerManifest, stateTimestamp)
         .<>(DurableStateRow.tupled, DurableStateRow.unapply)
 
-    val ordering: Rep[Long] = column[Long](durableStateTableCfg.columnNames.ordering, O.AutoInc)
+    val globalOffset: Rep[Long] = column[Long](durableStateTableCfg.columnNames.globalOffset, O.AutoInc)
     val persistenceId: Rep[String] =
       column[String](durableStateTableCfg.columnNames.persistenceId, O.PrimaryKey, O.Length(255, varying = true))
     val seqNumber: Rep[Long] = column[Long](durableStateTableCfg.columnNames.seqNumber)
@@ -42,7 +42,9 @@ trait DurableStateTables {
       column[Option[String]](durableStateTableCfg.columnNames.stateSerManifest)
     val stateTimestamp: Rep[Long] = column[Long](durableStateTableCfg.columnNames.stateTimestamp)
 
-    val orderingIdx = index(s"${tableName}_ordering_idx", ordering, unique = true)
+    val globalOffsetIdx = index(s"${tableName}_globalOffset_idx", globalOffset, unique = true)
   }
   lazy val durableStateTable = new TableQuery(new DurableState(_))
+  // lazy val offsetSequence = Sequence[Long]("state_ordering_seq") start 1 inc 1
+  // (durableStateTable.schema ++ offsetSequence.schema).create.statements.foreach(println)
 }

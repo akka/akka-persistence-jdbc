@@ -2,6 +2,7 @@ package akka.persistence.jdbc.state.scaladsl
 
 import scala.util.Try
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.duration._
 import slick.jdbc.{ JdbcBackend, JdbcProfile }
 import akka.{ Done, NotUsed }
 import akka.actor.ActorSystem
@@ -72,7 +73,7 @@ class JdbcDurableStateStore[A](
       // if seqNr > 1 we always try update and if that fails (returns 0 affected rows) we throw
       Future
         .fromTry(row)
-        .flatMap(r => db.run(queries._updateDurableState(r)))
+        .flatMap(r => db.run(updateDurableState(r)))
         .map { rowsAffected =>
           if (rowsAffected == 0)
             throw new IllegalStateException(
@@ -85,34 +86,57 @@ class JdbcDurableStateStore[A](
   def deleteObject(persistenceId: String): Future[Done] =
     db.run(queries._delete(persistenceId).map(_ => Done))
 
-  def currentChanges(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] = offset match {
+  def currentChanges(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] = (offset match {
     case NoOffset      => makeSourceFromStateQuery(tag, None)
     case APSequence(l) => makeSourceFromStateQuery(tag, Some(l))
     case _             => ??? // should not reach here
-  }
+  })
 
   def changes(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] = {
 
+    // a collection to store the start offsets for every iteration 
+    val lastStartOffsets = collection.mutable.ListBuffer.empty[Long]
+    val stopAfterEmptyFetchIterations = durableStateConfig.stopAfterEmptyFetchIterations 
     Source
       .unfoldAsync[(Offset, FlowControl), Seq[DurableStateChange[A]]]((offset, Continue)) { case (from, control) =>
         def retrieveNextBatch() = {
+          // we will Stop after this many empty fetches
+          // may be this should come from config
           /* get all records from the specified offset */
           currentChanges(tag, from).runWith(Sink.seq).map { chgs =>
-            val nextStartOffset: Long = chgs.map { chg =>
+            val offsets: Seq[Long] = chgs.map { chg =>
               chg.offset match {
                 case NoOffset      => 0
                 case APSequence(l) => l
                 case _             => 0 // should not reach here
               }
-            }.max
-            /* if retrieved set is empty, then wait else continue */
-            val nextControl = if (chgs.isEmpty) ContinueDelayed else Continue
+            }
+            val nextControl = {
+              // check if we have reached `stopAfterEmptyFetchIterations` empty fetch cycles
+              // Stop if we have else ContinueDelayed
+              if (stopAfterEmptyFetchIterations > 0) {
+                val tailOffsetsUnchanged = lastStartOffsets.slice(lastStartOffsets.size - stopAfterEmptyFetchIterations, lastStartOffsets.size)
+                if (tailOffsetsUnchanged.size == stopAfterEmptyFetchIterations && tailOffsetsUnchanged.forall(_ == tailOffsetsUnchanged.head)) Stop
+                else ContinueDelayed
+              } else ContinueDelayed
+            } 
+
+            val nextStartOffset: Long =
+              if (offsets.nonEmpty) {
+                lastStartOffsets += offsets.max
+                offsets.max
+              } else {
+                val l = lastStartOffsets.last
+                lastStartOffsets += lastStartOffsets.last
+                l
+              }
+
             Some(((Offset.sequence(nextStartOffset), nextControl), chgs))
           }
         }
 
         control match {
-          case Stop     => Future.successful(None) // should not come here as this is supposed to be a live stream
+          case Stop     => Future.successful(None) 
           case Continue => retrieveNextBatch()
           case ContinueDelayed =>
             akka.pattern.after(durableStateConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
@@ -122,9 +146,11 @@ class JdbcDurableStateStore[A](
   }
 
   private def makeSourceFromStateQuery(tag: String, offset: Option[Long]): Source[DurableStateChange[A], NotUsed] = {
-    Source.fromPublisher(db.stream(queries._selectByTag(Some(tag), offset).result)).map { row =>
-      toDurableStateChange(row).getOrElse(throw new IllegalStateException(s"Error fetching state information for $tag"))
-    }
+    Source
+      .fromPublisher(db.stream(queries._selectByTag(Some(tag), offset).result))
+      .mapAsync(1) { row =>
+        Future.fromTry(toDurableStateChange(row)) 
+      }
   }
 
   private def toDurableStateChange(row: DurableStateTables.DurableStateRow): Try[DurableStateChange[A]] = {
@@ -135,7 +161,15 @@ class JdbcDurableStateStore[A](
           row.persistenceId,
           row.seqNumber,
           payload.asInstanceOf[A],
-          Offset.sequence(row.ordering),
+          Offset.sequence(row.globalOffset),
           row.stateTimestamp))
+  }
+
+  private def updateDurableState(row: DurableStateTables.DurableStateRow) = {
+    import queries._
+    for {
+      s <- _getSequenceName()
+      u <- _updateDurableState(row, s.head)
+    } yield u
   }
 }

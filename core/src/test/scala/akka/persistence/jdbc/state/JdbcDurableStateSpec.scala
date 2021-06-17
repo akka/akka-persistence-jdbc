@@ -14,7 +14,10 @@ import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.state.scaladsl.JdbcDurableStateStore
 import akka.persistence.jdbc.testkit.internal.{ H2, SchemaType }
 import akka.persistence.jdbc.util.DropCreate
+import akka.persistence.query.{ NoOffset, Offset, Sequence }
+import akka.persistence.query.DurableStateChange
 import akka.serialization.SerializationExtension
+import akka.stream.scaladsl.Sink
 
 abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
     extends PluginSpec(config)
@@ -50,6 +53,9 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
 
   val stateStoreString: JdbcDurableStateStore[String]
   val stateStorePayload: JdbcDurableStateStore[MyPayload]
+      import org.scalatest.time._
+  implicit val defaultPatience =
+    PatienceConfig(timeout = Span(20, Seconds), interval = Span(5, Millis))
 
   override def beforeAll(): Unit = {
     dropAndCreate(schemaType)
@@ -176,6 +182,104 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
           v.value shouldBe None
         }
       }
+    }
+  }
+
+  "A JDBC durable state store" must {
+    import stateStoreString._
+    def upserts() = {
+      upsertObject("p1", 1, "1 valid string", "t1").futureValue // offset = 1
+      upsertObject("p1", 2, "2 valid string", "t1").futureValue // offset = 2
+      upsertObject("p2", 1, "1 valid string", "t1").futureValue // offset = 3
+      upsertObject("p3", 1, "1 valid string", "t2").futureValue // offset = 4
+      upsertObject("p2", 2, "2 valid string", "t1").futureValue // offset = 5
+      upsertObject("p1", 3, "3 valid string", "t1").futureValue // offset = 6
+      upsertObject("p2", 3, "3 valid string", "t1").futureValue // offset = 7
+      upsertObject("p1", 4, "4 valid string", "t1").futureValue // offset = 8
+    }
+    "support query for current changes by tags and return last offsets seen" in {
+      upserts()
+      val source = stateStoreString.currentChanges("t1", NoOffset)
+      whenReady {
+        source.runFold(List.empty[DurableStateChange[String]]) { (acc, chg) => acc ++ List(chg) }
+      } { v =>
+        v.size shouldBe 2
+        val states = v.foldLeft(Map.empty[String, (Offset, Long)])((acc, e) => acc + ((e.persistenceId, (e.offset, e.seqNr)))) 
+        states.get("p1").map(e => e._1 === Sequence(8) && e._2 === 4)
+        states.get("p2").map(e => e._1 === Sequence(7) && e._2 === 3)
+      }
+
+      // push more data
+      upsertObject("p1", 5, "5 valid string", "t1").futureValue
+      upsertObject("p1", 6, "6 valid string", "t1").futureValue
+      upsertObject("p1", 7, "7 valid string", "t1").futureValue
+      upsertObject("p1", 8, "8 valid string", "t1").futureValue
+
+      // new offsets
+      whenReady {
+        source.runFold(List.empty[DurableStateChange[String]]) { (acc, chg) => acc ++ List(chg) }
+      } { v =>
+        v.size shouldBe 2
+        val states = v.foldLeft(Map.empty[String, (Offset, Long)])((acc, e) => acc + ((e.persistenceId, (e.offset, e.seqNr)))) 
+        states.get("p1").map(e => e._1 === Sequence(12) && e._2 === 8)
+        states.get("p2").map(e => e._1 === Sequence(7) && e._2 === 3)
+      }
+    }
+    "support query for current changes by tags with offset specified" in {
+      upserts()
+      val source = stateStoreString.currentChanges("t1", Offset.sequence(7))
+      whenReady {
+        source.runFold(List.empty[DurableStateChange[String]]) { (acc, chg) => acc ++ List(chg) }
+      } { v =>
+        v.size shouldBe 1
+        v.map(_.persistenceId).toSet shouldBe Set("p1")
+        v.map(_.seqNr).toSet shouldBe Set(4)
+        v.map(_.offset).toSet shouldBe Set(Sequence(8))
+      }
+    }
+    def upsertsForChange() = {
+        upsertObject("p1", 1, "1 valid string", "t1").futureValue
+        upsertObject("p1", 2, "2 valid string", "t1").futureValue
+        upsertObject("p2", 1, "1 valid string", "t1").futureValue
+        upsertObject("p3", 1, "1 valid string", "t2").futureValue
+        upsertObject("p2", 2, "2 valid string", "t1").futureValue
+        upsertObject("p1", 3, "3 valid string", "t1").futureValue
+        upsertObject("p2", 3, "3 valid string", "t1").futureValue
+        upsertObject("p1", 4, "4 valid string", "t1").futureValue
+        upsertObject("p1", 5, "5 valid string", "t1").futureValue
+        upsertObject("p2", 4, "4 valid string", "t1").futureValue
+        upsertObject("p3", 2, "2 valid string", "t2").futureValue
+        upsertObject("p2", 5, "5 valid string", "t1").futureValue
+        upsertObject("p1", 6, "6 valid string", "t1").futureValue
+    }
+    def moreUpsertsForChange() = {
+        upsertObject("p3", 3, "3 valid string", "t2").futureValue
+        upsertObject("p2", 6, "6 valid string", "t1").futureValue
+        upsertObject("p1", 7, "7 valid string", "t1").futureValue
+    }
+    "support query for changes by tags with no offset specified" in {
+      upsertsForChange()
+      val source = stateStoreString.changes("t1", NoOffset)
+      val m = collection.mutable.ListBuffer.empty[(String, Offset)]
+      val f = source.map(ds => m += ((ds.persistenceId, ds.offset))).runWith(Sink.ignore)
+
+      // more data after some delay
+      Thread.sleep(1000)
+      moreUpsertsForChange()
+
+      whenReady(f) { _ => 
+        m.size shouldBe 4
+        m.toList.toSet shouldBe Set(("p1", Sequence(13)), ("p2", Sequence(12)), ("p1", Sequence(16)), ("p2", Sequence(15)))
+      }
+    }
+    "support query for changes by tags with an offset specified" in {
+      upsertsForChange()
+      val source = stateStoreString.changes("t1", Sequence(12))
+      val z = source.runWith(Sink.seq).futureValue 
+      val elems = z.map(a => (a.persistenceId, a.offset, a.seqNr))
+      elems.size shouldBe 1
+      elems.map(_._2).toSet shouldBe Set(Sequence(13))
+      elems.map(_._1).toSet shouldBe Set("p1")
     }
   }
 }

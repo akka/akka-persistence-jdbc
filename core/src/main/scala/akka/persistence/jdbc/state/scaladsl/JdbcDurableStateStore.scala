@@ -15,9 +15,10 @@ import akka.dispatch.ExecutionContexts
 import akka.persistence.query.scaladsl.DurableStateStoreQuery
 import akka.persistence.jdbc.journal.dao.FlowControl
 import akka.stream.scaladsl.{ Sink, Source }
-import akka.persistence.query.{ Offset, Sequence => APSequence, NoOffset, DurableStateChange }
+import akka.persistence.query.{ DurableStateChange, Offset }
 import akka.stream.{ Materializer, SystemMaterializer }
 
+case class MaxOffset(value: Long) extends AnyVal
 class JdbcDurableStateStore[A](
     db: JdbcBackend#Database,
     profile: JdbcProfile,
@@ -86,56 +87,90 @@ class JdbcDurableStateStore[A](
   def deleteObject(persistenceId: String): Future[Done] =
     db.run(queries._delete(persistenceId).map(_ => Done))
 
-  def currentChanges(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] = offset match {
-    case NoOffset      => makeSourceFromStateQuery(tag, None)
-    case APSequence(l) => makeSourceFromStateQuery(tag, Some(l))
-    case _             => ??? // should not reach here
+  def currentChanges(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] =
+    currentChangesByTag(tag, offset.value)
+
+  def changes(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] =
+    _changesByTag(tag, offset.value, terminateAfterOffset = None)
+
+  private def currentChangesByTag(tag: String, offset: Long): Source[DurableStateChange[A], NotUsed] = {
+    Source
+      .futureSource(maxJournalSequence().map { maxOrderingInDb =>
+        _changesByTag(tag, offset, terminateAfterOffset = Some(maxOrderingInDb))
+      })
+      .mapMaterializedValue(_ => NotUsed)
   }
 
-  def changes(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] = {
+  private def _currentChangesByTag(
+      tag: String,
+      from: Long,
+      batchSize: Long,
+      queryUntil: MaxOffset): Source[DurableStateChange[A], NotUsed] = {
+    if (queryUntil.value < from.value) Source.empty
+    else changesByTag(tag, from, queryUntil.value, batchSize).mapAsync(1)(Future.fromTry)
+  }
 
-    // a collection to store the start offsets for every iteration
-    val lastStartOffsets = collection.mutable.ListBuffer.empty[Long]
+  private def changesByTag(
+      tag: String,
+      offset: Long,
+      maxOffset: Long,
+      max: Long): Source[Try[DurableStateChange[A]], NotUsed] = {
+    Source
+      .fromPublisher(db.stream(queries.changesByTag((tag, offset, maxOffset, max)).result))
+      .map(toDurableStateChange)
+  }
+
+  // checks if the last n elements of a list are equal
+  private def equalLastNElements(coll: List[Long], n: Int): Boolean = {
+    if (coll.isEmpty) false
+    else if (coll.size < n) false
+    else {
+      val res = coll.slice(coll.length - n, coll.length)
+      res.forall(_ == res.head)
+    }
+  }
+
+  private def _changesByTag(
+      tag: String,
+      offset: Long,
+      terminateAfterOffset: Option[Long]): Source[DurableStateChange[A], NotUsed] = {
+    val batchSize = durableStateConfig.batchSize
+    val startingOffsets = collection.mutable.ListBuffer.empty[Long]
     val stopAfterEmptyFetchIterations = durableStateConfig.stopAfterEmptyFetchIterations
     Source
-      .unfoldAsync[(Offset, FlowControl), Seq[DurableStateChange[A]]]((offset, Continue)) { case (from, control) =>
+      .unfoldAsync[(Long, FlowControl), Seq[DurableStateChange[A]]]((offset, Continue)) { case (from, control) =>
         def retrieveNextBatch() = {
-          // we will Stop after this many empty fetches
-          // may be this should come from config
-          /* get all records from the specified offset */
-          currentChanges(tag, from).runWith(Sink.seq).map { chgs =>
-            val offsets: Seq[Long] = chgs.map { chg =>
-              chg.offset match {
-                case NoOffset      => 0
-                case APSequence(l) => l
-                case _             => 0 // should not reach here
-              }
-            }
-            val nextControl = {
-              // check if we have reached `stopAfterEmptyFetchIterations` empty fetch cycles
-              // Stop if we have else ContinueDelayed
-              if (stopAfterEmptyFetchIterations > 0) {
-                val tailOffsetsUnchanged =
-                  lastStartOffsets.slice(lastStartOffsets.size - stopAfterEmptyFetchIterations, lastStartOffsets.size)
-                if (
-                  tailOffsetsUnchanged.size == stopAfterEmptyFetchIterations && tailOffsetsUnchanged.forall(
-                    _ == tailOffsetsUnchanged.head)
-                ) Stop
-                else ContinueDelayed
-              } else ContinueDelayed
-            }
+          for {
+            queryUntil <- maxJournalSequence()
+            xs <- _currentChangesByTag(tag, from, batchSize, MaxOffset(queryUntil)).runWith(Sink.seq)
+          } yield {
+            val hasMoreEvents = xs.size == batchSize
+            val nextControl: FlowControl =
+              terminateAfterOffset match {
+                // we may stop if target is behind queryUntil and we don't have more events to fetch
+                case Some(target) if !hasMoreEvents && target <= queryUntil => Stop
 
-            val nextStartOffset: Long =
-              if (offsets.nonEmpty) {
-                lastStartOffsets += offsets.max
-                offsets.max
-              } else {
-                val l = lastStartOffsets.last
-                lastStartOffsets += lastStartOffsets.last
-                l
-              }
+                // We may also stop if we have found an event with an offset >= target
+                case Some(target) if xs.exists(_.offset.value >= target) => Stop
 
-            Some(((Offset.sequence(nextStartOffset), nextControl), chgs))
+                // otherwise, disregarding if Some or None, we must decide how to continue
+                case _ =>
+                  if (
+                    stopAfterEmptyFetchIterations > 0 && equalLastNElements(
+                      startingOffsets.toList,
+                      stopAfterEmptyFetchIterations)
+                  ) Stop
+                  else if (hasMoreEvents) Continue
+                  else ContinueDelayed
+              }
+            val nextStartingOffset = if (xs.isEmpty) {
+              math.max(from.value, queryUntil)
+            } else {
+              // Continue querying from the largest offset
+              xs.map(_.offset.value).max
+            }
+            startingOffsets += nextStartingOffset
+            Some(((nextStartingOffset, nextControl), xs))
           }
         }
 
@@ -149,11 +184,8 @@ class JdbcDurableStateStore[A](
       .mapConcat(identity)
   }
 
-  private def makeSourceFromStateQuery(tag: String, offset: Option[Long]): Source[DurableStateChange[A], NotUsed] = {
-    Source.fromPublisher(db.stream(queries._selectByTag(Some(tag), offset).result)).mapAsync(1) { row =>
-      Future.fromTry(toDurableStateChange(row))
-    }
-  }
+  private def maxJournalSequence(): Future[Long] =
+    db.run(queries.maxOffsetQuery.result)
 
   private def toDurableStateChange(row: DurableStateTables.DurableStateRow): Try[DurableStateChange[A]] = {
     AkkaSerialization

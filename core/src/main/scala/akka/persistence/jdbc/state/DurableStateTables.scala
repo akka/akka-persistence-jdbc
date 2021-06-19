@@ -45,6 +45,4 @@ trait DurableStateTables {
     val globalOffsetIdx = index(s"${tableName}_globalOffset_idx", globalOffset, unique = true)
   }
   lazy val durableStateTable = new TableQuery(new DurableState(_))
-  // lazy val offsetSequence = Sequence[Long]("state_ordering_seq") start 1 inc 1
-  // (durableStateTable.schema ++ offsetSequence.schema).create.statements.foreach(println)
 }

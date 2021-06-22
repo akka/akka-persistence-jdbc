@@ -58,4 +58,5 @@ CREATE TABLE IF NOT EXISTS "state" (
     "state_timestamp" BIGINT NOT NULL,
     PRIMARY KEY("persistence_id")
     );
-CREATE INDEX "state_tag_idx" on "state" ("tag");
+CREATE INDEX CONCURRENTLY "state_tag_idx" on "state" ("tag");
+CREATE INDEX CONCURRENTLY "state_global_offset_idx" on "state" ("global_offset");

@@ -212,7 +212,12 @@ class DurableStateTableConfiguration(config: Config) {
   val refreshInterval: FiniteDuration = config.asFiniteDuration("refreshInterval")
   val batchSize: Int = config.getInt("batchSize")
   val stopAfterEmptyFetchIterations: Int = config.getInt("stopAfterEmptyFetchIterations")
-  val schemaType: String = config.getString("schemaType")
+  val schemaType: String = {
+    val s = config.getString("schemaType")
+    if (s != "H2" && s != "POSTGRES")
+      throw new IllegalArgumentException(s"Schema type [$s] not supported. Has to be one of H2 or POSTGRES")
+    else s
+  }
   val tableName: String = cfg.getString("tableName")
   val schemaName: Option[String] = cfg.asStringOption("schemaName")
   val columnNames: DurableStateTableColumnNames = new DurableStateTableColumnNames(config)

@@ -2,6 +2,7 @@ package akka.persistence.jdbc.state.scaladsl
 
 import org.scalatest.concurrent.ScalaFutures
 import scala.concurrent.{ ExecutionContext, Future }
+import akka.dispatch.ExecutionContexts
 
 trait DataGenerationHelper extends ScalaFutures {
 
@@ -41,14 +42,14 @@ trait DataGenerationHelper extends ScalaFutures {
     }
   }
 
-  def upsertParallel(store: JdbcDurableStateStore[String], pids: Set[String], tag: String)(
+  def upsertParallel(store: JdbcDurableStateStore[String], pids: Set[String], tag: String, noOfItems: Int)(
       implicit ec: ExecutionContext) = {
 
     for {
       _ <- Future.unit
-      f1 = Future(upsertManyFor(store, pids.head, tag, 1, 10))
-      f2 = Future(upsertManyFor(store, pids.tail.head, tag, 1, 10))
-      f3 = Future(upsertManyFor(store, pids.last, tag, 1, 10))
+      f1 = Future(upsertManyFor(store, pids.head, tag, 1, noOfItems))(ExecutionContexts.parasitic)
+      f2 = Future(upsertManyFor(store, pids.tail.head, tag, 1, noOfItems))(ExecutionContexts.parasitic)
+      f3 = Future(upsertManyFor(store, pids.last, tag, 1, noOfItems))(ExecutionContexts.parasitic)
       _ <- f1
       _ <- f2
       _ <- f3

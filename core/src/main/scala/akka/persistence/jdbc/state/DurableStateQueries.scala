@@ -16,10 +16,11 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
     params.setBytes(bytes)
   }
 
-  private[jdbc] def _selectByPersistenceId(persistenceId: Rep[String]) =
+  private[jdbc] def selectFromDbByPersistenceId(persistenceId: Rep[String]) =
     durableStateTable.filter(_.persistenceId === persistenceId)
 
-  private[jdbc] def _selectByTag(tag: Rep[Option[String]], offset: Option[Long]) = {
+  /*
+  private[jdbc] def selectFromDbByTag(tag: Rep[Option[String]], offset: Option[Long]) = {
     offset
       .map { o =>
         durableStateTable.filter(r => r.tag === tag && r.globalOffset > o)
@@ -28,14 +29,38 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
         durableStateTable.filter(r => r.tag === tag)
       }
   }.sortBy(_.globalOffset.asc)
+   */
 
-  private[jdbc] def _insertDurableState(row: DurableStateTables.DurableStateRow) =
-    durableStateTable += row
+  private[jdbc] def insertDbWithDurableState(row: DurableStateTables.DurableStateRow, seqName: String) = {
 
-  private[jdbc] def _updateDurableState(row: DurableStateTables.DurableStateRow, seqName: String) = {
-    val str = sequenceNextValUpdater.nextValUpdater(seqName)
+    sqlu"""INSERT INTO state 
+            (
+              persistence_id, 
+              global_offset,
+              sequence_number, 
+              state_payload, 
+              state_serial_id, 
+              state_serial_manifest, 
+              tag, 
+              state_timestamp
+            )
+            VALUES
+            (
+              ${row.persistenceId},
+              #${seqName},
+              ${row.seqNumber},
+              ${row.statePayload},
+              ${row.stateSerId},
+              ${row.stateSerManifest},
+              ${row.tag},
+              #${System.currentTimeMillis()}
+            )
+      """
+  }
+
+  private[jdbc] def updateDbWithDurableState(row: DurableStateTables.DurableStateRow, seqNextValue: String) = {
     sqlu"""UPDATE state 
-           SET global_offset = #${str},
+           SET global_offset = #${seqNextValue},
                sequence_number = ${row.seqNumber}, 
                state_payload = ${row.statePayload},
                state_serial_id = ${row.stateSerId}, 
@@ -47,9 +72,9 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
         """
   }
 
-  private[jdbc] def _getSequenceName() = sequenceNextValUpdater._getSequenceName()
+  private[jdbc] def getSequenceNextValueExpr() = sequenceNextValUpdater.getSequenceNextValueExpr()
 
-  def _delete(persistenceId: String) = {
+  def deleteFromDb(persistenceId: String) = {
     durableStateTable.filter(_.persistenceId === persistenceId).delete
   }
 

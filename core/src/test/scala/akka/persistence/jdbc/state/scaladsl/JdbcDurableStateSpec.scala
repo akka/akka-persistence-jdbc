@@ -12,7 +12,8 @@ import akka.actor._
 import akka.persistence.PluginSpec
 import akka.persistence.jdbc.db.SlickDatabase
 import akka.persistence.jdbc.config._
-import akka.persistence.jdbc.state.MyPayload
+import akka.persistence.jdbc.state.{ MyPayload, OffsetSyntax }
+import OffsetSyntax._
 import akka.persistence.jdbc.testkit.internal.{ H2, Postgres, SchemaType }
 import akka.persistence.jdbc.util.DropCreate
 import akka.persistence.query.{ NoOffset, Offset, Sequence }
@@ -61,6 +62,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
 
   val stateStoreString: JdbcDurableStateStore[String]
   val stateStorePayload: JdbcDurableStateStore[MyPayload]
+
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(20, Seconds), interval = Span(5, Millis))
 
@@ -129,8 +131,8 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
 
         } yield u).failed
       } { e =>
-        e shouldBe an[org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException]
-      // e shouldBe an[org.postgresql.util.PSQLException]
+        // e shouldBe an[org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException]
+        e shouldBe an[org.postgresql.util.PSQLException]
       }
     }
     "fail inserting an already existing sequence number" in {
@@ -203,7 +205,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
   "A JDBC durable state store" must {
     import stateStoreString._
 
-    "fetch the max offset after a series of upserts" in {
+    "find all states by tag either from the beginning or from a specific offset" in {
       // fetch from beginning
       upsertManyFor(stateStoreString, "p1", "t1", 1, 4)
       val chgs = currentChanges("t1", NoOffset).runWith(Sink.seq).futureValue
@@ -228,14 +230,14 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
       cs.map(_.offset.value).max shouldBe 14
     }
 
-    "fetch the max offset after a series of upserts with multiple persistence ids" in {
+    "find the max offset after a series of upserts with multiple persistence ids" in {
       upsertRandomlyShuffledPersistenceIds(stateStoreString, List("p1", "p2", "p3"), "t1", 3)
       val chgs = currentChanges("t1", NoOffset).runWith(Sink.seq).futureValue
       chgs.size shouldBe 3
       chgs.map(_.offset.value).max shouldBe 9
     }
 
-    "support query for current changes by tags with offset specified" in {
+    "find all states by tags with offsets sorted and proper max and min offsets when starting offset is specified" in {
       upsertRandomlyShuffledPersistenceIds(stateStoreString, List("p1", "p2", "p3"), "t1", 3)
       val chgs = stateStoreString.currentChanges("t1", Offset.sequence(7)).runWith(Sink.seq).futureValue
       chgs.map(_.offset.value) shouldBe sorted
@@ -243,7 +245,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
       chgs.map(_.offset.value).min should be > 7L
     }
 
-    "support query for changes by tags with no offset specified" in {
+    "find all states by tags returning a live source with no offset specified" in {
       upsertRandomlyShuffledPersistenceIds(stateStoreString, List("p1", "p2", "p3"), "t1", 3)
       val source = stateStoreString.changes("t1", NoOffset)
       val m = collection.mutable.ListBuffer.empty[(String, Offset)]
@@ -255,6 +257,9 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
       upsertObject("p2", 4, "4 valid string", "t1").futureValue
       upsertObject("p1", 4, "4 valid string", "t1").futureValue
 
+      // val f = source.runWith(Sink.seq)
+      // this.system.terminate().futureValue
+
       whenReady(f) { _ =>
         m.size shouldBe 5
         m.toList.map(_._2.value) shouldBe sorted
@@ -262,7 +267,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
       }
     }
 
-    "support query for changes by tags with an offset specified" in {
+    "find all states by tags returning a live source with a starting offset specified" in {
       upsertRandomlyShuffledPersistenceIds(stateStoreString, List("p1", "p2", "p3"), "t1", 3)
       val source = stateStoreString.changes("t1", Sequence(4))
       val m = collection.mutable.ListBuffer.empty[(String, Offset)]
@@ -279,16 +284,41 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
       }
     }
   }
+
   "A JDBC durable state store in the face of parallel upserts" must {
     import stateStoreString._
 
-    "fetch current changes" in {
-      upsertParallel(stateStoreString, Set("p1", "p2", "p3"), "t1")(e).futureValue
+    "fetch current changes and proper value of offsets" in {
+      upsertParallel(stateStoreString, Set("p1", "p2", "p3"), "t1", 1000)(e).futureValue
       whenReady {
         currentChanges("t1", NoOffset).runWith(Sink.seq)
       } { chgs =>
         chgs.map(_.offset.value) shouldBe sorted
-        chgs.map(_.offset.value).max shouldBe 30
+        chgs.map(_.offset.value).max shouldBe 3000
+      }
+
+      whenReady {
+        currentChanges("t1", Sequence(2000)).runWith(Sink.seq)
+      } { chgs =>
+        chgs.map(_.offset.value) shouldBe sorted
+        chgs.map(_.offset.value).max shouldBe 3000
+      }
+    }
+
+    "fetch changes with offsets from beginning" in {
+      upsertParallel(stateStoreString, Set("p1", "p2", "p3"), "t1", 1000)(e).futureValue
+      val source = changes("t1", NoOffset)
+      val m = collection.mutable.ListBuffer.empty[(String, Offset)]
+      val z = source.map(ds => m += ((ds.persistenceId, ds.offset))).runWith(Sink.ignore)
+
+      // more data after some delay
+      Thread.sleep(1000)
+      upsertManyFor(stateStoreString, "p3", "t1", 1001, 30)
+
+      whenReady(z) { _ =>
+        m.map(_._2.value) shouldBe sorted
+        m.map(_._2.value).min should be > 0L
+        m.map(_._2.value).max shouldBe 3030
       }
     }
   }

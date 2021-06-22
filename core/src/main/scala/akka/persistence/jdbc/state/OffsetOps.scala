@@ -6,7 +6,7 @@
 package akka.persistence.jdbc.state
 
 import akka.persistence.query._
-package object scaladsl {
+object OffsetSyntax {
   implicit class OffsetOps(val that: Offset) extends AnyVal {
     def value =
       that match {

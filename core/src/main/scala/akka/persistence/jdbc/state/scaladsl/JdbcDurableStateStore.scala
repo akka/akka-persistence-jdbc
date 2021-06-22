@@ -10,8 +10,8 @@ import akka.persistence.state.scaladsl.{ DurableStateUpdateStore, GetObjectResul
 import akka.serialization.Serialization
 import akka.persistence.jdbc.state.{ AkkaSerialization, DurableStateQueries }
 import akka.persistence.jdbc.config.DurableStateTableConfiguration
-import akka.persistence.jdbc.state.DurableStateTables
-import akka.dispatch.ExecutionContexts
+import akka.persistence.jdbc.state.{ DurableStateTables, OffsetSyntax }
+import OffsetSyntax._
 import akka.persistence.query.scaladsl.DurableStateStoreQuery
 import akka.persistence.jdbc.journal.dao.FlowControl
 import akka.stream.scaladsl.{ Sink, Source }
@@ -35,7 +35,7 @@ class JdbcDurableStateStore[A](
   val queries = new DurableStateQueries(profile, durableStateConfig)
 
   def getObject(persistenceId: String): Future[GetObjectResult[A]] = {
-    db.run(queries._selectByPersistenceId(persistenceId).result).map { rows =>
+    db.run(queries.selectFromDbByPersistenceId(persistenceId).result).map { rows =>
       rows.headOption match {
         case Some(row) =>
           GetObjectResult(AkkaSerialization.fromRow(serialization)(row).toOption.asInstanceOf[Option[A]], row.seqNumber)
@@ -61,76 +61,54 @@ class JdbcDurableStateStore[A](
           System.currentTimeMillis)
       }
 
-    if (seqNr == 1) {
-      // this insert will fail if any record exists in the table with the same persistence id
-      // in case concurrent users try to insert, one will fail because the transactions will be serializable
-      // and we have a primary key on persistence_id - hence fail with integrity constraints violation
-      // on primary key constraints
-      Future
-        .fromTry(row)
-        .flatMap(r => db.run(queries._insertDurableState(r)))
-        .map(_ => Done)(ExecutionContexts.parasitic)
-    } else {
-      // if seqNr > 1 we always try update and if that fails (returns 0 affected rows) we throw
-      Future
-        .fromTry(row)
-        .flatMap(r => db.run(updateDurableState(r)))
-        .map { rowsAffected =>
-          if (rowsAffected == 0)
-            throw new IllegalStateException(
-              s"Incorrect sequence number [$seqNr] provided: It has to be 1 more than the value existing in the database for persistenceId [$persistenceId]")
-          else Done
-        }(ExecutionContexts.parasitic)
-    }
+    Future
+      .fromTry(row)
+      .flatMap { r =>
+        val action = if (seqNr == 1) insertDurableState(r) else updateDurableState(r)
+        db.run(action)
+      }
+      .map { rowsAffected =>
+        if (rowsAffected == 0)
+          throw new IllegalStateException(
+            s"Incorrect sequence number [$seqNr] provided: It has to be 1 more than the value existing in the database for persistenceId [$persistenceId]")
+        else Done
+      }
   }
 
   def deleteObject(persistenceId: String): Future[Done] =
-    db.run(queries._delete(persistenceId).map(_ => Done))
+    db.run(queries.deleteFromDb(persistenceId).map(_ => Done))
 
-  def currentChanges(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] =
-    currentChangesByTag(tag, offset.value)
-
-  def changes(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] =
-    _changesByTag(tag, offset.value, terminateAfterOffset = None)
-
-  private def currentChangesByTag(tag: String, offset: Long): Source[DurableStateChange[A], NotUsed] = {
+  def currentChanges(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] = {
     Source
       .futureSource(maxJournalSequence().map { maxOrderingInDb =>
-        _changesByTag(tag, offset, terminateAfterOffset = Some(maxOrderingInDb))
+        changesByTag(tag, offset.value, terminateAfterOffset = Some(maxOrderingInDb))
       })
       .mapMaterializedValue(_ => NotUsed)
   }
 
-  private def _currentChangesByTag(
+  def changes(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] =
+    changesByTag(tag, offset.value, terminateAfterOffset = None)
+
+  private def currentChangesByTag(
       tag: String,
       from: Long,
       batchSize: Long,
       queryUntil: MaxOffset): Source[DurableStateChange[A], NotUsed] = {
     if (queryUntil.value < from.value) Source.empty
-    else changesByTag(tag, from, queryUntil.value, batchSize).mapAsync(1)(Future.fromTry)
+    else changesByTagFromDb(tag, from, queryUntil.value, batchSize).mapAsync(1)(Future.fromTry)
   }
 
-  private def changesByTag(
+  private def changesByTagFromDb(
       tag: String,
       offset: Long,
       maxOffset: Long,
-      max: Long): Source[Try[DurableStateChange[A]], NotUsed] = {
+      batchSize: Long): Source[Try[DurableStateChange[A]], NotUsed] = {
     Source
-      .fromPublisher(db.stream(queries.changesByTag((tag, offset, maxOffset, max)).result))
+      .fromPublisher(db.stream(queries.changesByTag((tag, offset, maxOffset, batchSize)).result))
       .map(toDurableStateChange)
   }
 
-  // checks if the last n elements of a list are equal
-  private def equalLastNElements(coll: List[Long], n: Int): Boolean = {
-    if (coll.isEmpty) false
-    else if (coll.size < n) false
-    else {
-      val res = coll.slice(coll.length - n, coll.length)
-      res.forall(_ == res.head)
-    }
-  }
-
-  private def _changesByTag(
+  private def changesByTag(
       tag: String,
       offset: Long,
       terminateAfterOffset: Option[Long]): Source[DurableStateChange[A], NotUsed] = {
@@ -142,7 +120,7 @@ class JdbcDurableStateStore[A](
         def retrieveNextBatch() = {
           for {
             queryUntil <- maxJournalSequence()
-            xs <- _currentChangesByTag(tag, from, batchSize, MaxOffset(queryUntil)).runWith(Sink.seq)
+            xs <- currentChangesByTag(tag, from, batchSize, MaxOffset(queryUntil)).runWith(Sink.seq)
           } yield {
             val hasMoreEvents = xs.size == batchSize
             val nextControl: FlowControl =
@@ -184,6 +162,16 @@ class JdbcDurableStateStore[A](
       .mapConcat(identity)
   }
 
+  // checks if the last n elements of a list are equal
+  private def equalLastNElements(coll: List[Long], n: Int): Boolean = {
+    if (coll.isEmpty) false
+    else if (coll.size < n) false
+    else {
+      val res = coll.slice(coll.length - n, coll.length)
+      res.forall(_ == res.head)
+    }
+  }
+
   private def maxJournalSequence(): Future[Long] =
     db.run(queries.maxOffsetQuery.result)
 
@@ -201,9 +189,19 @@ class JdbcDurableStateStore[A](
 
   private def updateDurableState(row: DurableStateTables.DurableStateRow) = {
     import queries._
+
     for {
-      s <- _getSequenceName()
-      u <- _updateDurableState(row, s.head)
+      s <- getSequenceNextValueExpr()
+      u <- updateDbWithDurableState(row, s.head)
+    } yield u
+  }
+
+  private def insertDurableState(row: DurableStateTables.DurableStateRow) = {
+    import queries._
+
+    for {
+      s <- getSequenceNextValueExpr()
+      u <- insertDbWithDurableState(row, s.head)
     } yield u
   }
 }

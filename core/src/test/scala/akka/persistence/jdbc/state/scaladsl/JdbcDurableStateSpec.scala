@@ -45,7 +45,13 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
 
   val customConfig = ConfigFactory.parseString(s"""
     jdbc-durable-state-store {
+      schemaType = POSTGRES
       stopAfterEmptyFetchIterations = 5
+      batchSize = 200
+      refreshInterval = 500.milliseconds
+      durable-state-sequence-retrieval {
+        query-delay = 100.milliseconds
+      }
     }
   """)
 
@@ -57,14 +63,15 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
 
   lazy val db = SlickDatabase.database(cfg, new SlickConfiguration(cfg.getConfig("slick")), "slick.db")
   lazy val durableStateConfig = new DurableStateTableConfiguration(cfg)
-  implicit lazy val system: ActorSystem = ActorSystem("JdbcDurableStateSpec", config.withFallback(customSerializers))
+  implicit lazy val system: ExtendedActorSystem =
+    ActorSystem("JdbcDurableStateSpec", config.withFallback(customSerializers)).asInstanceOf[ExtendedActorSystem]
   lazy val serialization = SerializationExtension(system)
 
   val stateStoreString: JdbcDurableStateStore[String]
   val stateStorePayload: JdbcDurableStateStore[MyPayload]
 
   implicit val defaultPatience =
-    PatienceConfig(timeout = Span(20, Seconds), interval = Span(5, Millis))
+    PatienceConfig(timeout = Span(30, Seconds), interval = Span(10, Millis))
 
   override def beforeAll(): Unit = {
     dropAndCreate(schemaType)
@@ -78,12 +85,6 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
 
   override def afterAll(): Unit = {
     db.close()
-    system.terminate().futureValue
-  }
-
-  def withActorSystem(f: ActorSystem => Unit): Unit = {
-    implicit val system: ActorSystem = ActorSystem("test", config)
-    f(system)
     system.terminate().futureValue
   }
 
@@ -252,7 +253,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
       val f = source.map(ds => m += ((ds.persistenceId, ds.offset))).runWith(Sink.ignore)
 
       // more data after some delay
-      Thread.sleep(1000)
+      Thread.sleep(100)
       upsertObject("p3", 4, "4 valid string", "t2").futureValue
       upsertObject("p2", 4, "4 valid string", "t1").futureValue
       upsertObject("p1", 4, "4 valid string", "t1").futureValue
@@ -274,7 +275,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
       val z = source.map(ds => m += ((ds.persistenceId, ds.offset))).runWith(Sink.ignore)
 
       // more data after some delay
-      Thread.sleep(1000)
+      Thread.sleep(100)
       upsertManyFor(stateStoreString, "p3", "t1", 4, 3)
 
       whenReady(z) { _ =>
@@ -312,7 +313,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType)
       val z = source.map(ds => m += ((ds.persistenceId, ds.offset))).runWith(Sink.ignore)
 
       // more data after some delay
-      Thread.sleep(1000)
+      Thread.sleep(100)
       upsertManyFor(stateStoreString, "p3", "t1", 1001, 30)
 
       whenReady(z) { _ =>

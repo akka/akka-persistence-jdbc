@@ -19,18 +19,6 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
   private[jdbc] def selectFromDbByPersistenceId(persistenceId: Rep[String]) =
     durableStateTable.filter(_.persistenceId === persistenceId)
 
-  /*
-  private[jdbc] def selectFromDbByTag(tag: Rep[Option[String]], offset: Option[Long]) = {
-    offset
-      .map { o =>
-        durableStateTable.filter(r => r.tag === tag && r.globalOffset > o)
-      }
-      .getOrElse {
-        durableStateTable.filter(r => r.tag === tag)
-      }
-  }.sortBy(_.globalOffset.asc)
-   */
-
   private[jdbc] def insertDbWithDurableState(row: DurableStateTables.DurableStateRow, seqName: String) = {
 
     sqlu"""INSERT INTO state 
@@ -95,4 +83,9 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
   }
 
   private[jdbc] val changesByTag = Compiled(_changesByTag _)
+
+  private def _stateStoreSequenceQuery(from: ConstColumn[Long], limit: ConstColumn[Long]) =
+    durableStateTable.filter(_.globalOffset > from).map(_.globalOffset).sorted.take(limit)
+
+  val stateStoreSequenceQuery = Compiled(_stateStoreSequenceQuery _)
 }

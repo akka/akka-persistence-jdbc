@@ -221,5 +221,22 @@ class DurableStateTableConfiguration(config: Config) {
   val tableName: String = cfg.getString("tableName")
   val schemaName: Option[String] = cfg.asStringOption("schemaName")
   val columnNames: DurableStateTableColumnNames = new DurableStateTableColumnNames(config)
+  val stateSequenceConfig = DurableStateSequenceRetrievalConfig(config)
   override def toString: String = s"DurableStateTableConfiguration($tableName,$schemaName,$columnNames)"
 }
+
+object DurableStateSequenceRetrievalConfig {
+  def apply(config: Config): DurableStateSequenceRetrievalConfig =
+    DurableStateSequenceRetrievalConfig(
+      batchSize = config.getInt("durable-state-sequence-retrieval.batch-size"),
+      maxTries = config.getInt("durable-state-sequence-retrieval.max-tries"),
+      queryDelay = config.asFiniteDuration("durable-state-sequence-retrieval.query-delay"),
+      maxBackoffQueryDelay = config.asFiniteDuration("durable-state-sequence-retrieval.max-backoff-query-delay"),
+      askTimeout = config.asFiniteDuration("durable-state-sequence-retrieval.ask-timeout"))
+}
+case class DurableStateSequenceRetrievalConfig(
+    batchSize: Int,
+    maxTries: Int,
+    queryDelay: FiniteDuration,
+    maxBackoffQueryDelay: FiniteDuration,
+    askTimeout: FiniteDuration)

@@ -1,29 +1,31 @@
 package akka.persistence.jdbc.state.scaladsl
 
-import scala.util.Try
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
+import scala.util.Try
 import slick.jdbc.{ JdbcBackend, JdbcProfile }
 import akka.{ Done, NotUsed }
-import akka.actor.ActorSystem
+import akka.actor.ExtendedActorSystem
+import akka.pattern.ask
 import akka.persistence.state.scaladsl.{ DurableStateUpdateStore, GetObjectResult }
-import akka.serialization.Serialization
 import akka.persistence.jdbc.state.{ AkkaSerialization, DurableStateQueries }
 import akka.persistence.jdbc.config.DurableStateTableConfiguration
 import akka.persistence.jdbc.state.{ DurableStateTables, OffsetSyntax }
-import OffsetSyntax._
+import akka.persistence.query.{ DurableStateChange, Offset }
 import akka.persistence.query.scaladsl.DurableStateStoreQuery
 import akka.persistence.jdbc.journal.dao.FlowControl
+import akka.serialization.Serialization
 import akka.stream.scaladsl.{ Sink, Source }
-import akka.persistence.query.{ DurableStateChange, Offset }
 import akka.stream.{ Materializer, SystemMaterializer }
+import akka.util.Timeout
+import DurableStateSequenceActor._
+import OffsetSyntax._
 
-case class MaxOffset(value: Long) extends AnyVal
 class JdbcDurableStateStore[A](
     db: JdbcBackend#Database,
     profile: JdbcProfile,
     durableStateConfig: DurableStateTableConfiguration,
-    serialization: Serialization)(implicit val system: ActorSystem)
+    serialization: Serialization)(implicit val system: ExtendedActorSystem)
     extends DurableStateUpdateStore[A]
     with DurableStateStoreQuery[A] {
   import FlowControl._
@@ -33,6 +35,12 @@ class JdbcDurableStateStore[A](
   implicit val mat: Materializer = SystemMaterializer(system).materializer
 
   val queries = new DurableStateQueries(profile, durableStateConfig)
+  val durableStateSequenceConfig = durableStateConfig.stateSequenceConfig
+
+  // Started lazily to prevent the actor for querying the db if no changesByTag queries are used
+  private[jdbc] lazy val stateSequenceActor = system.systemActorOf(
+    DurableStateSequenceActor.props(this, durableStateSequenceConfig),
+    s"akka-persistence-jdbc-durable-state-sequence-actor")
 
   def getObject(persistenceId: String): Future[GetObjectResult[A]] = {
     db.run(queries.selectFromDbByPersistenceId(persistenceId).result).map { rows =>
@@ -80,7 +88,7 @@ class JdbcDurableStateStore[A](
 
   def currentChanges(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] = {
     Source
-      .futureSource(maxJournalSequence().map { maxOrderingInDb =>
+      .futureSource(maxStateStoreSequence().map { maxOrderingInDb =>
         changesByTag(tag, offset.value, terminateAfterOffset = Some(maxOrderingInDb))
       })
       .mapMaterializedValue(_ => NotUsed)
@@ -93,9 +101,9 @@ class JdbcDurableStateStore[A](
       tag: String,
       from: Long,
       batchSize: Long,
-      queryUntil: MaxOffset): Source[DurableStateChange[A], NotUsed] = {
-    if (queryUntil.value < from.value) Source.empty
-    else changesByTagFromDb(tag, from, queryUntil.value, batchSize).mapAsync(1)(Future.fromTry)
+      queryUntil: MaxOrderingId): Source[DurableStateChange[A], NotUsed] = {
+    if (queryUntil.maxOrdering < from) Source.empty
+    else changesByTagFromDb(tag, from, queryUntil.maxOrdering, batchSize).mapAsync(1)(Future.fromTry)
   }
 
   private def changesByTagFromDb(
@@ -112,52 +120,56 @@ class JdbcDurableStateStore[A](
       tag: String,
       offset: Long,
       terminateAfterOffset: Option[Long]): Source[DurableStateChange[A], NotUsed] = {
+
     val batchSize = durableStateConfig.batchSize
-    val startingOffsets = collection.mutable.ListBuffer.empty[Long]
+    val startingOffsets = List.empty[Long]
+    // for testing : should be always 0 otherwise
     val stopAfterEmptyFetchIterations = durableStateConfig.stopAfterEmptyFetchIterations
+    implicit val askTimeout: Timeout = Timeout(durableStateSequenceConfig.askTimeout)
+
     Source
-      .unfoldAsync[(Long, FlowControl), Seq[DurableStateChange[A]]]((offset, Continue)) { case (from, control) =>
-        def retrieveNextBatch() = {
-          for {
-            queryUntil <- maxJournalSequence()
-            xs <- currentChangesByTag(tag, from, batchSize, MaxOffset(queryUntil)).runWith(Sink.seq)
-          } yield {
-            val hasMoreEvents = xs.size == batchSize
-            val nextControl: FlowControl =
-              terminateAfterOffset match {
-                // we may stop if target is behind queryUntil and we don't have more events to fetch
-                case Some(target) if !hasMoreEvents && target <= queryUntil => Stop
+      .unfoldAsync[(Long, FlowControl, List[Long]), Seq[DurableStateChange[A]]]((offset, Continue, startingOffsets)) {
+        case (from, control, s) =>
+          def retrieveNextBatch() = {
+            for {
+              queryUntil <- stateSequenceActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId]
+              xs <- currentChangesByTag(tag, from, batchSize, queryUntil).runWith(Sink.seq)
+            } yield {
+              val hasMoreEvents = xs.size == batchSize
+              val nextControl: FlowControl =
+                terminateAfterOffset match {
+                  // we may stop if target is behind queryUntil and we don't have more events to fetch
+                  case Some(target) if !hasMoreEvents && target <= queryUntil.maxOrdering => Stop
 
-                // We may also stop if we have found an event with an offset >= target
-                case Some(target) if xs.exists(_.offset.value >= target) => Stop
+                  // We may also stop if we have found an event with an offset >= target
+                  case Some(target) if xs.exists(_.offset.value >= target) => Stop
 
-                // otherwise, disregarding if Some or None, we must decide how to continue
-                case _ =>
-                  if (
-                    stopAfterEmptyFetchIterations > 0 && equalLastNElements(
-                      startingOffsets.toList,
-                      stopAfterEmptyFetchIterations)
-                  ) Stop
-                  else if (hasMoreEvents) Continue
-                  else ContinueDelayed
+                  // otherwise, disregarding if Some or None, we must decide how to continue
+                  case _ =>
+                    if (
+                      stopAfterEmptyFetchIterations > 0 && equalLastNElements(
+                        s, // startingOffsets.toList,
+                        stopAfterEmptyFetchIterations)
+                    ) Stop
+                    else if (hasMoreEvents) Continue
+                    else ContinueDelayed
+                }
+              val nextStartingOffset = if (xs.isEmpty) {
+                math.max(from.value, queryUntil.maxOrdering)
+              } else {
+                // Continue querying from the largest offset
+                xs.map(_.offset.value).max
               }
-            val nextStartingOffset = if (xs.isEmpty) {
-              math.max(from.value, queryUntil)
-            } else {
-              // Continue querying from the largest offset
-              xs.map(_.offset.value).max
+              Some(((nextStartingOffset, nextControl, s :+ nextStartingOffset), xs))
             }
-            startingOffsets += nextStartingOffset
-            Some(((nextStartingOffset, nextControl), xs))
           }
-        }
 
-        control match {
-          case Stop     => Future.successful(None)
-          case Continue => retrieveNextBatch()
-          case ContinueDelayed =>
-            akka.pattern.after(durableStateConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
-        }
+          control match {
+            case Stop     => Future.successful(None)
+            case Continue => retrieveNextBatch()
+            case ContinueDelayed =>
+              akka.pattern.after(durableStateConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
+          }
       }
       .mapConcat(identity)
   }
@@ -172,8 +184,11 @@ class JdbcDurableStateStore[A](
     }
   }
 
-  private def maxJournalSequence(): Future[Long] =
+  private[jdbc] def maxStateStoreSequence(): Future[Long] =
     db.run(queries.maxOffsetQuery.result)
+
+  private[jdbc] def stateStoreSequence(offset: Long, limit: Long): Source[Long, NotUsed] =
+    Source.fromPublisher(db.stream(queries.stateStoreSequenceQuery((offset, limit)).result))
 
   private def toDurableStateChange(row: DurableStateTables.DurableStateRow): Try[DurableStateChange[A]] = {
     AkkaSerialization

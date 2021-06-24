@@ -66,6 +66,10 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
     durableStateTable.filter(_.persistenceId === persistenceId).delete
   }
 
+  def deleteAllFromDb() = {
+    durableStateTable.delete
+  }
+
   private[jdbc] val maxOffsetQuery = Compiled {
     durableStateTable.map(_.globalOffset).max.getOrElse(0L)
   }

@@ -130,11 +130,13 @@ class JdbcDurableStateStore[A](
     Source
       .unfoldAsync[(Long, FlowControl, List[Long]), Seq[DurableStateChange[A]]]((offset, Continue, startingOffsets)) {
         case (from, control, s) =>
+          // println(s"start offset $from $s")
           def retrieveNextBatch() = {
             for {
               queryUntil <- stateSequenceActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId]
               xs <- currentChangesByTag(tag, from, batchSize, queryUntil).runWith(Sink.seq)
             } yield {
+              // println(s"queryuntil : ${queryUntil.maxOrdering} xs size : ${xs.size} pids : ${xs.map(_.persistenceId)}")
               val hasMoreEvents = xs.size == batchSize
               val nextControl: FlowControl =
                 terminateAfterOffset match {
@@ -219,4 +221,6 @@ class JdbcDurableStateStore[A](
       u <- insertDbWithDurableState(row, s.head)
     } yield u
   }
+
+  def deleteAllFromDb() = db.run(queries.deleteAllFromDb())
 }

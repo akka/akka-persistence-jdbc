@@ -214,8 +214,8 @@ class DurableStateTableConfiguration(config: Config) {
   val stopAfterEmptyFetchIterations: Int = config.getInt("stopAfterEmptyFetchIterations")
   val schemaType: String = {
     val s = config.getString("schemaType")
-    if (s != "H2" && s != "POSTGRES")
-      throw new IllegalArgumentException(s"Schema type [$s] not supported. Has to be one of H2 or POSTGRES")
+    if (s != "H2" && s != "Postgres")
+      throw new IllegalArgumentException(s"Schema type [$s] not supported. Has to be one of H2 or Postgres")
     else s
   }
   val tableName: String = cfg.getString("tableName")

@@ -9,7 +9,7 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
 
   val sequenceNextValUpdater = durableStateTableCfg.schemaType match {
     case "H2"       => new H2SequenceNextValUpdater(profile)
-    case "POSTGRES" => new PostgresSequenceNextValUpdater(profile)
+    case "Postgres" => new PostgresSequenceNextValUpdater(profile)
   }
 
   implicit val uuidSetter = SetParameter[Array[Byte]] { case (bytes, params) =>

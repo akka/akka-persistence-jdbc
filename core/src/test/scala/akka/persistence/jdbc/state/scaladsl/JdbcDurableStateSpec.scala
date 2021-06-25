@@ -51,7 +51,7 @@ abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
 
   val customConfig = ConfigFactory.parseString(s"""
     jdbc-durable-state-store {
-      schemaType = H2
+      schemaType = ${schemaType.toString}
       stopAfterEmptyFetchIterations = 5
       batchSize = 200
       refreshInterval = 500.milliseconds
@@ -67,7 +67,16 @@ abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
     .withFallback(config.getConfig("jdbc-durable-state-store"))
     .withFallback(customSerializers.getConfig("akka.actor"))
 
-  lazy val db = SlickDatabase.database(cfg, new SlickConfiguration(cfg.getConfig("slick")), "slick.db")
+  lazy val db = if (cfg.hasPath("slick.profile")) {
+    SlickDatabase.database(cfg, new SlickConfiguration(cfg.getConfig("slick")), "slick.db")
+  } else {
+    // needed for integration test where we use postgres-shared-db-application.conf
+    SlickDatabase.database(
+      config,
+      new SlickConfiguration(config.getConfig("akka-persistence-jdbc.shared-databases.slick")),
+      "akka-persistence-jdbc.shared-databases.slick.db")
+  }
+
   lazy val durableStateConfig = new DurableStateTableConfiguration(cfg)
   lazy val serialization = SerializationExtension(system)
 
@@ -131,7 +140,7 @@ abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
         v.value shouldBe Some("updated valid string")
       }
     }
-    "fail inserting incorrect sequence number" in {
+    "fail inserting an already existing sequence number" in {
       whenReady {
         (for {
 
@@ -151,11 +160,18 @@ abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
         }
       }
     }
-    "fail inserting an already existing sequence number" in {
+    "fail inserting incorrect sequence number with 0 rows affected" in {
       whenReady {
-        stateStoreString.upsertObject("p234", 2, "another valid string", "t123").failed
+        stateStoreString.upsertObject("p234", 1, "1 valid string", "t1").futureValue
+        stateStoreString.upsertObject("p234", 2, "2 valid string", "t1").futureValue
+        stateStoreString.upsertObject("p234", 3, "3 valid string", "t1").futureValue
+        stateStoreString.upsertObject("p234", 5, "5 valid string", "t1").failed
       } { e =>
         e shouldBe an[IllegalStateException]
+        // offset should not change
+        stateStoreString.maxStateStoreSequence().futureValue shouldBe 3
+        // sequence number should not change
+        stateStoreString.getObject("p234").futureValue.seqNr shouldBe 3
       }
     }
     "delete an existing state" in {

@@ -10,3 +10,5 @@ target
 .worksheet
 .bsp
 *.code-workspace
+.bloop
+.metals

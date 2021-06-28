@@ -2,108 +2,14 @@ package akka.persistence.jdbc.state.scaladsl
 
 import com.typesafe.config.{ Config, ConfigFactory }
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time._
-
 import akka.actor._
-import akka.persistence.jdbc.db.SlickDatabase
-import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.state.{ MyPayload, OffsetSyntax }
 import OffsetSyntax._
 import akka.persistence.jdbc.testkit.internal.{ H2, Postgres, SchemaType }
-import akka.persistence.jdbc.util.DropCreate
 import akka.persistence.query.{ NoOffset, Offset, Sequence }
-import akka.serialization.SerializationExtension
 import akka.stream.scaladsl.Sink
 
-abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
-    extends AnyWordSpecLike
-    with BeforeAndAfterAll
-    with BeforeAndAfterEach
-    with Matchers
-    with ScalaFutures
-    with DropCreate
-    with DataGenerationHelper {
-
-  implicit def system: ActorSystem
-
-  implicit lazy val e = system.dispatcher
-
-  private def schemaTypeToProfile(s: SchemaType) = s match {
-    case H2       => slick.jdbc.H2Profile
-    case Postgres => slick.jdbc.PostgresProfile
-    case _        => ???
-  }
-
-  val customSerializers = ConfigFactory.parseString("""
-      akka.actor {
-        serializers {
-          my-payload = "akka.persistence.jdbc.state.MyPayloadSerializer"
-        }
-        serialization-bindings {
-          "akka.persistence.jdbc.state.MyPayload" = my-payload
-        }
-      }
-    """)
-
-  val customConfig = ConfigFactory.parseString(s"""
-    jdbc-durable-state-store {
-      schemaType = ${schemaType.toString}
-      stopAfterEmptyFetchIterations = 5
-      batchSize = 200
-      refreshInterval = 500.milliseconds
-      durable-state-sequence-retrieval {
-        query-delay = 100.milliseconds
-      }
-    }
-  """)
-
-  lazy val cfg = customConfig
-    .getConfig("jdbc-durable-state-store")
-    .withFallback(system.settings.config.getConfig("jdbc-durable-state-store"))
-    .withFallback(config.getConfig("jdbc-durable-state-store"))
-    .withFallback(customSerializers.getConfig("akka.actor"))
-
-  lazy val db = if (cfg.hasPath("slick.profile")) {
-    SlickDatabase.database(cfg, new SlickConfiguration(cfg.getConfig("slick")), "slick.db")
-  } else {
-    // needed for integration test where we use postgres-shared-db-application.conf
-    SlickDatabase.database(
-      config,
-      new SlickConfiguration(config.getConfig("akka-persistence-jdbc.shared-databases.slick")),
-      "akka-persistence-jdbc.shared-databases.slick.db")
-  }
-
-  lazy val durableStateConfig = new DurableStateTableConfiguration(cfg)
-  lazy val serialization = SerializationExtension(system)
-
-  implicit val defaultPatience =
-    PatienceConfig(timeout = Span(60, Seconds), interval = Span(10, Millis))
-
-  def withActorSystem(f: ExtendedActorSystem => Unit): Unit = {
-    implicit val system: ExtendedActorSystem =
-      ActorSystem("JdbcDurableStateSpec", config.withFallback(customSerializers)).asInstanceOf[ExtendedActorSystem]
-    f(system)
-    system.terminate().futureValue
-  }
-
-  override def beforeAll(): Unit = {
-    dropAndCreate(schemaType)
-    super.beforeAll()
-  }
-
-  override def beforeEach(): Unit = {
-    dropAndCreate(schemaType)
-    super.beforeAll()
-  }
-
-  override def afterAll(): Unit = {
-    db.close()
-    system.terminate().futureValue
-  }
+abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) extends StateSpecBase(config, schemaType) {
 
   "A durable state store" must withActorSystem { implicit system =>
     val stateStoreString =
@@ -157,6 +63,7 @@ abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
             e shouldBe an[org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException]
           case Postgres =>
             e shouldBe an[org.postgresql.util.PSQLException]
+          case _ => ???
         }
       }
     }
@@ -257,7 +164,7 @@ abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
       moreChgs.size shouldBe 1
       moreChgs.map(_.offset.value).max shouldBe 11
 
-      // upsert same tag, different peristence id and fetch from after the last offset
+      // upsert same tag, different persistence id and fetch from after the last offset
       upsertManyFor(stateStoreString, "p2", "t1", 1, 3)
       val otherChgs = currentChanges("t1", moreChgs.head.offset).runWith(Sink.seq).futureValue
       otherChgs.size shouldBe 1
@@ -301,8 +208,15 @@ abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
       import stateStoreString._
       upsertRandomlyShuffledPersistenceIds(stateStoreString, List("p1", "p2", "p3"), "t1", 3)
       val source = stateStoreString.changes("t1", NoOffset)
-      val m = collection.mutable.ListBuffer.empty[(String, Offset)]
-      val f = source.map(ds => m += ((ds.persistenceId, ds.offset))).runWith(Sink.ignore)
+      val m = collection.mutable.ListBuffer.empty[(String, Long)]
+
+      // trick to complete the future
+      val f = source
+        .takeWhile { e =>
+          m += ((e.persistenceId, e.offset.value))
+          e.offset.value < 12
+        }
+        .runWith(Sink.seq)
 
       // more data after some delay
       Thread.sleep(100)
@@ -312,8 +226,8 @@ abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
 
       whenReady(f) { _ =>
         m.size shouldBe 2
-        m.toList.map(_._2.value) shouldBe sorted
-        m.toList.map(_._2.value).max shouldBe 12
+        m.toList.map(_._2) shouldBe sorted
+        m.toList.map(_._2).max shouldBe 12
       }
     }
 
@@ -325,17 +239,24 @@ abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
         import stateStoreString._
         upsertRandomlyShuffledPersistenceIds(stateStoreString, List("p1", "p2", "p3"), "t1", 3)
         val source = stateStoreString.changes("t1", Sequence(4))
-        val m = collection.mutable.ListBuffer.empty[(String, Offset)]
-        val z = source.map(ds => m += ((ds.persistenceId, ds.offset))).runWith(Sink.ignore)
+        val m = collection.mutable.ListBuffer.empty[(String, Long)]
+
+        // trick to complete the future
+        val f = source
+          .takeWhile { e =>
+            m += ((e.persistenceId, e.offset.value))
+            e.offset.value < 12
+          }
+          .runWith(Sink.seq)
 
         // more data after some delay
         Thread.sleep(100)
         upsertManyFor(stateStoreString, "p3", "t1", 4, 3)
 
-        whenReady(z) { _ =>
-          m.map(_._2.value) shouldBe sorted
-          m.map(_._2.value).min should be > 4L
-          m.map(_._2.value).max shouldBe 12
+        whenReady(f) { _ =>
+          m.map(_._2) shouldBe sorted
+          m.map(_._2).min should be > 4L
+          m.map(_._2).max shouldBe 12
         }
     }
   }
@@ -373,8 +294,14 @@ abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
 
         upsertParallel(stateStoreString, Set("p1", "p2", "p3"), "t1", 5)(e).futureValue
         val source = changes("t2", NoOffset)
-        val m = collection.mutable.ListBuffer.empty[(String, Offset)]
-        val z = source.map(ds => m += ((ds.persistenceId, ds.offset))).runWith(Sink.ignore)
+        val m = collection.mutable.ListBuffer.empty[(String, Long)]
+        // trick to complete the future
+        val f = source
+          .takeWhile { e =>
+            m += ((e.persistenceId, e.offset.value))
+            e.offset.value < 21
+          }
+          .runWith(Sink.seq)
 
         // more data after some delay
         Thread.sleep(1000)
@@ -382,10 +309,10 @@ abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
         Thread.sleep(1000)
         upsertManyFor(stateStoreString, "p3", "t2", 9, 3)
 
-        whenReady(z) { _ =>
-          m.map(_._2.value) shouldBe sorted
-          m.map(_._2.value).min should be > 0L
-          m.map(_._2.value).max shouldBe 21
+        whenReady(f) { _ =>
+          m.map(_._2) shouldBe sorted
+          m.map(_._2).min should be > 0L
+          m.map(_._2).max shouldBe 21
         }
     }
 
@@ -398,8 +325,14 @@ abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
 
         upsertParallel(stateStoreString, Set("p1", "p2", "p3"), "t1", 1000)(e).futureValue
         val source = changes("t2", NoOffset)
-        val m = collection.mutable.ListBuffer.empty[(String, Offset)]
-        val z = source.map(ds => m += ((ds.persistenceId, ds.offset))).runWith(Sink.ignore)
+        val m = collection.mutable.ListBuffer.empty[(String, Long)]
+        // trick to complete the future
+        val f = source
+          .takeWhile { e =>
+            m += ((e.persistenceId, e.offset.value))
+            e.offset.value < 3060
+          }
+          .runWith(Sink.seq)
 
         // more data after some delay
         Thread.sleep(1000)
@@ -407,10 +340,10 @@ abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
         Thread.sleep(1000)
         upsertManyFor(stateStoreString, "p3", "t2", 1031, 30)
 
-        whenReady(z) { _ =>
-          m.map(_._2.value) shouldBe sorted
-          m.map(_._2.value).min should be > 0L
-          m.map(_._2.value).max shouldBe 3060
+        whenReady(f) { _ =>
+          m.map(_._2) shouldBe sorted
+          m.map(_._2).min should be > 0L
+          m.map(_._2).max shouldBe 3060
         }
     }
 
@@ -421,21 +354,29 @@ abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
 
         import stateStoreString._
 
-        upsertParallel(stateStoreString, Set("p1", "p2", "p3"), "t1", 1000)(e).futureValue
+        upsertParallel(stateStoreString, Set("p1", "p2", "p3"), "t1", 5)(e).futureValue
         val source = changes("t1", NoOffset)
-        val m = collection.mutable.ListBuffer.empty[(String, Offset)]
-        val z = source.map(ds => m += ((ds.persistenceId, ds.offset))).runWith(Sink.ignore)
+        val m = collection.mutable.ListBuffer.empty[(String, Long)]
+        // trick to complete the future
+        val f = source
+          .takeWhile { e =>
+            m += ((e.persistenceId, e.offset.value))
+            m.size == 2 && m.map(_._1).toSet == Set("p1", "p2")
+          }
+          .runWith(Sink.seq)
 
         // more data after some delay
         Thread.sleep(1000)
-        upsertManyFor(stateStoreString, "p3", "t1", 1001, 30)
+        upsertManyFor(stateStoreString, "p3", "t1", 6, 2)
         Thread.sleep(1000)
-        upsertManyFor(stateStoreString, "p3", "t2", 1031, 30)
+        // tag for p3 now changes to t2
+        // hence should not be included in the query
+        upsertManyFor(stateStoreString, "p3", "t2", 8, 2)
 
-        whenReady(z) { _ =>
-          m.map(_._2.value) shouldBe sorted
-          m.map(_._2.value).min should be > 0L
-          m.map(_._2.value).max shouldBe 2000
+        whenReady(f) { _ =>
+          m.map(_._2) shouldBe sorted
+          m.map(_._2).min should be > 0L
+          m.map(_._2).max should be > 10L
         }
     }
   }
@@ -443,10 +384,5 @@ abstract class JdbcDurableStateSpec(val config: Config, schemaType: SchemaType)
 
 class H2DurableStateSpec extends JdbcDurableStateSpec(ConfigFactory.load("h2-application.conf"), H2) {
   implicit lazy val system: ActorSystem =
-    ActorSystem("JdbcDurableStateSpec", config.withFallback(customSerializers))
-}
-
-class PostgresDurableStateSpec extends JdbcDurableStateSpec(ConfigFactory.load("postgres-application.conf"), Postgres) {
-  implicit lazy val system: ActorSystem =
-    ActorSystem("JdbcDurableStateSpec", config.withFallback(customSerializers))
+    ActorSystem("test", config.withFallback(customSerializers))
 }

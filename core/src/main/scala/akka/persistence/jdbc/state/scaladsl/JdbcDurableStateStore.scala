@@ -116,27 +116,24 @@ class JdbcDurableStateStore[A](
       .map(toDurableStateChange)
   }
 
-  private def changesByTag(
+  private[jdbc] def changesByTag(
       tag: String,
       offset: Long,
       terminateAfterOffset: Option[Long]): Source[DurableStateChange[A], NotUsed] = {
 
     val batchSize = durableStateConfig.batchSize
     val startingOffsets = List.empty[Long]
-    // for testing : should be always 0 otherwise
-    val stopAfterEmptyFetchIterations = durableStateConfig.stopAfterEmptyFetchIterations
     implicit val askTimeout: Timeout = Timeout(durableStateSequenceConfig.askTimeout)
 
     Source
       .unfoldAsync[(Long, FlowControl, List[Long]), Seq[DurableStateChange[A]]]((offset, Continue, startingOffsets)) {
         case (from, control, s) =>
-          // println(s"start offset $from $s")
           def retrieveNextBatch() = {
             for {
               queryUntil <- stateSequenceActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId]
               xs <- currentChangesByTag(tag, from, batchSize, queryUntil).runWith(Sink.seq)
             } yield {
-              // println(s"queryuntil : ${queryUntil.maxOrdering} xs size : ${xs.size} pids : ${xs.map(_.persistenceId)}")
+
               val hasMoreEvents = xs.size == batchSize
               val nextControl: FlowControl =
                 terminateAfterOffset match {
@@ -148,12 +145,7 @@ class JdbcDurableStateStore[A](
 
                   // otherwise, disregarding if Some or None, we must decide how to continue
                   case _ =>
-                    if (
-                      stopAfterEmptyFetchIterations > 0 && equalLastNElements(
-                        s, // startingOffsets.toList,
-                        stopAfterEmptyFetchIterations)
-                    ) Stop
-                    else if (hasMoreEvents) Continue
+                    if (hasMoreEvents) Continue
                     else ContinueDelayed
                 }
               val nextStartingOffset = if (xs.isEmpty) {
@@ -174,16 +166,6 @@ class JdbcDurableStateStore[A](
           }
       }
       .mapConcat(identity)
-  }
-
-  // checks if the last n elements of a list are equal
-  private def equalLastNElements(coll: List[Long], n: Int): Boolean = {
-    if (coll.isEmpty) false
-    else if (coll.size < n) false
-    else {
-      val res = coll.slice(coll.length - n, coll.length)
-      res.forall(_ == res.head)
-    }
   }
 
   private[jdbc] def maxStateStoreSequence(): Future[Long] =

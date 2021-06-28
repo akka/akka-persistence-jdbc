@@ -37,9 +37,8 @@ private[jdbc] object SchemaUtilsImpl {
    * INTERNAL API
    */
   @InternalApi
-  private[jdbc] def dropIfExists(logger: Logger, configKey: String = "jdbc-journal")(
-      implicit actorSystem: ClassicActorSystemProvider): Future[Done] = {
-    val slickDb: SlickDatabase = loadSlickDatabase(configKey)
+  private[jdbc] def dropIfExists(logger: Logger)(implicit actorSystem: ClassicActorSystemProvider): Future[Done] = {
+    val slickDb: SlickDatabase = loadSlickDatabase("jdbc-journal")
     val (fileToLoad, separator) =
       dropScriptFor(slickProfileToSchemaType(slickDb.profile), legacy(actorSystem.classicSystem.settings.config))
 
@@ -51,10 +50,10 @@ private[jdbc] object SchemaUtilsImpl {
    * INTERNAL API
    */
   @InternalApi
-  private[jdbc] def createIfNotExists(logger: Logger, configKey: String = "jdbc-journal")(
+  private[jdbc] def createIfNotExists(logger: Logger)(
       implicit actorSystem: ClassicActorSystemProvider): Future[Done] = {
 
-    val slickDb: SlickDatabase = loadSlickDatabase(configKey)
+    val slickDb: SlickDatabase = loadSlickDatabase("jdbc-journal")
     val (fileToLoad, separator) =
       createScriptFor(slickProfileToSchemaType(slickDb.profile), legacy(actorSystem.classicSystem.settings.config))
 

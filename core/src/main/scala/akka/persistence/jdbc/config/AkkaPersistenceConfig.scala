@@ -211,7 +211,6 @@ class DurableStateTableConfiguration(config: Config) {
   private val cfg = config.getConfig("tables.state")
   val refreshInterval: FiniteDuration = config.asFiniteDuration("refreshInterval")
   val batchSize: Int = config.getInt("batchSize")
-  val stopAfterEmptyFetchIterations: Int = config.getInt("stopAfterEmptyFetchIterations")
   val schemaType: String = {
     val s = config.getString("schemaType")
     if (s != "H2" && s != "Postgres")

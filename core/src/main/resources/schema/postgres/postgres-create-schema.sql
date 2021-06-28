@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS public.snapshot (
 CREATE TABLE IF NOT EXISTS "state" (
     "global_offset" BIGSERIAL,
     "persistence_id" VARCHAR(255) NOT NULL,
-    "sequence_number" BIGINT NOT NULL,
+    "revision" BIGINT NOT NULL,
     "state_payload" BYTEA NOT NULL,
     "state_serial_id" INTEGER NOT NULL,
     "state_serial_manifest" VARCHAR(255),

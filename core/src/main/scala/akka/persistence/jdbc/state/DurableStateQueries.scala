@@ -25,7 +25,7 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
             (
               persistence_id, 
               global_offset,
-              sequence_number, 
+              revision, 
               state_payload, 
               state_serial_id, 
               state_serial_manifest, 
@@ -36,7 +36,7 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
             (
               ${row.persistenceId},
               #${seqName},
-              ${row.seqNumber},
+              ${row.revision},
               ${row.statePayload},
               ${row.stateSerId},
               ${row.stateSerManifest},
@@ -49,14 +49,14 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
   private[jdbc] def updateDbWithDurableState(row: DurableStateTables.DurableStateRow, seqNextValue: String) = {
     sqlu"""UPDATE state 
            SET global_offset = #${seqNextValue},
-               sequence_number = ${row.seqNumber}, 
+               revision = ${row.revision}, 
                state_payload = ${row.statePayload},
                state_serial_id = ${row.stateSerId}, 
                state_serial_manifest = ${row.stateSerManifest}, 
                tag = ${row.tag}, 
                state_timestamp = ${System.currentTimeMillis}
            WHERE persistence_id = ${row.persistenceId} 
-             AND sequence_number = ${row.seqNumber} - 1
+             AND revision = ${row.revision} - 1
         """
   }
 

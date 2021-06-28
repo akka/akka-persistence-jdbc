@@ -6,7 +6,7 @@ object DurableStateTables {
   case class DurableStateRow(
       globalOffset: Long,
       persistenceId: String,
-      seqNumber: Long,
+      revision: Long,
       statePayload: Array[Byte],
       tag: Option[String],
       stateSerId: Int,
@@ -28,13 +28,13 @@ trait DurableStateTables {
         _tableName = durableStateTableCfg.tableName) {
 
     def * =
-      (globalOffset, persistenceId, seqNumber, statePayload, tag, stateSerId, stateSerManifest, stateTimestamp)
+      (globalOffset, persistenceId, revision, statePayload, tag, stateSerId, stateSerManifest, stateTimestamp)
         .<>(DurableStateRow.tupled, DurableStateRow.unapply)
 
     val globalOffset: Rep[Long] = column[Long](durableStateTableCfg.columnNames.globalOffset, O.AutoInc)
     val persistenceId: Rep[String] =
       column[String](durableStateTableCfg.columnNames.persistenceId, O.PrimaryKey, O.Length(255, varying = true))
-    val seqNumber: Rep[Long] = column[Long](durableStateTableCfg.columnNames.seqNumber)
+    val revision: Rep[Long] = column[Long](durableStateTableCfg.columnNames.revision)
     val statePayload: Rep[Array[Byte]] = column[Array[Byte]](durableStateTableCfg.columnNames.statePayload)
     val tag: Rep[Option[String]] = column[Option[String]](durableStateTableCfg.columnNames.tag)
     val stateSerId: Rep[Int] = column[Int](durableStateTableCfg.columnNames.stateSerId)

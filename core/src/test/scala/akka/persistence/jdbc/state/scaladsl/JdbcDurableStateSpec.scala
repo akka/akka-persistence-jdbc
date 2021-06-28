@@ -78,7 +78,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
         // offset should not change
         stateStoreString.maxStateStoreSequence().futureValue shouldBe 3
         // sequence number should not change
-        stateStoreString.getObject("p234").futureValue.seqNr shouldBe 3
+        stateStoreString.getObject("p234").futureValue.revision shouldBe 3
       }
     }
     "delete an existing state" in {

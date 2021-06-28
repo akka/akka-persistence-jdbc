@@ -201,7 +201,7 @@ class DurableStateTableColumnNames(config: Config) {
   val persistenceId: String = cfg.getString("persistenceId")
   val statePayload: String = cfg.getString("statePayload")
   val tag: String = cfg.getString("tag")
-  val seqNumber: String = cfg.getString("seqNumber")
+  val revision: String = cfg.getString("revision")
   val stateSerId: String = cfg.getString("stateSerId")
   val stateSerManifest: String = cfg.getString("stateSerManifest")
   val stateTimestamp: String = cfg.getString("stateTimestamp")

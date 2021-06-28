@@ -46,7 +46,7 @@ class JdbcDurableStateStore[A](
     db.run(queries.selectFromDbByPersistenceId(persistenceId).result).map { rows =>
       rows.headOption match {
         case Some(row) =>
-          GetObjectResult(AkkaSerialization.fromRow(serialization)(row).toOption.asInstanceOf[Option[A]], row.seqNumber)
+          GetObjectResult(AkkaSerialization.fromRow(serialization)(row).toOption.asInstanceOf[Option[A]], row.revision)
 
         case None =>
           GetObjectResult(None, 0)
@@ -54,14 +54,14 @@ class JdbcDurableStateStore[A](
     }
   }
 
-  def upsertObject(persistenceId: String, seqNr: Long, value: A, tag: String): Future[Done] = {
-    require(seqNr > 0)
+  def upsertObject(persistenceId: String, revision: Long, value: A, tag: String): Future[Done] = {
+    require(revision > 0)
     val row =
       AkkaSerialization.serialize(serialization, value).map { serialized =>
         DurableStateTables.DurableStateRow(
           0, // insert 0 for autoinc columns
           persistenceId,
-          seqNr,
+          revision,
           serialized.payload,
           Option(tag).filter(_.trim.nonEmpty),
           serialized.serId,
@@ -72,13 +72,13 @@ class JdbcDurableStateStore[A](
     Future
       .fromTry(row)
       .flatMap { r =>
-        val action = if (seqNr == 1) insertDurableState(r) else updateDurableState(r)
+        val action = if (revision == 1) insertDurableState(r) else updateDurableState(r)
         db.run(action)
       }
       .map { rowsAffected =>
         if (rowsAffected == 0)
           throw new IllegalStateException(
-            s"Incorrect sequence number [$seqNr] provided: It has to be 1 more than the value existing in the database for persistenceId [$persistenceId]")
+            s"Incorrect revision number [$revision] provided: It has to be 1 more than the value existing in the database for persistenceId [$persistenceId]")
         else Done
       }
   }
@@ -180,7 +180,7 @@ class JdbcDurableStateStore[A](
       .map(payload =>
         new DurableStateChange(
           row.persistenceId,
-          row.seqNumber,
+          row.revision,
           payload.asInstanceOf[A],
           Offset.sequence(row.globalOffset),
           row.stateTimestamp))

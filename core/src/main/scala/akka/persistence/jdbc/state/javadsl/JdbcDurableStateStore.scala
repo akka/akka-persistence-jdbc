@@ -26,10 +26,10 @@ class JdbcDurableStateStore[A](
     toJava(
       scalaStore
         .getObject(persistenceId)
-        .map(x => GetObjectResult(Optional.ofNullable(x.value.getOrElse(null.asInstanceOf[A])), x.seqNr)))
+        .map(x => GetObjectResult(Optional.ofNullable(x.value.getOrElse(null.asInstanceOf[A])), x.revision)))
 
-  def upsertObject(persistenceId: String, seqNr: Long, value: A, tag: String): CompletionStage[Done] =
-    toJava(scalaStore.upsertObject(persistenceId, seqNr, value, tag))
+  def upsertObject(persistenceId: String, revision: Long, value: A, tag: String): CompletionStage[Done] =
+    toJava(scalaStore.upsertObject(persistenceId, revision, value, tag))
 
   def deleteObject(persistenceId: String): CompletionStage[Done] =
     toJava(scalaStore.deleteObject(persistenceId))

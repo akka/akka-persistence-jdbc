@@ -7,7 +7,7 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
     extends DurableStateTables {
   import profile.api._
 
-  val sequenceNextValUpdater = durableStateTableCfg.schemaType match {
+  lazy val sequenceNextValUpdater = durableStateTableCfg.schemaType match {
     case "H2"       => new H2SequenceNextValUpdater(profile)
     case "Postgres" => new PostgresSequenceNextValUpdater(profile)
   }

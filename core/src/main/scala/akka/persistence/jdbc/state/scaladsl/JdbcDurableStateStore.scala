@@ -34,12 +34,11 @@ class JdbcDurableStateStore[A](
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val mat: Materializer = SystemMaterializer(system).materializer
 
-  val queries = new DurableStateQueries(profile, durableStateConfig)
-  val durableStateSequenceConfig = durableStateConfig.stateSequenceConfig
+  lazy val queries = new DurableStateQueries(profile, durableStateConfig)
 
   // Started lazily to prevent the actor for querying the db if no changesByTag queries are used
   private[jdbc] lazy val stateSequenceActor = system.systemActorOf(
-    DurableStateSequenceActor.props(this, durableStateSequenceConfig),
+    DurableStateSequenceActor.props(this, durableStateConfig.stateSequenceConfig),
     s"akka-persistence-jdbc-durable-state-sequence-actor")
 
   def getObject(persistenceId: String): Future[GetObjectResult[A]] = {
@@ -123,7 +122,7 @@ class JdbcDurableStateStore[A](
 
     val batchSize = durableStateConfig.batchSize
     val startingOffsets = List.empty[Long]
-    implicit val askTimeout: Timeout = Timeout(durableStateSequenceConfig.askTimeout)
+    implicit val askTimeout: Timeout = Timeout(durableStateConfig.stateSequenceConfig.askTimeout)
 
     Source
       .unfoldAsync[(Long, FlowControl, List[Long]), Seq[DurableStateChange[A]]]((offset, Continue, startingOffsets)) {

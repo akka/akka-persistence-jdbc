@@ -101,6 +101,7 @@ class DurableStateSequenceActor[A](stateStore: JdbcDurableStateStore[A], config:
       sender() ! MaxOrderingId(currentMaxOrdering)
 
     case QueryOrderingIds =>
+      log.debug("QueryOrderingIds currentMaxOrdering [{}]", currentMaxOrdering)
       stateStore
         .stateStoreSequence(currentMaxOrdering, batchSize)
         .runWith(Sink.seq)
@@ -110,6 +111,7 @@ class DurableStateSequenceActor[A](stateStore: JdbcDurableStateStore[A], config:
     case NewOrderingIds(originalOffset, _) if originalOffset < currentMaxOrdering =>
       // search was done using an offset that became obsolete in the meantime
       // therefore we start a new query
+      log.debug("Obsolete NewOrderingIds, query again")
       self ! QueryOrderingIds
 
     case NewOrderingIds(_, elements) =>
@@ -159,6 +161,11 @@ class DurableStateSequenceActor[A](stateStore: JdbcDurableStateStore[A], config:
       }
 
     val newMissingByCounter = missingByCounter + (moduloCounter -> missingElems)
+
+    if (log.isDebugEnabled)
+      log.debug(
+        s"findGaps elements [${elements.mkString(",")}], currentMaxOrdering [$currentMaxOrdering], " +
+        s"givenUp [$givenUp], moduloCounter [$moduloCounter], missingElems [$missingElems]")
 
     // did we detect gaps in the current batch?
     val noGapsFound = missingElems.isEmpty

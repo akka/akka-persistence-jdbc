@@ -30,17 +30,20 @@ import slick.jdbc.SQLServerProfile
 @InternalApi
 private[jdbc] object SchemaUtilsImpl {
 
-  def legacy(config: Config): Boolean =
-    config.getString("jdbc-journal.dao") != "akka.persistence.jdbc.journal.dao.DefaultJournalDao"
+  def legacy(configKey: String, config: Config): Boolean =
+    config.getConfig(configKey).getString("dao") != "akka.persistence.jdbc.journal.dao.DefaultJournalDao"
 
   /**
    * INTERNAL API
    */
   @InternalApi
-  private[jdbc] def dropIfExists(logger: Logger)(implicit actorSystem: ClassicActorSystemProvider): Future[Done] = {
-    val slickDb: SlickDatabase = loadSlickDatabase("jdbc-journal")
+  private[jdbc] def dropIfExists(configKey: String, logger: Logger)(
+      implicit actorSystem: ClassicActorSystemProvider): Future[Done] = {
+    val slickDb: SlickDatabase = loadSlickDatabase(configKey)
     val (fileToLoad, separator) =
-      dropScriptFor(slickProfileToSchemaType(slickDb.profile), legacy(actorSystem.classicSystem.settings.config))
+      dropScriptFor(
+        slickProfileToSchemaType(slickDb.profile),
+        legacy(configKey, actorSystem.classicSystem.settings.config))
 
     val blockingEC = actorSystem.classicSystem.dispatchers.lookup(Dispatchers.DefaultBlockingDispatcherId)
     Future(applyScriptWithSlick(fromClasspathAsString(fileToLoad), separator, logger, slickDb.database))(blockingEC)
@@ -50,12 +53,14 @@ private[jdbc] object SchemaUtilsImpl {
    * INTERNAL API
    */
   @InternalApi
-  private[jdbc] def createIfNotExists(logger: Logger)(
+  private[jdbc] def createIfNotExists(configKey: String, logger: Logger)(
       implicit actorSystem: ClassicActorSystemProvider): Future[Done] = {
 
-    val slickDb: SlickDatabase = loadSlickDatabase("jdbc-journal")
+    val slickDb: SlickDatabase = loadSlickDatabase(configKey)
     val (fileToLoad, separator) =
-      createScriptFor(slickProfileToSchemaType(slickDb.profile), legacy(actorSystem.classicSystem.settings.config))
+      createScriptFor(
+        slickProfileToSchemaType(slickDb.profile),
+        legacy(configKey, actorSystem.classicSystem.settings.config))
 
     val blockingEC = actorSystem.classicSystem.dispatchers.lookup(Dispatchers.DefaultBlockingDispatcherId)
     Future(applyScriptWithSlick(fromClasspathAsString(fileToLoad), separator, logger, slickDb.database))(blockingEC)

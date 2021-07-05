@@ -38,6 +38,8 @@
     <!--<logger name="slick.util.AsyncExecutor" level="DEBUG" />-->
 
     <!-- <logger name="akka.persistence.jdbc.testkit.scaladsl.SchemaUtils" level="DEBUG"/>-->
+    <!-- <logger name="akka.persistence.jdbc.state.scaladsl.DurableStateSequenceActor" level="DEBUG"/>-->
+
     <root level="INFO">
         <appender-ref ref="console"/>
     </root>

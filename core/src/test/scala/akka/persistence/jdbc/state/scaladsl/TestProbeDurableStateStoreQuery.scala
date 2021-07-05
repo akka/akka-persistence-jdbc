@@ -22,6 +22,7 @@ import akka.serialization.Serialization
 
 object TestProbeDurableStateStoreQuery {
   case class OffsetSequence(offset: Long, limit: Long)
+  case class StateInfoSequence(iffset: Long, limit: Long)
 }
 
 class TestProbeDurableStateStoreQuery(
@@ -39,12 +40,12 @@ class TestProbeDurableStateStoreQuery(
 
   override def changes(tag: String, offset: Offset): Source[DurableStateChange[String], NotUsed] = ???
 
-  override def stateStoreSequence(offset: Long, limit: Long): Source[Long, NotUsed] = {
+  override def stateStoreStateInfo(offset: Long, limit: Long): Source[(String, Long, Long), NotUsed] = {
     val f = probe.ref
-      .ask(TestProbeDurableStateStoreQuery.OffsetSequence(offset, limit))
-      .mapTo[scala.collection.immutable.Seq[Long]]
+      .ask(TestProbeDurableStateStoreQuery.StateInfoSequence(offset, limit))
+      .mapTo[scala.collection.immutable.Seq[DurableStateSequenceActor.VisitedElement]]
 
-    Source.future(f).mapConcat(identity)
+    Source.future(f).mapConcat(e => e.map(x => (x.pid, x.offset, x.revision)))
   }
 
   override def maxStateStoreOffset(): Future[Long] = Future.successful(0)

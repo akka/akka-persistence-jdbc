@@ -290,7 +290,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
       }
     }
 
-    "fetch proper values of offsets from beginning with changes() and phased upserts - case 1" in withActorSystem {
+    "fetch proper values of offsets from beginning with changes() and phased upserts" in withActorSystem {
       implicit system =>
         val stateStoreString =
           new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
@@ -321,7 +321,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
         }
     }
 
-    "fetch proper values of offsets from beginning for a larger dataset with changes() and phased upserts - case 2" in withActorSystem {
+    "fetch proper values of offsets from beginning for a larger dataset with changes() and phased upserts" in withActorSystem {
       implicit system =>
         val stateStoreString =
           new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
@@ -349,39 +349,6 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
           m.map(_._2) shouldBe sorted
           m.map(_._2).min should be > 0L
           m.map(_._2).max shouldBe 3060
-        }
-    }
-
-    "fetch proper values of offsets from beginning for a larger dataset with changes() and phased upserts - case 3" in withActorSystem {
-      implicit system =>
-        val stateStoreString =
-          new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
-
-        import stateStoreString._
-
-        upsertParallel(stateStoreString, Set("p1", "p2", "p3"), "t1", 5)(e).futureValue
-        val source = changes("t1", NoOffset)
-        val m = collection.mutable.ListBuffer.empty[(String, Long)]
-        // trick to complete the future
-        val f = source
-          .takeWhile { e =>
-            m += ((e.persistenceId, e.offset.value))
-            m.size == 2 && m.map(_._1).toSet == Set("p1", "p2")
-          }
-          .runWith(Sink.seq)
-
-        // more data after some delay
-        Thread.sleep(1000)
-        upsertManyFor(stateStoreString, "p3", "t1", 6, 2)
-        Thread.sleep(1000)
-        // tag for p3 now changes to t2
-        // hence should not be included in the query
-        upsertManyFor(stateStoreString, "p3", "t2", 8, 2)
-
-        whenReady(f) { _ =>
-          m.map(_._2) shouldBe sorted
-          m.map(_._2).min should be > 0L
-          m.map(_._2).max should be > 10L
         }
     }
   }

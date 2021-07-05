@@ -108,7 +108,7 @@ class JdbcDurableStateStore[A](
       tag: String,
       from: Long,
       batchSize: Long,
-      queryUntil: MaxOrderingId): Source[DurableStateChange[A], NotUsed] = {
+      queryUntil: MaxGlobalOffset): Source[DurableStateChange[A], NotUsed] = {
     if (queryUntil.maxOrdering < from) Source.empty
     else changesByTagFromDb(tag, from, queryUntil.maxOrdering, batchSize).mapAsync(1)(Future.fromTry)
   }
@@ -137,7 +137,7 @@ class JdbcDurableStateStore[A](
         case (from, control, s) =>
           def retrieveNextBatch() = {
             for {
-              queryUntil <- stateSequenceActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId]
+              queryUntil <- stateSequenceActor.ask(GetMaxGlobalOffset).mapTo[MaxGlobalOffset]
               xs <- currentChangesByTag(tag, from, batchSize, queryUntil).runWith(Sink.seq)
             } yield {
 
@@ -178,8 +178,8 @@ class JdbcDurableStateStore[A](
   private[jdbc] def maxStateStoreOffset(): Future[Long] =
     db.run(queries.maxOffsetQuery.result)
 
-  private[jdbc] def stateStoreSequence(offset: Long, limit: Long): Source[Long, NotUsed] =
-    Source.fromPublisher(db.stream(queries.stateStoreSequenceQuery((offset, limit)).result))
+  private[jdbc] def stateStoreStateInfo(offset: Long, limit: Long): Source[(String, Long, Long), NotUsed] =
+    Source.fromPublisher(db.stream(queries.stateStoreStateQuery((offset, limit)).result))
 
   private def toDurableStateChange(row: DurableStateTables.DurableStateRow): Try[DurableStateChange[A]] = {
     AkkaSerialization

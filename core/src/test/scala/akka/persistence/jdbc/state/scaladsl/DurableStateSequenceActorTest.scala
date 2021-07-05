@@ -5,13 +5,12 @@
 
 package akka.persistence.jdbc.state.scaladsl
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
 import com.typesafe.config.{ Config, ConfigFactory }
 import akka.actor.{ ActorRef, ActorSystem, ExtendedActorSystem }
 import akka.pattern.ask
 import akka.persistence.jdbc.SharedActorSystemTestSpec
-import akka.persistence.jdbc.state.scaladsl.DurableStateSequenceActor.{ GetMaxOrderingId, MaxOrderingId }
+import akka.persistence.jdbc.state.scaladsl.DurableStateSequenceActor.{ GetMaxGlobalOffset, MaxGlobalOffset }
 import akka.persistence.jdbc.testkit.internal.{ H2, SchemaType }
 import akka.testkit.TestProbe
 import akka.util.Timeout
@@ -36,7 +35,7 @@ abstract class DurableStateSequenceActorTest(config: Config, schemaType: SchemaT
 
         withDurableStateSequenceActor(store, maxTries = 100) { actor =>
           eventually {
-            actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue shouldBe MaxOrderingId(400)
+            actor.ask(GetMaxGlobalOffset).mapTo[MaxGlobalOffset].futureValue shouldBe MaxGlobalOffset(400)
           }
         }
       }
@@ -58,47 +57,58 @@ abstract class DurableStateSequenceActorTest(config: Config, schemaType: SchemaT
 }
 
 class MockDurableStateSequenceActorTest extends SharedActorSystemTestSpec {
-  def fetchMaxOrderingId(durableStateSequenceActor: ActorRef): Future[Long] = {
-    durableStateSequenceActor.ask(GetMaxOrderingId)(20.millis).mapTo[MaxOrderingId].map(_.maxOrdering)
-  }
-
-  it should "re-query with delay only when events are missing." in {
-    val batchSize = 100
+  it should "re-query with delay only when offsets are missing or when we fetch less than batch size" in {
+    val batchSize = 5
     val maxTries = 5
     val queryDelay = 200.millis
+    import DurableStateSequenceActor.VisitedElement
 
     val almostQueryDelay = queryDelay - 50.millis
     val almostImmediately = 50.millis
+
     withTestProbeDurableStateSequenceActor(batchSize, maxTries, queryDelay) { (daoProbe, _) =>
-      daoProbe.expectMsg(almostImmediately, TestProbeDurableStateStoreQuery.OffsetSequence(0, batchSize))
-      val firstBatch = (1L to 40L) ++ (51L to 110L)
+      daoProbe.expectMsg(almostImmediately, TestProbeDurableStateStoreQuery.StateInfoSequence(0, batchSize))
+
+      // less than batch size
+      // no offsets missing
+      val firstBatch =
+        List(VisitedElement("p2", 2978, 1000), VisitedElement("p3", 2995, 1000), VisitedElement("p1", 3000, 1000))
+
       daoProbe.reply(firstBatch)
-      withClue(s"when events are missing, the actor should wait for $queryDelay before querying again") {
-        daoProbe.expectNoMessage(almostQueryDelay)
-        daoProbe.expectMsg(almostQueryDelay, TestProbeDurableStateStoreQuery.OffsetSequence(40, batchSize))
-      }
-      // number 41 is still missing after this batch
-      val secondBatch = 42L to 110L
-      daoProbe.reply(secondBatch)
-      withClue(s"when events are missing, the actor should wait for $queryDelay before querying again") {
-        daoProbe.expectNoMessage(almostQueryDelay)
-        daoProbe.expectMsg(almostQueryDelay, TestProbeDurableStateStoreQuery.OffsetSequence(40, batchSize))
-      }
-      val thirdBatch = 41L to 110L
-      daoProbe.reply(thirdBatch)
       withClue(
-        s"when no more events are missing, but less that batchSize elemens have been received, " +
+        s"when offsets are not missing " +
+        s"but the batch is not complete " +
         s"the actor should wait for $queryDelay before querying again") {
+        // wait for delay
         daoProbe.expectNoMessage(almostQueryDelay)
-        daoProbe.expectMsg(almostQueryDelay, TestProbeDurableStateStoreQuery.OffsetSequence(110, batchSize))
+        daoProbe.expectMsg(almostQueryDelay, TestProbeDurableStateStoreQuery.StateInfoSequence(3000, batchSize))
       }
 
-      val fourthBatch = 111L to 210L
-      daoProbe.reply(fourthBatch)
+      // introduce some missing offsets
+      // a new pid with 1000 revisions but an offset increase of 3
+      val secondBatch = List(VisitedElement("p4", 3003, 1000))
+
+      daoProbe.reply(secondBatch)
       withClue(
-        "When no more events are missing and the number of events received is equal to batchSize, " +
-        "the actor should query again immediately") {
-        daoProbe.expectMsg(almostImmediately, TestProbeDurableStateStoreQuery.OffsetSequence(210, batchSize))
+        s"when offsets are missing " +
+        s"the actor should wait for $queryDelay before querying again") {
+        // wait for delay
+        daoProbe.expectNoMessage(almostQueryDelay)
+        daoProbe.expectMsg(almostQueryDelay, TestProbeDurableStateStoreQuery.StateInfoSequence(3003, batchSize))
+      }
+
+      // introduce another batch with no missing offsets
+      // an already existing pid with 200 more revisions and an offset increase of 200
+      val thirdBatch = List(VisitedElement("p1", 3204, 1200))
+
+      daoProbe.reply(thirdBatch)
+      withClue(
+        s"when offsets are not missing for this batch " +
+        s"but we have past missing offsets " +
+        s"the actor should wait for $queryDelay before querying again") {
+        // wait for delay
+        daoProbe.expectNoMessage(almostQueryDelay)
+        daoProbe.expectMsg(almostQueryDelay, TestProbeDurableStateStoreQuery.StateInfoSequence(3204, batchSize))
       }
 
       // Reply to prevent a dead letter warning on the timeout
@@ -107,34 +117,66 @@ class MockDurableStateSequenceActorTest extends SharedActorSystemTestSpec {
     }
   }
 
-  it should "Assume an element missing after the configured amount of maxTries" in {
-    val batchSize = 100
+  it should "no re-query needed when offsets are not missing, batch is complete and we don't encounter new pids" in {
+    val batchSize = 7
     val maxTries = 5
-    val queryDelay = 150.millis
+    val queryDelay = 200.millis
+    import DurableStateSequenceActor.VisitedElement
 
-    val slightlyMoreThanQueryDelay = queryDelay + 50.millis
-    val almostImmediately = 20.millis
+    val almostQueryDelay = queryDelay - 50.millis
+    val almostImmediately = 50.millis
 
-    val allIds = (1L to 40L) ++ (43L to 200L)
+    withTestProbeDurableStateSequenceActor(batchSize, maxTries, queryDelay) { (daoProbe, _) =>
+      daoProbe.expectMsg(almostImmediately, TestProbeDurableStateStoreQuery.StateInfoSequence(0, batchSize))
 
-    withTestProbeDurableStateSequenceActor(batchSize, maxTries, queryDelay) { (daoProbe, actor) =>
-      daoProbe.expectMsg(almostImmediately, TestProbeDurableStateStoreQuery.OffsetSequence(0, batchSize))
-      daoProbe.reply(allIds.take(100))
+      // matches batch size
+      val firstBatch = List(
+        VisitedElement("p6", 54, 10),
+        VisitedElement("p2", 56, 10),
+        VisitedElement("p1", 57, 10),
+        VisitedElement("p7", 58, 10),
+        VisitedElement("p3", 59, 10),
+        VisitedElement("p4", 60, 10),
+        VisitedElement("p5", 70, 10))
 
-      val idsLargerThan40 = allIds.dropWhile(_ <= 40)
-      val retryResponse = idsLargerThan40.take(100)
-      for (i <- 1 to maxTries) withClue(s"should retry $maxTries times (attempt $i)") {
-        daoProbe.expectMsg(slightlyMoreThanQueryDelay, TestProbeDurableStateStoreQuery.OffsetSequence(40, batchSize))
-        daoProbe.reply(retryResponse)
+      daoProbe.reply(firstBatch)
+      withClue(
+        s"when offsets are not missing and " +
+        s"the batch is complete " +
+        s"but being the first batch, there will be cache miss " +
+        s"hence the actor should delay and re-query") {
+        daoProbe.expectNoMessage(almostQueryDelay)
+        daoProbe.expectMsg(almostQueryDelay, TestProbeDurableStateStoreQuery.StateInfoSequence(70, batchSize))
       }
 
-      // sanity check
-      retryResponse.last shouldBe 142
+      val secondBatch = List(
+        VisitedElement("p6", 71, 11),
+        VisitedElement("p2", 72, 11),
+        VisitedElement("p1", 73, 11),
+        VisitedElement("p7", 74, 11),
+        VisitedElement("p3", 75, 11),
+        VisitedElement("p4", 76, 11),
+        VisitedElement("p5", 77, 11))
+
+      daoProbe.reply(secondBatch)
       withClue(
-        "The elements 41 and 42 should be assumed missing, " +
-        "the actor should query again immediately since a full batch has been received") {
-        daoProbe.expectMsg(almostImmediately, TestProbeDurableStateStoreQuery.OffsetSequence(142, batchSize))
-        fetchMaxOrderingId(actor).futureValue shouldBe 142
+        s"when offsets are not missing and " +
+        s"the batch is complete " +
+        s"hence the actor should not delay") {
+        daoProbe.expectMsg(almostQueryDelay, TestProbeDurableStateStoreQuery.StateInfoSequence(77, batchSize))
+      }
+
+      // introduce some missing offsets
+      // a new pid with 10 revisions but an offset increase of 3
+      val thirdBatch = List(VisitedElement("p8", 80, 10))
+
+      daoProbe.reply(thirdBatch)
+      withClue(
+        s"when offsets are missing " +
+        s"and we have a new pid (cache miss) " +
+        s"the actor should wait for $queryDelay before querying again") {
+        daoProbe.expectNoMessage(almostQueryDelay)
+        daoProbe.expectMsg(almostQueryDelay, TestProbeDurableStateStoreQuery.StateInfoSequence(80, batchSize))
       }
 
       // Reply to prevent a dead letter warning on the timeout
@@ -150,7 +192,6 @@ class MockDurableStateSequenceActorTest extends SharedActorSystemTestSpec {
 
     val customConfig = ConfigFactory.parseString(s"""
       jdbc-durable-state-store {
-        schemaType = H2
         batchSize = ${batchSize}
         refreshInterval = 500.milliseconds
         durable-state-sequence-retrieval {

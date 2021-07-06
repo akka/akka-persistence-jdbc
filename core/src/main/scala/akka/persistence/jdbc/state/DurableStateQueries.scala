@@ -30,7 +30,6 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
   lazy val sequenceNextValUpdater = slickProfileToSchemaType(profile) match {
     case "H2"       => new H2SequenceNextValUpdater(profile)
     case "Postgres" => new PostgresSequenceNextValUpdater(profile)
-    case "Oracle"   => new OracleSequenceNextValUpdater(profile)
     case _          => ???
   }
 
@@ -111,11 +110,11 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
   private[jdbc] val changesByTag = Compiled(_changesByTag _)
 
   private def _stateStoreStateQuery(from: ConstColumn[Long], limit: ConstColumn[Long]) =
-    durableStateTable
+    durableStateTable // FIXME change this to a specialized query to only retrieve the 3 columns of interest
       .filter(_.globalOffset > from)
-      .map(s => (s.persistenceId, s.globalOffset, s.revision))
-      .sorted
+      .sortBy(_.globalOffset.asc)
       .take(limit)
+      .map(s => (s.persistenceId, s.globalOffset, s.revision))
 
   val stateStoreStateQuery = Compiled(_stateStoreStateQuery _)
 }

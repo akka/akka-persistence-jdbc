@@ -58,6 +58,7 @@ abstract class StateSpecBase(val config: Config, schemaType: SchemaType)
       durable-state-sequence-retrieval {
         batch-size = 1000
         query-delay = 100.milliseconds
+        max-tries = 3
       }
     }
   """)
@@ -82,7 +83,7 @@ abstract class StateSpecBase(val config: Config, schemaType: SchemaType)
   lazy val serialization = SerializationExtension(system)
 
   implicit val defaultPatience =
-    PatienceConfig(timeout = Span(120, Seconds), interval = Span(10, Millis))
+    PatienceConfig(timeout = Span(60, Seconds), interval = Span(100, Millis))
 
   def withActorSystem(f: ExtendedActorSystem => Unit): Unit = {
     implicit val system: ExtendedActorSystem =

@@ -225,11 +225,13 @@ object DurableStateSequenceRetrievalConfig {
       maxTries = config.getInt("durable-state-sequence-retrieval.max-tries"),
       queryDelay = config.asFiniteDuration("durable-state-sequence-retrieval.query-delay"),
       maxBackoffQueryDelay = config.asFiniteDuration("durable-state-sequence-retrieval.max-backoff-query-delay"),
-      askTimeout = config.asFiniteDuration("durable-state-sequence-retrieval.ask-timeout"))
+      askTimeout = config.asFiniteDuration("durable-state-sequence-retrieval.ask-timeout"),
+      revisionCacheCapacity = config.getInt("durable-state-sequence-retrieval.revision-cache-capacity"))
 }
 case class DurableStateSequenceRetrievalConfig(
     batchSize: Int,
     maxTries: Int,
     queryDelay: FiniteDuration,
     maxBackoffQueryDelay: FiniteDuration,
-    askTimeout: FiniteDuration)
+    askTimeout: FiniteDuration,
+    revisionCacheCapacity: Int)

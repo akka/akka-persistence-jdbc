@@ -21,8 +21,7 @@ import slick.jdbc.{ JdbcBackend, JdbcProfile }
 import akka.serialization.Serialization
 
 object TestProbeDurableStateStoreQuery {
-  case class OffsetSequence(offset: Long, limit: Long)
-  case class StateInfoSequence(iffset: Long, limit: Long)
+  case class StateInfoSequence(offset: Long, limit: Long)
 }
 
 class TestProbeDurableStateStoreQuery(

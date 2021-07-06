@@ -32,10 +32,3 @@ class PostgresSequenceNextValUpdater(profile: JdbcProfile) extends SequenceNextV
 
   def getSequenceNextValueExpr() = sql"""#$nextValFetcher""".as[String]
 }
-
-class OracleSequenceNextValUpdater(profile: JdbcProfile) extends SequenceNextValUpdater {
-  import profile.api._
-  final val nextValFetcher = s"""(SELECT STATE__GLOBAL_OFFSET_SEQ.nextval FROM DUAL)"""
-
-  def getSequenceNextValueExpr() = sql"""#$nextValFetcher""".as[String]
-}

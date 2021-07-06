@@ -109,8 +109,8 @@ class JdbcDurableStateStore[A](
       from: Long,
       batchSize: Long,
       queryUntil: MaxGlobalOffset): Source[DurableStateChange[A], NotUsed] = {
-    if (queryUntil.maxOrdering < from) Source.empty
-    else changesByTagFromDb(tag, from, queryUntil.maxOrdering, batchSize).mapAsync(1)(Future.fromTry)
+    if (queryUntil.maxOffset < from) Source.empty
+    else changesByTagFromDb(tag, from, queryUntil.maxOffset, batchSize).mapAsync(1)(Future.fromTry)
   }
 
   private def changesByTagFromDb(
@@ -145,7 +145,7 @@ class JdbcDurableStateStore[A](
               val nextControl: FlowControl =
                 terminateAfterOffset match {
                   // we may stop if target is behind queryUntil and we don't have more events to fetch
-                  case Some(target) if !hasMoreEvents && target <= queryUntil.maxOrdering => Stop
+                  case Some(target) if !hasMoreEvents && target <= queryUntil.maxOffset => Stop
 
                   // We may also stop if we have found an event with an offset >= target
                   case Some(target) if xs.exists(_.offset.value >= target) => Stop
@@ -156,7 +156,7 @@ class JdbcDurableStateStore[A](
                     else ContinueDelayed
                 }
               val nextStartingOffset = if (xs.isEmpty) {
-                math.max(from.value, queryUntil.maxOrdering)
+                math.max(from.value, queryUntil.maxOffset)
               } else {
                 // Continue querying from the largest offset
                 xs.map(_.offset.value).max

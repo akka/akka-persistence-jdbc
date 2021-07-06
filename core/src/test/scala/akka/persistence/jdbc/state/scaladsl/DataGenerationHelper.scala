@@ -10,15 +10,30 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 trait DataGenerationHelper extends ScalaFutures {
 
+  implicit def defaultPatience: PatienceConfig
+
   // upsert multiple records for 1 persistence id
-  def upsertManyFor(
+  def upsertManyForOnePersistenceId(
       store: JdbcDurableStateStore[String],
       persistenceId: String,
       tag: String,
       startIndex: Int,
       n: Int) = {
-    (startIndex to startIndex + n - 1).map { c =>
+    (startIndex until startIndex + n).map { c =>
       store.upsertObject(persistenceId, c, s"$c valid string", tag).futureValue
+    }
+  }
+
+  // upsert multiple records for 1 persistence id
+  def upsertForManyDifferentPersistenceIds(
+      store: JdbcDurableStateStore[String],
+      persistenceIdPrefix: String,
+      revision: Int,
+      tag: String,
+      startIndex: Int,
+      n: Int) = {
+    (startIndex until startIndex + n).map { c =>
+      store.upsertObject(s"$persistenceIdPrefix-$c", revision, s"$c valid string", tag).futureValue
     }
   }
 
@@ -51,9 +66,9 @@ trait DataGenerationHelper extends ScalaFutures {
 
     for {
       _ <- Future.unit
-      f1 = Future(upsertManyFor(store, pids.head, tag, 1, noOfItems))
-      f2 = Future(upsertManyFor(store, pids.tail.head, tag, 1, noOfItems))
-      f3 = Future(upsertManyFor(store, pids.last, tag, 1, noOfItems))
+      f1 = Future(upsertManyForOnePersistenceId(store, pids.head, tag, 1, noOfItems))
+      f2 = Future(upsertManyForOnePersistenceId(store, pids.tail.head, tag, 1, noOfItems))
+      f3 = Future(upsertManyForOnePersistenceId(store, pids.last, tag, 1, noOfItems))
       _ <- f1
       _ <- f2
       _ <- f3
@@ -65,13 +80,13 @@ trait DataGenerationHelper extends ScalaFutures {
 
     for {
       _ <- Future.unit
-      f1 = Future(upsertManyFor(store, pids.head, tag, 1, noOfItems))
-      f2 = Future(upsertManyFor(store, pids.tail.head, tag, 1, noOfItems))
-      f3 = Future(upsertManyFor(store, pids.tail.tail.head, tag, 1, noOfItems))
-      f4 = Future(upsertManyFor(store, pids.tail.tail.tail.head, tag, 1, noOfItems))
-      f5 = Future(upsertManyFor(store, pids.tail.tail.tail.tail.head, tag, 1, noOfItems))
-      f6 = Future(upsertManyFor(store, pids.tail.tail.tail.tail.tail.head, tag, 1, noOfItems))
-      f7 = Future(upsertManyFor(store, pids.last, tag, 1, noOfItems))
+      f1 = Future(upsertManyForOnePersistenceId(store, pids.head, tag, 1, noOfItems))
+      f2 = Future(upsertManyForOnePersistenceId(store, pids.tail.head, tag, 1, noOfItems))
+      f3 = Future(upsertManyForOnePersistenceId(store, pids.tail.tail.head, tag, 1, noOfItems))
+      f4 = Future(upsertManyForOnePersistenceId(store, pids.tail.tail.tail.head, tag, 1, noOfItems))
+      f5 = Future(upsertManyForOnePersistenceId(store, pids.tail.tail.tail.tail.head, tag, 1, noOfItems))
+      f6 = Future(upsertManyForOnePersistenceId(store, pids.tail.tail.tail.tail.tail.head, tag, 1, noOfItems))
+      f7 = Future(upsertManyForOnePersistenceId(store, pids.last, tag, 1, noOfItems))
       _ <- f1
       _ <- f2
       _ <- f3

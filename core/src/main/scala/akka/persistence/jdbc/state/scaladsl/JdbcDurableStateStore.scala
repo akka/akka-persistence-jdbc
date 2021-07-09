@@ -108,9 +108,9 @@ class JdbcDurableStateStore[A](
       tag: String,
       from: Long,
       batchSize: Long,
-      queryUntil: MaxOrderingId): Source[DurableStateChange[A], NotUsed] = {
-    if (queryUntil.maxOrdering < from) Source.empty
-    else changesByTagFromDb(tag, from, queryUntil.maxOrdering, batchSize).mapAsync(1)(Future.fromTry)
+      queryUntil: MaxGlobalOffset): Source[DurableStateChange[A], NotUsed] = {
+    if (queryUntil.maxOffset < from) Source.empty
+    else changesByTagFromDb(tag, from, queryUntil.maxOffset, batchSize).mapAsync(1)(Future.fromTry)
   }
 
   private def changesByTagFromDb(
@@ -137,7 +137,7 @@ class JdbcDurableStateStore[A](
         case (from, control, s) =>
           def retrieveNextBatch() = {
             for {
-              queryUntil <- stateSequenceActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId]
+              queryUntil <- stateSequenceActor.ask(GetMaxGlobalOffset).mapTo[MaxGlobalOffset]
               xs <- currentChangesByTag(tag, from, batchSize, queryUntil).runWith(Sink.seq)
             } yield {
 
@@ -145,7 +145,7 @@ class JdbcDurableStateStore[A](
               val nextControl: FlowControl =
                 terminateAfterOffset match {
                   // we may stop if target is behind queryUntil and we don't have more events to fetch
-                  case Some(target) if !hasMoreEvents && target <= queryUntil.maxOrdering => Stop
+                  case Some(target) if !hasMoreEvents && target <= queryUntil.maxOffset => Stop
 
                   // We may also stop if we have found an event with an offset >= target
                   case Some(target) if xs.exists(_.offset.value >= target) => Stop
@@ -156,7 +156,7 @@ class JdbcDurableStateStore[A](
                     else ContinueDelayed
                 }
               val nextStartingOffset = if (xs.isEmpty) {
-                math.max(from.value, queryUntil.maxOrdering)
+                math.max(from.value, queryUntil.maxOffset)
               } else {
                 // Continue querying from the largest offset
                 xs.map(_.offset.value).max
@@ -178,8 +178,8 @@ class JdbcDurableStateStore[A](
   private[jdbc] def maxStateStoreOffset(): Future[Long] =
     db.run(queries.maxOffsetQuery.result)
 
-  private[jdbc] def stateStoreSequence(offset: Long, limit: Long): Source[Long, NotUsed] =
-    Source.fromPublisher(db.stream(queries.stateStoreSequenceQuery((offset, limit)).result))
+  private[jdbc] def stateStoreStateInfo(offset: Long, limit: Long): Source[(String, Long, Long), NotUsed] =
+    Source.fromPublisher(db.stream(queries.stateStoreStateQuery((offset, limit)).result))
 
   private def toDurableStateChange(row: DurableStateTables.DurableStateRow): Try[DurableStateChange[A]] = {
     AkkaSerialization

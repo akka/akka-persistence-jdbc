@@ -6,15 +6,20 @@
 package akka.persistence.jdbc.state.scaladsl
 
 import com.typesafe.config.{ Config, ConfigFactory }
-
 import akka.actor._
 import akka.persistence.jdbc.state.{ MyPayload, OffsetSyntax }
 import OffsetSyntax._
 import akka.persistence.jdbc.testkit.internal.{ H2, Postgres, SchemaType }
 import akka.persistence.query.{ NoOffset, Offset, Sequence }
 import akka.stream.scaladsl.Sink
+import org.scalatest.time.Millis
+import org.scalatest.time.Seconds
+import org.scalatest.time.Span
 
 abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) extends StateSpecBase(config, schemaType) {
+
+  override implicit val defaultPatience =
+    PatienceConfig(timeout = Span(60, Seconds), interval = Span(100, Millis))
 
   "A durable state store" must withActorSystem { implicit system =>
     val stateStoreString =
@@ -158,19 +163,19 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
       import stateStoreString._
 
       // fetch from beginning
-      upsertManyFor(stateStoreString, "p1", "t1", 1, 4)
+      upsertManyForOnePersistenceId(stateStoreString, "p1", "t1", 1, 4)
       val chgs = currentChanges("t1", NoOffset).runWith(Sink.seq).futureValue
       chgs.size shouldBe 1
       chgs.map(_.offset.value).max shouldBe 4
 
       // upsert more and fetch from after the last offset
-      upsertManyFor(stateStoreString, "p1", "t1", 5, 7)
+      upsertManyForOnePersistenceId(stateStoreString, "p1", "t1", 5, 7)
       val moreChgs = currentChanges("t1", chgs.head.offset).runWith(Sink.seq).futureValue
       moreChgs.size shouldBe 1
       moreChgs.map(_.offset.value).max shouldBe 11
 
       // upsert same tag, different persistence id and fetch from after the last offset
-      upsertManyFor(stateStoreString, "p2", "t1", 1, 3)
+      upsertManyForOnePersistenceId(stateStoreString, "p2", "t1", 1, 3)
       val otherChgs = currentChanges("t1", moreChgs.head.offset).runWith(Sink.seq).futureValue
       otherChgs.size shouldBe 1
       otherChgs.map(_.offset.value).max shouldBe 14
@@ -256,7 +261,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
 
         // more data after some delay
         Thread.sleep(100)
-        upsertManyFor(stateStoreString, "p3", "t1", 4, 3)
+        upsertManyForOnePersistenceId(stateStoreString, "p3", "t1", 4, 3)
 
         whenReady(f) { _ =>
           m.map(_._2) shouldBe sorted
@@ -290,7 +295,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
       }
     }
 
-    "fetch proper values of offsets from beginning with changes() and phased upserts - case 1" in withActorSystem {
+    "fetch proper values of offsets from beginning with changes() and phased upserts" in withActorSystem {
       implicit system =>
         val stateStoreString =
           new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
@@ -310,9 +315,9 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
 
         // more data after some delay
         Thread.sleep(1000)
-        upsertManyFor(stateStoreString, "p3", "t1", 6, 3)
+        upsertManyForOnePersistenceId(stateStoreString, "p3", "t1", 6, 3)
         Thread.sleep(1000)
-        upsertManyFor(stateStoreString, "p3", "t2", 9, 3)
+        upsertManyForOnePersistenceId(stateStoreString, "p3", "t2", 9, 3)
 
         whenReady(f) { _ =>
           m.map(_._2) shouldBe sorted
@@ -321,7 +326,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
         }
     }
 
-    "fetch proper values of offsets from beginning for a larger dataset with changes() and phased upserts - case 2" in withActorSystem {
+    "fetch proper values of offsets from beginning for a larger dataset with changes() and phased upserts" in withActorSystem {
       implicit system =>
         val stateStoreString =
           new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
@@ -341,47 +346,14 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
 
         // more data after some delay
         Thread.sleep(1000)
-        upsertManyFor(stateStoreString, "p3", "t1", 1001, 30)
+        upsertManyForOnePersistenceId(stateStoreString, "p3", "t1", 1001, 30)
         Thread.sleep(1000)
-        upsertManyFor(stateStoreString, "p3", "t2", 1031, 30)
+        upsertManyForOnePersistenceId(stateStoreString, "p3", "t2", 1031, 30)
 
         whenReady(f) { _ =>
           m.map(_._2) shouldBe sorted
           m.map(_._2).min should be > 0L
           m.map(_._2).max shouldBe 3060
-        }
-    }
-
-    "fetch proper values of offsets from beginning for a larger dataset with changes() and phased upserts - case 3" in withActorSystem {
-      implicit system =>
-        val stateStoreString =
-          new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
-
-        import stateStoreString._
-
-        upsertParallel(stateStoreString, Set("p1", "p2", "p3"), "t1", 5)(e).futureValue
-        val source = changes("t1", NoOffset)
-        val m = collection.mutable.ListBuffer.empty[(String, Long)]
-        // trick to complete the future
-        val f = source
-          .takeWhile { e =>
-            m += ((e.persistenceId, e.offset.value))
-            m.size == 2 && m.map(_._1).toSet == Set("p1", "p2")
-          }
-          .runWith(Sink.seq)
-
-        // more data after some delay
-        Thread.sleep(1000)
-        upsertManyFor(stateStoreString, "p3", "t1", 6, 2)
-        Thread.sleep(1000)
-        // tag for p3 now changes to t2
-        // hence should not be included in the query
-        upsertManyFor(stateStoreString, "p3", "t2", 8, 2)
-
-        whenReady(f) { _ =>
-          m.map(_._2) shouldBe sorted
-          m.map(_._2).min should be > 0L
-          m.map(_._2).max should be > 10L
         }
     }
   }

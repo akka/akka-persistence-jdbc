@@ -27,6 +27,10 @@ import akka.util.Timeout
 import DurableStateSequenceActor._
 import OffsetSyntax._
 
+object JdbcDurableStateStore {
+  val Identifier = "jdbc-durable-state-store"
+}
+
 class JdbcDurableStateStore[A](
     db: JdbcBackend#Database,
     profile: JdbcProfile,

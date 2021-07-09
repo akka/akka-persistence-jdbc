@@ -14,9 +14,14 @@ import akka.{ Done, NotUsed }
 import akka.persistence.state.javadsl.{ DurableStateUpdateStore, GetObjectResult }
 import akka.persistence.jdbc.state.DurableStateQueries
 import akka.persistence.jdbc.config.DurableStateTableConfiguration
+import akka.persistence.jdbc.state.scaladsl.{ JdbcDurableStateStore => ScalaJdbcDurableStateStore }
 import akka.persistence.query.{ DurableStateChange, Offset }
 import akka.persistence.query.javadsl.DurableStateStoreQuery
 import akka.stream.javadsl.Source
+
+object JdbcDurableStateStore {
+  val Identifier = ScalaJdbcDurableStateStore.Identifier
+}
 
 class JdbcDurableStateStore[A](
     profile: JdbcProfile,

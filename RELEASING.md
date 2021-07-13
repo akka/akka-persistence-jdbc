@@ -27,3 +27,8 @@ It is possible to release a revised documentation to the already existing releas
     ```
 1. Do not forget to push the new branch back to GitHub.
 1. Commit the changes to Gustav's local git repo
+
+### Releasing a Snapshot
+
+Snapshots are released automatically when commits are pushed to master. 
+Alternatively you can merge commits to the `snapshot-release` branch, in cases when you do not want to push to master yet, this will also release a snapshot.

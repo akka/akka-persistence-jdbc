@@ -8,10 +8,10 @@ import akka.persistence.jdbc.query.{
   SqlServerCleaner
 }
 
-class PostgresLogicalDeleteQueryTest extends LogicalDeleteQueryTest("postgres-application.conf") with PostgresCleaner
+class PostgresLogicalDeleteQueryTest extends LogicalDeleteQueryTest("postgres-application-with-logical-delete.conf") with PostgresCleaner
 
-class MySQLLogicalDeleteQueryTest extends LogicalDeleteQueryTest("mysql-application.conf") with MysqlCleaner
+class MySQLLogicalDeleteQueryTest extends LogicalDeleteQueryTest("mysql-application-with-logical-delete.conf") with MysqlCleaner
 
-class OracleLogicalDeleteQueryTest extends LogicalDeleteQueryTest("oracle-application.conf") with OracleCleaner
+class OracleLogicalDeleteQueryTest extends LogicalDeleteQueryTest("oracle-application-with-logical-delete.conf") with OracleCleaner
 
-class SqlServerLogicalDeleteQueryTest extends LogicalDeleteQueryTest("sqlserver-application.conf") with SqlServerCleaner
+class SqlServerLogicalDeleteQueryTest extends LogicalDeleteQueryTest("sqlserver-application-with-logical-delete.conf") with SqlServerCleaner

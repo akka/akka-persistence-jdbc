@@ -97,4 +97,4 @@ abstract class LogicalDeleteQueryTest(config: String) extends QueryTestSpec(conf
   }
 }
 
-class H2LogicalDeleteQueryTest extends LogicalDeleteQueryTest("h2-application.conf") with H2Cleaner
+class H2LogicalDeleteQueryTest extends LogicalDeleteQueryTest("h2-application-with-logical-delete.conf") with H2Cleaner

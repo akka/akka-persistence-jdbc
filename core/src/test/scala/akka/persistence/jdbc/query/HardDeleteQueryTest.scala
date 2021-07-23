@@ -95,4 +95,4 @@ abstract class HardDeleteQueryTest(config: String) extends QueryTestSpec(config)
   }
 }
 
-class H2HardDeleteQueryTest extends HardDeleteQueryTest("h2-application-with-hard-delete.conf") with H2Cleaner
+class H2HardDeleteQueryTest extends HardDeleteQueryTest("h2-application.conf") with H2Cleaner

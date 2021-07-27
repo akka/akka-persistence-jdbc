@@ -33,7 +33,7 @@ object JdbcDurableStateStore {
 
 class JdbcDurableStateStore[A](
     db: JdbcBackend#Database,
-    profile: JdbcProfile,
+    val profile: JdbcProfile,
     durableStateConfig: DurableStateTableConfiguration,
     serialization: Serialization)(implicit val system: ExtendedActorSystem)
     extends DurableStateUpdateStore[A]

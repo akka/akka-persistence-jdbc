@@ -17,8 +17,7 @@ import akka.persistence.jdbc.db.{ SlickDatabase, SlickExtension }
 import akka.serialization.SerializationExtension
 import akka.stream.{ Materializer, SystemMaterializer }
 
-class JdbcDurableStateStoreProvider[A](system: ExtendedActorSystem) 
-  extends DurableStateStoreProvider {
+class JdbcDurableStateStoreProvider[A](system: ExtendedActorSystem) extends DurableStateStoreProvider {
 
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val mat: Materializer = SystemMaterializer(system).materializer

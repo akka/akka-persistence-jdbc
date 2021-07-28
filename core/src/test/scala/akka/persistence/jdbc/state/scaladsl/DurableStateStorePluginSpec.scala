@@ -8,9 +8,9 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import akka.persistence.jdbc.state.scaladsl.JdbcDurableStateStore
 import akka.persistence.state.DurableStateStoreRegistry
-import slick.jdbc.{JdbcProfile, H2Profile}
+import slick.jdbc.{ H2Profile, JdbcProfile }
 
-abstract class DurableStateStorePluginSpec(config: Config, profile: JdbcProfile) 
+abstract class DurableStateStorePluginSpec(config: Config, profile: JdbcProfile)
     extends AnyWordSpecLike
     with BeforeAndAfterAll
     with Matchers
@@ -24,23 +24,24 @@ abstract class DurableStateStorePluginSpec(config: Config, profile: JdbcProfile)
     }
   """)
 
-  implicit lazy val system: ExtendedActorSystem = 
+  implicit lazy val system: ExtendedActorSystem =
     ActorSystem("test", config.withFallback(pluginConf)).asInstanceOf[ExtendedActorSystem]
 
-  "A durable state store plugin" must { 
+  "A durable state store plugin" must {
     "instantiate a JdbcDurableDataStore successfully" in {
       val store = DurableStateStoreRegistry
         .get(system)
         .durableStateStoreFor[JdbcDurableStateStore[String]]("akka.persistence.state.jdbc")
 
-			store shouldBe a [JdbcDurableStateStore[_]]
-			store.profile shouldBe profile
+      store shouldBe a[JdbcDurableStateStore[_]]
+      store.profile shouldBe profile
     }
-	}
+  }
 
   override def afterAll(): Unit = {
     system.terminate().futureValue
   }
 }
 
-class H2DurableStateStorePluginSpec extends DurableStateStorePluginSpec(ConfigFactory.load("h2-application.conf"), H2Profile)
+class H2DurableStateStorePluginSpec
+    extends DurableStateStorePluginSpec(ConfigFactory.load("h2-application.conf"), H2Profile)

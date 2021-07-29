@@ -28,8 +28,8 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
     }
 
   lazy val sequenceNextValUpdater = slickProfileToSchemaType(profile) match {
-    case "H2"       => new H2SequenceNextValUpdater(profile, durableStateTableCfg)
-    case "Postgres" => new PostgresSequenceNextValUpdater(profile, durableStateTableCfg)
+    case "H2"       => new H2SequenceNextValUpdater(profile)
+    case "Postgres" => new PostgresSequenceNextValUpdater(profile)
     case _          => ???
   }
 
@@ -41,16 +41,17 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
     durableStateTable.filter(_.persistenceId === persistenceId)
 
   private[jdbc] def insertDbWithDurableState(row: DurableStateTables.DurableStateRow, seqNextValue: String) = {
-    sqlu"""INSERT INTO ${durableStateTableCfg.tableName}
+    // TODO: read the table name and column names from durableStateTableCfg
+    sqlu"""INSERT INTO durable_state
             (
-              ${durableStateTableCfg.columnNames.persistenceId},
-              ${durableStateTableCfg.columnNames.globalOffset},
-              ${durableStateTableCfg.columnNames.revision},
-              ${durableStateTableCfg.columnNames.statePayload},
-              ${durableStateTableCfg.columnNames.stateSerId},
-              ${durableStateTableCfg.columnNames.stateSerManifest},
-              ${durableStateTableCfg.columnNames.tag},
-              ${durableStateTableCfg.columnNames.stateTimestamp}
+              persistence_id,
+              global_offset,
+              revision,
+              state_payload,
+              state_serial_id,
+              state_serial_manifest,
+              tag,
+              state_timestamp
             )
             VALUES
             (
@@ -67,16 +68,17 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
   }
 
   private[jdbc] def updateDbWithDurableState(row: DurableStateTables.DurableStateRow, seqNextValue: String) = {
-    sqlu"""UPDATE ${durableStateTableCfg.tableName}
-           SET ${durableStateTableCfg.columnNames.globalOffset} = #${seqNextValue},
-               ${durableStateTableCfg.columnNames.revision} = ${row.revision},
-               ${durableStateTableCfg.columnNames.statePayload} = ${row.statePayload},
-               ${durableStateTableCfg.columnNames.stateSerId} = ${row.stateSerId},
-               ${durableStateTableCfg.columnNames.stateSerManifest} = ${row.stateSerManifest},
-               ${durableStateTableCfg.columnNames.tag} = ${row.tag},
-               ${durableStateTableCfg.columnNames.stateTimestamp} = ${System.currentTimeMillis}
-           WHERE ${durableStateTableCfg.columnNames.persistenceId} = ${row.persistenceId}
-             AND ${durableStateTableCfg.columnNames.revision} = ${row.revision} - 1
+    // TODO: read the table name and column names from durableStateTableCfg
+    sqlu"""UPDATE durable_state
+           SET global_offset = #${seqNextValue},
+               revision = ${row.revision},
+               state_payload = ${row.statePayload},
+               state_serial_id = ${row.stateSerId}, 
+               state_serial_manifest = ${row.stateSerManifest}, 
+               tag = ${row.tag}, 
+               state_timestamp = ${System.currentTimeMillis}
+           WHERE persistence_id = ${row.persistenceId} 
+             AND revision = ${row.revision} - 1
         """
   }
 

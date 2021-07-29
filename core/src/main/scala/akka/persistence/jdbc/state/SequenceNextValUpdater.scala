@@ -5,7 +5,6 @@
 
 package akka.persistence.jdbc.state
 
-import akka.persistence.jdbc.config.DurableStateTableConfiguration
 import slick.jdbc.JdbcProfile
 import slick.dbio.Effect
 import slick.sql.SqlStreamingAction
@@ -14,22 +13,24 @@ private[jdbc] trait SequenceNextValUpdater {
   def getSequenceNextValueExpr(): SqlStreamingAction[Vector[String], String, Effect]
 }
 
-class H2SequenceNextValUpdater(profile: JdbcProfile, val durableStateTableCfg: DurableStateTableConfiguration) extends SequenceNextValUpdater {
+class H2SequenceNextValUpdater(profile: JdbcProfile) extends SequenceNextValUpdater {
   import profile.api._
 
   // H2 dependent (https://stackoverflow.com/questions/36244641/h2-equivalent-of-postgres-serial-or-bigserial-column)
+  // TODO: read the table name and column names from durableStateTableCfg
   def getSequenceNextValueExpr() = {
     sql"""SELECT COLUMN_DEFAULT
           FROM INFORMATION_SCHEMA.COLUMNS
-          WHERE TABLE_NAME = ${durableStateTableCfg.tableName}
-            AND COLUMN_NAME = ${durableStateTableCfg.columnNames.globalOffset}
+          WHERE TABLE_NAME = 'durable_state'
+            AND COLUMN_NAME = 'global_offset'
             AND TABLE_SCHEMA = 'PUBLIC'""".as[String]
   }
 }
 
-class PostgresSequenceNextValUpdater(profile: JdbcProfile, val durableStateTableCfg: DurableStateTableConfiguration) extends SequenceNextValUpdater {
+class PostgresSequenceNextValUpdater(profile: JdbcProfile) extends SequenceNextValUpdater {
   import profile.api._
-  final val nextValFetcher = s"""(SELECT nextval(pg_get_serial_sequence(${durableStateTableCfg.tableName}, ${durableStateTableCfg.columnNames.globalOffset})))"""
+  // TODO: read the table name and column names from durableStateTableCfg
+  final val nextValFetcher = s"""(SELECT nextval(pg_get_serial_sequence('durable_state', 'global_offset')))"""
 
   def getSequenceNextValueExpr() = sql"""#$nextValFetcher""".as[String]
 }

@@ -76,7 +76,7 @@ final class JavadslSnippets {
     CompletionStage<GetObjectResult<String>> futureResult = store.getObject("InvalidPersistenceId");
     try {
       GetObjectResult<String> result = futureResult.toCompletableFuture().get();
-      assert result.value().isEmpty();
+      assert !result.value().isPresent();
     } catch (Exception e) {
       // handle exceptions
     }

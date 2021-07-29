@@ -25,8 +25,7 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
     baseTableQuery().map(_.persistenceId).distinct.take(max)
 
   private def baseTableQuery() =
-    if (readJournalConfig.includeDeleted) JournalTable
-    else JournalTable.filter(_.deleted === false)
+    JournalTable.filter(_.deleted === false)
 
   private def baseTableWithTagsQuery() = {
     baseTableQuery().join(TagTable).on(_.ordering === _.eventId)
@@ -43,6 +42,7 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
       .filter(_.persistenceId === persistenceId)
       .filter(_.sequenceNumber >= fromSequenceNr)
       .filter(_.sequenceNumber <= toSequenceNr)
+      .filter(!_.deleted)
       .sortBy(_.sequenceNumber.asc)
       .take(max)
 

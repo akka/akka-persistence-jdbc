@@ -14,7 +14,8 @@ private[jdbc] trait SequenceNextValUpdater {
   def getSequenceNextValueExpr(): SqlStreamingAction[Vector[String], String, Effect]
 }
 
-class H2SequenceNextValUpdater(profile: JdbcProfile, val durableStateTableCfg: DurableStateTableConfiguration) extends SequenceNextValUpdater {
+class H2SequenceNextValUpdater(profile: JdbcProfile, val durableStateTableCfg: DurableStateTableConfiguration)
+    extends SequenceNextValUpdater {
   import profile.api._
 
   // H2 dependent (https://stackoverflow.com/questions/36244641/h2-equivalent-of-postgres-serial-or-bigserial-column)
@@ -27,9 +28,11 @@ class H2SequenceNextValUpdater(profile: JdbcProfile, val durableStateTableCfg: D
   }
 }
 
-class PostgresSequenceNextValUpdater(profile: JdbcProfile, val durableStateTableCfg: DurableStateTableConfiguration) extends SequenceNextValUpdater {
+class PostgresSequenceNextValUpdater(profile: JdbcProfile, val durableStateTableCfg: DurableStateTableConfiguration)
+    extends SequenceNextValUpdater {
   import profile.api._
-  final val nextValFetcher = s"""(SELECT nextval(pg_get_serial_sequence('${durableStateTableCfg.tableName}', '${durableStateTableCfg.columnNames.globalOffset}')))"""
+  final val nextValFetcher =
+    s"""(SELECT nextval(pg_get_serial_sequence('${durableStateTableCfg.tableName}', '${durableStateTableCfg.columnNames.globalOffset}')))"""
 
   def getSequenceNextValueExpr() = sql"""#$nextValFetcher""".as[String]
 }

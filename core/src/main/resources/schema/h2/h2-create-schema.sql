@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS "snapshot" (
     PRIMARY KEY("persistence_id","sequence_number")
     );
 
-CREATE TABLE IF NOT EXISTS "state" (
+CREATE TABLE IF NOT EXISTS "durable_state" (
     "global_offset" BIGINT NOT NULL AUTO_INCREMENT,
     "persistence_id" VARCHAR(255) NOT NULL,
     "revision" BIGINT NOT NULL,
@@ -50,6 +50,5 @@ CREATE TABLE IF NOT EXISTS "state" (
     "state_timestamp" BIGINT NOT NULL,
     PRIMARY KEY("persistence_id")
     );
-CREATE INDEX "state_tag_idx" on "state" ("tag");
-
-
+CREATE INDEX "state_tag_idx" on "durable_state" ("tag");
+CREATE INDEX "state_global_offset_idx" on "durable_state" ("global_offset");

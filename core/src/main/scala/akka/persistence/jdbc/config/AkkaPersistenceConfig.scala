@@ -196,22 +196,22 @@ class ReadJournalConfig(config: Config) {
 }
 
 class DurableStateTableColumnNames(config: Config) {
-  private val cfg = config.getConfig("tables.state.columnNames")
+  private val cfg = config.getConfig("tables.durable_state.columnNames")
   val globalOffset: String = cfg.getString("globalOffset")
   val persistenceId: String = cfg.getString("persistenceId")
-  val statePayload: String = cfg.getString("statePayload")
-  val tag: String = cfg.getString("tag")
   val revision: String = cfg.getString("revision")
+  val statePayload: String = cfg.getString("statePayload")
   val stateSerId: String = cfg.getString("stateSerId")
   val stateSerManifest: String = cfg.getString("stateSerManifest")
+  val tag: String = cfg.getString("tag")
   val stateTimestamp: String = cfg.getString("stateTimestamp")
 }
 
 class DurableStateTableConfiguration(config: Config) {
-  private val cfg = config.getConfig("tables.state")
+  private val cfg = config.getConfig("tables.durable_state")
+  val tableName: String = cfg.getString("tableName")
   val refreshInterval: FiniteDuration = config.asFiniteDuration("refreshInterval")
   val batchSize: Int = config.getInt("batchSize")
-  val tableName: String = cfg.getString("tableName")
   val schemaName: Option[String] = cfg.asStringOption("schemaName")
   val columnNames: DurableStateTableColumnNames = new DurableStateTableColumnNames(config)
   val stateSequenceConfig = DurableStateSequenceRetrievalConfig(config)

@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS public.snapshot (
   PRIMARY KEY(persistence_id, sequence_number)
 );
 
-CREATE TABLE IF NOT EXISTS public.state (
+CREATE TABLE IF NOT EXISTS public.durable_state (
     global_offset BIGSERIAL,
     persistence_id VARCHAR(255) NOT NULL,
     revision BIGINT NOT NULL,
@@ -58,5 +58,5 @@ CREATE TABLE IF NOT EXISTS public.state (
     state_timestamp BIGINT NOT NULL,
     PRIMARY KEY(persistence_id)
     );
-CREATE INDEX CONCURRENTLY state_tag_idx on public.state (tag);
-CREATE INDEX CONCURRENTLY state_global_offset_idx on public.state (global_offset);
+CREATE INDEX CONCURRENTLY state_tag_idx on public.durable_state (tag);
+CREATE INDEX CONCURRENTLY state_global_offset_idx on public.durable_state (global_offset);

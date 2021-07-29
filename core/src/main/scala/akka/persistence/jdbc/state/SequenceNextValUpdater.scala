@@ -17,10 +17,12 @@ class H2SequenceNextValUpdater(profile: JdbcProfile) extends SequenceNextValUpda
   import profile.api._
 
   // H2 dependent (https://stackoverflow.com/questions/36244641/h2-equivalent-of-postgres-serial-or-bigserial-column)
+  // FIXME: read the table name and column names from durableStateTableCfg
+  // https://github.com/akka/akka-persistence-jdbc/issues/573
   def getSequenceNextValueExpr() = {
     sql"""SELECT COLUMN_DEFAULT
           FROM INFORMATION_SCHEMA.COLUMNS
-          WHERE TABLE_NAME = 'state'
+          WHERE TABLE_NAME = 'durable_state'
             AND COLUMN_NAME = 'global_offset'
             AND TABLE_SCHEMA = 'PUBLIC'""".as[String]
   }
@@ -28,7 +30,9 @@ class H2SequenceNextValUpdater(profile: JdbcProfile) extends SequenceNextValUpda
 
 class PostgresSequenceNextValUpdater(profile: JdbcProfile) extends SequenceNextValUpdater {
   import profile.api._
-  final val nextValFetcher = s"""(SELECT nextval(pg_get_serial_sequence('state', 'global_offset')))"""
+  // FIXME: read the table name and column names from durableStateTableCfg
+  // https://github.com/akka/akka-persistence-jdbc/issues/573
+  final val nextValFetcher = s"""(SELECT nextval(pg_get_serial_sequence('durable_state', 'global_offset')))"""
 
   def getSequenceNextValueExpr() = sql"""#$nextValFetcher""".as[String]
 }

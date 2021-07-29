@@ -41,16 +41,17 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
     durableStateTable.filter(_.persistenceId === persistenceId)
 
   private[jdbc] def insertDbWithDurableState(row: DurableStateTables.DurableStateRow, seqNextValue: String) = {
-
-    sqlu"""INSERT INTO state 
+    // FIXME: read the table name and column names from durableStateTableCfg
+    // https://github.com/akka/akka-persistence-jdbc/issues/573
+    sqlu"""INSERT INTO durable_state
             (
-              persistence_id, 
+              persistence_id,
               global_offset,
-              revision, 
-              state_payload, 
-              state_serial_id, 
-              state_serial_manifest, 
-              tag, 
+              revision,
+              state_payload,
+              state_serial_id,
+              state_serial_manifest,
+              tag,
               state_timestamp
             )
             VALUES
@@ -68,9 +69,11 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
   }
 
   private[jdbc] def updateDbWithDurableState(row: DurableStateTables.DurableStateRow, seqNextValue: String) = {
-    sqlu"""UPDATE state 
+    // FIXME: read the table name and column names from durableStateTableCfg
+    // https://github.com/akka/akka-persistence-jdbc/issues/573
+    sqlu"""UPDATE durable_state
            SET global_offset = #${seqNextValue},
-               revision = ${row.revision}, 
+               revision = ${row.revision},
                state_payload = ${row.statePayload},
                state_serial_id = ${row.stateSerId}, 
                state_serial_manifest = ${row.stateSerManifest}, 

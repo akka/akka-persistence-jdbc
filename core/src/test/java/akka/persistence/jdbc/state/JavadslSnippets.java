@@ -59,7 +59,8 @@ final class JavadslSnippets {
     @SuppressWarnings("unchecked")
     JdbcDurableStateStore<String> store =
         DurableStateStoreRegistry.get(system)
-            .getDurableStateStoreFor(JdbcDurableStateStore.class, "akka.persistence.state.jdbc");
+            .getDurableStateStoreFor(
+                JdbcDurableStateStore.class, JdbcDurableStateStore.Identifier());
     // #jdbc-durable-state-store
   }
 
@@ -71,7 +72,8 @@ final class JavadslSnippets {
     @SuppressWarnings("unchecked")
     JdbcDurableStateStore<String> store =
         DurableStateStoreRegistry.get(system)
-            .getDurableStateStoreFor(JdbcDurableStateStore.class, "akka.persistence.state.jdbc");
+            .getDurableStateStoreFor(
+                JdbcDurableStateStore.class, JdbcDurableStateStore.Identifier());
 
     CompletionStage<GetObjectResult<String>> futureResult = store.getObject("InvalidPersistenceId");
     try {
@@ -91,7 +93,8 @@ final class JavadslSnippets {
     @SuppressWarnings("unchecked")
     JdbcDurableStateStore<String> store =
         DurableStateStoreRegistry.get(system)
-            .getDurableStateStoreFor(JdbcDurableStateStore.class, "akka.persistence.state.jdbc");
+            .getDurableStateStoreFor(
+                JdbcDurableStateStore.class, JdbcDurableStateStore.Identifier());
 
     CompletionStage<GetObjectResult<String>> r =
         store
@@ -116,7 +119,8 @@ final class JavadslSnippets {
     @SuppressWarnings("unchecked")
     JdbcDurableStateStore<String> store =
         DurableStateStoreRegistry.get(system)
-            .getDurableStateStoreFor(JdbcDurableStateStore.class, "akka.persistence.state.jdbc");
+            .getDurableStateStoreFor(
+                JdbcDurableStateStore.class, JdbcDurableStateStore.Identifier());
 
     CompletionStage<Done> futureResult = store.deleteObject("p123");
     try {
@@ -135,7 +139,8 @@ final class JavadslSnippets {
     @SuppressWarnings("unchecked")
     JdbcDurableStateStore<String> store =
         DurableStateStoreRegistry.get(system)
-            .getDurableStateStoreFor(JdbcDurableStateStore.class, "akka.persistence.state.jdbc");
+            .getDurableStateStoreFor(
+                JdbcDurableStateStore.class, JdbcDurableStateStore.Identifier());
 
     Source<DurableStateChange<String>, NotUsed> willCompleteTheStream =
         store.currentChanges("tag-1", NoOffset.getInstance());
@@ -150,7 +155,8 @@ final class JavadslSnippets {
     @SuppressWarnings("unchecked")
     JdbcDurableStateStore<String> store =
         DurableStateStoreRegistry.get(system)
-            .getDurableStateStoreFor(JdbcDurableStateStore.class, "akka.persistence.state.jdbc");
+            .getDurableStateStoreFor(
+                JdbcDurableStateStore.class, JdbcDurableStateStore.Identifier());
 
     Source<DurableStateChange<String>, NotUsed> willNotCompleteTheStream =
         store.changes("tag-1", NoOffset.getInstance());

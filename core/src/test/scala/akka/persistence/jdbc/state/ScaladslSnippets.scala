@@ -25,7 +25,7 @@ object ScaladslSnippets extends ScalaFutures with Matchers {
     import akka.persistence.jdbc.state.scaladsl.JdbcDurableStateStore
     val store = DurableStateStoreRegistry
       .get(system)
-      .durableStateStoreFor[JdbcDurableStateStore[String]]("akka.persistence.state.jdbc")
+      .durableStateStoreFor[JdbcDurableStateStore[String]](JdbcDurableStateStore.Identifier)
     // #jdbc-durable-state-store
   }
 
@@ -39,7 +39,7 @@ object ScaladslSnippets extends ScalaFutures with Matchers {
 
     val store = DurableStateStoreRegistry
       .get(system)
-      .durableStateStoreFor[JdbcDurableStateStore[String]]("akka.persistence.state.jdbc")
+      .durableStateStoreFor[JdbcDurableStateStore[String]](JdbcDurableStateStore.Identifier)
 
     val futureResult: Future[GetObjectResult[String]] = store.getObject("InvalidPersistenceId")
     futureResult.futureValue.value shouldBe None
@@ -57,7 +57,7 @@ object ScaladslSnippets extends ScalaFutures with Matchers {
 
     val store = DurableStateStoreRegistry
       .get(system)
-      .durableStateStoreFor[JdbcDurableStateStore[String]]("akka.persistence.state.jdbc")
+      .durableStateStoreFor[JdbcDurableStateStore[String]](JdbcDurableStateStore.Identifier)
 
     val v: Future[GetObjectResult[String]] =
       for {
@@ -83,7 +83,7 @@ object ScaladslSnippets extends ScalaFutures with Matchers {
 
     val store = DurableStateStoreRegistry
       .get(system)
-      .durableStateStoreFor[JdbcDurableStateStore[String]]("akka.persistence.state.jdbc")
+      .durableStateStoreFor[JdbcDurableStateStore[String]](JdbcDurableStateStore.Identifier)
 
     store.deleteObject("p123").futureValue shouldBe Done
     store.getObject("p123").futureValue.value shouldBe None
@@ -102,7 +102,7 @@ object ScaladslSnippets extends ScalaFutures with Matchers {
 
     val store = DurableStateStoreRegistry
       .get(system)
-      .durableStateStoreFor[JdbcDurableStateStore[String]]("akka.persistence.state.jdbc")
+      .durableStateStoreFor[JdbcDurableStateStore[String]](JdbcDurableStateStore.Identifier)
 
     val willCompleteTheStream: Source[DurableStateChange[String], NotUsed] =
       store.currentChanges("tag-1", NoOffset)
@@ -121,7 +121,7 @@ object ScaladslSnippets extends ScalaFutures with Matchers {
 
     val store = DurableStateStoreRegistry
       .get(system)
-      .durableStateStoreFor[JdbcDurableStateStore[String]]("akka.persistence.state.jdbc")
+      .durableStateStoreFor[JdbcDurableStateStore[String]](JdbcDurableStateStore.Identifier)
 
     val willNotCompleteTheStream: Source[DurableStateChange[String], NotUsed] =
       store.changes("tag-1", NoOffset)

@@ -16,24 +16,17 @@ abstract class DurableStateStorePluginSpec(config: Config, profile: JdbcProfile)
     with Matchers
     with ScalaFutures {
 
-  val pluginConf: Config = ConfigFactory.parseString(s"""
-    akka.loglevel = INFO
-    akka.persistence.state.plugin = "akka.persistence.state.jdbc"
-    akka.persistence.state.jdbc {
-      class = "akka.persistence.jdbc.state.JdbcDurableStateStoreProvider"
-    }
-  """)
-
   implicit lazy val system: ExtendedActorSystem =
-    ActorSystem("test", config.withFallback(pluginConf)).asInstanceOf[ExtendedActorSystem]
+    ActorSystem("test", config).asInstanceOf[ExtendedActorSystem]
 
   "A durable state store plugin" must {
     "instantiate a JdbcDurableDataStore successfully" in {
       val store = DurableStateStoreRegistry
         .get(system)
-        .durableStateStoreFor[JdbcDurableStateStore[String]]("akka.persistence.state.jdbc")
+        .durableStateStoreFor[JdbcDurableStateStore[String]](JdbcDurableStateStore.Identifier)
 
       store shouldBe a[JdbcDurableStateStore[_]]
+      store.system.settings.config shouldBe system.settings.config
       store.profile shouldBe profile
     }
   }

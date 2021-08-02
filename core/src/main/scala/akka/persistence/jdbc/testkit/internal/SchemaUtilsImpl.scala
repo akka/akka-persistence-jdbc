@@ -149,6 +149,7 @@ private[jdbc] object SchemaUtilsImpl {
       case OracleProfile    => Oracle
       case SQLServerProfile => SqlServer
       case H2Profile        => H2
+      case _                => throw new IllegalArgumentException(s"Invalid profile $profile encountered")
     }
 
   /**

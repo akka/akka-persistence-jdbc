@@ -74,26 +74,4 @@ trait DataGenerationHelper extends ScalaFutures {
       _ <- f3
     } yield (())
   }
-
-  def upsertParallelMany(store: JdbcDurableStateStore[String], pids: Set[String], tag: String, noOfItems: Int)(
-      implicit ec: ExecutionContext) = {
-
-    for {
-      _ <- Future.unit
-      f1 = Future(upsertManyForOnePersistenceId(store, pids.head, tag, 1, noOfItems))
-      f2 = Future(upsertManyForOnePersistenceId(store, pids.tail.head, tag, 1, noOfItems))
-      f3 = Future(upsertManyForOnePersistenceId(store, pids.tail.tail.head, tag, 1, noOfItems))
-      f4 = Future(upsertManyForOnePersistenceId(store, pids.tail.tail.tail.head, tag, 1, noOfItems))
-      f5 = Future(upsertManyForOnePersistenceId(store, pids.tail.tail.tail.tail.head, tag, 1, noOfItems))
-      f6 = Future(upsertManyForOnePersistenceId(store, pids.tail.tail.tail.tail.tail.head, tag, 1, noOfItems))
-      f7 = Future(upsertManyForOnePersistenceId(store, pids.last, tag, 1, noOfItems))
-      _ <- f1
-      _ <- f2
-      _ <- f3
-      _ <- f4
-      _ <- f5
-      _ <- f6
-      _ <- f7
-    } yield (())
-  }
 }

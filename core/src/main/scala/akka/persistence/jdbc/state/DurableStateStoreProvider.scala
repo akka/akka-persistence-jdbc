@@ -24,10 +24,12 @@ class JdbcDurableStateStoreProvider[A](system: ExtendedActorSystem) extends Dura
 
   val config = system.settings.config
 
-  val slickDb: SlickDatabase = SlickExtension(system).database(config.getConfig("jdbc-durable-state-store"))
+  val slickDb: SlickDatabase =
+    SlickExtension(system).database(config.getConfig(scaladsl.JdbcDurableStateStore.Identifier))
   def db: Database = slickDb.database
 
-  lazy val durableStateConfig = new DurableStateTableConfiguration(config.getConfig("jdbc-durable-state-store"))
+  lazy val durableStateConfig = new DurableStateTableConfiguration(
+    config.getConfig(scaladsl.JdbcDurableStateStore.Identifier))
   lazy val serialization = SerializationExtension(system)
   val profile: JdbcProfile = slickDb.profile
 

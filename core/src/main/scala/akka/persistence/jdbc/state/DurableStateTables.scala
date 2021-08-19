@@ -5,9 +5,13 @@
 
 package akka.persistence.jdbc.state
 
+import akka.annotation.InternalApi
 import akka.persistence.jdbc.config.DurableStateTableConfiguration
 
-object DurableStateTables {
+/**
+ * INTERNAL API
+ */
+@InternalApi private[akka] object DurableStateTables {
   case class DurableStateRow(
       globalOffset: Long,
       persistenceId: String,
@@ -19,7 +23,10 @@ object DurableStateTables {
       stateTimestamp: Long)
 }
 
-trait DurableStateTables {
+/**
+ * INTERNAL API
+ */
+@InternalApi private[akka] trait DurableStateTables {
   val profile: slick.jdbc.JdbcProfile
   import profile.api._
   def durableStateTableCfg: DurableStateTableConfiguration

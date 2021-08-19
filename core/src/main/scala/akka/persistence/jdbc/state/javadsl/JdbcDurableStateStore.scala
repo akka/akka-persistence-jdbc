@@ -7,8 +7,11 @@ package akka.persistence.jdbc.state.javadsl
 
 import java.util.Optional
 import java.util.concurrent.CompletionStage
+
 import scala.compat.java8.FutureConverters._
 import scala.concurrent.ExecutionContext
+
+import akka.annotation.ApiMayChange
 import slick.jdbc.JdbcProfile
 import akka.{ Done, NotUsed }
 import akka.persistence.state.javadsl.{ DurableStateUpdateStore, GetObjectResult }
@@ -23,6 +26,10 @@ object JdbcDurableStateStore {
   val Identifier = ScalaJdbcDurableStateStore.Identifier
 }
 
+/**
+ * API may change
+ */
+@ApiMayChange
 class JdbcDurableStateStore[A](
     profile: JdbcProfile,
     durableStateConfig: DurableStateTableConfiguration,

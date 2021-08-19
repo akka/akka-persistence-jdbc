@@ -5,6 +5,7 @@
 
 package akka.persistence.jdbc.state
 
+import akka.annotation.InternalApi
 import slick.jdbc.{ JdbcProfile, SetParameter }
 import slick.jdbc.H2Profile
 import slick.jdbc.MySQLProfile
@@ -13,7 +14,12 @@ import slick.jdbc.PostgresProfile
 import slick.jdbc.SQLServerProfile
 import akka.persistence.jdbc.config.DurableStateTableConfiguration
 
-class DurableStateQueries(val profile: JdbcProfile, override val durableStateTableCfg: DurableStateTableConfiguration)
+/**
+ * INTERNAL API
+ */
+@InternalApi private[akka] class DurableStateQueries(
+    val profile: JdbcProfile,
+    override val durableStateTableCfg: DurableStateTableConfiguration)
     extends DurableStateTables {
   import profile.api._
 
@@ -33,8 +39,9 @@ class DurableStateQueries(val profile: JdbcProfile, override val durableStateTab
     case _          => ???
   }
 
-  implicit val uuidSetter = SetParameter[Array[Byte]] { case (bytes, params) =>
-    params.setBytes(bytes)
+  implicit val uuidSetter = SetParameter[Array[Byte]] {
+    case (bytes, params) =>
+      params.setBytes(bytes)
   }
 
   private[jdbc] def selectFromDbByPersistenceId(persistenceId: Rep[String]) =

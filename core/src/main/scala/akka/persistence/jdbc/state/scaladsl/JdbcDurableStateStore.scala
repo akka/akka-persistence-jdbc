@@ -8,6 +8,7 @@ package akka.persistence.jdbc.state.scaladsl
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
 import scala.util.Try
+
 import slick.jdbc.{ JdbcBackend, JdbcProfile }
 import akka.{ Done, NotUsed }
 import akka.actor.ExtendedActorSystem
@@ -26,11 +27,17 @@ import akka.stream.{ Materializer, SystemMaterializer }
 import akka.util.Timeout
 import DurableStateSequenceActor._
 import OffsetSyntax._
+import akka.annotation.ApiMayChange
+import akka.persistence.query.UpdatedDurableState
 
 object JdbcDurableStateStore {
   val Identifier = "jdbc-durable-state-store"
 }
 
+/**
+ * API may change
+ */
+@ApiMayChange
 class JdbcDurableStateStore[A](
     db: JdbcBackend#Database,
     val profile: JdbcProfile,
@@ -188,13 +195,14 @@ class JdbcDurableStateStore[A](
   private def toDurableStateChange(row: DurableStateTables.DurableStateRow): Try[DurableStateChange[A]] = {
     AkkaSerialization
       .fromDurableStateRow(serialization)(row)
-      .map(payload =>
-        new DurableStateChange(
-          row.persistenceId,
-          row.revision,
-          payload.asInstanceOf[A],
-          Offset.sequence(row.globalOffset),
-          row.stateTimestamp))
+      .map(
+        payload =>
+          new UpdatedDurableState(
+            row.persistenceId,
+            row.revision,
+            payload.asInstanceOf[A],
+            Offset.sequence(row.globalOffset),
+            row.stateTimestamp))
   }
 
   private def updateDurableState(row: DurableStateTables.DurableStateRow) = {

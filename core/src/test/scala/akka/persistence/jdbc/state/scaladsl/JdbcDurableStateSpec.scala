@@ -10,6 +10,7 @@ import akka.actor._
 import akka.persistence.jdbc.state.{ MyPayload, OffsetSyntax }
 import OffsetSyntax._
 import akka.persistence.jdbc.testkit.internal.{ H2, Postgres, SchemaType }
+import akka.persistence.query.UpdatedDurableState
 import akka.persistence.query.{ NoOffset, Offset, Sequence }
 import akka.stream.scaladsl.Sink
 import org.scalatest.time.Millis
@@ -281,14 +282,18 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
 
       upsertParallel(stateStoreString, Set("p1", "p2", "p3"), "t1", 1000)(e).futureValue
       whenReady {
-        currentChanges("t1", NoOffset).runWith(Sink.seq)
+        currentChanges("t1", NoOffset)
+          .collect { case u: UpdatedDurableState[String] => u }
+          .runWith(Sink.seq[UpdatedDurableState[String]])
       } { chgs =>
         chgs.map(_.offset.value) shouldBe sorted
         chgs.map(_.offset.value).max shouldBe 3000
       }
 
       whenReady {
-        currentChanges("t1", Sequence(2000)).runWith(Sink.seq)
+        currentChanges("t1", Sequence(2000))
+          .collect { case u: UpdatedDurableState[String] => u }
+          .runWith(Sink.seq[UpdatedDurableState[String]])
       } { chgs =>
         chgs.map(_.offset.value) shouldBe sorted
         chgs.map(_.offset.value).max shouldBe 3000

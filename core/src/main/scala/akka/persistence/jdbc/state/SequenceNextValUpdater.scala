@@ -5,16 +5,25 @@
 
 package akka.persistence.jdbc.state
 
+import akka.annotation.InternalApi
 import akka.persistence.jdbc.config.DurableStateTableConfiguration
 import slick.jdbc.JdbcProfile
 import slick.dbio.Effect
 import slick.sql.SqlStreamingAction
 
-private[jdbc] trait SequenceNextValUpdater {
+/**
+ * INTERNAL API
+ */
+@InternalApi private[jdbc] trait SequenceNextValUpdater {
   def getSequenceNextValueExpr(): SqlStreamingAction[Vector[String], String, Effect]
 }
 
-class H2SequenceNextValUpdater(profile: JdbcProfile, val durableStateTableCfg: DurableStateTableConfiguration)
+/**
+ * INTERNAL API
+ */
+@InternalApi private[jdbc] class H2SequenceNextValUpdater(
+    profile: JdbcProfile,
+    val durableStateTableCfg: DurableStateTableConfiguration)
     extends SequenceNextValUpdater {
   import profile.api._
 
@@ -28,7 +37,12 @@ class H2SequenceNextValUpdater(profile: JdbcProfile, val durableStateTableCfg: D
   }
 }
 
-class PostgresSequenceNextValUpdater(profile: JdbcProfile, val durableStateTableCfg: DurableStateTableConfiguration)
+/**
+ * INTERNAL API
+ */
+@InternalApi private[jdbc] class PostgresSequenceNextValUpdater(
+    profile: JdbcProfile,
+    val durableStateTableCfg: DurableStateTableConfiguration)
     extends SequenceNextValUpdater {
   import profile.api._
   final val nextValFetcher =

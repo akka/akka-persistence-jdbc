@@ -1,5 +1,8 @@
 import com.lightbend.paradox.apidoc.ApidocPlugin.autoImport.apidocRootPackage
 
+// FIXME remove switching to final Akka version
+resolvers in ThisBuild += "Akka Snapshots".at("https://oss.sonatype.org/content/repositories/snapshots/")
+
 lazy val `akka-persistence-jdbc` = project
   .in(file("."))
   .enablePlugins(ScalaUnidocPlugin)

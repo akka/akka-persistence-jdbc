@@ -12,5 +12,6 @@ The Akka Persistence JDBC plugin allows for using JDBC-compliant databases as ba
 * [Query](query.md)
 * [Custom DAO](custom-dao.md)
 * [Snapshots](snapshots.md)
+* [Durable State Store](durable-state-store.md)
 
 @@@

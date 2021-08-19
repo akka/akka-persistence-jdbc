@@ -6,8 +6,9 @@
 package akka.persistence.jdbc.query.dao
 import akka.NotUsed
 import akka.persistence.PersistentRepr
+import akka.persistence.jdbc.AkkaSerialization
 import akka.persistence.jdbc.config.ReadJournalConfig
-import akka.persistence.jdbc.journal.dao.{ AkkaSerialization, BaseJournalDaoWithReadMessages, H2Compat }
+import akka.persistence.jdbc.journal.dao.{ BaseJournalDaoWithReadMessages, H2Compat }
 import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source

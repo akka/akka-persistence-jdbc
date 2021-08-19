@@ -9,3 +9,6 @@ target
 .project
 .worksheet
 .bsp
+*.code-workspace
+.bloop
+.metals

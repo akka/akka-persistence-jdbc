@@ -39,9 +39,8 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
     case _          => ???
   }
 
-  implicit val uuidSetter = SetParameter[Array[Byte]] {
-    case (bytes, params) =>
-      params.setBytes(bytes)
+  implicit val uuidSetter = SetParameter[Array[Byte]] { case (bytes, params) =>
+    params.setBytes(bytes)
   }
 
   private[jdbc] def selectFromDbByPersistenceId(persistenceId: Rep[String]) =

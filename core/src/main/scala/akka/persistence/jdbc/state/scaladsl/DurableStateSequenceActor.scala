@@ -160,10 +160,11 @@ private[akka] class DurableStateSequenceActor[A](
         .stateStoreStateInfo(currentMaxGlobalOffset, batchSize)
         .runWith(Sink.seq)
         .map(result =>
-          NewStateInfo(currentMaxGlobalOffset, result.map {
-            case (pid, offset, rev) =>
+          NewStateInfo(
+            currentMaxGlobalOffset,
+            result.map { case (pid, offset, rev) =>
               VisitedElement(pid, offset, rev)
-          }.toList))
+            }.toList))
         .pipeTo(self)
 
     case NewStateInfo(originalOffset, _) if originalOffset < currentMaxGlobalOffset =>
@@ -248,25 +249,24 @@ private[akka] class DurableStateSequenceActor[A](
 
       val (inBetweenRevisionChanges, newMaxOffset, cacheMissed) =
         // in this fold we find the possibly new max offset and the total revision difference for all persistence ids
-        elements.foldLeft((0L, nextMax, false)) {
-          case ((revChg, currMaxOffset, cacheMiss), elem) =>
-            revisionCache.get(elem.pid) match {
-              case Some(e) =>
-                // cache hit: find the revision difference
-                val maxOffset = math.max(currMaxOffset, elem.offset)
-                val revDiff = elem.revision - e.revision
-                if (revDiff <= 1) {
-                  (revChg, maxOffset, cacheMiss)
-                } else {
-                  val pidOffsets =
-                    (e.offset until elem.offset).tail // e.offset and elem.offset are known to not be missing
-                  val missingCount = math.min(pidOffsets.count(missingElems.contains), revDiff - 1)
-                  (revChg + missingCount, maxOffset, cacheMiss)
-                }
-              case None =>
-                // this persistence id was not present in the cache
-                (revChg, math.max(elem.offset, currMaxOffset), cacheMiss || elem.revision != 1L)
-            }
+        elements.foldLeft((0L, nextMax, false)) { case ((revChg, currMaxOffset, cacheMiss), elem) =>
+          revisionCache.get(elem.pid) match {
+            case Some(e) =>
+              // cache hit: find the revision difference
+              val maxOffset = math.max(currMaxOffset, elem.offset)
+              val revDiff = elem.revision - e.revision
+              if (revDiff <= 1) {
+                (revChg, maxOffset, cacheMiss)
+              } else {
+                val pidOffsets =
+                  (e.offset until elem.offset).tail // e.offset and elem.offset are known to not be missing
+                val missingCount = math.min(pidOffsets.count(missingElems.contains), revDiff - 1)
+                (revChg + missingCount, maxOffset, cacheMiss)
+              }
+            case None =>
+              // this persistence id was not present in the cache
+              (revChg, math.max(elem.offset, currMaxOffset), cacheMiss || elem.revision != 1L)
+          }
         }
 
       // in this case we want to keep querying but not immediately

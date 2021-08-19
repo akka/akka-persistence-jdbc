@@ -195,14 +195,13 @@ class JdbcDurableStateStore[A](
   private def toDurableStateChange(row: DurableStateTables.DurableStateRow): Try[DurableStateChange[A]] = {
     AkkaSerialization
       .fromDurableStateRow(serialization)(row)
-      .map(
-        payload =>
-          new UpdatedDurableState(
-            row.persistenceId,
-            row.revision,
-            payload.asInstanceOf[A],
-            Offset.sequence(row.globalOffset),
-            row.stateTimestamp))
+      .map(payload =>
+        new UpdatedDurableState(
+          row.persistenceId,
+          row.revision,
+          payload.asInstanceOf[A],
+          Offset.sequence(row.globalOffset),
+          row.stateTimestamp))
   }
 
   private def updateDurableState(row: DurableStateTables.DurableStateRow) = {

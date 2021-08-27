@@ -8,10 +8,10 @@ package akka.persistence.jdbc.journal.dao
 import akka.NotUsed
 import akka.dispatch.ExecutionContexts
 import akka.persistence.jdbc.AkkaSerialization
-import akka.persistence.jdbc.config.{BaseDaoConfig, JournalConfig}
+import akka.persistence.jdbc.config.{ BaseDaoConfig, JournalConfig }
 import akka.persistence.jdbc.journal.dao.JournalTables.JournalAkkaSerializationRow
 import akka.persistence.journal.Tagged
-import akka.persistence.{AtomicWrite, PersistentRepr}
+import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
@@ -19,8 +19,8 @@ import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.JdbcProfile
 
 import scala.collection.immutable
-import scala.collection.immutable.{Nil, Seq}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.collection.immutable.{ Nil, Seq }
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
 /**

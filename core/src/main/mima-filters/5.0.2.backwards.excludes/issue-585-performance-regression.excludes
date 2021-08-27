@@ -1,0 +1,11 @@
+# internals
+ProblemFilters.exclude[IncompatibleTemplateDefProblem]("akka.persistence.jdbc.journal.dao.BaseDao")
+ProblemFilters.exclude[MissingTypesProblem]("akka.persistence.jdbc.journal.dao.DefaultJournalDao")
+ProblemFilters.exclude[IncompatibleSignatureProblem]("akka.persistence.jdbc.journal.dao.DefaultJournalDao.queueWriteJournalRows")
+ProblemFilters.exclude[IncompatibleSignatureProblem]("akka.persistence.jdbc.journal.dao.DefaultJournalDao.writeQueue")
+ProblemFilters.exclude[DirectMissingMethodProblem]("akka.persistence.jdbc.journal.dao.JournalQueries.insertAndReturn")
+ProblemFilters.exclude[IncompatibleSignatureProblem]("akka.persistence.jdbc.journal.dao.JournalQueries.writeJournalRows")
+ProblemFilters.exclude[MissingTypesProblem]("akka.persistence.jdbc.journal.dao.legacy.BaseByteArrayJournalDao")
+ProblemFilters.exclude[MissingTypesProblem]("akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao")
+ProblemFilters.exclude[IncompatibleSignatureProblem]("akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao.queueWriteJournalRows")
+ProblemFilters.exclude[IncompatibleSignatureProblem]("akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao.writeQueue")

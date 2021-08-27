@@ -19,18 +19,22 @@ class JournalQueries(
 
   import profile.api._
 
-  val insertAndReturn =
-    JournalTable.returning(JournalTable.map(_.ordering))
+  val insertAndReturn = JournalTable.returning(JournalTable.map(_.ordering))
   private val TagTableC = Compiled(TagTable)
 
   def writeJournalRows(xs: Seq[(JournalAkkaSerializationRow, Set[String])])(implicit ec: ExecutionContext) = {
     val sorted = xs.sortBy((event => event._1.sequenceNumber))
     val (events, tags) = sorted.unzip
-    for {
-      ids <- insertAndReturn ++= events
-      tagInserts = ids.zip(tags).flatMap { case (id, tags) => tags.map(tag => TagRow(id, tag)) }
-      _ <- TagTableC ++= tagInserts
-    } yield ()
+    if (tags.nonEmpty) {
+      for {
+        ids <- insertAndReturn ++= events
+        tagInserts = ids.zip(tags).flatMap { case (id, tags) => tags.map(tag => TagRow(id, tag)) }
+        _ <- TagTableC ++= tagInserts
+      } yield ()
+    } else {
+      // optimization avoid some work when not using tags
+      insertAndReturn ++= events
+    }
   }
 
   private def selectAllJournalForPersistenceIdDesc(persistenceId: Rep[String]) =

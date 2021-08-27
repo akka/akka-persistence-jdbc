@@ -43,7 +43,7 @@ trait BaseByteArrayJournalDao
   val profile: JdbcProfile
   val queries: JournalQueries
   val journalConfig: JournalConfig
-  val baseDaoConfig: BaseDaoConfig = journalConfig.daoConfig
+  override def baseDaoConfig: BaseDaoConfig = journalConfig.daoConfig
   val serializer: FlowPersistentReprSerializer[JournalRow]
   implicit val ec: ExecutionContext
   implicit val mat: Materializer

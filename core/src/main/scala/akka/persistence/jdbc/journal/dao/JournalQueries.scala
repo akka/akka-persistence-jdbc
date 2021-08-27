@@ -19,13 +19,15 @@ class JournalQueries(
 
   import profile.api._
 
-  val insertAndReturn = JournalTable.returning(JournalTable.map(_.ordering))
+  private val JournalTableC = Compiled(JournalTable)
+  private val insertAndReturn = JournalTable.returning(JournalTable.map(_.ordering))
   private val TagTableC = Compiled(TagTable)
 
   def writeJournalRows(xs: Seq[(JournalAkkaSerializationRow, Set[String])])(implicit ec: ExecutionContext) = {
     val sorted = xs.sortBy((event => event._1.sequenceNumber))
-    val (events, tags) = sorted.unzip
-    if (tags.nonEmpty) {
+    if (sorted.exists(_._2.nonEmpty)) {
+      // only if there are any tags
+      val (events, tags) = sorted.unzip
       for {
         ids <- insertAndReturn ++= events
         tagInserts = ids.zip(tags).flatMap { case (id, tags) => tags.map(tag => TagRow(id, tag)) }
@@ -33,7 +35,8 @@ class JournalQueries(
       } yield ()
     } else {
       // optimization avoid some work when not using tags
-      insertAndReturn ++= events
+      val events = sorted.map(_._1)
+      JournalTableC ++= events
     }
   }
 

@@ -35,9 +35,9 @@ class ByteArrayJournalDao(
  * The DefaultJournalDao contains all the knowledge to persist and load serialized journal entries
  */
 trait BaseByteArrayJournalDao
-    extends JournalDaoWithUpdates
+    extends BaseDao[JournalRow]
+    with JournalDaoWithUpdates
     with BaseJournalDaoWithReadMessages
-    with BaseDao[JournalRow]
     with H2Compat {
   val db: Database
   val profile: JdbcProfile

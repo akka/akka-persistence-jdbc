@@ -6,6 +6,8 @@
 package akka.persistence.jdbc.journal.dao
 
 import akka.NotUsed
+import akka.dispatch.ExecutionContexts
+import akka.persistence.jdbc.AkkaSerialization
 import akka.persistence.jdbc.config.{ BaseDaoConfig, JournalConfig }
 import akka.persistence.jdbc.journal.dao.JournalTables.JournalAkkaSerializationRow
 import akka.persistence.journal.Tagged
@@ -40,7 +42,7 @@ class DefaultJournalDao(
   override def baseDaoConfig: BaseDaoConfig = journalConfig.daoConfig
 
   override def writeJournalRows(xs: immutable.Seq[(JournalAkkaSerializationRow, Set[String])]): Future[Unit] = {
-    db.run(queries.writeJournalRows(xs).transactionally).map(_ => ())
+    db.run(queries.writeJournalRows(xs).transactionally).map(_ => ())(ExecutionContexts.parasitic)
   }
 
   val queries =

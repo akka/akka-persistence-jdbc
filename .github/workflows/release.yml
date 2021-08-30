@@ -3,7 +3,8 @@ name: Release
 on:
   push:
     branches:
-      - master
+      # FIXME snapshot release
+      - wip-durable-state
     tags: ["*"]
 
 jobs:
@@ -34,10 +35,11 @@ jobs:
       - name: Cache Coursier cache
         uses: coursier/cache-action@v5
 
-      - name: Whitesource check policies and update
-        env:
-          WHITESOURCE_PASSWORD: ${{ secrets.WHITESOURCE_PASSWORD }}
-        run: sbt ";whitesourceCheckPolicies ;whitesourceUpdate"
+      # FIXME snapshot release 
+      #- name: Whitesource check policies and update
+      #  env:
+      #    WHITESOURCE_PASSWORD: ${{ secrets.WHITESOURCE_PASSWORD }}
+      #  run: sbt ";whitesourceCheckPolicies ;whitesourceUpdate"
 
       - name: Publish artifacts for all Scala versions
         env:
@@ -45,15 +47,15 @@ jobs:
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
         run: sbt ci-release
-
-      - name: Publish API and reference documentation
-        env:
-          GUSTAV_KEY: ${{ secrets.GUSTAV_KEY }}
-          GUSTAV_PASSPHRASE: ${{ secrets.GUSTAV_PASSPHRASE }}
-        run: |+
-          eval "$(ssh-agent -s)"
-          echo $GUSTAV_KEY | base64 -di > .github/id_rsa
-          chmod 600 .github/id_rsa
-          ssh-keygen -p -P "$GUSTAV_PASSPHRASE" -N "" -f .github/id_rsa
-          ssh-add .github/id_rsa
-          sbt "++2.13.4 docs/publishRsync"
+      # FIXME snapshot release 
+      #- name: Publish API and reference documentation
+      #  env:
+      #    GUSTAV_KEY: ${{ secrets.GUSTAV_KEY }}
+      #    GUSTAV_PASSPHRASE: ${{ secrets.GUSTAV_PASSPHRASE }}
+      #  run: |+
+      #    eval "$(ssh-agent -s)"
+      #    echo $GUSTAV_KEY | base64 -di > .github/id_rsa
+      #    chmod 600 .github/id_rsa
+      #    ssh-keygen -p -P "$GUSTAV_PASSPHRASE" -N "" -f .github/id_rsa
+      #    ssh-add .github/id_rsa
+      #    sbt "++2.13.4 docs/publishRsync"

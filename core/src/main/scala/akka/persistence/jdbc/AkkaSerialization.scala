@@ -3,10 +3,11 @@
  * Copyright (C) 2019 - 2021 Lightbend Inc. <https://www.lightbend.com>
  */
 
-package akka.persistence.jdbc.journal.dao
+package akka.persistence.jdbc
 
 import akka.annotation.InternalApi
 import akka.persistence.PersistentRepr
+import akka.persistence.jdbc.state.DurableStateTables
 import akka.persistence.jdbc.journal.dao.JournalTables.JournalAkkaSerializationRow
 import akka.serialization.{ Serialization, Serializers }
 
@@ -56,5 +57,9 @@ object AkkaSerialization {
         }
       } yield (withMeta.withTimestamp(row.writeTimestamp), row.ordering)
     }
+  }
+
+  def fromDurableStateRow(serialization: Serialization)(row: DurableStateTables.DurableStateRow): Try[AnyRef] = {
+    serialization.deserialize(row.statePayload, row.stateSerId, row.stateSerManifest.getOrElse(""))
   }
 }

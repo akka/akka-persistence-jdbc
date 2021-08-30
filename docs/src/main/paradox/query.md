@@ -10,7 +10,7 @@ Scala
 Java
 : @@snip[snip](/core/src/test/java/akka/persistence/jdbc/JavadslSnippets.java) { #read-journal }
 
-## Persistence Query
+## Persistence Query Plugin
 
 The plugin supports the following queries:
 

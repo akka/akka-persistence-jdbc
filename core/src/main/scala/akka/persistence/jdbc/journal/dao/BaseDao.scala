@@ -13,13 +13,13 @@ import scala.collection.immutable.{ Seq, Vector }
 import scala.concurrent.{ ExecutionContext, Future, Promise }
 
 // Shared with the legacy DAO
-trait BaseDao[T] {
+abstract class BaseDao[T] {
   implicit val mat: Materializer
   implicit val ec: ExecutionContext
 
   def baseDaoConfig: BaseDaoConfig
 
-  lazy val writeQueue: SourceQueueWithComplete[(Promise[Unit], Seq[T])] = Source
+  val writeQueue: SourceQueueWithComplete[(Promise[Unit], Seq[T])] = Source
     .queue[(Promise[Unit], Seq[T])](baseDaoConfig.bufferSize, OverflowStrategy.dropNew)
     .batchWeighted[(Seq[Promise[Unit]], Seq[T])](baseDaoConfig.batchSize, _._2.size, tup => Vector(tup._1) -> tup._2) {
       case ((promises, rows), (newPromise, newRows)) => (promises :+ newPromise) -> (rows ++ newRows)

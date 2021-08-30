@@ -36,68 +36,69 @@ import akka.persistence.jdbc.query.javadsl.JdbcReadJournal;
 import java.util.concurrent.CompletionStage;
 
 final class JavadslSnippets {
-    void create() {
-        // #create
+  void create() {
+    // #create
 
-        ActorSystem actorSystem = ActorSystem.create("example");
-        CompletionStage<Done> done = SchemaUtils.createIfNotExists(actorSystem);
-        // #create
-    }
+    ActorSystem actorSystem = ActorSystem.create("example");
+    CompletionStage<Done> done = SchemaUtils.createIfNotExists(actorSystem);
+    // #create
+  }
 
-    void readJournal() {
-        ActorSystem system = ActorSystem.create("example");
-        // #read-journal
+  void readJournal() {
+    ActorSystem system = ActorSystem.create("example");
+    // #read-journal
 
-        final JdbcReadJournal readJournal = PersistenceQuery.get(system)
-                .getReadJournalFor(JdbcReadJournal.class, JdbcReadJournal.Identifier());
-        // #read-journal
+    final JdbcReadJournal readJournal =
+        PersistenceQuery.get(system)
+            .getReadJournalFor(JdbcReadJournal.class, JdbcReadJournal.Identifier());
+    // #read-journal
 
-    }
+  }
 
-    void persistenceIds() {
-        ActorSystem system = ActorSystem.create();
-        // #persistence-ids
+  void persistenceIds() {
+    ActorSystem system = ActorSystem.create();
+    // #persistence-ids
 
-        JdbcReadJournal readJournal = PersistenceQuery.get(system)
-                .getReadJournalFor(JdbcReadJournal.class, JdbcReadJournal.Identifier());
+    JdbcReadJournal readJournal =
+        PersistenceQuery.get(system)
+            .getReadJournalFor(JdbcReadJournal.class, JdbcReadJournal.Identifier());
 
-        Source<String, NotUsed> willNotCompleteTheStream = readJournal.persistenceIds();
+    Source<String, NotUsed> willNotCompleteTheStream = readJournal.persistenceIds();
 
-        Source<String, NotUsed> willCompleteTheStream = readJournal.currentPersistenceIds();
-        // #persistence-ids
-    }
+    Source<String, NotUsed> willCompleteTheStream = readJournal.currentPersistenceIds();
+    // #persistence-ids
+  }
 
-    void eventsByPersistenceIds() {
-        ActorSystem system = ActorSystem.create();
+  void eventsByPersistenceIds() {
+    ActorSystem system = ActorSystem.create();
 
-        // #events-by-persistence-id
+    // #events-by-persistence-id
 
-        JdbcReadJournal readJournal = PersistenceQuery.get(system)
-                .getReadJournalFor(JdbcReadJournal.class, JdbcReadJournal.Identifier());
+    JdbcReadJournal readJournal =
+        PersistenceQuery.get(system)
+            .getReadJournalFor(JdbcReadJournal.class, JdbcReadJournal.Identifier());
 
-        Source<EventEnvelope, NotUsed> willNotCompleteTheStream = readJournal
-                .eventsByPersistenceId("some-persistence-id", 0L, Long.MAX_VALUE);
+    Source<EventEnvelope, NotUsed> willNotCompleteTheStream =
+        readJournal.eventsByPersistenceId("some-persistence-id", 0L, Long.MAX_VALUE);
 
-        Source<EventEnvelope, NotUsed> willCompleteTheStream = readJournal
-                .currentEventsByPersistenceId("some-persistence-id", 0L, Long.MAX_VALUE);
-        // #events-by-persistence-id
-    }
+    Source<EventEnvelope, NotUsed> willCompleteTheStream =
+        readJournal.currentEventsByPersistenceId("some-persistence-id", 0L, Long.MAX_VALUE);
+    // #events-by-persistence-id
+  }
 
-    void eventsByTag() {
-        ActorSystem system = ActorSystem.create();
-        // #events-by-tag
+  void eventsByTag() {
+    ActorSystem system = ActorSystem.create();
+    // #events-by-tag
 
-        JdbcReadJournal readJournal = PersistenceQuery.get(system)
-                .getReadJournalFor(JdbcReadJournal.class, JdbcReadJournal.Identifier());
+    JdbcReadJournal readJournal =
+        PersistenceQuery.get(system)
+            .getReadJournalFor(JdbcReadJournal.class, JdbcReadJournal.Identifier());
 
-        Source<EventEnvelope, NotUsed> willNotCompleteTheStream = readJournal
-                .eventsByTag("apple", Offset.sequence(0L));
+    Source<EventEnvelope, NotUsed> willNotCompleteTheStream =
+        readJournal.eventsByTag("apple", Offset.sequence(0L));
 
-        Source<EventEnvelope, NotUsed> willCompleteTheStream = readJournal
-                .currentEventsByTag("apple", Offset.sequence(0L));
-        // #events-by-tag
-    }
-
-
-
+    Source<EventEnvelope, NotUsed> willCompleteTheStream =
+        readJournal.currentEventsByTag("apple", Offset.sequence(0L));
+    // #events-by-tag
+  }
 }

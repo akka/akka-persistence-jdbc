@@ -82,11 +82,9 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
 
   override def asyncWriteMessages(messages: Seq[AtomicWrite]): Future[Seq[Try[Unit]]] = {
     // add timestamp to all payloads in all AtomicWrite messages
+    val now = System.currentTimeMillis()
     val timedMessages =
       messages.map { atomWrt =>
-        // since they are all persisted atomically,
-        // all PersistentRepr on the same atomic batch gets the same timestamp
-        val now = System.currentTimeMillis()
         atomWrt.copy(payload = atomWrt.payload.map(pr => pr.withTimestamp(now)))
       }
 

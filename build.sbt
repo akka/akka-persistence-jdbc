@@ -21,11 +21,11 @@ lazy val core = project
     libraryDependencies ++= Dependencies.Libraries,
     mimaReportSignatureProblems := true,
     mimaPreviousArtifacts := Set(organization.value %% name.value % "5.0.2")
-      // FIXME: revert it after releasing 5.0.4
-      // Set(
-      // organization.value %% name.value % previousStableVersion.value.getOrElse(
-      //   throw new Error("Unable to determine previous version for MiMa")))
-    )
+    // FIXME: revert it after releasing 5.0.4
+    // Set(
+    // organization.value %% name.value % previousStableVersion.value.getOrElse(
+    //   throw new Error("Unable to determine previous version for MiMa")))
+  )
 
 lazy val migration = project
   .in(file("migration"))

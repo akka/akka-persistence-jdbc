@@ -6,7 +6,7 @@ addSbtPlugin("com.lightbend" % "sbt-whitesource" % "0.1.18")
 addSbtPlugin("com.lightbend.sbt" % "sbt-java-formatter" % "0.6.0")
 
 // release
-addSbtPlugin("com.geirsson" % "sbt-ci-release" % "1.5.6")
+addSbtPlugin("com.geirsson" % "sbt-ci-release" % "1.5.7")
 addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1")
 // docs
 addSbtPlugin("com.lightbend.akka" % "sbt-paradox-akka" % "0.39")

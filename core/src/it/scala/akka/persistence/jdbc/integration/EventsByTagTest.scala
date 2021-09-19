@@ -1,6 +1,6 @@
 package akka.persistence.jdbc.integration
 
-import akka.persistence.jdbc.query.{EventsByTagTest, MysqlCleaner, OracleCleaner, PostgresCleaner, SqlServerCleaner}
+import akka.persistence.jdbc.query.{ EventsByTagTest, MysqlCleaner, OracleCleaner, PostgresCleaner, SqlServerCleaner }
 
 class PostgresScalaEventsByTagTest extends EventsByTagTest("postgres-application.conf") with PostgresCleaner
 
@@ -11,4 +11,3 @@ class OracleScalaEventByTagTest extends EventsByTagTest("oracle-application.conf
 }
 
 class SqlServerScalaEventByTagTest extends EventsByTagTest("sqlserver-application.conf") with SqlServerCleaner
-

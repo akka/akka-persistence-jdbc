@@ -1,6 +1,6 @@
 package akka.persistence.jdbc.integration
 
-import akka.persistence.jdbc.query.{EventAdapterTest, MysqlCleaner, OracleCleaner, PostgresCleaner, SqlServerCleaner}
+import akka.persistence.jdbc.query.{ EventAdapterTest, MysqlCleaner, OracleCleaner, PostgresCleaner, SqlServerCleaner }
 
 class PostgresScalaEventAdapterTest extends EventAdapterTest("postgres-application.conf") with PostgresCleaner
 

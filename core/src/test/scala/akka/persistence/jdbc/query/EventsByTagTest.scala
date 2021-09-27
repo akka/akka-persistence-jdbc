@@ -120,11 +120,10 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
   }
 
   it should "deliver EventEnvelopes non-zero timestamps" in withActorSystem { implicit system =>
-
+    val testStartTimeNs = System.currentTimeMillis()
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
 
-      val testStartTime = System.currentTimeMillis()
 
       (actor1 ? withTags(1, "number")).futureValue
       (actor2 ? withTags(2, "number")).futureValue

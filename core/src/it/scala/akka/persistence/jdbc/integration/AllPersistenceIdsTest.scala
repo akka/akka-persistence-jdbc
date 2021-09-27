@@ -1,6 +1,12 @@
 package akka.persistence.jdbc.integration
 
-import akka.persistence.jdbc.query.{AllPersistenceIdsTest, MysqlCleaner, OracleCleaner, PostgresCleaner, SqlServerCleaner}
+import akka.persistence.jdbc.query.{
+  AllPersistenceIdsTest,
+  MysqlCleaner,
+  OracleCleaner,
+  PostgresCleaner,
+  SqlServerCleaner
+}
 
 class PostgresScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("postgres-application.conf") with PostgresCleaner
 
@@ -9,5 +15,5 @@ class MySQLScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("mysql-appli
 class OracleScalaAllPersistenceIdsTest extends AllPersistenceIdsTest("oracle-application.conf") with OracleCleaner
 
 class SqlServerScalaAllPersistenceIdsTest
-  extends AllPersistenceIdsTest("sqlserver-application.conf")
+    extends AllPersistenceIdsTest("sqlserver-application.conf")
     with SqlServerCleaner

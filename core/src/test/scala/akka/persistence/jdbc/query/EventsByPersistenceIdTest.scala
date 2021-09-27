@@ -171,8 +171,8 @@ abstract class EventsByPersistenceIdTest(config: String) extends QueryTestSpec(c
 
   it should "deliver EventEnvelopes non-zero timestamps" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)
+    val testStartTime = System.currentTimeMillis()
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
-      val testStartTime = System.currentTimeMillis()
 
       (actor1 ? withTags(1, "number")).futureValue
       (actor2 ? withTags(2, "number")).futureValue

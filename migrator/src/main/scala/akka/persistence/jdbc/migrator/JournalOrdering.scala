@@ -19,7 +19,7 @@ sealed trait JournalOrdering {
   /**
    * the actual event journal table
    */
-  val tableName: String = s"${journalConfig.eventJournalTableConfiguration.tableName}"
+  val tableName: String = journalConfig.eventJournalTableConfiguration.tableName
 
   /**
    * helps set the sequence ordering value in the event_journal table

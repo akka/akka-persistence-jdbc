@@ -21,7 +21,6 @@ import slick.jdbc
 import slick.jdbc.{ JdbcBackend, JdbcProfile }
 
 import scala.concurrent.Future
-import scala.util.{ Failure, Success }
 
 /**
  * This will help migrate the legacy snapshot data onto the new snapshot schema with the
@@ -58,10 +57,7 @@ case class SnapshotMigrator(profile: JdbcProfile)(implicit system: ActorSystem) 
     new ByteArrayReadJournalDao(journaldb, profile, readJournalConfig, SerializationExtension(system))
 
   private def toSnapshotData(row: SnapshotRow): (SnapshotMetadata, Any) =
-    serializer.deserialize(row) match {
-      case Success(deserialized) => deserialized
-      case Failure(cause)        => throw cause
-    }
+    serializer.deserialize(row).get
 
   /**
    * migrate the latest snapshot data

@@ -14,7 +14,6 @@ import akka.persistence.jdbc.journal.dao.{ AkkaSerialization, JournalQueries }
 import akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalSerializer
 import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, TagRow }
 import akka.persistence.jdbc.query.dao.legacy.ReadJournalQueries
-import akka.persistence.journal.Tagged
 import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.scaladsl.Source
 import org.slf4j.{ Logger, LoggerFactory }
@@ -74,6 +73,8 @@ final case class JournalMigrator(profile: JdbcProfile)(implicit system: ActorSys
     case _: OracleProfile    => Oracle(journalConfig, newJournalQueries, journaldb)
     case _: H2Profile        => H2(journalConfig, newJournalQueries, journaldb)
     case _: SQLServerProfile => SqlServer(journalConfig, newJournalQueries, journaldb)
+    case unmanaged =>
+      throw new Exception(s"Unmanaged SQL database profile: ${unmanaged.getClass.getName}")
   }
 
   /**
@@ -122,22 +123,10 @@ final case class JournalMigrator(profile: JdbcProfile)(implicit system: ActorSys
   }
 
   /**
-   * Unpack a PersistentRepr into a PersistentRepr and set of tags.
-   * It returns a tuple containing the PersistentRepr and its set of tags
-   *
-   * @param pr the given PersistentRepr
-   */
-  private def unpackPersistentRepr(pr: PersistentRepr): (PersistentRepr, Set[String]) = {
-    pr.payload match {
-      case Tagged(payload, tags) => (pr.withPayload(payload), tags)
-      case _                     => (pr, Set.empty[String])
-    }
-  }
-
-  /**
    * serialize the PersistentRepr and construct a JournalAkkaSerializationRow and set of matching tags
    *
-   * @param pr       the PersistentRepr
+   * @param repr the PersistentRepr
+   * @param tags the tags
    * @param ordering the ordering of the PersistentRepr
    * @return the tuple of JournalAkkaSerializationRow and set of tags
    */
@@ -147,10 +136,7 @@ final case class JournalMigrator(profile: JdbcProfile)(implicit system: ActorSys
       ordering: Long): (JournalAkkaSerializationRow, Set[String]) = {
 
     val serializedPayload: AkkaSerialization.AkkaSerialized =
-      AkkaSerialization.serialize(serialization, repr.payload) match {
-        case Failure(exception) => throw exception
-        case Success(value)     => value
-      }
+      AkkaSerialization.serialize(serialization, repr.payload).get
 
     val serializedMetadata: Option[AkkaSerialization.AkkaSerialized] =
       repr.metadata.flatMap(m => AkkaSerialization.serialize(serialization, m).toOption)

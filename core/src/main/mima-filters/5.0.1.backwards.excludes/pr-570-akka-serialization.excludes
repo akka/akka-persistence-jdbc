@@ -1,0 +1,7 @@
+# https://github.com/akka/akka-persistence-jdbc/pull/570/files
+# The problem comes from an earlier PR where the class akka.persistence.jdbc.journal.dao.AkkaSerialization
+# was moved to akka.persistence.jdbc.AkkaSerialization as it was also being used from durable state
+ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.journal.dao.AkkaSerialization")
+ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.journal.dao.AkkaSerialization$")
+ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.journal.dao.AkkaSerialization$AkkaSerialized")
+ProblemFilters.exclude[MissingClassProblem]("akka.persistence.jdbc.journal.dao.AkkaSerialization$AkkaSerialized$")

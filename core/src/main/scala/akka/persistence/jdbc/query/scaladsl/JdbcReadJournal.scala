@@ -187,7 +187,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
         adaptEvents(repr).map(_ -> ordNr)
       }
       .map { case (repr, ordNr) =>
-        EventEnvelope(Sequence(ordNr), repr.persistenceId, repr.sequenceNr, repr.payload, repr.timestamp)
+        EventEnvelope(Sequence(ordNr), repr.persistenceId, repr.sequenceNr, repr.payload, repr.timestamp, repr.metadata)
       }
   }
 
@@ -209,7 +209,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
       readJournalDao.eventsByTag(tag, offset, latestOrdering.maxOrdering, max).mapAsync(1)(Future.fromTry).mapConcat {
         case (repr, _, ordering) =>
           adaptEvents(repr).map(r =>
-            EventEnvelope(Sequence(ordering), r.persistenceId, r.sequenceNr, r.payload, r.timestamp))
+            EventEnvelope(Sequence(ordering), r.persistenceId, r.sequenceNr, r.payload, r.timestamp, r.metadata))
       }
     }
   }

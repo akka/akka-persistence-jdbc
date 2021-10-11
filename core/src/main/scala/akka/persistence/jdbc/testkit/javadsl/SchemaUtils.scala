@@ -34,7 +34,26 @@ object SchemaUtils {
    */
   @ApiMayChange
   def dropIfExists(actorSystem: ClassicActorSystemProvider): CompletionStage[Done] =
-    SchemaUtilsImpl.dropIfExists(logger)(actorSystem).toJava
+    dropIfExists(configKey = "jdbc-journal", actorSystem)
+
+  /**
+   * Drops the schema for both the journal and the snapshot table using the default schema definition.
+   *
+   * For information about the different schemas and supported databases consult
+   * https://doc.akka.io/docs/akka-persistence-jdbc/current/index.html#database-schema
+   *
+   * This utility method is intended to be used for testing only.
+   * For production, it's recommended to run any DDL statements before the system is started.
+   *
+   * This method will automatically detects the configured database using the settings from `configKey` config.
+   * If configured with `use-shared-db`, it will use the `akka-persistence-jdbc.shared-databases` definition instead.
+   * See https://doc.akka.io/docs/akka-persistence-jdbc/current/index.html#sharing-the-database-connection-pool-between-the-journals for details.
+   *
+   * @param configKey the database journal configuration key to use.
+   */
+  @ApiMayChange
+  def dropIfExists(configKey: String, actorSystem: ClassicActorSystemProvider): CompletionStage[Done] =
+    SchemaUtilsImpl.dropIfExists(configKey, logger)(actorSystem).toJava
 
   /**
    * Creates the schema for both the journal and the snapshot table using the default schema definition.
@@ -51,7 +70,26 @@ object SchemaUtils {
    */
   @ApiMayChange
   def createIfNotExists(actorSystem: ClassicActorSystemProvider): CompletionStage[Done] =
-    SchemaUtilsImpl.createIfNotExists(logger)(actorSystem).toJava
+    createIfNotExists("jdbc-journal", actorSystem)
+
+  /**
+   * Creates the schema for both the journal and the snapshot table using the default schema definition.
+   *
+   * For information about the different schemas and supported databases consult
+   * https://doc.akka.io/docs/akka-persistence-jdbc/current/index.html#database-schema
+   *
+   * This utility method is intended to be used for testing only.
+   * For production, it's recommended to create run DDL statements before the system is started.
+   *
+   * This method will automatically detects the configured database using the settings from `configKey` config.
+   * If configured with `use-shared-db`, it will use the `akka-persistence-jdbc.shared-databases` definition instead.
+   * See https://doc.akka.io/docs/akka-persistence-jdbc/current/index.html#sharing-the-database-connection-pool-between-the-journals for details.
+   *
+   * @param configKey the database journal configuration key to use.
+   */
+  @ApiMayChange
+  def createIfNotExists(configKey: String, actorSystem: ClassicActorSystemProvider): CompletionStage[Done] =
+    SchemaUtilsImpl.createIfNotExists(configKey, logger)(actorSystem).toJava
 
   /**
    * This method can be used to load alternative DDL scripts.

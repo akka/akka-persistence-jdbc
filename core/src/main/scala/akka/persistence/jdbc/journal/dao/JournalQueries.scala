@@ -19,18 +19,25 @@ class JournalQueries(
 
   import profile.api._
 
-  val insertAndReturn =
-    JournalTable.returning(JournalTable.map(_.ordering))
+  private val JournalTableC = Compiled(JournalTable)
+  private val insertAndReturn = JournalTable.returning(JournalTable.map(_.ordering))
   private val TagTableC = Compiled(TagTable)
 
   def writeJournalRows(xs: Seq[(JournalAkkaSerializationRow, Set[String])])(implicit ec: ExecutionContext) = {
     val sorted = xs.sortBy((event => event._1.sequenceNumber))
-    val (events, tags) = sorted.unzip
-    for {
-      ids <- insertAndReturn ++= events
-      tagInserts = ids.zip(tags).flatMap { case (id, tags) => tags.map(tag => TagRow(id, tag)) }
-      _ <- TagTableC ++= tagInserts
-    } yield ()
+    if (sorted.exists(_._2.nonEmpty)) {
+      // only if there are any tags
+      val (events, tags) = sorted.unzip
+      for {
+        ids <- insertAndReturn ++= events
+        tagInserts = ids.zip(tags).flatMap { case (id, tags) => tags.map(tag => TagRow(id, tag)) }
+        _ <- TagTableC ++= tagInserts
+      } yield ()
+    } else {
+      // optimization avoid some work when not using tags
+      val events = sorted.map(_._1)
+      JournalTableC ++= events
+    }
   }
 
   private def selectAllJournalForPersistenceIdDesc(persistenceId: Rep[String]) =
@@ -52,10 +59,10 @@ class JournalQueries(
       .update(true)
 
   private def _highestSequenceNrForPersistenceId(persistenceId: Rep[String]): Rep[Option[Long]] =
-    selectAllJournalForPersistenceId(persistenceId).map(_.sequenceNumber).max
+    selectAllJournalForPersistenceId(persistenceId).take(1).map(_.sequenceNumber).max
 
   private def _highestMarkedSequenceNrForPersistenceId(persistenceId: Rep[String]): Rep[Option[Long]] =
-    selectAllJournalForPersistenceId(persistenceId).filter(_.deleted === true).map(_.sequenceNumber).max
+    selectAllJournalForPersistenceId(persistenceId).filter(_.deleted === true).take(1).map(_.sequenceNumber).max
 
   val highestSequenceNrForPersistenceId = Compiled(_highestSequenceNrForPersistenceId _)
 

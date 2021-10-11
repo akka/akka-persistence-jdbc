@@ -6,6 +6,7 @@
 package akka.persistence.jdbc.query
 
 import akka.actor.{ ActorRef, ActorSystem, Props, Stash, Status }
+import akka.pattern.ask
 import akka.event.LoggingReceive
 import akka.persistence.{ DeleteMessagesFailure, DeleteMessagesSuccess, PersistentActor }
 import akka.persistence.jdbc.SingleActorSystemPerTestSpec
@@ -292,15 +293,26 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
   def withTestActors(seq: Int = 1, replyToMessages: Boolean = false)(f: (ActorRef, ActorRef, ActorRef) => Unit)(
       implicit system: ActorSystem): Unit = {
     val refs = (seq until seq + 3).map(setupEmpty(_, replyToMessages)).toList
-    try f(refs.head, refs.drop(1).head, refs.drop(2).head)
-    finally killActors(refs: _*)
+    try {
+      expectAllStarted(refs)
+      f(refs.head, refs.drop(1).head, refs.drop(2).head)
+    } finally killActors(refs: _*)
   }
 
   def withManyTestActors(amount: Int, seq: Int = 1, replyToMessages: Boolean = false)(f: Seq[ActorRef] => Unit)(
       implicit system: ActorSystem): Unit = {
     val refs = (seq until seq + amount).map(setupEmpty(_, replyToMessages)).toList
-    try f(refs)
-    finally killActors(refs: _*)
+    try {
+      expectAllStarted(refs)
+      f(refs)
+    } finally killActors(refs: _*)
+  }
+
+  def expectAllStarted(refs: Seq[ActorRef])(implicit system: ActorSystem): Unit = {
+    // make sure we notice early if the actors failed to start (because of issues with journal) makes debugging
+    // failing tests easier as we know it is not the actual interaction from the test that is the problem
+    implicit val ec = system.dispatcher
+    Future.sequence(refs.map(_ ? "state")).futureValue
   }
 
   def withTags(payload: Any, tags: String*) = Tagged(payload, Set(tags: _*))

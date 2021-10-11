@@ -1,6 +1,12 @@
 package akka.persistence.jdbc.integration
 
-import akka.persistence.jdbc.query.{LogicalDeleteQueryTest, MysqlCleaner, OracleCleaner, PostgresCleaner, SqlServerCleaner}
+import akka.persistence.jdbc.query.{
+  LogicalDeleteQueryTest,
+  MysqlCleaner,
+  OracleCleaner,
+  PostgresCleaner,
+  SqlServerCleaner
+}
 
 class PostgresLogicalDeleteQueryTest extends LogicalDeleteQueryTest("postgres-application.conf") with PostgresCleaner
 

@@ -25,7 +25,7 @@ private[jdbc] trait DropCreate {
   def db: Database
   def config: Config
 
-  def newDao: Boolean = !SchemaUtilsImpl.legacy(config)
+  def newDao: Boolean = !SchemaUtilsImpl.legacy("jdbc-journal", config)
 
   /**
    * INTERNAL API

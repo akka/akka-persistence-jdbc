@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - master
+      - migration-tool # remove before merging to master
     tags-ignore: [ v.* ]
 
 jobs:

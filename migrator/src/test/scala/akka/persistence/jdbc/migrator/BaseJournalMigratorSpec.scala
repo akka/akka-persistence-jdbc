@@ -1,64 +1,150 @@
-/*
- * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
- * Copyright (C) 2019 - 2021 Lightbend Inc. <https://www.lightbend.com>
- */
-
 package akka.persistence.jdbc.migrator
 
+import akka.actor.{ActorRef, ActorSystem, Props, Stash, Status}
+import akka.event.LoggingReceive
+import akka.pattern.ask
 import akka.persistence.jdbc.SingleActorSystemPerTestSpec
-import akka.persistence.jdbc.journal.dao.legacy
-import akka.persistence.PersistentRepr
-import akka.serialization.Serialization
-import akka.Done
-import slick.jdbc.JdbcBackend
+import akka.persistence.{DeleteMessagesFailure, DeleteMessagesSuccess, PersistentActor}
+import akka.persistence.jdbc.db.SlickDatabase
+import akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao
+import akka.persistence.jdbc.query.CurrentEventsByTagTest.configOverrides
+import akka.persistence.jdbc.query.EventAdapterTest.{Event, TaggedAsyncEvent, TaggedEvent}
+import akka.persistence.jdbc.query.{EventAdapterTest, MysqlCleaner, QueryTestSpec, ScalaJdbcReadJournalOperations}
+import akka.persistence.journal.{EventSeq, ReadEventAdapter, Tagged, WriteEventAdapter}
+import akka.serialization.SerializationExtension
+import org.scalatest.time.SpanSugar.convertIntToGrainOfTime
 
-import java.util.UUID
-import scala.concurrent.{ ExecutionContext, Future }
 
-abstract class BaseJournalMigratorSpec(config: String) extends SingleActorSystemPerTestSpec(config) {
+abstract class BaseJournalMigratorSpec(config: String) extends SingleActorSystemPerTestSpec(config, configOverrides) {
+  case class AccountOpenedCommand(balance: Int) extends Serializable
+  case class AccountOpenedEvent(balance: Int){
+    def adapted = AccountOpenedEventAdapted(value = balance)
+  }
+  case object GetBalanceCommand extends Serializable
+  case class TaggedAccountOpenedEvent(event: AccountOpenedEvent, tag: String)
 
-  import profile.api._
+  case class TaggedAsyncAccountOpenedEvent(event: Event, tag: String)
 
-  case class AccountOpened(accountId: String, openingBalance: Double)
-
-  def countLegacyJournal(journaldb: JdbcBackend.Database, legacyJournalQueries: legacy.JournalQueries): Future[Int] = {
-    journaldb.run(legacyJournalQueries.JournalTable.length.result)
+  case class AccountOpenedEventAdapted(value: Int) {
+    def restored = AccountOpenedEvent(value)
   }
 
-  // every specific database test will have to implement that method
-  def nextOrderingValue(journaldb: JdbcBackend.Database)(implicit ec: ExecutionContext)
+  case class AccountOpenedEventRestored(value: String)
 
-  private def journalRows(serialization: Serialization, numRows: Int): Seq[legacy.JournalRow] = {
-    (1 to numRows).foldLeft(Seq.empty[legacy.JournalRow])((s, i) => {
-      val persistenceId: String = UUID.randomUUID.toString
-      s :+ legacy.JournalRow(
-        ordering = i,
-        deleted = false,
-        persistenceId = persistenceId,
-        sequenceNumber = i,
-        message = serialization
-          .serialize(
-            PersistentRepr(
-              payload = AccountOpened(accountId = s"account-$i", openingBalance = 200 * i),
-              sequenceNr = i,
-              persistenceId = persistenceId,
-              deleted = false))
-          .getOrElse(Seq.empty[Byte].toArray), // to avoid scalastyle yelling
-        tags = Some(s"tag-$i"))
-    })
+  class TestReadAccountOpenedEventAdapter extends ReadEventAdapter {
+    override def fromJournal(event: Any, manifest: String): EventSeq =
+      event match {
+        case e: AccountOpenedEventAdapted => EventSeq.single(e.restored)
+      }
   }
 
-  def seedLegacyJournal(
-      serialization: Serialization,
-      journaldb: JdbcBackend.Database,
-      legacyJournalQueries: legacy.JournalQueries,
-      numRows: Int = 500000)(implicit ec: ExecutionContext): Future[Done] = {
-    journaldb
-      .run(
-        legacyJournalQueries.JournalTable
-          .returning(legacyJournalQueries.JournalTable.map(_.ordering))
-          .forceInsertAll(journalRows(serialization, numRows)))
-      .map(_ => Done)
+  class TestWriteEventAdapter extends WriteEventAdapter {
+    override def manifest(event: Any): String = ""
+
+    override def toJournal(event: Any): Any =
+      event match {
+        case e: AccountOpenedEvent           => e.adapted
+        case TaggedEvent(e: Event, tag)      => Tagged(e.adapted, Set(tag))
+        case TaggedAsyncEvent(e: Event, tag) => Tagged(e.adapted, Set(tag))
+        case _                               => event
+      }
   }
 
+  final val ExpectNextTimeout = 10.second
+
+  class TestActor(id: Int, replyToMessages: Boolean) extends PersistentActor with Stash {
+    override val persistenceId: String = s"actor-$id"
+
+    var state: Int = 0
+
+    override def receiveCommand: Receive =
+      LoggingReceive {
+        case "state" =>
+          sender() ! state
+
+        case AccountOpenedCommand(balance) =>
+          persist(AccountOpenedEvent(balance)) { (event: AccountOpenedEvent) =>
+            updateState(event)
+            if (replyToMessages) sender() ! akka.actor.Status.Success(event)
+          }
+        case GetBalanceCommand => sender() ! state
+        case _ =>
+          if (replyToMessages) sender() ! akka.actor.Status.Success()
+      }
+
+    def updateState(event: AccountOpenedEvent): Unit = {
+      state = state + event.balance
+    }
+
+    override def receiveRecover: Receive =
+      LoggingReceive { case event: AccountOpenedEvent =>
+        updateState(event)
+      }
+  }
+
+  def setupEmpty(persistenceId: Int, replyToMessages: Boolean)(implicit system: ActorSystem): ActorRef = {
+    system.actorOf(Props(new TestActor(persistenceId, replyToMessages)))
+  }
+
+  def withTestActors(seq: Int = 1, replyToMessages: Boolean = false)(f: (ActorRef, ActorRef, ActorRef) => Unit)(
+    implicit system: ActorSystem): Unit = {
+    val refs = (seq until seq + 3).map(setupEmpty(_, replyToMessages)).toList
+    try f(refs.head, refs.drop(1).head, refs.drop(2).head)
+    finally killActors(refs: _*)
+  }
+
+  def withManyTestActors(amount: Int, seq: Int = 1, replyToMessages: Boolean = false)(f: Seq[ActorRef] => Unit)(
+    implicit system: ActorSystem): Unit = {
+    val refs = (seq until seq + amount).map(setupEmpty(_, replyToMessages)).toList
+    try f(refs)
+    finally killActors(refs: _*)
+  }
+
+  def withTags(payload: Any, tags: String*) = Tagged(payload, Set(tags: _*))
+
+
+
+
+
+
+  it should "not find an event by tag for unknown tag" in  {
+    pending
+    withActorSystem { implicit system =>
+      //val dao = new ByteArrayJournalDao(db, profile, journalConfig, SerializationExtension(system))
+
+      val journalOps = new ScalaJdbcReadJournalOperations(system)
+      withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
+        (actor1 ? AccountOpenedCommand(1)).futureValue
+        (actor2 ? AccountOpenedCommand(2)).futureValue
+        (actor3 ? AccountOpenedCommand(3)).futureValue
+        (actor1 ? AccountOpenedCommand(1)).futureValue
+        (actor2 ? AccountOpenedCommand(2)).futureValue
+        (actor3 ? AccountOpenedCommand(3)).futureValue
+        (actor1 ? AccountOpenedCommand(1)).futureValue //balance 3
+        (actor2 ? AccountOpenedCommand(2)).futureValue //balance 6
+        (actor3 ? AccountOpenedCommand(3)).futureValue //balance 9
+
+        eventually {
+          journalOps.countJournal.futureValue shouldBe 9
+        }
+
+        system.terminate()
+      }
+      /* withActorSystem { implicit system =>
+       val migrate = JournalMigrator(SlickDatabase.profile(cfg, "slick")).migrate()
+         eventually {
+           journalOps.countJournal.futureValue shouldBe 9
+         }
+         (actor1 ? AccountOpenedCommand(1)).futureValue
+         (actor2 ? AccountOpenedCommand(2)).futureValue
+         (actor3 ? AccountOpenedCommand(3)).futureValue
+         assert(1 == 1)
+         system.terminate()
+       }*/
+    }
+  }
 }
+/*class MysqlBaseJournalMigratorSpecF
+  extends BaseJournalMigratorSpecF("mysql-application.conf")
+    with MysqlCleaner*/
+

@@ -30,6 +30,7 @@ import scala.concurrent.Future
  */
 case class SnapshotMigrator(profile: JdbcProfile)(implicit system: ActorSystem) {
   val log: Logger = LoggerFactory.getLogger(getClass)
+
   import system.dispatcher
   import profile.api._
 
@@ -67,48 +68,26 @@ case class SnapshotMigrator(profile: JdbcProfile)(implicit system: ActorSystem) 
       .allPersistenceIdsSource(Long.MaxValue)
       .mapAsync(1)(persistenceId => {
         // let us fetch the latest snapshot for each persistenceId
-        snapshotdb
-          .run(queries.selectLatestByPersistenceId(persistenceId).result)
-          .map(rows => {
-            rows.headOption.map(toSnapshotData).map { case (metadata, value) =>
-              log.debug(s"migrating snapshot for ${metadata.toString}")
+        snapshotdb.run(queries.selectLatestByPersistenceId(persistenceId).result).map { rows =>
+          rows.headOption.map(toSnapshotData).map { case (metadata, value) =>
+            log.debug(s"migrating snapshot for ${metadata.toString}")
 
-              defaultSnapshotDao.save(metadata, value)
-            }
-          })
+            defaultSnapshotDao.save(metadata, value)
+          }
+        }
       })
       .runWith(Sink.ignore)
   }
-
-  /*
-  /**
-   * migrate the latest snapshot data into the the new snapshot schema
-   */
-  def migrate(offset: Int, limit: Int): Future[Seq[Future[Unit]]] = {
-    for {
-      rows <- snapshotdb.run(queries.SnapshotTable.sortBy(_.sequenceNumber.desc).drop(offset).take(limit).result)
-    } yield rows.map(toSnapshotData).map { case (metadata, value) =>
-      defaultSnapshotDao.save(metadata, value)
-    }
-  }
-
-  def migrateLatest(): Future[Option[Future[Unit]]] = {
-    for {
-      rows <- snapshotdb.run(queries.SnapshotTable.sortBy(_.sequenceNumber.desc).take(1).result)
-    } yield rows.headOption.map(toSnapshotData).map { case (metadata, value) =>
-      defaultSnapshotDao.save(metadata, value)
-    }
-  } */
 
   /**
    * migrate all the legacy snapshot schema data into the new snapshot schema
    */
   def migrateAll(): Future[Done] = Source
     .fromPublisher(snapshotdb.stream(queries.SnapshotTable.result))
-    .mapAsync(1)(record => {
+    .mapAsync(1) { record =>
       val (metadata, value) = toSnapshotData(record)
       log.debug(s"migrating snapshot for ${metadata.toString}")
       defaultSnapshotDao.save(metadata, value)
-    })
+    }
     .run()
 }

@@ -8,9 +8,10 @@ package akka.persistence.jdbc.migrator
 import akka.Done
 import akka.actor.ActorSystem
 import akka.persistence.PersistentRepr
+import akka.persistence.jdbc.AkkaSerialization
 import akka.persistence.jdbc.config.{ JournalConfig, ReadJournalConfig }
 import akka.persistence.jdbc.db.SlickExtension
-import akka.persistence.jdbc.journal.dao.{ AkkaSerialization, JournalQueries }
+import akka.persistence.jdbc.journal.dao.JournalQueries
 import akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalSerializer
 import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, TagRow }
 import akka.persistence.jdbc.query.dao.legacy.ReadJournalQueries
@@ -102,10 +103,10 @@ final case class JournalMigrator(profile: JdbcProfile)(implicit system: ActorSys
       .mapAsync(1)(records => {
         val stmt: DBIO[Unit] = records
           // get all the sql statements for this record as an option
-          .map({ case (newRepr, newTags) =>
+          .map { case (newRepr, newTags) =>
             log.debug(s"migrating event for PersistenceID: ${newRepr.persistenceId} with tags ${newTags.mkString(",")}")
             writeJournalRowsStatements(newRepr, newTags)
-          })
+          }
           // reduce to 1 statement
           .foldLeft[DBIO[Unit]](DBIO.successful[Unit] {})((priorStmt, nextStmt) => {
             priorStmt.andThen(nextStmt)

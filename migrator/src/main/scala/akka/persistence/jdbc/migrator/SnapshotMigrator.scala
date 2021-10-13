@@ -80,6 +80,7 @@ case class SnapshotMigrator(profile: JdbcProfile)(implicit system: ActorSystem) 
       .runWith(Sink.ignore)
   }
 
+  /*
   /**
    * migrate the latest snapshot data into the the new snapshot schema
    */
@@ -97,8 +98,8 @@ case class SnapshotMigrator(profile: JdbcProfile)(implicit system: ActorSystem) 
     } yield rows.headOption.map(toSnapshotData).map { case (metadata, value) =>
       defaultSnapshotDao.save(metadata, value)
     }
-  }
-  
+  } */
+
   /**
    * migrate all the legacy snapshot schema data into the new snapshot schema
    */

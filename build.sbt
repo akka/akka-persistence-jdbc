@@ -46,6 +46,7 @@ lazy val docs = project
     Paradox / siteSubdirName := s"docs/akka-persistence-jdbc/${if (isSnapshot.value) "snapshot" else version.value}",
     Compile / paradoxProperties ++= Map(
       "project.url" -> "https://doc.akka.io/docs/akka-persistence-jdbc/current/",
+      "github.base_url" -> "https://github.com/akka/akka-persistence-jdbc/",
       "canonical.base_url" -> "https://doc.akka.io/docs/akka-persistence-jdbc/current",
       "akka.version" -> Dependencies.AkkaVersion,
       "slick.version" -> Dependencies.SlickVersion,

@@ -1,20 +1,32 @@
 package akka.persistence.jdbc.migrator
 
-import akka.actor.{ ActorRef, ActorSystem, Props, Stash }
+import akka.actor.{ActorRef, ActorSystem, Props, Stash}
 import akka.event.LoggingReceive
-import akka.pattern.ask
 import akka.persistence.PersistentActor
 import akka.persistence.jdbc.SingleActorSystemPerTestSpec
 import akka.persistence.jdbc.migrator.JournalMigratorSpec._
 import akka.persistence.jdbc.query.CurrentEventsByTagTest.configOverrides
-import akka.persistence.jdbc.query.ScalaJdbcReadJournalOperations
-import akka.persistence.jdbc.testkit.internal.MySQL
+import akka.persistence.jdbc.testkit.internal._
 
-// TODO TAG
-// TODO not find an event by tag for unknown tag
-// TODO QueryTestSpec
-// TODO import akka.persistence.journal.{EventSeq, ReadEventAdapter, Tagged, WriteEventAdapter}
-// TODO import org.scalatest.time.SpanSugar.convertIntToGrainOfTime
+abstract class JournalMigratorSpec(config: String) extends SingleActorSystemPerTestSpec(config, configOverrides) {
+
+  protected def setupEmpty(persistenceId: Int)(implicit system: ActorSystem): ActorRef =
+    system.actorOf(Props(new TestAccountActor(persistenceId)))
+
+  protected def withTestActors(seq: Int = 1)(f: (ActorRef, ActorRef, ActorRef) => Unit)(
+      implicit system: ActorSystem): Unit = {
+    val refs: Seq[ActorRef] = (seq until seq + 3).map(setupEmpty).toList
+    try f(refs.head, refs.drop(1).head, refs.drop(2).head)
+    finally killActors(refs: _*)
+  }
+
+  protected def withManyTestActors(amount: Int, seq: Int = 1)(f: Seq[ActorRef] => Unit)(
+      implicit system: ActorSystem): Unit = {
+    val refs: Seq[ActorRef] = (seq until seq + amount).map(setupEmpty).toList
+    try f(refs)
+    finally killActors(refs: _*)
+  }
+}
 
 object JournalMigratorSpec {
 
@@ -80,81 +92,105 @@ object JournalMigratorSpec {
         updateState(event)
       }
   }
-}
 
-abstract class JournalMigratorSpec(config: String) extends SingleActorSystemPerTestSpec(config, configOverrides) {
+  trait PostgresCleaner extends JournalMigratorSpec {
 
-  protected def setupEmpty(persistenceId: Int)(implicit system: ActorSystem): ActorRef =
-    system.actorOf(Props(new TestAccountActor(persistenceId)))
+    def clearPostgres(): Unit =
+      tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
 
-  protected def withTestActors(seq: Int = 1)(f: (ActorRef, ActorRef, ActorRef) => Unit)(
-      implicit system: ActorSystem): Unit = {
-    val refs: Seq[ActorRef] = (seq until seq + 3).map(setupEmpty).toList
-    try f(refs.head, refs.drop(1).head, refs.drop(2).head)
-    finally killActors(refs: _*)
+    override def beforeAll(): Unit = {
+      dropAndCreate(Postgres)
+      super.beforeAll()
+    }
+
+    override def beforeEach(): Unit = {
+      dropAndCreate(Postgres)
+      super.beforeEach()
+    }
   }
 
-  protected def withManyTestActors(amount: Int, seq: Int = 1)(f: Seq[ActorRef] => Unit)(
-      implicit system: ActorSystem): Unit = {
-    val refs: Seq[ActorRef] = (seq until seq + amount).map(setupEmpty).toList
-    try f(refs)
-    finally killActors(refs: _*)
-  }
+  trait MysqlCleaner extends JournalMigratorSpec {
 
-  it should "TODO 1" in {
-    pending
-    withActorSystem { implicit system =>
-      //val dao = new ByteArrayJournalDao(db, profile, journalConfig, SerializationExtension(system))
-
-      val journalOps = new ScalaJdbcReadJournalOperations(system)
-      withTestActors() { (actor1, actor2, actor3) =>
-        (actor1 ? AccountCreated(1)).futureValue //balance 1
-        (actor2 ? AccountCreated(2)).futureValue //balance 2
-        (actor3 ? AccountCreated(3)).futureValue //balance 3
-        (actor1 ? Deposit(3)).futureValue //balance 4
-        (actor2 ? Deposit(2)).futureValue //balance 4
-        (actor3 ? Deposit(1)).futureValue //balance 4
-        (actor1 ? Withdrawn(3)).futureValue //balance 3
-        (actor2 ? Withdrawn(3)).futureValue //balance 3
-        (actor3 ? Withdrawn(3)).futureValue //balance 3
-
-        eventually {
-          journalOps.countJournal.futureValue shouldBe 20
-        }
-
-        system.terminate()
+    def clearMySQL(): Unit = {
+      withStatement { stmt =>
+        stmt.execute("SET FOREIGN_KEY_CHECKS = 0")
+        tables.foreach { name => stmt.executeUpdate(s"TRUNCATE $name") }
+        stmt.execute("SET FOREIGN_KEY_CHECKS = 1")
       }
-      /* withActorSystem { implicit system =>
-       val migrate = JournalMigrator(SlickDatabase.profile(cfg, "slick")).migrate()
-         eventually {
-           journalOps.countJournal.futureValue shouldBe 9
-         }
-         (actor1 ? AccountOpenedCommand(1)).futureValue
-         (actor2 ? AccountOpenedCommand(2)).futureValue
-         (actor3 ? AccountOpenedCommand(3)).futureValue
-         assert(1 == 1)
-         system.terminate()
-       }*/
     }
-  }
-}
 
-class MysqlJournalMigratorSpec extends JournalMigratorSpec("mysql-application.conf") {
-  def clearMySQL(): Unit = {
-    withStatement { statement =>
-      statement.execute("SET FOREIGN_KEY_CHECKS = 0")
-      tables.foreach(name => statement.executeUpdate(s"TRUNCATE $name"))
-      statement.execute("SET FOREIGN_KEY_CHECKS = 1")
+    override def beforeAll(): Unit = {
+      dropAndCreate(MySQL)
+      super.beforeAll()
+    }
+
+    override def beforeEach(): Unit = {
+      clearMySQL()
+      super.beforeEach()
     }
   }
 
-  override def beforeAll(): Unit = {
-    dropAndCreate(MySQL)
-    super.beforeAll()
+  trait OracleCleaner extends JournalMigratorSpec {
+
+    def clearOracle(): Unit = {
+      tables.foreach { name =>
+        withStatement(stmt => stmt.executeUpdate(s"""DELETE FROM "$name" """))
+      }
+      withStatement(stmt => stmt.executeUpdate("""BEGIN "reset_sequence"; END; """))
+    }
+
+    override def beforeAll(): Unit = {
+      dropAndCreate(Oracle)
+      super.beforeAll()
+    }
+
+    override def beforeEach(): Unit = {
+      clearOracle()
+      super.beforeEach()
+    }
   }
 
-  override def beforeEach(): Unit = {
-    clearMySQL()
-    super.beforeEach()
+  trait SqlServerCleaner extends JournalMigratorSpec {
+
+    var initial = true
+
+    def clearSqlServer(): Unit = {
+      val reset = if (initial) {
+        initial = false
+        1
+      } else {
+        0
+      }
+      withStatement { stmt =>
+        tables.foreach { name => stmt.executeUpdate(s"DELETE FROM $name") }
+        stmt.executeUpdate(s"DBCC CHECKIDENT('$journalTableName', RESEED, $reset)")
+      }
+    }
+
+    override def beforeAll(): Unit = {
+      dropAndCreate(SqlServer)
+      super.beforeAll()
+    }
+
+    override def afterAll(): Unit = {
+      dropAndCreate(SqlServer)
+      super.afterAll()
+    }
+
+    override def beforeEach(): Unit = {
+      clearSqlServer()
+      super.beforeEach()
+    }
+  }
+
+  trait H2Cleaner extends JournalMigratorSpec {
+
+    def clearH2(): Unit =
+      tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
+
+    override def beforeEach(): Unit = {
+      dropAndCreate(H2)
+      super.beforeEach()
+    }
   }
 }

@@ -41,7 +41,6 @@ abstract class JournalMigratorTest(config: String) extends JournalMigratorSpec(c
        }*/
     }
   }
-
 }
 
 class H2JournalMigratorTest extends JournalMigratorTest("h2-application.conf") with JournalMigratorSpec.H2Cleaner

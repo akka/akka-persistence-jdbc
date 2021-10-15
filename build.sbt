@@ -27,6 +27,8 @@ lazy val core = project
 lazy val migrator = project
   .in(file("migrator"))
   .disablePlugins(SitePlugin, MimaPlugin)
+  .configs(IntegrationTest.extend(Test))
+  .settings(Defaults.itSettings)
   .settings(
     name := "akka-persistence-jdbc-migrator",
     libraryDependencies ++= Dependencies.Migration ++ Dependencies.Libraries,

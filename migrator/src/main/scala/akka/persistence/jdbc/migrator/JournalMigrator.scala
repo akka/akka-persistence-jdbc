@@ -14,21 +14,13 @@ import akka.persistence.jdbc.db.SlickExtension
 import akka.persistence.jdbc.journal.dao.JournalQueries
 import akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalSerializer
 import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, TagRow }
+import akka.persistence.jdbc.migrator.JournalMigrator.{ JournalConfig, ReadJournalConfig }
+import akka.persistence.jdbc.migrator.JournalOrdering._
 import akka.persistence.jdbc.query.dao.legacy.ReadJournalQueries
 import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.scaladsl.Source
 import org.slf4j.{ Logger, LoggerFactory }
-import slick.jdbc.{
-  H2Profile,
-  JdbcBackend,
-  JdbcProfile,
-  MySQLProfile,
-  OracleProfile,
-  PostgresProfile,
-  ResultSetConcurrency,
-  ResultSetType,
-  SQLServerProfile
-}
+import slick.jdbc._
 
 import scala.concurrent.{ ExecutionContextExecutor, Future }
 import scala.util.{ Failure, Success }
@@ -47,13 +39,13 @@ final case class JournalMigrator(profile: JdbcProfile)(implicit system: ActorSys
   val log: Logger = LoggerFactory.getLogger(getClass)
 
   // get the various configurations
-  private val journalConfig: JournalConfig = new JournalConfig(system.settings.config.getConfig("jdbc-journal"))
+  private val journalConfig: JournalConfig = new JournalConfig(system.settings.config.getConfig(JournalConfig))
   private val readJournalConfig: ReadJournalConfig = new ReadJournalConfig(
-    system.settings.config.getConfig("jdbc-read-journal"))
+    system.settings.config.getConfig(ReadJournalConfig))
 
   // the journal database
-  private val journaldb: JdbcBackend.Database =
-    SlickExtension(system).database(system.settings.config.getConfig("jdbc-read-journal")).database
+  private val journalDB: JdbcBackend.Database =
+    SlickExtension(system).database(system.settings.config.getConfig(ReadJournalConfig)).database
 
   // get an instance of the new journal queries
   private val newJournalQueries: JournalQueries =
@@ -69,11 +61,11 @@ final case class JournalMigrator(profile: JdbcProfile)(implicit system: ActorSys
 
   // get the journal ordering based upon the schema type used
   private val journalOrdering: JournalOrdering = profile match {
-    case _: MySQLProfile     => MySQL(journalConfig, newJournalQueries, journaldb)
-    case _: PostgresProfile  => Postgres(journalConfig, newJournalQueries, journaldb)
-    case _: OracleProfile    => Oracle(journalConfig, newJournalQueries, journaldb)
-    case _: H2Profile        => H2(journalConfig, newJournalQueries, journaldb)
-    case _: SQLServerProfile => SqlServer(journalConfig, newJournalQueries, journaldb)
+    case _: MySQLProfile     => MySQL(journalConfig, newJournalQueries, journalDB)
+    case _: PostgresProfile  => Postgres(journalConfig, newJournalQueries, journalDB)
+    case _: OracleProfile    => Oracle(journalConfig, newJournalQueries, journalDB)
+    case _: H2Profile        => H2(journalConfig, newJournalQueries, journalDB)
+    case _: SQLServerProfile => SqlServer(journalConfig, newJournalQueries, journalDB)
     case unmanaged =>
       throw new Exception(s"Unmanaged SQL database profile: ${unmanaged.getClass.getName}")
   }
@@ -91,7 +83,7 @@ final case class JournalMigrator(profile: JdbcProfile)(implicit system: ActorSys
         .transactionally
 
     val eventualDone: Future[Done] = Source
-      .fromPublisher(journaldb.stream(query))
+      .fromPublisher(journalDB.stream(query))
       .via(serializer.deserializeFlow)
       .map {
         case Success((repr, tags, ordering)) => (repr, tags, ordering)
@@ -112,7 +104,7 @@ final case class JournalMigrator(profile: JdbcProfile)(implicit system: ActorSys
             priorStmt.andThen(nextStmt)
           })
 
-        journaldb.run(stmt)
+        journalDB.run(stmt)
       })
       .run()
 
@@ -171,4 +163,9 @@ final case class JournalMigrator(profile: JdbcProfile)(implicit system: ActorSys
 
     journalInsert.flatMap(_ => tagInserts.asInstanceOf[DBIO[Unit]])
   }
+}
+
+case object JournalMigrator {
+  final val JournalConfig: String = "jdbc-journal"
+  final val ReadJournalConfig: String = "jdbc-read-journal"
 }

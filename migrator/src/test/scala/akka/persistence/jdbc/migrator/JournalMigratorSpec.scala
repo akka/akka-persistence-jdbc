@@ -2,29 +2,44 @@ package akka.persistence.jdbc.migrator
 
 import akka.actor.{ ActorRef, ActorSystem, Props, Stash }
 import akka.event.LoggingReceive
+import akka.pattern.ask
 import akka.persistence.PersistentActor
 import akka.persistence.jdbc.SingleActorSystemPerTestSpec
 import akka.persistence.jdbc.migrator.JournalMigratorSpec._
 import akka.persistence.jdbc.query.CurrentEventsByTagTest.configOverrides
 import akka.persistence.jdbc.testkit.internal._
 
+import scala.concurrent.{ ExecutionContextExecutor, Future }
+import scala.concurrent.duration.DurationInt
+
 abstract class JournalMigratorSpec(config: String) extends SingleActorSystemPerTestSpec(config, configOverrides) {
+
+  override implicit val pc: PatienceConfig = PatienceConfig(timeout = 5.seconds)
 
   protected def setupEmpty(persistenceId: Int)(implicit system: ActorSystem): ActorRef =
     system.actorOf(Props(new TestAccountActor(persistenceId)))
 
-  protected def withTestActors(seq: Int = 1)(f: (ActorRef, ActorRef, ActorRef) => Unit)(
-      implicit system: ActorSystem): Unit = {
-    val refs: Seq[ActorRef] = (seq until seq + 3).map(setupEmpty).toList
-    try f(refs.head, refs.drop(1).head, refs.drop(2).head)
-    finally killActors(refs: _*)
+  def withTestActors(seq: Int = 1)(f: (ActorRef, ActorRef, ActorRef) => Unit)(implicit system: ActorSystem): Unit = {
+    val refs = (seq until seq + 3).map(setupEmpty).toList
+    try {
+      expectAllStarted(refs)
+      f(refs.head, refs.drop(1).head, refs.drop(2).head)
+    } finally killActors(refs: _*)
   }
 
-  protected def withManyTestActors(amount: Int, seq: Int = 1)(f: Seq[ActorRef] => Unit)(
-      implicit system: ActorSystem): Unit = {
-    val refs: Seq[ActorRef] = (seq until seq + amount).map(setupEmpty).toList
-    try f(refs)
-    finally killActors(refs: _*)
+  def withManyTestActors(amount: Int, seq: Int = 1)(f: Seq[ActorRef] => Unit)(implicit system: ActorSystem): Unit = {
+    val refs = (seq until seq + amount).map(setupEmpty).toList
+    try {
+      expectAllStarted(refs)
+      f(refs)
+    } finally killActors(refs: _*)
+  }
+
+  def expectAllStarted(refs: Seq[ActorRef])(implicit system: ActorSystem): Unit = {
+    // make sure we notice early if the actors failed to start (because of issues with journal) makes debugging
+    // failing tests easier as we know it is not the actual interaction from the test that is the problem
+    implicit val ec: ExecutionContextExecutor = system.dispatcher
+    Future.sequence(refs.map(_ ? State)).futureValue
   }
 }
 
@@ -41,7 +56,7 @@ object JournalMigratorSpec {
 
   final case class Withdraw(amount: BigDecimal) extends AccountCommand
 
-  final object GetBalance extends AccountCommand
+  final object State extends AccountCommand
 
   /** Reply */
   final case class CurrentBalance(balance: BigDecimal)
@@ -78,7 +93,8 @@ object JournalMigratorSpec {
             updateState(event)
             sender() ! akka.actor.Status.Success(event)
           }
-        case GetBalance => sender() ! state
+        case State =>
+          sender() ! akka.actor.Status.Success(state)
       }
 
     def updateState(event: AccountEvent): Unit = event match {

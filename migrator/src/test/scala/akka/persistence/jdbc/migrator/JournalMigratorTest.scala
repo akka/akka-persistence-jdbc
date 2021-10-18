@@ -9,28 +9,8 @@ import akka.persistence.jdbc.query.ScalaJdbcReadJournalOperations
   val snapshotConfig = new SnapshotConfig(config.getConfig("jdbc-snapshot-store"))
   val readJournalConfig = new ReadJournalConfig(config.getConfig("jdbc-read-journal"))
  */
-abstract class JournalMigratorTest(config: String) extends JournalMigratorSpec(config) {
 
-  it should "work in progress" in {
-    withActorSystem { implicit system =>
-      val journalOps = new ScalaJdbcReadJournalOperations(system)
-      withTestActors() { (actor1, actor2, actor3) =>
-        (actor1 ? CreateAccount(1)).futureValue //balance 1
-        (actor2 ? CreateAccount(2)).futureValue //balance 2
-        (actor3 ? CreateAccount(3)).futureValue //balance 3
-        (actor1 ? Deposit(3)).futureValue //balance 4
-        (actor2 ? Deposit(2)).futureValue //balance 4
-        (actor3 ? Deposit(1)).futureValue //balance 4
-        (actor1 ? Withdraw(3)).futureValue //balance 3
-        (actor2 ? Withdraw(3)).futureValue //balance 3
-        (actor3 ? Withdraw(3)).futureValue //balance 3
-
-        eventually {
-          journalOps.countJournal.futureValue shouldBe 20
-        }
-
-        system.terminate()
-      }
+/*
     //val dao = new ByteArrayJournalDao(db, profile, journalConfig, SerializationExtension(system))
 
     /**/
@@ -45,6 +25,34 @@ abstract class JournalMigratorTest(config: String) extends JournalMigratorSpec(c
          assert(1 == 1)
          system.terminate()
        }*/
+ */
+abstract class JournalMigratorTest(config: String) extends JournalMigratorSpec(config) {
+
+  it should "TODO" in {
+    withActorSystem { implicit system =>
+      val journalOps = new ScalaJdbcReadJournalOperations(system)
+      withTestActors() { (actor1, actor2, actor3) =>
+        (actor1 ? CreateAccount(1)).futureValue //balance 1
+        (actor2 ? CreateAccount(2)).futureValue //balance 2
+        (actor3 ? CreateAccount(3)).futureValue //balance 3
+
+        (actor1 ? Deposit(3)).futureValue //balance 4
+        (actor2 ? Deposit(2)).futureValue //balance 4
+        (actor3 ? Deposit(1)).futureValue //balance 4
+
+        (actor1 ? Withdraw(3)).futureValue //balance 1
+        (actor2 ? Withdraw(2)).futureValue //balance 1
+        (actor3 ? Withdraw(1)).futureValue //balance 1
+
+        eventually {
+
+          (actor1 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(1)
+          (actor2 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(2)
+          (actor3 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(3)
+
+          // journalOps.countJournal.futureValue shouldBe 9
+        }
+      }
     }
   }
 }

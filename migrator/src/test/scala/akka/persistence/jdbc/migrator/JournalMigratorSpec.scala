@@ -1,6 +1,6 @@
 package akka.persistence.jdbc.migrator
 
-import akka.actor.{ActorRef, ActorSystem, Props, Stash}
+import akka.actor.{ ActorRef, ActorSystem, Props, Stash }
 import akka.event.LoggingReceive
 import akka.persistence.PersistentActor
 import akka.persistence.jdbc.SingleActorSystemPerTestSpec

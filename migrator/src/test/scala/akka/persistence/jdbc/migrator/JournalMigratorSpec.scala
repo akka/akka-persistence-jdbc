@@ -1,53 +1,160 @@
 package akka.persistence.jdbc.migrator
 
-import akka.actor.{ ActorRef, ActorSystem, Props, Stash }
+import akka.actor.{ActorRef, ActorSystem, Props, Stash}
 import akka.event.LoggingReceive
 import akka.pattern.ask
 import akka.persistence.PersistentActor
-import akka.persistence.jdbc.SingleActorSystemPerTestSpec
+import akka.persistence.jdbc.SimpleSpec
+import akka.persistence.jdbc.config.{JournalConfig, SlickConfiguration}
+import akka.persistence.jdbc.db.SlickDatabase
 import akka.persistence.jdbc.migrator.JournalMigratorSpec._
-import akka.persistence.jdbc.query.CurrentEventsByTagTest.configOverrides
+import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 import akka.persistence.jdbc.testkit.internal._
+import akka.persistence.query.PersistenceQuery
+import akka.stream.Materializer
+import akka.stream.scaladsl.Sink
+import akka.util.Timeout
+import com.typesafe.config.{Config, ConfigFactory, ConfigValue}
+import org.scalatest.BeforeAndAfterEach
+import org.slf4j.{Logger, LoggerFactory}
+import slick.jdbc.JdbcBackend.{Database, Session}
 
-import scala.concurrent.{ ExecutionContextExecutor, Future }
+import java.sql.Statement
 import scala.concurrent.duration.DurationInt
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
-abstract class JournalMigratorSpec(config: String) extends SingleActorSystemPerTestSpec(config, configOverrides) {
+abstract class JournalMigratorSpec(val config: Config) extends SimpleSpec with BeforeAndAfterEach {
 
-  override implicit val pc: PatienceConfig = PatienceConfig(timeout = 5.seconds)
+  // The db is initialized in the before and after each bocks
+  var dbsOpt: Option[Databases] = None
+
+  implicit val pc: PatienceConfig = PatienceConfig(timeout = 5.seconds)
+  implicit val timeout: Timeout = Timeout(1.minute)
+
+  private val logger: Logger = LoggerFactory.getLogger(this.getClass)
+  private val cfg: Config = config.getConfig("jdbc-journal")
+  private val journalConfig: JournalConfig = new JournalConfig(cfg)
+
+  protected val journalTableName: String = journalConfig.eventJournalTableConfiguration.tableName
+  protected val legacyJournalTableName: String = journalConfig.journalTableConfiguration.tableName
+
+  //event_tag
+  //event_journal
+  protected val tables: Seq[String] =
+    List(journalConfig.eventTagTableConfiguration.tableName, journalConfig.eventJournalTableConfiguration.tableName)
+
+  // journal
+  protected val legacyTables: Seq[String] = List(journalConfig.journalTableConfiguration.tableName)
+
+
+  def this(config: String = "postgres-application.conf", configOverrides: Map[String, ConfigValue] = Map.empty) =
+    this(configOverrides.foldLeft(ConfigFactory.load(config)) { case (conf, (path, configValue)) =>
+      conf.withValue(path, configValue)
+    })
+
+  def dbs: Databases = dbsOpt.getOrElse {
+    val dbs = Databases(
+      legacyDatabase = SlickDatabase.database(cfg, new SlickConfiguration(cfg.getConfig("slick")), "slick.db"),
+      // TODO da capire la questione del legacy e del nuovo
+      /*database = SlickDatabase.database(
+        config,
+        new SlickConfiguration(config.getConfig("akka-persistence-jdbc.shared-databases.slick")),
+        "akka-persistence-jdbc.shared-databases.slick.db"))*/
+      database = SlickDatabase.database(cfg, new SlickConfiguration(cfg.getConfig("slick")), "slick.db"))
+    dbsOpt = Some(dbs)
+    dbs
+  }
+
+  protected def dropAndCreate(schemaType: SchemaType): Unit = {
+    // blocking calls, usually done in our before test methods
+    // legacy
+    SchemaUtilsImpl.dropWithSlick(schemaType, logger, dbs.legacyDatabase, legacy = true)
+    SchemaUtilsImpl.createWithSlick(schemaType, logger, dbs.legacyDatabase, legacy = true)
+    // new
+    SchemaUtilsImpl.dropWithSlick(schemaType, logger, dbs.database, legacy = false)
+    SchemaUtilsImpl.createWithSlick(schemaType, logger, dbs.database, legacy = false)
+  }
+
+  def withSession[A](f: Session => A)(db: Database): A = {
+    val session = db.createSession()
+    try f(session)
+    finally session.close()
+  }
+
+  def withStatement[A](f: Statement => A)(db: Database): A =
+    withSession(session => session.withStatement()(f))(db)
+
+  def closeDb(): Unit = {
+    dbsOpt.foreach { tuple =>
+      tuple.legacyDatabase.close()
+      tuple.database.close()
+    }
+    dbsOpt = None
+  }
+
+  override protected def afterEach(): Unit = {
+    super.afterEach()
+    closeDb()
+  }
+
+  override protected def afterAll(): Unit = {
+    super.afterAll()
+    closeDb()
+  }
 
   protected def setupEmpty(persistenceId: Int)(implicit system: ActorSystem): ActorRef =
     system.actorOf(Props(new TestAccountActor(persistenceId)))
 
   def withTestActors(seq: Int = 1)(f: (ActorRef, ActorRef, ActorRef) => Unit)(implicit system: ActorSystem): Unit = {
+    implicit val ec: ExecutionContextExecutor = system.dispatcher
     val refs = (seq until seq + 3).map(setupEmpty).toList
     try {
-      expectAllStarted(refs)
+      // make sure we notice early if the actors failed to start (because of issues with journal) makes debugging
+      // failing tests easier as we know it is not the actual interaction from the test that is the problem
+      Future.sequence(refs.map(_ ? State)).futureValue
+
       f(refs.head, refs.drop(1).head, refs.drop(2).head)
     } finally killActors(refs: _*)
   }
 
-  def withManyTestActors(amount: Int, seq: Int = 1)(f: Seq[ActorRef] => Unit)(implicit system: ActorSystem): Unit = {
-    val refs = (seq until seq + amount).map(setupEmpty).toList
-    try {
-      expectAllStarted(refs)
-      f(refs)
-    } finally killActors(refs: _*)
+  def withActorSystem(config: Config)(f: ActorSystem => Unit): Unit = {
+    implicit val system: ActorSystem = ActorSystem("migrator-test", config)
+    f(system)
+    system.terminate().futureValue
   }
 
-  def expectAllStarted(refs: Seq[ActorRef])(implicit system: ActorSystem): Unit = {
-    // make sure we notice early if the actors failed to start (because of issues with journal) makes debugging
-    // failing tests easier as we know it is not the actual interaction from the test that is the problem
-    implicit val ec: ExecutionContextExecutor = system.dispatcher
-    Future.sequence(refs.map(_ ? State)).futureValue
+  def withReadJournal(f: JdbcReadJournal => Unit)(implicit system: ActorSystem): Unit = {
+    val readJournal: JdbcReadJournal =
+      PersistenceQuery(system).readJournalFor[JdbcReadJournal](JdbcReadJournal.Identifier)
+    f(readJournal)
   }
+
+  def countJournal(filterPid: String => Boolean)(
+      implicit system: ActorSystem,
+      mat: Materializer,
+      readJournal: JdbcReadJournal): Future[Long] =
+    readJournal
+      .currentPersistenceIds()
+      .filter(filterPid(_))
+      .mapAsync(1) { pid =>
+        readJournal
+          .currentEventsByPersistenceId(pid, 0, Long.MaxValue)
+          .map(_ => 1L)
+          .runWith(Sink.seq)
+          .map(_.sum)(system.dispatcher)
+      }
+      .runWith(Sink.seq)
+      .map(_.sum)(system.dispatcher)
+
 }
 
 object JournalMigratorSpec {
 
+  case class Databases(legacyDatabase: Database, database: Database)
+
   private final val Zero = BigDecimal(0)
 
-  /** commands */
+  /** Commands */
   sealed trait AccountCommand extends Serializable
 
   final case class CreateAccount(amount: BigDecimal) extends AccountCommand
@@ -58,10 +165,7 @@ object JournalMigratorSpec {
 
   final object State extends AccountCommand
 
-  /** Reply */
-  final case class CurrentBalance(balance: BigDecimal)
-
-  /** events */
+  /** Events */
   sealed trait AccountEvent extends Serializable
 
   final case class AccountCreated(amount: BigDecimal) extends AccountEvent
@@ -70,8 +174,12 @@ object JournalMigratorSpec {
 
   final case class Withdrawn(amount: BigDecimal) extends AccountEvent
 
+  /** Reply */
+  final case class CurrentBalance(balance: BigDecimal)
+
+  /** Actor */
   class TestAccountActor(id: Int) extends PersistentActor with Stash {
-    override val persistenceId: String = s"actor-$id"
+    override val persistenceId: String = s"test-account-$id"
 
     var state: BigDecimal = Zero
 
@@ -104,15 +212,17 @@ object JournalMigratorSpec {
     }
 
     override def receiveRecover: Receive =
-      LoggingReceive { case event: AccountEvent =>
-        updateState(event)
-      }
+      LoggingReceive { case event: AccountEvent => updateState(event) }
   }
 
   trait PostgresCleaner extends JournalMigratorSpec {
 
-    def clearPostgres(): Unit =
-      tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
+    def clearPostgres(): Unit = {
+      legacyTables.foreach { name =>
+        withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name"))(dbs.legacyDatabase)
+      }
+      tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name"))(dbs.database) }
+    }
 
     override def beforeAll(): Unit = {
       dropAndCreate(Postgres)
@@ -130,9 +240,14 @@ object JournalMigratorSpec {
     def clearMySQL(): Unit = {
       withStatement { stmt =>
         stmt.execute("SET FOREIGN_KEY_CHECKS = 0")
+        legacyTables.foreach { name => stmt.executeUpdate(s"TRUNCATE $name") }
+        stmt.execute("SET FOREIGN_KEY_CHECKS = 1")
+      }(dbs.legacyDatabase)
+      withStatement { stmt =>
+        stmt.execute("SET FOREIGN_KEY_CHECKS = 0")
         tables.foreach { name => stmt.executeUpdate(s"TRUNCATE $name") }
         stmt.execute("SET FOREIGN_KEY_CHECKS = 1")
-      }
+      }(dbs.database)
     }
 
     override def beforeAll(): Unit = {
@@ -149,10 +264,14 @@ object JournalMigratorSpec {
   trait OracleCleaner extends JournalMigratorSpec {
 
     def clearOracle(): Unit = {
-      tables.foreach { name =>
-        withStatement(stmt => stmt.executeUpdate(s"""DELETE FROM "$name" """))
+      legacyTables.foreach { name =>
+        withStatement(stmt => stmt.executeUpdate(s"""DELETE FROM "$name" """))(dbs.legacyDatabase)
       }
-      withStatement(stmt => stmt.executeUpdate("""BEGIN "reset_sequence"; END; """))
+      withStatement(stmt => stmt.executeUpdate("""BEGIN "reset_sequence"; END; """))(dbs.legacyDatabase)
+      tables.foreach { name =>
+        withStatement(stmt => stmt.executeUpdate(s"""DELETE FROM "$name" """))(dbs.database)
+      }
+      withStatement(stmt => stmt.executeUpdate("""BEGIN "reset_sequence"; END; """))(dbs.database)
     }
 
     override def beforeAll(): Unit = {
@@ -178,9 +297,13 @@ object JournalMigratorSpec {
         0
       }
       withStatement { stmt =>
+        legacyTables.foreach { name => stmt.executeUpdate(s"DELETE FROM $name") }
+        stmt.executeUpdate(s"DBCC CHECKIDENT('$legacyJournalTableName', RESEED, $reset)")
+      }(dbs.legacyDatabase)
+      withStatement { stmt =>
         tables.foreach { name => stmt.executeUpdate(s"DELETE FROM $name") }
         stmt.executeUpdate(s"DBCC CHECKIDENT('$journalTableName', RESEED, $reset)")
-      }
+      }(dbs.database)
     }
 
     override def beforeAll(): Unit = {
@@ -201,8 +324,12 @@ object JournalMigratorSpec {
 
   trait H2Cleaner extends JournalMigratorSpec {
 
-    def clearH2(): Unit =
-      tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name")) }
+    def clearH2(): Unit = {
+      legacyTables.foreach { name =>
+        withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name"))(dbs.legacyDatabase)
+      }
+      tables.foreach { name => withStatement(stmt => stmt.executeUpdate(s"DELETE FROM $name"))(dbs.database) }
+    }
 
     override def beforeEach(): Unit = {
       dropAndCreate(H2)

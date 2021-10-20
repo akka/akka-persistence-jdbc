@@ -1,29 +1,29 @@
 package akka.persistence.jdbc.migrator
 
-import akka.actor.{ ActorRef, ActorSystem, Props, Stash }
+import akka.actor.{ActorRef, ActorSystem, Props, Stash}
 import akka.event.LoggingReceive
 import akka.pattern.ask
-import akka.persistence.PersistentActor
+import akka.persistence.{PersistentActor, SaveSnapshotSuccess, SnapshotMetadata, SnapshotOffer}
 import akka.persistence.jdbc.SimpleSpec
-import akka.persistence.jdbc.config.{ JournalConfig, SlickConfiguration }
+import akka.persistence.jdbc.config.{JournalConfig, SlickConfiguration}
 import akka.persistence.jdbc.db.SlickDatabase
-import akka.persistence.jdbc.migrator.JournalMigratorSpec._
+import akka.persistence.jdbc.migrator.MigratorSpec._
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 import akka.persistence.jdbc.testkit.internal._
 import akka.persistence.query.PersistenceQuery
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import akka.util.Timeout
-import com.typesafe.config.{ Config, ConfigFactory, ConfigValue, ConfigValueFactory }
+import com.typesafe.config.{Config, ConfigFactory, ConfigValue, ConfigValueFactory}
 import org.scalatest.BeforeAndAfterEach
-import org.slf4j.{ Logger, LoggerFactory }
-import slick.jdbc.JdbcBackend.{ Database, Session }
+import org.slf4j.{Logger, LoggerFactory}
+import slick.jdbc.JdbcBackend.{Database, Session}
 
 import java.sql.Statement
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{ ExecutionContextExecutor, Future }
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
-abstract class JournalMigratorSpec(val config: Config) extends SimpleSpec with BeforeAndAfterEach {
+abstract class MigratorSpec(val config: Config) extends SimpleSpec with BeforeAndAfterEach {
 
   // The db is initialized in the before and after each bocks
   var dbOpt: Option[Database] = None
@@ -171,9 +171,11 @@ abstract class JournalMigratorSpec(val config: Config) extends SimpleSpec with B
 
 }
 
-object JournalMigratorSpec {
+object MigratorSpec {
 
   private final val Zero: Int = 0
+
+  private final val SnapshotInterval: Int = 10
 
   /** Commands */
   sealed trait AccountCommand extends Serializable
@@ -206,22 +208,33 @@ object JournalMigratorSpec {
 
     var state: Int = Zero
 
+    private def saveSnapshot(): Unit = {
+      if (state % SnapshotInterval == 0) {
+        saveSnapshot(state)
+      }
+    }
+
     override def receiveCommand: Receive =
       LoggingReceive {
+
+        case SaveSnapshotSuccess(_: SnapshotMetadata) => ()
 
         case CreateAccount(balance) =>
           persist(AccountCreated(balance)) { (event: AccountCreated) =>
             updateState(event)
+            saveSnapshot()
             sender() ! akka.actor.Status.Success(event)
           }
         case Deposit(balance) =>
           persist(Deposited(balance)) { (event: Deposited) =>
             updateState(event)
+            saveSnapshot()
             sender() ! akka.actor.Status.Success(event)
           }
         case Withdraw(balance) =>
           persist(Withdrawn(balance)) { (event: Withdrawn) =>
             updateState(event)
+            saveSnapshot()
             sender() ! akka.actor.Status.Success(event)
           }
         case State =>
@@ -235,10 +248,14 @@ object JournalMigratorSpec {
     }
 
     override def receiveRecover: Receive =
-      LoggingReceive { case event: AccountEvent => updateState(event) }
+      LoggingReceive {
+        case SnapshotOffer(_, snapshot: Int) =>
+          state = snapshot
+        case event: AccountEvent => updateState(event)
+      }
   }
 
-  trait PostgresCleaner extends JournalMigratorSpec {
+  trait PostgresCleaner extends MigratorSpec {
 
     def clearPostgres(): Unit = {
       tables.foreach { name =>
@@ -257,7 +274,7 @@ object JournalMigratorSpec {
     }
   }
 
-  trait MysqlCleaner extends JournalMigratorSpec {
+  trait MysqlCleaner extends MigratorSpec {
 
     def clearMySQL(): Unit = {
       withStatement { stmt =>
@@ -278,7 +295,7 @@ object JournalMigratorSpec {
     }
   }
 
-  trait OracleCleaner extends JournalMigratorSpec {
+  trait OracleCleaner extends MigratorSpec {
 
     def clearOracle(): Unit = {
       tables.foreach { name =>
@@ -298,7 +315,7 @@ object JournalMigratorSpec {
     }
   }
 
-  trait SqlServerCleaner extends JournalMigratorSpec {
+  trait SqlServerCleaner extends MigratorSpec {
 
     var initial = true
 
@@ -332,7 +349,7 @@ object JournalMigratorSpec {
     }
   }
 
-  trait H2Cleaner extends JournalMigratorSpec {
+  trait H2Cleaner extends MigratorSpec {
 
     def clearH2(): Unit = {
       tables.foreach { name =>

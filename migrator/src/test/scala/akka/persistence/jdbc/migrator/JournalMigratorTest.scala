@@ -3,10 +3,11 @@ package akka.persistence.jdbc.migrator
 import akka.Done
 import akka.pattern.ask
 import akka.persistence.jdbc.db.SlickDatabase
-import akka.persistence.jdbc.migrator.JournalMigratorSpec._
+import akka.persistence.jdbc.migrator.MigratorSpec._
 
-abstract class JournalMigratorTest(configName: String) extends JournalMigratorSpec(configName) {
+abstract class JournalMigratorTest(configName: String) extends MigratorSpec(configName) {
 
+  // TODO TAG
   it should "migrate the event journal" in {
     withLegacyActorSystem { implicit systemLegacy =>
       withReadJournal { implicit readJournal =>
@@ -29,7 +30,7 @@ abstract class JournalMigratorTest(configName: String) extends JournalMigratorSp
           }
         }
       }
-    }
+    } // legacy persistence
     withActorSystem { implicit systemNew =>
       withReadJournal { implicit readJournal =>
         eventually {
@@ -45,7 +46,7 @@ abstract class JournalMigratorTest(configName: String) extends JournalMigratorSp
           }
         }
       }
-    }
+    } // new persistence
   }
 
   it should "migrate the event journal preserving the order of events" in {
@@ -55,20 +56,17 @@ abstract class JournalMigratorTest(configName: String) extends JournalMigratorSp
           (actorA1 ? CreateAccount(0)).futureValue
           (actorA2 ? CreateAccount(0)).futureValue
           (actorA3 ? CreateAccount(0)).futureValue
-
           for (i <- 1 to 999) {
             (actorA1 ? Deposit(i)).futureValue
             (actorA2 ? Deposit(i)).futureValue
             (actorA3 ? Deposit(i)).futureValue
           }
-
           eventually {
             countJournal().futureValue shouldBe 3000
           }
         }
       }
     } // legacy persistence
-
     withActorSystem { implicit systemNew =>
       withReadJournal { implicit readJournal =>
         eventually {
@@ -94,4 +92,4 @@ abstract class JournalMigratorTest(configName: String) extends JournalMigratorSp
   }
 }
 
-class H2JournalMigratorTest extends JournalMigratorTest("h2-application.conf") with JournalMigratorSpec.H2Cleaner
+class H2JournalMigratorTest extends JournalMigratorTest("h2-application.conf") with MigratorSpec.H2Cleaner

@@ -1,6 +1,6 @@
 package akka.persistence.jdbc.migrator.integration
 
-import akka.persistence.jdbc.migrator.JournalMigratorSpec._
+import akka.persistence.jdbc.migrator.MigratorSpec._
 import akka.persistence.jdbc.migrator.JournalMigratorTest
 
 class PostgresJournalMigratorTest extends JournalMigratorTest("postgres-application.conf") with PostgresCleaner

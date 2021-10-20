@@ -5,6 +5,11 @@ import akka.persistence.jdbc.migrator.JournalMigratorSpec._
 import akka.persistence.query.scaladsl.ReadJournal
 
 /*
+
+  def newDao: Boolean = !SchemaUtilsImpl.legacy("jdbc-journal", config)
+
+
+
   val journalConfig = new JournalConfig(config.getConfig("jdbc-journal"))
   val snapshotConfig = new SnapshotConfig(config.getConfig("jdbc-snapshot-store"))
   val readJournalConfig = new ReadJournalConfig(config.getConfig("jdbc-read-journal"))
@@ -13,7 +18,7 @@ import akka.persistence.query.scaladsl.ReadJournal
 
 abstract class JournalMigratorTest(configName: String) extends JournalMigratorSpec(configName) {
 
-  it should "TODO" in {
+  it should "migrate the event journal" in  {
     withActorSystem(config) { implicit systemLegacy =>
       withTestActors() { (actorA1, actorA2, actorA3) =>
         withReadJournal { implicit readJournal =>

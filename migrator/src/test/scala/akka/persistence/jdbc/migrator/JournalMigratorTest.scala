@@ -39,14 +39,14 @@ abstract class JournalMigratorTest(configName: String) extends JournalMigratorSp
     } // legacy persistence
     withActorSystem(config) { implicit systemNew =>
       // TODO migration
-      // val journalOps = new ScalaJdbcReadJournalOperations(systemNew)
       withTestActors() { (actorB1, actorB2, actorB3) =>
-        eventually {
-          (actorB1 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(1)
-          (actorB2 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(2)
-          (actorB3 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(3)
-
-          // journalOps.countJournal.futureValue shouldBe 9
+        withReadJournal { implicit readJournal =>
+          eventually {
+            countJournal(_ => true).futureValue shouldBe 9
+            (actorB1 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(1)
+            (actorB2 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(2)
+            (actorB3 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(3)
+          }
         }
       }
     } // new persistence

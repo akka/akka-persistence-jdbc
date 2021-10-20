@@ -1,11 +1,11 @@
 package akka.persistence.jdbc.migrator
 
-import akka.actor.{ActorRef, ActorSystem, Props, Stash}
+import akka.actor.{ ActorRef, ActorSystem, Props, Stash }
 import akka.event.LoggingReceive
 import akka.pattern.ask
 import akka.persistence.PersistentActor
 import akka.persistence.jdbc.SimpleSpec
-import akka.persistence.jdbc.config.{JournalConfig, SlickConfiguration}
+import akka.persistence.jdbc.config.{ JournalConfig, SlickConfiguration }
 import akka.persistence.jdbc.db.SlickDatabase
 import akka.persistence.jdbc.migrator.JournalMigratorSpec._
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
@@ -14,14 +14,14 @@ import akka.persistence.query.PersistenceQuery
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import akka.util.Timeout
-import com.typesafe.config.{Config, ConfigFactory, ConfigValue, ConfigValueFactory}
+import com.typesafe.config.{ Config, ConfigFactory, ConfigValue, ConfigValueFactory }
 import org.scalatest.BeforeAndAfterEach
-import org.slf4j.{Logger, LoggerFactory}
-import slick.jdbc.JdbcBackend.{Database, Session}
+import org.slf4j.{ Logger, LoggerFactory }
+import slick.jdbc.JdbcBackend.{ Database, Session }
 
 import java.sql.Statement
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.{ ExecutionContextExecutor, Future }
 
 abstract class JournalMigratorSpec(val config: Config) extends SimpleSpec with BeforeAndAfterEach {
 
@@ -135,7 +135,7 @@ abstract class JournalMigratorSpec(val config: Config) extends SimpleSpec with B
     f(readJournal)
   }
 
-  def countJournal(filterPid: String => Boolean)(
+  def countJournal(filterPid: String => Boolean = _ => true)(
       implicit system: ActorSystem,
       mat: Materializer,
       readJournal: JdbcReadJournal): Future[Long] =
@@ -152,40 +152,59 @@ abstract class JournalMigratorSpec(val config: Config) extends SimpleSpec with B
       .runWith(Sink.seq)
       .map(_.sum)(system.dispatcher)
 
+  def events(filterPid: String => Boolean = _ => true)(
+      implicit mat: Materializer,
+      readJournal: JdbcReadJournal): Future[Seq[Seq[AccountEvent]]] =
+    readJournal
+      .currentPersistenceIds()
+      .filter(filterPid(_))
+      .mapAsync(1) { pid =>
+        readJournal
+          .currentEventsByPersistenceId(pid, 0, Long.MaxValue)
+          .map(e => e.event)
+          .collect { case e: AccountEvent =>
+            e
+          }
+          .runWith(Sink.seq)
+      }
+      .runWith(Sink.seq)
+
 }
 
 object JournalMigratorSpec {
 
-  private final val Zero = BigDecimal(0)
+  private final val Zero: Int = 0
 
   /** Commands */
   sealed trait AccountCommand extends Serializable
 
-  final case class CreateAccount(amount: BigDecimal) extends AccountCommand
+  final case class CreateAccount(amount: Int) extends AccountCommand
 
-  final case class Deposit(amount: BigDecimal) extends AccountCommand
+  final case class Deposit(amount: Int) extends AccountCommand
 
-  final case class Withdraw(amount: BigDecimal) extends AccountCommand
+  final case class Withdraw(amount: Int) extends AccountCommand
 
   final object State extends AccountCommand
 
   /** Events */
-  sealed trait AccountEvent extends Serializable
+  sealed trait AccountEvent extends Serializable {
+    val amount: Int
+  }
 
-  final case class AccountCreated(amount: BigDecimal) extends AccountEvent
+  final case class AccountCreated(override val amount: Int) extends AccountEvent
 
-  final case class Deposited(amount: BigDecimal) extends AccountEvent
+  final case class Deposited(override val amount: Int) extends AccountEvent
 
-  final case class Withdrawn(amount: BigDecimal) extends AccountEvent
+  final case class Withdrawn(override val amount: Int) extends AccountEvent
 
   /** Reply */
-  final case class CurrentBalance(balance: BigDecimal)
+  final case class CurrentBalance(balance: Int)
 
   /** Actor */
   class TestAccountActor(id: Int) extends PersistentActor with Stash {
     override val persistenceId: String = s"test-account-$id"
 
-    var state: BigDecimal = Zero
+    var state: Int = Zero
 
     override def receiveCommand: Receive =
       LoggingReceive {

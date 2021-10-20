@@ -15,7 +15,6 @@ import akka.persistence.jdbc.journal.dao.JournalQueries
 import akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalSerializer
 import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, TagRow }
 import akka.persistence.jdbc.migrator.JournalMigrator.{ JournalConfig, ReadJournalConfig }
-import akka.persistence.jdbc.migrator.JournalOrdering._
 import akka.persistence.jdbc.query.dao.legacy.ReadJournalQueries
 import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.scaladsl.Source
@@ -59,61 +58,42 @@ final case class JournalMigrator(profile: JdbcProfile)(implicit system: ActorSys
 
   private val bufferSize: Int = journalConfig.daoConfig.bufferSize
 
-  // get the journal ordering based upon the schema type used
-  private val journalOrdering: JournalOrdering = profile match {
-    case _: MySQLProfile     => MySQL(journalConfig, newJournalQueries, journalDB)
-    case _: PostgresProfile  => Postgres(journalConfig, newJournalQueries, journalDB)
-    case _: OracleProfile    => Oracle(journalConfig, newJournalQueries, journalDB)
-    case _: H2Profile        => H2(journalConfig, newJournalQueries, journalDB)
-    case _: SQLServerProfile => SqlServer(journalConfig, newJournalQueries, journalDB)
-    case unmanaged =>
-      throw new Exception(s"Unmanaged SQL database profile: ${unmanaged.getClass.getName}")
-  }
+  private val query =
+    legacyJournalQueries.JournalTable.result
+      .withStatementParameters(
+        rsType = ResultSetType.ForwardOnly,
+        rsConcurrency = ResultSetConcurrency.ReadOnly,
+        fetchSize = bufferSize)
+      .transactionally
 
   /**
    * write all legacy events into the new journal tables applying the proper serialization
    */
-  def migrate(): Future[Done] = {
-    val query =
-      legacyJournalQueries.JournalTable.result
-        .withStatementParameters(
-          rsType = ResultSetType.ForwardOnly,
-          rsConcurrency = ResultSetConcurrency.ReadOnly,
-          fetchSize = bufferSize)
-        .transactionally
+  def migrate(): Future[Done] = Source
+    .fromPublisher(journalDB.stream(query))
+    .via(serializer.deserializeFlow)
+    .map {
+      case Success((repr, tags, ordering)) => (repr, tags, ordering)
+      case Failure(exception)              => throw exception // blow-up on failure
+    }
+    .map { case (repr, tags, ordering) => serialize(repr, tags, ordering) }
+    // get pages of many records at once
+    .grouped(bufferSize)
+    .mapAsync(1)(records => {
+      val stmt: DBIO[Unit] = records
+        // get all the sql statements for this record as an option
+        .map { case (newRepr, newTags) =>
+          log.debug(s"migrating event for PersistenceID: ${newRepr.persistenceId} with tags ${newTags.mkString(",")}")
+          writeJournalRowsStatements(newRepr, newTags)
+        }
+        // reduce to 1 statement
+        .foldLeft[DBIO[Unit]](DBIO.successful[Unit] {})((priorStmt, nextStmt) => {
+          priorStmt.andThen(nextStmt)
+        })
 
-    val eventualDone: Future[Done] = Source
-      .fromPublisher(journalDB.stream(query))
-      .via(serializer.deserializeFlow)
-      .map {
-        case Success((repr, tags, ordering)) => (repr, tags, ordering)
-        case Failure(exception)              => throw exception // blow-up on failure
-      }
-      .map { case (repr, tags, ordering) => serialize(repr, tags, ordering) }
-      // get pages of many records at once
-      .grouped(bufferSize)
-      .mapAsync(1)(records => {
-        val stmt: DBIO[Unit] = records
-          // get all the sql statements for this record as an option
-          .map { case (newRepr, newTags) =>
-            log.debug(s"migrating event for PersistenceID: ${newRepr.persistenceId} with tags ${newTags.mkString(",")}")
-            writeJournalRowsStatements(newRepr, newTags)
-          }
-          // reduce to 1 statement
-          .foldLeft[DBIO[Unit]](DBIO.successful[Unit] {})((priorStmt, nextStmt) => {
-            priorStmt.andThen(nextStmt)
-          })
-
-        journalDB.run(stmt)
-      })
-      .run()
-
-    // run the data migration and set the next ordering value
-    for {
-      _ <- eventualDone
-      _ <- journalOrdering.setSequenceVal() // reset the event_journal ordering to avoid collision
-    } yield Done
-  }
+      journalDB.run(stmt)
+    })
+    .run()
 
   /**
    * serialize the PersistentRepr and construct a JournalAkkaSerializationRow and set of matching tags

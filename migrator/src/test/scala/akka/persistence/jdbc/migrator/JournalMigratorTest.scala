@@ -5,52 +5,88 @@ import akka.pattern.ask
 import akka.persistence.jdbc.db.SlickDatabase
 import akka.persistence.jdbc.migrator.JournalMigratorSpec._
 
-/*
-  val journalConfig = new JournalConfig(config.getConfig("jdbc-journal"))
-  val snapshotConfig = new SnapshotConfig(config.getConfig("jdbc-snapshot-store"))
-  val readJournalConfig = new ReadJournalConfig(config.getConfig("jdbc-read-journal"))
-  val dao = new ByteArrayJournalDao(db, profile, journalConfig, SerializationExtension(system))
- */
-
 abstract class JournalMigratorTest(configName: String) extends JournalMigratorSpec(configName) {
 
   it should "migrate the event journal" in {
     withLegacyActorSystem { implicit systemLegacy =>
-      withTestActors() { (actorA1, actorA2, actorA3) =>
-        withReadJournal { implicit readJournal =>
+      withReadJournal { implicit readJournal =>
+        withTestActors() { (actorA1, actorA2, actorA3) =>
+          eventually {
+            countJournal().futureValue shouldBe 0
+            (actorA1 ? CreateAccount(1)).futureValue //balance 1
+            (actorA2 ? CreateAccount(2)).futureValue //balance 2
+            (actorA3 ? CreateAccount(3)).futureValue //balance 3
+            (actorA1 ? Deposit(3)).futureValue //balance 4
+            (actorA2 ? Deposit(2)).futureValue //balance 4
+            (actorA3 ? Deposit(1)).futureValue //balance 4
+            (actorA1 ? Withdraw(3)).futureValue //balance 1
+            (actorA2 ? Withdraw(2)).futureValue //balance 1
+            (actorA3 ? Withdraw(1)).futureValue //balance 1
+            (actorA1 ? State).mapTo[Int].futureValue shouldBe 1
+            (actorA2 ? State).mapTo[Int].futureValue shouldBe 2
+            (actorA3 ? State).mapTo[Int].futureValue shouldBe 3
+            countJournal().futureValue shouldBe 9
+          }
+        }
+      }
+    }
+    withActorSystem { implicit systemNew =>
+      withReadJournal { implicit readJournal =>
+        eventually {
+          countJournal().futureValue shouldBe 0 // before migration
+          JournalMigrator(SlickDatabase.profile(config, "slick")).migrate().futureValue shouldBe Done
+          countJournal().futureValue shouldBe 9 // after migration
+        }
+        withTestActors() { (actorB1, actorB2, actorB3) =>
+          eventually {
+            (actorB1 ? State).mapTo[Int].futureValue shouldBe 1
+            (actorB2 ? State).mapTo[Int].futureValue shouldBe 2
+            (actorB3 ? State).mapTo[Int].futureValue shouldBe 3
+          }
+        }
+      }
+    }
+  }
 
-          (actorA1 ? CreateAccount(1)).futureValue //balance 1
-          (actorA2 ? CreateAccount(2)).futureValue //balance 2
-          (actorA3 ? CreateAccount(3)).futureValue //balance 3
-          (actorA1 ? Deposit(3)).futureValue //balance 4
-          (actorA2 ? Deposit(2)).futureValue //balance 4
-          (actorA3 ? Deposit(1)).futureValue //balance 4
-          (actorA1 ? Withdraw(3)).futureValue //balance 1
-          (actorA2 ? Withdraw(2)).futureValue //balance 1
-          (actorA3 ? Withdraw(1)).futureValue //balance 1
+  it should "migrate the event journal preserving the order of events" in {
+    withLegacyActorSystem { implicit systemLegacy =>
+      withReadJournal { implicit readJournal =>
+        withTestActors() { (actorA1, actorA2, actorA3) =>
+          (actorA1 ? CreateAccount(0)).futureValue
+          (actorA2 ? CreateAccount(0)).futureValue
+          (actorA3 ? CreateAccount(0)).futureValue
+
+          for (i <- 1 to 999) {
+            (actorA1 ? Deposit(i)).futureValue
+            (actorA2 ? Deposit(i)).futureValue
+            (actorA3 ? Deposit(i)).futureValue
+          }
 
           eventually {
-            (actorA1 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(1)
-            (actorA2 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(2)
-            (actorA3 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(3)
-
-            countJournal(_ => true).futureValue shouldBe 9
+            countJournal().futureValue shouldBe 3000
           }
         }
       }
     } // legacy persistence
 
     withActorSystem { implicit systemNew =>
-      eventually {
-        JournalMigrator(SlickDatabase.profile(config, "slick")).migrate().futureValue shouldBe Done
-
-        withTestActors() { (actorB1, actorB2, actorB3) =>
-          withReadJournal { implicit readJournal =>
-
-            countJournal(_ => true).futureValue shouldBe 9
-            (actorB1 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(1)
-            (actorB2 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(2)
-            (actorB3 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(3)
+      withReadJournal { implicit readJournal =>
+        eventually {
+          countJournal().futureValue shouldBe 0 // before migration
+          JournalMigrator(SlickDatabase.profile(config, "slick")).migrate().futureValue shouldBe Done
+          countJournal().futureValue shouldBe 3000 // after migration
+        }
+        withTestActors() { (_, _, _) =>
+          eventually {
+            val allEvents: Seq[Seq[AccountEvent]] = events().futureValue
+            allEvents.size shouldBe 3
+            val seq1: Seq[Int] = allEvents.head.map(_.amount)
+            val seq2: Seq[Int] = allEvents(1).map(_.amount)
+            val seq3: Seq[Int] = allEvents(2).map(_.amount)
+            val expectedResult: Seq[Int] = 0 to 999
+            seq1 shouldBe expectedResult
+            seq2 shouldBe expectedResult
+            seq3 shouldBe expectedResult
           }
         }
       }

@@ -1,27 +1,29 @@
 package akka.persistence.jdbc.migrator
 
-import akka.actor.{ActorRef, ActorSystem, Props, Stash}
+import akka.actor.{ ActorRef, ActorSystem, Props, Stash }
 import akka.event.LoggingReceive
 import akka.pattern.ask
-import akka.persistence.{PersistentActor, SaveSnapshotSuccess, SnapshotMetadata, SnapshotOffer}
 import akka.persistence.jdbc.SimpleSpec
-import akka.persistence.jdbc.config.{JournalConfig, SlickConfiguration}
+import akka.persistence.jdbc.config.{ JournalConfig, SlickConfiguration }
 import akka.persistence.jdbc.db.SlickDatabase
 import akka.persistence.jdbc.migrator.MigratorSpec._
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 import akka.persistence.jdbc.testkit.internal._
+import akka.persistence.journal.EventSeq.single
+import akka.persistence.journal.{ EventAdapter, EventSeq, Tagged }
 import akka.persistence.query.PersistenceQuery
+import akka.persistence.{ PersistentActor, SaveSnapshotSuccess, SnapshotMetadata, SnapshotOffer }
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import akka.util.Timeout
-import com.typesafe.config.{Config, ConfigFactory, ConfigValue, ConfigValueFactory}
+import com.typesafe.config.{ Config, ConfigFactory, ConfigValue, ConfigValueFactory }
 import org.scalatest.BeforeAndAfterEach
-import org.slf4j.{Logger, LoggerFactory}
-import slick.jdbc.JdbcBackend.{Database, Session}
+import org.slf4j.{ Logger, LoggerFactory }
+import slick.jdbc.JdbcBackend.{ Database, Session }
 
 import java.sql.Statement
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.{ ExecutionContextExecutor, Future }
 
 abstract class MigratorSpec(val config: Config) extends SimpleSpec with BeforeAndAfterEach {
 
@@ -152,6 +154,15 @@ abstract class MigratorSpec(val config: Config) extends SimpleSpec with BeforeAn
       .runWith(Sink.seq)
       .map(_.sum)(system.dispatcher)
 
+  def eventsByTag(tag: String)(implicit mat: Materializer, readJournal: JdbcReadJournal): Future[Seq[AccountEvent]] =
+    readJournal
+      .currentEventsByTag(tag, offset = 0)
+      .map(_.event)
+      .collect { case e: AccountEvent =>
+        e
+      }
+      .runWith(Sink.seq)
+
   def events(filterPid: String => Boolean = _ => true)(
       implicit mat: Materializer,
       readJournal: JdbcReadJournal): Future[Seq[Seq[AccountEvent]]] =
@@ -160,7 +171,7 @@ abstract class MigratorSpec(val config: Config) extends SimpleSpec with BeforeAn
       .filter(filterPid(_))
       .mapAsync(1) { pid =>
         readJournal
-          .currentEventsByPersistenceId(pid, 0, Long.MaxValue)
+          .currentEventsByPersistenceId(pid, fromSequenceNr = 0, toSequenceNr = Long.MaxValue)
           .map(e => e.event)
           .collect { case e: AccountEvent =>
             e
@@ -176,6 +187,9 @@ object MigratorSpec {
   private final val Zero: Int = 0
 
   private final val SnapshotInterval: Int = 10
+
+  val Even: String = "EVEN"
+  val Odd: String = "ODD"
 
   /** Commands */
   sealed trait AccountCommand extends Serializable
@@ -201,6 +215,23 @@ object MigratorSpec {
 
   /** Reply */
   final case class CurrentBalance(balance: Int)
+
+  class AccountEventAdapter extends EventAdapter {
+
+    override def manifest(event: Any): String = event.getClass.getSimpleName
+
+    def fromJournal(event: Any, manifest: String): EventSeq = event match {
+      case event: AccountEvent => single(event)
+      case _                   => sys.error(s"Unexpected case '${event.getClass.getName}'")
+    }
+
+    def toJournal(event: Any): Any = event match {
+      case event: AccountEvent =>
+        val tag: String = if (event.amount % 2 == 0) Even else Odd
+        Tagged(event, Set(tag))
+      case _ => sys.error(s"Unexpected case '${event.getClass.getName}'")
+    }
+  }
 
   /** Actor */
   class TestAccountActor(id: Int) extends PersistentActor with Stash {

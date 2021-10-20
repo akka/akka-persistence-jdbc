@@ -7,7 +7,6 @@ import akka.persistence.jdbc.migrator.MigratorSpec._
 
 abstract class SnapshotMigratorTest(configName: String) extends MigratorSpec(configName) {
 
-
   it should "migrate snapshots" in {
     withLegacyActorSystem { implicit systemLegacy =>
       withReadJournal { implicit readJournal =>

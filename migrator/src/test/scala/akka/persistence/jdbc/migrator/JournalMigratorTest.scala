@@ -1,15 +1,11 @@
 package akka.persistence.jdbc.migrator
 
+import akka.Done
 import akka.pattern.ask
+import akka.persistence.jdbc.db.SlickDatabase
 import akka.persistence.jdbc.migrator.JournalMigratorSpec._
-import akka.persistence.query.scaladsl.ReadJournal
 
 /*
-
-  def newDao: Boolean = !SchemaUtilsImpl.legacy("jdbc-journal", config)
-
-
-
   val journalConfig = new JournalConfig(config.getConfig("jdbc-journal"))
   val snapshotConfig = new SnapshotConfig(config.getConfig("jdbc-snapshot-store"))
   val readJournalConfig = new ReadJournalConfig(config.getConfig("jdbc-read-journal"))
@@ -18,10 +14,11 @@ import akka.persistence.query.scaladsl.ReadJournal
 
 abstract class JournalMigratorTest(configName: String) extends JournalMigratorSpec(configName) {
 
-  it should "migrate the event journal" in  {
-    withActorSystem(config) { implicit systemLegacy =>
+  it should "migrate the event journal" in {
+    withLegacyActorSystem { implicit systemLegacy =>
       withTestActors() { (actorA1, actorA2, actorA3) =>
         withReadJournal { implicit readJournal =>
+
           (actorA1 ? CreateAccount(1)).futureValue //balance 1
           (actorA2 ? CreateAccount(2)).futureValue //balance 2
           (actorA3 ? CreateAccount(3)).futureValue //balance 3
@@ -42,11 +39,14 @@ abstract class JournalMigratorTest(configName: String) extends JournalMigratorSp
         }
       }
     } // legacy persistence
-    withActorSystem(config) { implicit systemNew =>
-      // TODO migration
-      withTestActors() { (actorB1, actorB2, actorB3) =>
-        withReadJournal { implicit readJournal =>
-          eventually {
+
+    withActorSystem { implicit systemNew =>
+      eventually {
+        JournalMigrator(SlickDatabase.profile(config, "slick")).migrate().futureValue shouldBe Done
+
+        withTestActors() { (actorB1, actorB2, actorB3) =>
+          withReadJournal { implicit readJournal =>
+
             countJournal(_ => true).futureValue shouldBe 9
             (actorB1 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(1)
             (actorB2 ? State).mapTo[BigDecimal].futureValue shouldBe BigDecimal.apply(2)

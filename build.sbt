@@ -1,7 +1,7 @@
 import com.lightbend.paradox.apidoc.ApidocPlugin.autoImport.apidocRootPackage
 
 // FIXME remove switching to final Akka version
-resolvers in ThisBuild += "Akka Snapshots".at("https://oss.sonatype.org/content/repositories/snapshots/")
+ThisBuild / resolvers += "Akka Snapshots".at("https://oss.sonatype.org/content/repositories/snapshots/")
 
 lazy val `akka-persistence-jdbc` = project
   .in(file("."))
@@ -24,9 +24,11 @@ lazy val core = project
       organization.value %% name.value % previousStableVersion.value.getOrElse(
         throw new Error("Unable to determine previous version for MiMa"))))
 
-lazy val migration = project
-  .in(file("migration"))
+lazy val migrator = project
+  .in(file("migrator"))
   .disablePlugins(SitePlugin, MimaPlugin)
+  .configs(IntegrationTest.extend(Test))
+  .settings(Defaults.itSettings)
   .settings(
     name := "akka-persistence-jdbc-migrator",
     libraryDependencies ++= Dependencies.Migration ++ Dependencies.Libraries,

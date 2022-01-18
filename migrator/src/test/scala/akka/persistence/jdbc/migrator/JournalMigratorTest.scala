@@ -13,15 +13,15 @@ abstract class JournalMigratorTest(configName: String) extends MigratorSpec(conf
         withTestActors() { (actorA1, actorA2, actorA3) =>
           eventually {
             countJournal().futureValue shouldBe 0
-            (actorA1 ? CreateAccount(1)).futureValue //balance 1
-            (actorA2 ? CreateAccount(2)).futureValue //balance 2
-            (actorA3 ? CreateAccount(3)).futureValue //balance 3
-            (actorA1 ? Deposit(3)).futureValue //balance 4
-            (actorA2 ? Deposit(2)).futureValue //balance 4
-            (actorA3 ? Deposit(1)).futureValue //balance 4
-            (actorA1 ? Withdraw(3)).futureValue //balance 1
-            (actorA2 ? Withdraw(2)).futureValue //balance 1
-            (actorA3 ? Withdraw(1)).futureValue //balance 1
+            (actorA1 ? CreateAccount(1)).futureValue // balance 1
+            (actorA2 ? CreateAccount(2)).futureValue // balance 2
+            (actorA3 ? CreateAccount(3)).futureValue // balance 3
+            (actorA1 ? Deposit(3)).futureValue // balance 4
+            (actorA2 ? Deposit(2)).futureValue // balance 4
+            (actorA3 ? Deposit(1)).futureValue // balance 4
+            (actorA1 ? Withdraw(3)).futureValue // balance 1
+            (actorA2 ? Withdraw(2)).futureValue // balance 1
+            (actorA3 ? Withdraw(1)).futureValue // balance 1
             (actorA1 ? State).mapTo[Int].futureValue shouldBe 1
             (actorA2 ? State).mapTo[Int].futureValue shouldBe 2
             (actorA3 ? State).mapTo[Int].futureValue shouldBe 3

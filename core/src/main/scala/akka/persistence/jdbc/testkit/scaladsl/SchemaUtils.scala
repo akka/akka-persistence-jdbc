@@ -115,7 +115,7 @@ object SchemaUtils {
    *
    * @param script the DDL script. The passed `script` can contain more then one SQL statements.
    * @param separator used to separate the different DDL statements.
-   * @param configKey the database configuration key to use. Can be `jbdc-journal` or `jdbc-snapshot-store`.
+   * @param configKey the database configuration key to use. Can be `jdbc-journal` or `jdbc-snapshot-store`.
    */
   @ApiMayChange
   def applyScript(script: String, separator: String, configKey: String)(

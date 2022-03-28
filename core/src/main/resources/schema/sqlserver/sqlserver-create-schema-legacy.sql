@@ -1,3 +1,9 @@
+/*
+Note that because this schema uses VARCHAR (as opposed to NVARCHAR), it is recommended if using this schema to
+disable sending string fields as Unicode.  This can be accomplished by appending
+;sendStringParametersAsUnicode=false to the JDBC connection string.
+*/
+
 IF  NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'"journal"') AND type in (N'U'))
 begin
 CREATE TABLE journal (

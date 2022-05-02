@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "event_journal" (
-    "ordering" BIGINT NOT NULL AUTO_INCREMENT,
+    "ordering" BIGINT UNIQUE NOT NULL AUTO_INCREMENT,
     "deleted" BOOLEAN DEFAULT false NOT NULL,
     "persistence_id" VARCHAR(255) NOT NULL,
     "sequence_number" BIGINT NOT NULL,
@@ -39,8 +39,10 @@ CREATE TABLE IF NOT EXISTS "snapshot" (
     PRIMARY KEY("persistence_id","sequence_number")
     );
 
+CREATE SEQUENCE IF NOT EXISTS "global_offset_seq";
+
 CREATE TABLE IF NOT EXISTS "durable_state" (
-    "global_offset" BIGINT NOT NULL AUTO_INCREMENT,
+    "global_offset" BIGINT DEFAULT NEXT VALUE FOR "global_offset_seq",
     "persistence_id" VARCHAR(255) NOT NULL,
     "revision" BIGINT NOT NULL,
     "state_payload" BLOB NOT NULL,
@@ -50,5 +52,5 @@ CREATE TABLE IF NOT EXISTS "durable_state" (
     "state_timestamp" BIGINT NOT NULL,
     PRIMARY KEY("persistence_id")
     );
-CREATE INDEX "state_tag_idx" on "durable_state" ("tag");
-CREATE INDEX "state_global_offset_idx" on "durable_state" ("global_offset");
+CREATE INDEX IF NOT EXISTS "state_tag_idx" on "durable_state" ("tag");
+CREATE INDEX IF NOT EXISTS "state_global_offset_idx" on "durable_state" ("global_offset");

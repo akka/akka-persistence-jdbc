@@ -24,6 +24,12 @@ Configure `slick`:
 - @extref:[Oracle Schema](github:/core/src/main/resources/schema/oracle/oracle-create-schema.sql)
 - @extref:[SQL Server Schema](github:/core/src/main/resources/schema/sqlserver/sqlserver-create-schema.sql)
 
+@@@ note
+
+Please note that the H2 database is not recommended to be used as a production database, and support for H2 is primarily for testing purposes.
+
+@@@
+
 For testing purposes the journal and snapshot tables can be created programmatically using the provided `SchemaUtils`.
 
 

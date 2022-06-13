@@ -7,6 +7,8 @@
 akka-persistence-jdbc writes journal and snapshot entries to a configured JDBC store. It implements the full akka-persistence-query API and is therefore very useful for implementing DDD-style 
 application models using Akka for creating reactive applications.
 
+Please note that the H2 database is not recommended to be used as a production database, and support for H2 is primarily for testing purposes.
+
 ## Documentation
 
 * [current Akka Persistence JDBC documentation](https://doc.akka.io/docs/akka-persistence-jdbc/current/)

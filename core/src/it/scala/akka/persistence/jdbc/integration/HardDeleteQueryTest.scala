@@ -8,16 +8,10 @@ import akka.persistence.jdbc.query.{
   SqlServerCleaner
 }
 
-class PostgresHardDeleteQueryTest
-  extends HardDeleteQueryTest("postgres-application.conf")
-    with PostgresCleaner
+class PostgresHardDeleteQueryTest extends HardDeleteQueryTest("postgres-application.conf") with PostgresCleaner
 
 class MySQLHardDeleteQueryTest extends HardDeleteQueryTest("mysql-application.conf") with MysqlCleaner
 
-class OracleHardDeleteQueryTest
-  extends HardDeleteQueryTest("oracle-application.conf")
-    with OracleCleaner
+class OracleHardDeleteQueryTest extends HardDeleteQueryTest("oracle-application.conf") with OracleCleaner
 
-class SqlServerHardDeleteQueryTest
-  extends HardDeleteQueryTest("sqlserver-application.conf")
-    with SqlServerCleaner
+class SqlServerHardDeleteQueryTest extends HardDeleteQueryTest("sqlserver-application.conf") with SqlServerCleaner

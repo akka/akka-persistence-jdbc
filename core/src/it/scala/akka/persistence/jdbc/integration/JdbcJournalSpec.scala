@@ -1,7 +1,7 @@
 package akka.persistence.jdbc.integration
 
 import akka.persistence.jdbc.journal.JdbcJournalSpec
-import akka.persistence.jdbc.testkit.internal.{MySQL, Oracle, Postgres, SqlServer}
+import akka.persistence.jdbc.testkit.internal.{ MySQL, Oracle, Postgres, SqlServer }
 import com.typesafe.config.ConfigFactory
 
 class PostgresJournalSpec extends JdbcJournalSpec(ConfigFactory.load("postgres-application.conf"), Postgres)

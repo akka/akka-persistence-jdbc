@@ -6,6 +6,6 @@ class PostgresScalaEventAdapterTest extends EventAdapterTest("postgres-applicati
 
 class MySQLScalaEventAdapterTest extends EventAdapterTest("mysql-application.conf") with MysqlCleaner
 
-class OracleScalaEventAdapterTest extends EventAdapterTest("oracle-application.conf") with OracleCleaner
+class OracleScalaEventAdapterTest extends EventAdapterTest("oracle-application.conf") with OracleCleaner //test
 
 class SqlServerScalaEventAdapterTest extends EventAdapterTest("sqlserver-application.conf") with SqlServerCleaner

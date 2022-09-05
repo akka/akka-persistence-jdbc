@@ -80,7 +80,6 @@ object ProjectAutoPlugin extends AutoPlugin {
     headerLicense := Some(HeaderLicense.Custom("""|Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
            |Copyright (C) 2019 - 2021 Lightbend Inc. <https://www.lightbend.com>
            |""".stripMargin)),
-    resolvers += Resolver.typesafeRepo("releases"),
     resolvers += Resolver.jcenterRepo,
     sonatypeProfileName := "com.lightbend")
 

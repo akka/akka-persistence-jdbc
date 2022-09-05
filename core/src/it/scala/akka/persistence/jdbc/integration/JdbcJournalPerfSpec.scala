@@ -17,10 +17,6 @@ class PostgresJournalPerfSpecSharedDb
   override def eventsCount: Int = 100
 }
 
-class PostgresJournalPerfSpecPhysicalDelete extends PostgresJournalPerfSpec {
-  this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
-}
-
 class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-application.conf"), MySQL) {
   override def eventsCount: Int = 100
 }
@@ -28,10 +24,6 @@ class MySQLJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("mysql
 class MySQLJournalPerfSpecSharedDb
     extends JdbcJournalPerfSpec(ConfigFactory.load("mysql-shared-db-application.conf"), MySQL) {
   override def eventsCount: Int = 100
-}
-
-class MySQLJournalPerfSpecPhysicalDelete extends MySQLJournalPerfSpec {
-  this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
 }
 
 class OracleJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("oracle-application.conf"), Oracle) {
@@ -43,10 +35,6 @@ class OracleJournalPerfSpecSharedDb
   override def eventsCount: Int = 100
 }
 
-class OracleJournalPerfSpecPhysicalDelete extends OracleJournalPerfSpec {
-  this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
-}
-
 class SqlServerJournalPerfSpec
     extends JdbcJournalPerfSpec(ConfigFactory.load("sqlserver-application.conf"), SqlServer) {
   override def eventsCount: Int = 100
@@ -55,8 +43,4 @@ class SqlServerJournalPerfSpec
 class SqlServerJournalPerfSpecSharedDb
     extends JdbcJournalPerfSpec(ConfigFactory.load("sqlserver-shared-db-application.conf"), SqlServer) {
   override def eventsCount: Int = 100
-}
-
-class SqlServerJournalPerfSpecPhysicalDelete extends SqlServerJournalPerfSpec {
-  this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
 }

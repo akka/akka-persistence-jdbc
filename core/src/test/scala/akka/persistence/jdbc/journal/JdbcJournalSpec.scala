@@ -5,22 +5,17 @@
 
 package akka.persistence.jdbc.journal
 
-import scala.concurrent.duration._
-
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.db.SlickExtension
-import akka.persistence.jdbc.testkit.internal.H2
-import akka.persistence.jdbc.testkit.internal.SchemaType
-import akka.persistence.jdbc.util.ClasspathResources
-import akka.persistence.jdbc.util.DropCreate
+import akka.persistence.jdbc.testkit.internal.{ H2, SchemaType }
+import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate }
 import akka.persistence.journal.JournalSpec
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigValueFactory
+import com.typesafe.config.{ Config, ConfigFactory }
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.BeforeAndAfterEach
+
+import scala.concurrent.duration._
 
 abstract class JdbcJournalSpec(config: Config, schemaType: SchemaType)
     extends JournalSpec(config)
@@ -57,9 +52,3 @@ abstract class JdbcJournalSpec(config: Config, schemaType: SchemaType)
 
 class H2JournalSpec extends JdbcJournalSpec(ConfigFactory.load("h2-application.conf"), H2)
 class H2JournalSpecSharedDb extends JdbcJournalSpec(ConfigFactory.load("h2-shared-db-application.conf"), H2)
-class H2JournalSpecPhysicalDelete
-    extends JdbcJournalSpec(
-      ConfigFactory
-        .load("h2-application.conf")
-        .withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false)),
-      H2)

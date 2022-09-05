@@ -24,8 +24,7 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
     baseTableQuery().map(_.persistenceId).distinct.take(max)
 
   private def baseTableQuery() =
-    if (readJournalConfig.includeDeleted) JournalTable
-    else JournalTable.filter(_.deleted === false)
+    JournalTable.filter(_.deleted === false)
 
   val allPersistenceIdsDistinct = Compiled(_allPersistenceIdsDistinct _)
 

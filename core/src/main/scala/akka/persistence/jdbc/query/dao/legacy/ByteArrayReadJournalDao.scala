@@ -124,19 +124,19 @@ trait OracleReadJournalDao extends ReadJournalDao {
       val theTag = s"%$tag%"
 
       val selectStatement =
-        if (readJournalConfig.includeDeleted)
-          sql"""
-            SELECT "#$ordering", "#$deleted", "#$persistenceId", "#$sequenceNumber", "#$message", "#$tags"
-            FROM (
-              SELECT * FROM #$theTableName
-              WHERE "#$tags" LIKE $theTag
-              AND "#$ordering" > $theOffset
-              AND "#$ordering" <= $maxOffset
-              ORDER BY "#$ordering"
-            )
-            WHERE rownum <= $max""".as[JournalRow]
-        else
-          sql"""
+//        if (readJournalConfig.includeDeleted)
+//          sql"""
+//            SELECT "#$ordering", "#$deleted", "#$persistenceId", "#$sequenceNumber", "#$message", "#$tags"
+//            FROM (
+//              SELECT * FROM #$theTableName
+//              WHERE "#$tags" LIKE $theTag
+//              AND "#$ordering" > $theOffset
+//              AND "#$ordering" <= $maxOffset
+//              ORDER BY "#$ordering"
+//            )
+//            WHERE rownum <= $max""".as[JournalRow]
+//        else
+        sql"""
             SELECT "#$ordering", "#$deleted", "#$persistenceId", "#$sequenceNumber", "#$message", "#$tags"
             FROM (
               SELECT * FROM #$theTableName

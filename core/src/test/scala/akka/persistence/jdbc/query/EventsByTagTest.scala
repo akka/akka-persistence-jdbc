@@ -48,6 +48,8 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
   }
 
   it should "find all events by tag" in withActorSystem { implicit system =>
+    pendingIfOracleWithLegacy()
+
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       (actor1 ? withTags(1, "number")).futureValue

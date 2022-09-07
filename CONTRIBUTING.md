@@ -4,7 +4,7 @@
 
 This is the process for committing code into master.
 
-1. Make sure you have signed the Lightbend CLA, if not, [sign it online](https://www.lightbend.com/contribute/cla).
+1. Make sure you have signed the Lightbend CLA, if not, [sign it online](https://www.lightbend.com/contribute/cla/akka/current).
 2. Before starting to work on a feature or a fix, make sure that there is a ticket for your work in the [issue tracker](https://github.com/akka/akka-persistence-jdbc/issues). If not, create it first.
 3. Perform your work according to the [pull request requirements](#pull-request-requirements).
 4. When the feature or fix is completed you should open a [Pull Request](https://help.github.com/articles/using-pull-requests) on [GitHub](https://github.com/akka/akka-persistence-jdbc/pulls).

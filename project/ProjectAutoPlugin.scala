@@ -24,7 +24,9 @@ object ProjectAutoPlugin extends AutoPlugin {
         "Contributors",
         "https://gitter.im/akka/dev",
         url("https://github.com/akka/akka-persistence-jdbc/graphs/contributors")),
-      licenses := Seq(("BUSL-1.1", url("https://raw.githubusercontent.com/akka/akka-persistence-jdbc/master/LICENSE"))), // FIXME change s/master/v5.2.0/ when released
+      licenses := Seq(
+        ("BUSL-1.1", url("https://raw.githubusercontent.com/akka/akka-persistence-jdbc/master/LICENSE"))
+      ), // FIXME change s/master/v5.2.0/ when released
       description := "A plugin for storing events in an event journal akka-persistence-jdbc",
       startYear := Some(2014))
 

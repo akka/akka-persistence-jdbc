@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Copyright 2016 Dennis Vriend
-# Copyright (C) 2019 - 2021 Lightbend Inc. <https://www.lightbend.com>
+# Copyright (C) 2019 - 2022 Lightbend Inc. <https://www.lightbend.com>
 #
 export VM_HOST="${VM_HOST:-localhost}"
 

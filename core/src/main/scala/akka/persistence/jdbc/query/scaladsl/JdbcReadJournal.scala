@@ -228,15 +228,29 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
     import FlowControl._
     implicit val askTimeout: Timeout = Timeout(readJournalConfig.journalSequenceRetrievalConfiguration.askTimeout)
     val batchSize = readJournalConfig.maxBufferSize
+    val maxOrderingRange = readJournalConfig.eventsByTagBufferSizesPerQuery match {
+      case 0 => None
+      case x => Some(x * batchSize)
+    }
+
+    def getLoopMaxOrderingId(offset: Long, latestOrdering: MaxOrderingId): Future[MaxOrderingId] =
+      Future.successful(maxOrderingRange match {
+        case None => latestOrdering
+        case Some(numberOfEvents) =>
+          val limitedMaxOrderingId = offset + numberOfEvents
+          if (limitedMaxOrderingId >= latestOrdering.maxOrdering) latestOrdering
+          else MaxOrderingId(limitedMaxOrderingId)
+      })
 
     Source
       .unfoldAsync[(Long, FlowControl), Seq[EventEnvelope]]((offset, Continue)) { case (from, control) =>
         def retrieveNextBatch() = {
           for {
             queryUntil <- journalSequenceActor.ask(GetMaxOrderingId).mapTo[MaxOrderingId]
-            xs <- currentJournalEventsByTag(tag, from, batchSize, queryUntil).runWith(Sink.seq)
+            loopMaxOrderingId <- getLoopMaxOrderingId(from, queryUntil)
+            xs <- currentJournalEventsByTag(tag, from, batchSize, loopMaxOrderingId).runWith(Sink.seq)
           } yield {
-            val hasMoreEvents = xs.size == batchSize
+            val hasMoreEvents = (xs.size == batchSize) || (loopMaxOrderingId.maxOrdering < queryUntil.maxOrdering)
             val nextControl: FlowControl =
               terminateAfterOffset match {
                 // we may stop if target is behind queryUntil and we don't have more events to fetch

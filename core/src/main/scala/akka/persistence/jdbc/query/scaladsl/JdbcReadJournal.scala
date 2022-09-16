@@ -238,7 +238,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
         case None => latestOrdering
         case Some(numberOfEvents) =>
           val limitedMaxOrderingId = offset + numberOfEvents
-          if (limitedMaxOrderingId >= latestOrdering.maxOrdering) latestOrdering
+          if (limitedMaxOrderingId < 0 || limitedMaxOrderingId >= latestOrdering.maxOrdering) latestOrdering
           else MaxOrderingId(limitedMaxOrderingId)
       })
 

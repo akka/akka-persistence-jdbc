@@ -188,6 +188,7 @@ class ReadJournalConfig(config: Config) {
   val refreshInterval: FiniteDuration = config.asFiniteDuration("refresh-interval")
   val maxBufferSize: Int = config.getInt("max-buffer-size")
   val eventsByTagBufferSizesPerQuery: Long = config.getLong("events-by-tag-buffer-sizes-per-query")
+  require(eventsByTagBufferSizesPerQuery >= 0, "events-by-tag-buffer-sizes-per-query must not be negative")
   val addShutdownHook: Boolean = config.getBoolean("add-shutdown-hook")
 
   override def toString: String =

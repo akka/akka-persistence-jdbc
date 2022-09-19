@@ -1,31 +1,24 @@
 /*
  * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
- * Copyright (C) 2019 - 2021 Lightbend Inc. <https://www.lightbend.com>
+ * Copyright (C) 2019 - 2022 Lightbend Inc. <https://www.lightbend.com>
  */
 
 package akka.persistence.jdbc.journal
-
-import scala.concurrent.duration._
 
 import akka.actor.Props
 import akka.persistence.CapabilityFlag
 import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.db.SlickExtension
-import akka.persistence.jdbc.testkit.internal.H2
-import akka.persistence.jdbc.testkit.internal.SchemaType
-import akka.persistence.jdbc.util.ClasspathResources
-import akka.persistence.jdbc.util.DropCreate
+import akka.persistence.jdbc.testkit.internal.{ H2, SchemaType }
+import akka.persistence.jdbc.util.{ ClasspathResources, DropCreate }
 import akka.persistence.journal.JournalPerfSpec
-import akka.persistence.journal.JournalPerfSpec.BenchActor
-import akka.persistence.journal.JournalPerfSpec.Cmd
-import akka.persistence.journal.JournalPerfSpec.ResetCounter
+import akka.persistence.journal.JournalPerfSpec.{ BenchActor, Cmd, ResetCounter }
 import akka.testkit.TestProbe
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigValueFactory
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.BeforeAndAfterEach
+import com.typesafe.config.{ Config, ConfigFactory }
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatest.concurrent.ScalaFutures
+
+import scala.concurrent.duration._
 
 abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType)
     extends JournalPerfSpec(config)
@@ -114,7 +107,3 @@ abstract class JdbcJournalPerfSpec(config: Config, schemaType: SchemaType)
 class H2JournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("h2-application.conf"), H2)
 
 class H2JournalPerfSpecSharedDb extends JdbcJournalPerfSpec(ConfigFactory.load("h2-shared-db-application.conf"), H2)
-
-class H2JournalPerfSpecPhysicalDelete extends H2JournalPerfSpec {
-  this.cfg.withValue("jdbc-journal.logicalDelete", ConfigValueFactory.fromAnyRef(false))
-}

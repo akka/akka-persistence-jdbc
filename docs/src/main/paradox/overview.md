@@ -49,4 +49,4 @@ Contributors all agree to follow the [Lightbend Community Code of Conduct](https
 
 ## License
 
-This source code is made available under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0).
+This source code is made available under the [Business Source License 1.1](https://raw.githubusercontent.com/akka/akka-persistence-jdbc/master/LICENSE)

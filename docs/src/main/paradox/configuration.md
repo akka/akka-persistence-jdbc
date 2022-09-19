@@ -94,7 +94,7 @@ SQL Server
 ### Customized loading of the db connection
 
 It is also possible to load a custom database connection. 
-In order to do so a custom implementation of @extref:[SlickDatabaseProvider](github:/src/main/scala/akka/persistence/jdbc/util/SlickExtension.scala)
+In order to do so a custom implementation of @extref:[SlickDatabaseProvider](github:/core/src/main/scala/akka/persistence/jdbc/db/SlickExtension.scala)
 needs to be created. The methods that need to be implemented supply the Slick `Database` and `Profile` to the journals.
 
 To enable your custom `SlickDatabaseProvider`, the fully qualified class name of the `SlickDatabaseProvider`

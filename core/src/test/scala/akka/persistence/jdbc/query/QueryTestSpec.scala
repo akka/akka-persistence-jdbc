@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
- * Copyright (C) 2019 - 2021 Lightbend Inc. <https://www.lightbend.com>
+ * Copyright (C) 2019 - 2022 Lightbend Inc. <https://www.lightbend.com>
  */
 
 package akka.persistence.jdbc.query
@@ -284,6 +284,14 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
       LoggingReceive { case event: Int =>
         updateState(event)
       }
+  }
+
+  def pendingIfOracleWithLegacy(): Unit = {
+    if (
+      profile == slick.jdbc.OracleProfile && readJournalConfig.pluginConfig.dao == classOf[
+        akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao].getName
+    )
+      pending // TODO https://github.com/akka/akka-persistence-jdbc/issues/673
   }
 
   def setupEmpty(persistenceId: Int, replyToMessages: Boolean)(implicit system: ActorSystem): ActorRef = {

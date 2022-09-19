@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
- * Copyright (C) 2019 - 2021 Lightbend Inc. <https://www.lightbend.com>
+ * Copyright (C) 2019 - 2022 Lightbend Inc. <https://www.lightbend.com>
  */
 
 package akka.persistence.jdbc.query
@@ -74,6 +74,8 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
   }
 
   it should "apply event adapters when querying events by tag from an offset" in withActorSystem { implicit system =>
+    pendingIfOracleWithLegacy()
+
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       (actor1 ? TaggedEvent(Event("1"), "event")).futureValue
@@ -137,6 +139,8 @@ abstract class EventAdapterTest(config: String) extends QueryTestSpec(config) {
   }
 
   it should "apply event adapters when querying all current events by tag" in withActorSystem { implicit system =>
+    pendingIfOracleWithLegacy()
+
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
       (actor1 ? TaggedEvent(Event("1"), "event")).futureValue

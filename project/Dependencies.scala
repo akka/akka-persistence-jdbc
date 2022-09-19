@@ -4,7 +4,7 @@ object Dependencies {
   val Nightly = sys.env.get("TRAVIS_EVENT_TYPE").contains("cron")
 
   // Keep in sync with .travis.yml
-  val Scala212 = "2.12.15"
+  val Scala212 = "2.12.16"
   val Scala213 = "2.13.8"
   val ScalaVersions = Seq(Scala212, Scala213)
 
@@ -16,7 +16,7 @@ object Dependencies {
 
   val JdbcDrivers = Seq(
     "org.postgresql" % "postgresql" % "42.3.3",
-    "com.h2database" % "h2" % "2.1.212",
+    "com.h2database" % "h2" % "2.1.214",
     "mysql" % "mysql-connector-java" % "8.0.30",
     "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8")
 
@@ -24,7 +24,7 @@ object Dependencies {
     "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
     "com.typesafe.slick" %% "slick" % SlickVersion,
     "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
-    "ch.qos.logback" % "logback-classic" % "1.2.10" % Test,
+    "ch.qos.logback" % "logback-classic" % "1.2.11" % Test,
     "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-persistence-tck" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % AkkaVersion % Test,
@@ -33,7 +33,7 @@ object Dependencies {
 
   val Migration: Seq[ModuleID] = Seq(
     "com.typesafe" % "config" % "1.4.2",
-    "ch.qos.logback" % "logback-classic" % "1.2.10",
+    "ch.qos.logback" % "logback-classic" % "1.2.11",
     "org.testcontainers" % "postgresql" % "1.16.3" % Test,
     "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Provided)
 }

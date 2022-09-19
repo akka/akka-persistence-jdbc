@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
- * Copyright (C) 2019 - 2021 Lightbend Inc. <https://www.lightbend.com>
+ * Copyright (C) 2019 - 2022 Lightbend Inc. <https://www.lightbend.com>
  */
 
 package akka.persistence.jdbc.config
@@ -129,8 +129,7 @@ class BaseDaoConfig(config: Config) {
   val batchSize: Int = config.getInt("batchSize")
   val replayBatchSize: Int = config.getInt("replayBatchSize")
   val parallelism: Int = config.getInt("parallelism")
-  val logicalDelete: Boolean = config.getBoolean("logicalDelete")
-  override def toString: String = s"BaseDaoConfig($bufferSize,$batchSize,$parallelism,$logicalDelete)"
+  override def toString: String = s"BaseDaoConfig($bufferSize,$batchSize,$parallelism)"
 }
 
 class ReadJournalPluginConfig(config: Config) {
@@ -189,10 +188,9 @@ class ReadJournalConfig(config: Config) {
   val refreshInterval: FiniteDuration = config.asFiniteDuration("refresh-interval")
   val maxBufferSize: Int = config.getInt("max-buffer-size")
   val addShutdownHook: Boolean = config.getBoolean("add-shutdown-hook")
-  val includeDeleted: Boolean = config.getBoolean("includeLogicallyDeleted")
 
   override def toString: String =
-    s"ReadJournalConfig($journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook,$includeDeleted)"
+    s"ReadJournalConfig($journalTableConfiguration,$pluginConfig,$refreshInterval,$maxBufferSize,$addShutdownHook)"
 }
 
 class DurableStateTableColumnNames(config: Config) {

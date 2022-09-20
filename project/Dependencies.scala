@@ -11,7 +11,7 @@ object Dependencies {
   val AkkaVersion = "2.6.16"
   val AkkaBinaryVersion = AkkaVersion.take(3)
 
-  val SlickVersion = "3.4.0"
+  val SlickVersion = "3.4.1"
   val ScalaTestVersion = "3.2.10"
 
   val JdbcDrivers = Seq(

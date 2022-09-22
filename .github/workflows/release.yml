@@ -82,4 +82,4 @@ jobs:
           chmod 600 .github/id_rsa
           ssh-keygen -p -P "$GUSTAV_PASSPHRASE" -N "" -f .github/id_rsa
           ssh-add .github/id_rsa
-          sbt "++2.13.4 docs/publishRsync"
+          sbt "docs/publishRsync"

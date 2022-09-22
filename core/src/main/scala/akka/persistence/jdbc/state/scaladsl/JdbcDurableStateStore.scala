@@ -101,8 +101,14 @@ class JdbcDurableStateStore[A](
       }
   }
 
-  def deleteObject(persistenceId: String): Future[Done] =
+  @deprecated(message = "Use the deleteObject overload with revision instead.", since = "5.2.0")
+  override def deleteObject(persistenceId: String): Future[Done] =
+    deleteObject(persistenceId, revision = 0)
+
+  override def deleteObject(persistenceId: String, revision: Long): Future[Done] = {
+    // FIXME #686 use revision
     db.run(queries.deleteFromDb(persistenceId).map(_ => Done))
+  }
 
   def currentChanges(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] = {
     Source

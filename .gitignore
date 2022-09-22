@@ -12,3 +12,4 @@ target
 *.code-workspace
 .bloop
 .metals
+metals.sbt

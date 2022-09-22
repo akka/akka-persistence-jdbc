@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
- * Copyright (C) 2019 - 2021 Lightbend Inc. <https://www.lightbend.com>
+ * Copyright (C) 2019 - 2022 Lightbend Inc. <https://www.lightbend.com>
  */
 
 package akka.persistence.jdbc.query
@@ -95,4 +95,4 @@ abstract class HardDeleteQueryTest(config: String) extends QueryTestSpec(config)
   }
 }
 
-class H2HardDeleteQueryTest extends HardDeleteQueryTest("h2-application-with-hard-delete.conf") with H2Cleaner
+class H2HardDeleteQueryTest extends HardDeleteQueryTest("h2-application.conf") with H2Cleaner

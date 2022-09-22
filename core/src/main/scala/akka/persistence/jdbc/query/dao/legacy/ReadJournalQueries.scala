@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
- * Copyright (C) 2019 - 2021 Lightbend Inc. <https://www.lightbend.com>
+ * Copyright (C) 2019 - 2022 Lightbend Inc. <https://www.lightbend.com>
  */
 
 package akka.persistence.jdbc.query.dao.legacy
@@ -24,8 +24,7 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
     baseTableQuery().map(_.persistenceId).distinct.take(max)
 
   private def baseTableQuery() =
-    if (readJournalConfig.includeDeleted) JournalTable
-    else JournalTable.filter(_.deleted === false)
+    JournalTable.filter(_.deleted === false)
 
   val allPersistenceIdsDistinct = Compiled(_allPersistenceIdsDistinct _)
 

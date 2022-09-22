@@ -1,0 +1,4 @@
+ProblemFilters.exclude[DirectMissingMethodProblem]("akka.persistence.jdbc.config.BaseDaoConfig.logicalDelete")
+ProblemFilters.exclude[DirectMissingMethodProblem]("akka.persistence.jdbc.config.ReadJournalConfig.includeDeleted")
+ProblemFilters.exclude[DirectMissingMethodProblem]("akka.persistence.jdbc.journal.dao.legacy.BaseByteArrayJournalDao.logWarnAboutLogicalDeletionDeprecation")
+ProblemFilters.exclude[DirectMissingMethodProblem]("akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao.logWarnAboutLogicalDeletionDeprecation")

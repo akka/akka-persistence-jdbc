@@ -24,7 +24,9 @@ object ProjectAutoPlugin extends AutoPlugin {
         "Contributors",
         "https://gitter.im/akka/dev",
         url("https://github.com/akka/akka-persistence-jdbc/graphs/contributors")),
-      licenses := Seq("Apache-2.0" -> url("https://opensource.org/licenses/Apache-2.0")),
+      licenses := Seq(
+        ("BUSL-1.1", url("https://raw.githubusercontent.com/akka/akka-persistence-jdbc/master/LICENSE"))
+      ), // FIXME change s/master/v5.2.0/ when released
       description := "A plugin for storing events in an event journal akka-persistence-jdbc",
       startYear := Some(2014))
 
@@ -78,9 +80,8 @@ object ProjectAutoPlugin extends AutoPlugin {
     // show full stack traces and test case durations
     Test / testOptions += Tests.Argument("-oDF"),
     headerLicense := Some(HeaderLicense.Custom("""|Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
-           |Copyright (C) 2019 - 2021 Lightbend Inc. <https://www.lightbend.com>
+           |Copyright (C) 2019 - 2022 Lightbend Inc. <https://www.lightbend.com>
            |""".stripMargin)),
-    resolvers += Resolver.typesafeRepo("releases"),
     resolvers += Resolver.jcenterRepo,
     sonatypeProfileName := "com.lightbend")
 

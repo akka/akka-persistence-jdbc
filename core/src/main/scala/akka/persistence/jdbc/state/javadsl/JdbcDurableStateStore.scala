@@ -48,7 +48,11 @@ class JdbcDurableStateStore[A](
   def upsertObject(persistenceId: String, revision: Long, value: A, tag: String): CompletionStage[Done] =
     toJava(scalaStore.upsertObject(persistenceId, revision, value, tag))
 
-  def deleteObject(persistenceId: String): CompletionStage[Done] =
+  @deprecated(message = "Use the deleteObject overload with revision instead.", since = "1.0.0")
+  override def deleteObject(persistenceId: String): CompletionStage[Done] =
+    deleteObject(persistenceId, revision = 0)
+
+  override def deleteObject(persistenceId: String, revision: Long): CompletionStage[Done] =
     toJava(scalaStore.deleteObject(persistenceId))
 
   def currentChanges(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] =

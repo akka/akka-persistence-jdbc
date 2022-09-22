@@ -1,5 +1,5 @@
 /*
-Akka Persistence JDBC versions from 5.0.0 through 5.0.4 used this schema.  The only difference from the
+Akka Persistence JDBC versions from 5.0.0 through 5.1.0 used this schema.  The only difference from the
 post-5.0.4 schema is the use of VARCHAR instead of NVARCHAR for string fields.  It is strongly
 recommended that new uses of Akka Persistence JDBC 5.0.0 and later use the NVARCHAR schema.  This schema is
 still usable with post-5.0.4 versions of Akka Persistence JDBC, though will not support Unicode persistence IDs,

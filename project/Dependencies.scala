@@ -5,7 +5,7 @@ object Dependencies {
 
   // Keep in sync with .travis.yml
   val Scala212 = "2.12.16"
-  val Scala213 = "2.13.8"
+  val Scala213 = "2.13.10"
   val ScalaVersions = Seq(Scala213, Scala212)
 
   val AkkaVersion = "2.7.0-M1"

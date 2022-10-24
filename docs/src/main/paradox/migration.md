@@ -5,7 +5,7 @@
 **Release `6.0.0` updates H2 to version 2.1.212 which is not compatible to the previous 1.4.200***
 
 H2 has undergone considerable changes that broke backwards compatibility to make H2 SQL Standard compliant.
-For migration please refer to the H2 [migration guide](http://www.h2database.com/html/migration-to-v2.html)
+For migration please refer to the H2 [migration guide](https://www.h2database.com/html/migration-to-v2.html)
 
 
 ## Migrating to version 5.0.0

@@ -52,7 +52,7 @@ jobs:
           jvm: ${{ matrix.jvmName }}
 
       - name: Run tests with Scala ${{ matrix.scalaVersion }} on JDK ${{ matrix.jdkVersion }}
-        run: sbt "+~${{ matrix.scalaVersion }} test" ${{ matrix.extraOpts }}
+        run: sbt "+~ ${{ matrix.scalaVersion }} test" ${{ matrix.extraOpts }}
 
       - name: Print logs on failure
         if: ${{ failure() }}

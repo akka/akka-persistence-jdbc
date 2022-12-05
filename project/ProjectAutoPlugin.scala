@@ -68,7 +68,7 @@ object ProjectAutoPlugin extends AutoPlugin {
       "-doc-version",
       version.value,
       "-sourcepath",
-      (baseDirectory in ThisBuild).value.toString,
+      (ThisBuild / baseDirectory).value.toString,
       "-skip-packages",
       "akka.pattern", // for some reason Scaladoc creates this
       "-doc-source-url", {

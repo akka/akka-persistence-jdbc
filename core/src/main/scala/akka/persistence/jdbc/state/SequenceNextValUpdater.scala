@@ -33,7 +33,7 @@ import slick.sql.SqlStreamingAction
           FROM INFORMATION_SCHEMA.COLUMNS
           WHERE TABLE_NAME = '#${durableStateTableCfg.tableName}'
             AND COLUMN_NAME = '#${durableStateTableCfg.columnNames.globalOffset}'
-            AND TABLE_SCHEMA = 'PUBLIC'""".as[String]
+            AND TABLE_SCHEMA = '#${durableStateTableCfg.schemaName}'""".as[String]
   }
 }
 

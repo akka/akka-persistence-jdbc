@@ -46,7 +46,7 @@ import slick.sql.SqlStreamingAction
     extends SequenceNextValUpdater {
   import profile.api._
   final val nextValFetcher =
-    s"""(SELECT nextval(pg_get_serial_sequence('${durableStateTableCfg.tableName}', '${durableStateTableCfg.columnNames.globalOffset}')))"""
+    s"""(SELECT nextval(pg_get_serial_sequence('${durableStateTableCfg.schemaName}.${durableStateTableCfg.tableName}', '${durableStateTableCfg.columnNames.globalOffset}')))"""
 
   def getSequenceNextValueExpr() = sql"""#$nextValFetcher""".as[String]
 }

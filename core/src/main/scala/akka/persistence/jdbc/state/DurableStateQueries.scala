@@ -47,7 +47,7 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
     durableStateTable.filter(_.persistenceId === persistenceId)
 
   private[jdbc] def insertDbWithDurableState(row: DurableStateTables.DurableStateRow, seqNextValue: String) = {
-    sqlu"""INSERT INTO #${durableStateTableCfg.tableName}
+    sqlu"""INSERT INTO #${durableStateTableCfg.schemaName}.#${durableStateTableCfg.tableName}
             (
              #${durableStateTableCfg.columnNames.persistenceId},
              #${durableStateTableCfg.columnNames.globalOffset},
@@ -73,7 +73,7 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
   }
 
   private[jdbc] def updateDbWithDurableState(row: DurableStateTables.DurableStateRow, seqNextValue: String) = {
-    sqlu"""UPDATE #${durableStateTableCfg.tableName}
+    sqlu"""UPDATE #${durableStateTableCfg.schemaName}.#${durableStateTableCfg.tableName}
            SET #${durableStateTableCfg.columnNames.globalOffset} = #${seqNextValue},
                #${durableStateTableCfg.columnNames.revision} = ${row.revision},
                #${durableStateTableCfg.columnNames.statePayload} = ${row.statePayload},

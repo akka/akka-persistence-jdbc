@@ -15,7 +15,7 @@ import slick.jdbc.SQLServerProfile
 import akka.persistence.jdbc.config.DurableStateTableConfiguration
 
 /**
- * INTERNAL API 
+ * INTERNAL API
  */
 @InternalApi private[akka] class DurableStateQueries(
     val profile: JdbcProfile,
@@ -47,7 +47,8 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
     durableStateTable.filter(_.persistenceId === persistenceId)
 
   private[jdbc] def insertDbWithDurableState(row: DurableStateTables.DurableStateRow, seqNextValue: String) = {
-    val tableAndSchema = durableStateTableCfg.schemaName.fold(durableStateTableCfg.tableName)(schema => s"$schema.${durableStateTableCfg.tableName}")
+    val tableAndSchema = durableStateTableCfg.schemaName.fold(durableStateTableCfg.tableName)(schema =>
+      s"$schema.${durableStateTableCfg.tableName}")
     sqlu"""INSERT INTO #$tableAndSchema
             (
              #${durableStateTableCfg.columnNames.persistenceId},
@@ -74,7 +75,8 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
   }
 
   private[jdbc] def updateDbWithDurableState(row: DurableStateTables.DurableStateRow, seqNextValue: String) = {
-    val tableAndSchema = durableStateTableCfg.schemaName.fold(durableStateTableCfg.tableName)(schema => s"$schema.${durableStateTableCfg.tableName}")
+    val tableAndSchema = durableStateTableCfg.schemaName.fold(durableStateTableCfg.tableName)(schema =>
+      s"$schema.${durableStateTableCfg.tableName}")
     sqlu"""UPDATE #$tableAndSchema
            SET #${durableStateTableCfg.columnNames.globalOffset} = #${seqNextValue},
                #${durableStateTableCfg.columnNames.revision} = ${row.revision},

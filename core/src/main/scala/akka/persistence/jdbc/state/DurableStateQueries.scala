@@ -47,43 +47,36 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
     durableStateTable.filter(_.persistenceId === persistenceId)
 
   private[jdbc] def insertDbWithDurableState(row: DurableStateTables.DurableStateRow, seqNextValue: String) = {
-    sqlu"""INSERT INTO #${durableStateTableCfg.schemaName}.#${durableStateTableCfg.tableName}
-            (
-             #${durableStateTableCfg.columnNames.persistenceId},
-             #${durableStateTableCfg.columnNames.globalOffset},
-             #${durableStateTableCfg.columnNames.revision},
-             #${durableStateTableCfg.columnNames.statePayload},
-             #${durableStateTableCfg.columnNames.stateSerId},
-             #${durableStateTableCfg.columnNames.stateSerManifest},
-             #${durableStateTableCfg.columnNames.tag},
-             #${durableStateTableCfg.columnNames.stateTimestamp}
-            )
-            VALUES
-            (
-              ${row.persistenceId},
-              #${seqNextValue},
-              ${row.revision},
-              ${row.statePayload},
-              ${row.stateSerId},
-              ${row.stateSerManifest},
-              ${row.tag},
-              #${System.currentTimeMillis()}
-            )
-      """
+    durableStateTable += row.copy(globalOffset = seqNextValue, stateTimestamp = System.currentTimeMillis())
   }
 
   private[jdbc] def updateDbWithDurableState(row: DurableStateTables.DurableStateRow, seqNextValue: String) = {
-    sqlu"""UPDATE #${durableStateTableCfg.schemaName}.#${durableStateTableCfg.tableName}
-           SET #${durableStateTableCfg.columnNames.globalOffset} = #${seqNextValue},
-               #${durableStateTableCfg.columnNames.revision} = ${row.revision},
-               #${durableStateTableCfg.columnNames.statePayload} = ${row.statePayload},
-               #${durableStateTableCfg.columnNames.stateSerId} = ${row.stateSerId},
-               #${durableStateTableCfg.columnNames.stateSerManifest} = ${row.stateSerManifest},
-               #${durableStateTableCfg.columnNames.tag} = ${row.tag},
-               #${durableStateTableCfg.columnNames.stateTimestamp} = ${System.currentTimeMillis}
-           WHERE #${durableStateTableCfg.columnNames.persistenceId} = ${row.persistenceId}
-             AND #${durableStateTableCfg.columnNames.revision} = ${row.revision} - 1
-        """
+    durableStateTable
+      .filter(t =>
+        t.persistenceId === row.persistenceId && t.revision === (row.revision - 1)
+      )
+      .map(t =>
+        (
+          t.globalOffset,
+          t.revision,
+          t.statePayload,
+          t.stateSerId,
+          t.stateSerManifest,
+          t.tag,
+          t.stateTimestamp
+        )
+      )
+      .update(
+        (
+          seqNextValue,
+          row.revision,
+          row.statePayload,
+          row.stateSerId,
+          row.stateSerManifest,
+          row.tag,
+          System.currentTimeMillis()
+        )
+      )
   }
 
   private[jdbc] def getSequenceNextValueExpr() = sequenceNextValUpdater.getSequenceNextValueExpr()

@@ -33,7 +33,7 @@ import slick.sql.SqlStreamingAction
           FROM INFORMATION_SCHEMA.COLUMNS
           WHERE TABLE_NAME = '#${durableStateTableCfg.tableName}'
             AND COLUMN_NAME = '#${durableStateTableCfg.columnNames.globalOffset}'
-            AND TABLE_SCHEMA = '#${durableStateTableCfg.schemaName}'""".as[String]
+            AND TABLE_SCHEMA = '#${durableStateTableCfg.schemaName.getOrElse("PUBLIC")}'""".as[String]
   }
 }
 
@@ -45,8 +45,9 @@ import slick.sql.SqlStreamingAction
     val durableStateTableCfg: DurableStateTableConfiguration)
     extends SequenceNextValUpdater {
   import profile.api._
+  private val schemaPrefix = durableStateTableCfg.schemaName.map(n => s"$n.").getOrElse("")
   final val nextValFetcher =
-    s"""(SELECT nextval(pg_get_serial_sequence('${durableStateTableCfg.schemaName}.${durableStateTableCfg.tableName}', '${durableStateTableCfg.columnNames.globalOffset}')))"""
+    s"""(SELECT nextval(pg_get_serial_sequence('$schemaPrefix${durableStateTableCfg.tableName}', '${durableStateTableCfg.columnNames.globalOffset}')))"""
 
   def getSequenceNextValueExpr() = sql"""#$nextValFetcher""".as[String]
 }

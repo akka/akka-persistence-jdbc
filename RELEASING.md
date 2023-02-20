@@ -30,5 +30,4 @@ It is possible to release a revised documentation to the already existing releas
 
 ### Releasing a Snapshot
 
-Snapshots are released automatically when commits are pushed to master. 
-Alternatively you can merge commits to the `snapshot-release` branch, in cases when you do not want to push to master yet, this will also release a snapshot.
+Snapshots are released automatically when commits are pushed to master.

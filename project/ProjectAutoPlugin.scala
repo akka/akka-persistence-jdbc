@@ -26,7 +26,7 @@ object ProjectAutoPlugin extends AutoPlugin {
         url("https://github.com/akka/akka-persistence-jdbc/graphs/contributors")),
       licenses := Seq(
         ("BUSL-1.1", url("https://raw.githubusercontent.com/akka/akka-persistence-jdbc/master/LICENSE"))
-      ), // FIXME change s/master/v5.2.0/ when released
+      ), // FIXME change s/master/v5.2.1/ when released
       description := "A plugin for storing events in an event journal akka-persistence-jdbc",
       startYear := Some(2014))
 
@@ -68,7 +68,7 @@ object ProjectAutoPlugin extends AutoPlugin {
       "-doc-version",
       version.value,
       "-sourcepath",
-      (baseDirectory in ThisBuild).value.toString,
+      (ThisBuild / baseDirectory).value.toString,
       "-skip-packages",
       "akka.pattern", // for some reason Scaladoc creates this
       "-doc-source-url", {

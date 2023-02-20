@@ -3,8 +3,12 @@ name: Release
 on:
   push:
     branches:
+      - main
       - master
-    tags: ["*"]
+    tags: ["v.*"]
+
+permissions:
+  contents: read
 
 jobs:
   release:
@@ -14,10 +18,10 @@ jobs:
     # the release environment provides access to secrets required in the release process
     # https://github.com/akka/akka-persistence-jdbc/settings/environments/164872635/edit
     environment: release
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.1.0
         with:
           # we don't know what commit the last tag was it's safer to get entire repo so previousStableVersion resolves
           fetch-depth: 0
@@ -28,13 +32,13 @@ jobs:
           git fetch origin pull/${{ github.event.pull_request.number }}/merge:scratch
           git checkout scratch
 
-      - name: Setup Scala with JDK 8
-        uses: olafurpg/setup-scala@v10
-        with:
-          java-version: adopt@1.8.0-275
-
       - name: Cache Coursier cache
-        uses: coursier/cache-action@v5
+        uses: coursier/cache-action@v6.4.0
+
+      - name: Set up JDK 8
+        uses: coursier/setup-action@v1.3.0
+        with:
+          jvm: temurin:1.8.0-352
 
       - name: Publish artifacts for all Scala versions
         env:
@@ -50,10 +54,10 @@ jobs:
     # the release environment provides access to secrets required in the release process
     # https://github.com/akka/akka-persistence-jdbc/settings/environments/164872635/edit
     environment: release
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.1.0
         with:
           # we don't know what commit the last tag was it's safer to get entire repo so previousStableVersion resolves
           fetch-depth: 0
@@ -64,14 +68,14 @@ jobs:
           git fetch origin pull/${{ github.event.pull_request.number }}/merge:scratch
           git checkout scratch
 
-      - name: Setup Scala with JDK 8
-        uses: olafurpg/setup-scala@v10
-        with:
-          java-version: adopt@1.11.0-9
-
       - name: Cache Coursier cache
-        uses: coursier/cache-action@v5
-      
+        uses: coursier/cache-action@v6.4.0
+
+      - name: Set up JDK 11
+        uses: coursier/setup-action@v1.3.0
+        with:
+          jvm: temurin:1.11.0
+
       - name: Publish API and reference documentation
         env:
           GUSTAV_KEY: ${{ secrets.GUSTAV_KEY }}

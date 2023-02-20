@@ -12,7 +12,7 @@ object Dependencies {
   val ScalaTestVersion = "3.2.15"
 
   val JdbcDrivers = Seq(
-    "org.postgresql" % "postgresql" % "42.5.1",
+    "org.postgresql" % "postgresql" % "42.5.3",
     "com.h2database" % "h2" % "2.1.214",
     "mysql" % "mysql-connector-java" % "8.0.31",
     "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8")

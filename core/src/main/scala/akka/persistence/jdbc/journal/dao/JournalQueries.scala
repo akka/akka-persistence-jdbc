@@ -6,7 +6,7 @@
 package akka.persistence.jdbc.journal.dao
 
 import akka.persistence.jdbc.config.{ EventJournalTableConfiguration, EventTagTableConfiguration }
-import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, TagRow }
+import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, LegacyTagRow, TagRow }
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContext
@@ -20,22 +20,42 @@ class JournalQueries(
   import profile.api._
 
   private val JournalTableC = Compiled(JournalTable)
+  private val insertAndReturn = JournalTable.returning(JournalTable.map(_.ordering))
   private val TagTableC = Compiled(TagTable)
+  private val LegacyTagTableC = Compiled(LegacyTagTable)
 
-  def writeJournalRows(xs: Seq[(JournalAkkaSerializationRow, Set[String])])(implicit ec: ExecutionContext): DBIOAction[Any, NoStream, Effect.Write] = {
+  def writeJournalRows(xs: Seq[(JournalAkkaSerializationRow, Set[String])])(
+      implicit ec: ExecutionContext): DBIOAction[Any, NoStream, Effect.Write] = {
     val sorted = xs.sortBy((event => event._1.sequenceNumber))
-    // not matter what, always insert event.
-    val events = sorted.map(_._1)
     if (sorted.exists(_._2.nonEmpty)) {
       // only if there are any tags
-      val tagsRows = sorted.flatMap(e => e._2.map(v => TagRow(e._1.persistenceId, e._1.sequenceNumber, v)))
-      for {
-        _ <- JournalTableC ++= events
-        _ <- TagTableC ++= tagsRows
-      } yield ()
+      writeEventsAndTags(sorted)
     } else {
       // optimization avoid some work when not using tags
+      val events = sorted.map(_._1)
       JournalTableC ++= events
+    }
+  }
+
+  private def writeEventsAndTags(sorted: Seq[(JournalAkkaSerializationRow, Set[String])])(
+      implicit ec: ExecutionContext): DBIOAction[Any, NoStream, Effect.Write] = {
+    val (events, tags) = sorted.unzip
+    val tagRows = sorted.flatMap { case (eventRow, tags) =>
+      tags.map(t => TagRow(eventRow.persistenceId, eventRow.sequenceNumber, t))
+    }
+    if (tagTableCfg.writeLegacyTag) {
+      for {
+        ids <- insertAndReturn ++= events
+        tagInserts = ids.zip(tags).flatMap { case (id, tags) => tags.map(tag => LegacyTagRow(id, tag)) }
+        _ <- LegacyTagTableC ++= tagInserts
+        _ <- TagTableC ++= tagRows
+      } yield ()
+    } else {
+      // optimization using batch insert
+      for {
+        _ <- JournalTableC ++= events
+        _ <- TagTableC ++= tagRows
+      } yield ()
     }
   }
 

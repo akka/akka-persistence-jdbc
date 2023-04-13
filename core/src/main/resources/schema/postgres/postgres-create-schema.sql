@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS public.event_journal(
+CREATE TABLE IF NOT EXISTS public.event_journal (
   ordering BIGSERIAL,
   persistence_id VARCHAR(255) NOT NULL,
   sequence_number BIGINT NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS public.event_journal(
 
 CREATE UNIQUE INDEX event_journal_ordering_idx ON public.event_journal(ordering);
 
-CREATE TABLE IF NOT EXISTS public.event_tag(
+CREATE TABLE IF NOT EXISTS public.event_tags (
     persistence_id VARCHAR(255) NOT NULL,
     sequence_number BIGINT NOT NULL,
     tag VARCHAR(256),

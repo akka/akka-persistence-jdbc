@@ -1,4 +1,4 @@
-CREATE TABLE event_journal(
+CREATE TABLE event_journal (
     "ordering" BIGINT IDENTITY(1,1) NOT NULL,
     "deleted" BIT DEFAULT 0 NOT NULL,
     "persistence_id" NVARCHAR(255) NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE event_journal(
 
 CREATE UNIQUE INDEX event_journal_ordering_idx ON event_journal(ordering);
 
-CREATE TABLE event_tag (
+CREATE TABLE event_tags (
     "persistence_id" NVARCHAR(255) NOT NULL,
     "sequence_number" NUMERIC(10,0) NOT NULL,
     "tag" NVARCHAR(255) NOT NULL

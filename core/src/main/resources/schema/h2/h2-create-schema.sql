@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS "event_journal" (
 
 CREATE UNIQUE INDEX "event_journal_ordering_idx" on "event_journal" ("ordering");
 
-CREATE TABLE IF NOT EXISTS "event_tag" (
+CREATE TABLE IF NOT EXISTS "event_tags" (
     "persistence_id" VARCHAR(255) NOT NULL,
     "sequence_number" BIGINT NOT NULL,
     "tag" VARCHAR NOT NULL,

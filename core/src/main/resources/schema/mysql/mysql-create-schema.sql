@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS event_journal(
+CREATE TABLE IF NOT EXISTS event_journal (
     ordering SERIAL,
     deleted BOOLEAN DEFAULT false NOT NULL,
     persistence_id VARCHAR(255) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS event_journal(
 
 CREATE UNIQUE INDEX event_journal_ordering_idx ON event_journal(ordering);
 
-CREATE TABLE IF NOT EXISTS event_tag (
+CREATE TABLE IF NOT EXISTS event_tags (
     persistence_id VARCHAR(255) NOT NULL,
     sequence_number BIGINT NOT NULL,
     tag VARCHAR(255) NOT NULL,

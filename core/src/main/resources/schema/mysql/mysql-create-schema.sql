@@ -17,11 +17,12 @@ CREATE TABLE IF NOT EXISTS event_journal(
 CREATE UNIQUE INDEX event_journal_ordering_idx ON event_journal(ordering);
 
 CREATE TABLE IF NOT EXISTS event_tag (
-    event_id BIGINT UNSIGNED NOT NULL,
+    persistence_id VARCHAR(255) NOT NULL,
+    sequence_number BIGINT NOT NULL,
     tag VARCHAR(255) NOT NULL,
-    PRIMARY KEY(event_id, tag),
-    FOREIGN KEY (event_id)
-        REFERENCES event_journal(ordering)
+    PRIMARY KEY(persistence_id, sequence_number, tag),
+    FOREIGN KEY (persistence_id, sequence_number)
+        REFERENCES event_journal(persistence_id, sequence_number)
         ON DELETE CASCADE
     );
 

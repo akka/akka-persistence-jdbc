@@ -53,7 +53,8 @@ class EventJournalTableColumnNames(config: Config) {
 
 class EventTagTableColumnNames(config: Config) {
   private val cfg = config.getConfig("tables.event_tag.columnNames")
-  val eventId: String = cfg.getString("eventId")
+  val persistenceId: String = cfg.getString("persistenceId")
+  val sequenceNumber: String = cfg.getString("sequenceNumber")
   val tag: String = cfg.getString("tag")
 }
 

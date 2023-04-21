@@ -14,7 +14,7 @@ object Dependencies {
   val JdbcDrivers = Seq(
     "org.postgresql" % "postgresql" % "42.5.4",
     "com.h2database" % "h2" % "2.1.214",
-    "mysql" % "mysql-connector-java" % "8.0.32",
+    "mysql" % "mysql-connector-java" % "8.0.33",
     "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8")
 
   val Libraries: Seq[ModuleID] = Seq(
@@ -31,6 +31,6 @@ object Dependencies {
   val Migration: Seq[ModuleID] = Seq(
     "com.typesafe" % "config" % "1.4.2",
     "ch.qos.logback" % "logback-classic" % "1.2.12",
-    "org.testcontainers" % "postgresql" % "1.17.6" % Test,
+    "org.testcontainers" % "postgresql" % "1.18.0" % Test,
     "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Provided)
 }

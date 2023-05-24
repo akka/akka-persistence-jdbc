@@ -10,5 +10,6 @@ addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1")
 // docs
 addSbtPlugin("com.lightbend.akka" % "sbt-paradox-akka" % "0.47")
 addSbtPlugin("com.github.sbt" % "sbt-site" % "1.5.0")
+addSbtPlugin("com.github.sbt" % "sbt-site-paradox" % "1.5.0")
 addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.5.0")
 addSbtPlugin("com.lightbend.sbt" % "sbt-publish-rsync" % "0.2")

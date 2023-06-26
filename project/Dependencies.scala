@@ -1,8 +1,10 @@
 import sbt._
 
 object Dependencies {
-  val Scala212 = "2.12.17"
+
+  val Scala212 = "2.12.18"
   val Scala213 = "2.13.11"
+
   val ScalaVersions = Seq(Scala213, Scala212)
 
   val AkkaVersion = "2.7.0"
@@ -31,6 +33,6 @@ object Dependencies {
   val Migration: Seq[ModuleID] = Seq(
     "com.typesafe" % "config" % "1.4.2",
     "ch.qos.logback" % "logback-classic" % "1.2.12",
-    "org.testcontainers" % "postgresql" % "1.18.1" % Test,
+    "org.testcontainers" % "postgresql" % "1.18.3" % Test,
     "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Provided)
 }

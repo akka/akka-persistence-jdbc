@@ -25,7 +25,7 @@ object ProjectAutoPlugin extends AutoPlugin {
         "https://gitter.im/akka/dev",
         url("https://github.com/akka/akka-persistence-jdbc/graphs/contributors")),
       releaseNotesURL := (
-        if (isSnapshot.value) None
+        if ((ThisBuild / isSnapshot).value) None
         else Some(url(s"https://github.com/akka/akka-persistence-jdbc/releases/tag/v${version.value}"))
         ),
       licenses := {

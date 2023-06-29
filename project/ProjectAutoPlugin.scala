@@ -27,7 +27,7 @@ object ProjectAutoPlugin extends AutoPlugin {
       releaseNotesURL := (
         if ((ThisBuild / isSnapshot).value) None
         else Some(url(s"https://github.com/akka/akka-persistence-jdbc/releases/tag/v${version.value}"))
-        ),
+      ),
       licenses := {
         val tagOrBranch =
           if (version.value.endsWith("SNAPSHOT")) "master"

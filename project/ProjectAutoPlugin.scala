@@ -24,6 +24,10 @@ object ProjectAutoPlugin extends AutoPlugin {
         "Contributors",
         "https://gitter.im/akka/dev",
         url("https://github.com/akka/akka-persistence-jdbc/graphs/contributors")),
+      releaseNotesURL := (
+        if (isSnapshot.value) None
+        else Some(url(s"https://github.com/akka/akka-persistence-jdbc/releases/tag/v${version.value}"))
+        ),
       licenses := {
         val tagOrBranch =
           if (version.value.endsWith("SNAPSHOT")) "master"

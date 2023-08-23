@@ -7,7 +7,7 @@ package akka.persistence.jdbc.journal.dao
 
 import akka.annotation.InternalApi
 import akka.persistence.jdbc.config.{ EventJournalTableConfiguration, EventTagTableConfiguration }
-import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, LegacyTagRow, TagRow }
+import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, TagRow }
 
 /**
  * INTERNAL API
@@ -29,8 +29,7 @@ object JournalTables {
       metaSerId: Option[Int],
       metaSerManifest: Option[String])
 
-  case class TagRow(persistenceId: String, sequenceNumber: Long, tag: String)
-  case class LegacyTagRow(eventId: Long, tag: String)
+  case class TagRow(eventId: Option[Long], persistenceId: Option[String], sequenceNumber: Option[Long], tag: String)
 }
 
 /**
@@ -45,6 +44,7 @@ trait JournalTables {
 
   def journalTableCfg: EventJournalTableConfiguration
   def tagTableCfg: EventTagTableConfiguration
+
   class JournalEvents(_tableTag: Tag)
       extends Table[JournalAkkaSerializationRow](
         _tableTag,
@@ -91,10 +91,11 @@ trait JournalTables {
   lazy val JournalTable = new TableQuery(tag => new JournalEvents(tag))
 
   class EventTags(_tableTag: Tag) extends Table[TagRow](_tableTag, tagTableCfg.schemaName, tagTableCfg.tableName) {
-    override def * = (persistenceId, sequenceNumber, tag) <> (TagRow.tupled, TagRow.unapply)
-
-    val persistenceId: Rep[String] = column[String](tagTableCfg.columnNames.persistenceId)
-    val sequenceNumber: Rep[Long] = column[Long](tagTableCfg.columnNames.sequenceNumber)
+    override def * = (eventId, persistenceId, sequenceNumber, tag) <> (TagRow.tupled, TagRow.unapply)
+    // allow null value insert.
+    val eventId: Rep[Option[Long]] = column[Long](tagTableCfg.columnNames.eventId)
+    val persistenceId: Rep[Option[String]] = column[String](tagTableCfg.columnNames.persistenceId)
+    val sequenceNumber: Rep[Option[Long]] = column[Long](tagTableCfg.columnNames.sequenceNumber)
     val tag: Rep[String] = column[String](tagTableCfg.columnNames.tag)
 
     val pk = primaryKey(s"${tagTableCfg.tableName}_pk", (persistenceId, sequenceNumber, tag))
@@ -104,17 +105,4 @@ trait JournalTables {
   }
 
   lazy val TagTable = new TableQuery(tag => new EventTags(tag))
-
-  class LegacyEventTags(_tableTag: Tag)
-      extends Table[LegacyTagRow](_tableTag, tagTableCfg.legacySchemaName, tagTableCfg.legacyTableName) {
-    override def * = (eventId, tag) <> (LegacyTagRow.tupled, LegacyTagRow.unapply)
-
-    val eventId: Rep[Long] = column[Long](tagTableCfg.legacyColumnNames.eventId)
-    val tag: Rep[String] = column[String](tagTableCfg.legacyColumnNames.tag)
-
-    val pk = primaryKey(s"${tagTableCfg.legacyTableName}_pk", (eventId, tag))
-    val journalEvent = foreignKey(s"fk_legacy_${journalTableCfg.tableName}", eventId, JournalTable)(_.ordering)
-  }
-
-  lazy val LegacyTagTable = new TableQuery(tag => new LegacyEventTags(tag))
 }

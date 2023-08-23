@@ -17,14 +17,15 @@ CREATE TABLE IF NOT EXISTS "event_journal" (
 
 CREATE UNIQUE INDEX "event_journal_ordering_idx" on "event_journal" ("ordering");
 
-CREATE TABLE IF NOT EXISTS "event_tags" (
-    "persistence_id" VARCHAR(255) NOT NULL,
-    "sequence_number" BIGINT NOT NULL,
+CREATE TABLE IF NOT EXISTS "event_tag" (
+    "event_id" BIGINT,
+    "persistence_id" VARCHAR(255),
+    "sequence_number" BIGINT,
     "tag" VARCHAR NOT NULL,
     PRIMARY KEY("persistence_id", "sequence_number", "tag"),
     CONSTRAINT fk_event_journal
       FOREIGN KEY("persistence_id", "sequence_number")
-      REFERENCES "event_journal"("persistence_id", "sequence_number"))
+      REFERENCES "event_journal"("persistence_id", "sequence_number")
       ON DELETE CASCADE
 );
 

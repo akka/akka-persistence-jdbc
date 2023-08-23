@@ -21,9 +21,10 @@ CREATE TABLE IF NOT EXISTS public.event_journal (
 
 CREATE UNIQUE INDEX event_journal_ordering_idx ON public.event_journal(ordering);
 
-CREATE TABLE IF NOT EXISTS public.event_tags (
-    persistence_id VARCHAR(255) NOT NULL,
-    sequence_number BIGINT NOT NULL,
+CREATE TABLE IF NOT EXISTS public.event_tag(
+    event_id BIGINT,
+    persistence_id VARCHAR(255),
+    sequence_number BIGINT,
     tag VARCHAR(256),
     PRIMARY KEY(persistence_id, sequence_number, tag),
     CONSTRAINT fk_event_journal

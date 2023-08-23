@@ -53,13 +53,9 @@ class EventJournalTableColumnNames(config: Config) {
 
 class EventTagTableColumnNames(config: Config) {
   private val cfg = config.getConfig("tables.event_tag.columnNames")
+  val eventId: String = cfg.getString("eventId") // for compatibility
   val persistenceId: String = cfg.getString("persistenceId")
   val sequenceNumber: String = cfg.getString("sequenceNumber")
-  val tag: String = cfg.getString("tag")
-}
-class LegacyEventTagTableColumnNames(config: Config) {
-  private val cfg = config.getConfig("tables.legacy_event_tag.columnNames")
-  val eventId: String = cfg.getString("eventId")
   val tag: String = cfg.getString("tag")
 }
 
@@ -80,15 +76,11 @@ class EventJournalTableConfiguration(config: Config) {
 }
 class EventTagTableConfiguration(config: Config) {
   private val cfg = config.getConfig("tables.event_tag")
-  private val legacyCfg = config.getConfig("tables.legacy_event_tag")
-  val writeLegacyTag: Boolean = config.getBoolean("tables.write-legacy-tag")
-  val readLegacyTag: Boolean = config.getBoolean("tables.read-legacy-tag")
+  val writeRedundant: Boolean = cfg.getBoolean("redundant-write")
+  val readRedundant: Boolean = cfg.getBoolean("redundant-read")
   val tableName: String = cfg.getString("tableName")
   val schemaName: Option[String] = cfg.asStringOption("schemaName")
   val columnNames: EventTagTableColumnNames = new EventTagTableColumnNames(config)
-  val legacyTableName: String = legacyCfg.getString("tableName")
-  val legacySchemaName: Option[String] = legacyCfg.asStringOption("schemaName")
-  val legacyColumnNames: LegacyEventTagTableColumnNames = new LegacyEventTagTableColumnNames(config)
 }
 class LegacySnapshotTableColumnNames(config: Config) {
   private val cfg = config.getConfig("tables.legacy_snapshot.columnNames")

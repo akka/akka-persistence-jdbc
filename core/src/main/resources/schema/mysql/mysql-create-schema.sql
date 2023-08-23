@@ -16,9 +16,10 @@ CREATE TABLE IF NOT EXISTS event_journal (
 
 CREATE UNIQUE INDEX event_journal_ordering_idx ON event_journal(ordering);
 
-CREATE TABLE IF NOT EXISTS event_tags (
-    persistence_id VARCHAR(255) NOT NULL,
-    sequence_number BIGINT NOT NULL,
+CREATE TABLE IF NOT EXISTS event_tag (
+    event_id BIGINT UNSIGNED,
+    persistence_id VARCHAR(255),
+    sequence_number BIGINT,
     tag VARCHAR(255) NOT NULL,
     PRIMARY KEY(persistence_id, sequence_number, tag),
     FOREIGN KEY (persistence_id, sequence_number)

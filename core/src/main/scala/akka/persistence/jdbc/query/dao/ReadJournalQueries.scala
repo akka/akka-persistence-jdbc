@@ -28,8 +28,8 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
     JournalTable.filter(_.deleted === false)
 
   private def baseTableWithTagsQuery() = {
-    if (tagTableCfg.readLegacyTag) {
-      baseTableQuery().join(LegacyTagTable).on(_.ordering === _.eventId)
+    if (tagTableCfg.readRedundant) {
+      baseTableQuery().join(TagTable).on(_.ordering === _.eventId)
     } else {
       baseTableQuery()
         .join(TagTable)

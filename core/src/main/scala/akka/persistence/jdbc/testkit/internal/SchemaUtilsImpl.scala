@@ -33,10 +33,6 @@ private[jdbc] object SchemaUtilsImpl {
   def legacy(configKey: String, config: Config): Boolean =
     config.getConfig(configKey).getString("dao") != "akka.persistence.jdbc.journal.dao.DefaultJournalDao"
 
-  // TODO How to gracefully create and drop legacy tags table.
-  def eventTagsLegacy(configKey: String, config: Config): Boolean =
-    config.getConfig(configKey).getBoolean("tables.use-legacy-tag")
-
   /**
    * INTERNAL API
    */

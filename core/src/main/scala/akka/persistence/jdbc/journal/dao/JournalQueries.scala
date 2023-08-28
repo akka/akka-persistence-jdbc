@@ -23,7 +23,8 @@ class JournalQueries(
   private val insertAndReturn = JournalTable.returning(JournalTable.map(_.ordering))
   private val TagTableC = Compiled(TagTable)
 
-  def writeJournalRows(xs: Seq[(JournalAkkaSerializationRow, Set[String])])(implicit ec: ExecutionContext): DBIOAction[Any, NoStream, Effect.Write] = {
+  def writeJournalRows(xs: Seq[(JournalAkkaSerializationRow, Set[String])])(
+      implicit ec: ExecutionContext): DBIOAction[Any, NoStream, Effect.Write] = {
     val sorted = xs.sortBy((event => event._1.sequenceNumber))
     if (sorted.exists(_._2.nonEmpty)) {
       // only if there are any tags
@@ -37,22 +38,23 @@ class JournalQueries(
 
   private def writeEventsAndTags(sorted: Seq[(JournalAkkaSerializationRow, Set[String])])(
       implicit ec: ExecutionContext): DBIOAction[Any, NoStream, Effect.Write] = {
-    val (events, tags) = sorted.unzip
-    // using revision by default.
-    val tagRows = sorted.map { case (eventRow, tags) =>
-      tags.map(t => TagRow(Option.empty, Option(eventRow.persistenceId), Option(eventRow.sequenceNumber), t))
-    }
+    val (events, _) = sorted.unzip
     if (tagTableCfg.writeRedundant) {
       for {
         ids <- insertAndReturn ++= events
-        tagInserts = ids.zip(tagRows).flatMap { case (id, tags) => tags.map(tag => tag.copy(Option(id))) }
+        tagInserts = ids.zip(sorted).flatMap { case (id, (e, tags)) =>
+          tags.map(tag => TagRow(Some(id), Some(e.persistenceId), Some(e.sequenceNumber), tag))
+        }
         _ <- TagTableC ++= tagInserts
       } yield ()
     } else {
+      val tagInserts = sorted.map { case (e, tags) =>
+        tags.map(t => TagRow(None, Some(e.persistenceId), Some(e.sequenceNumber), t))
+      }
       // optimization using batch insert
       for {
         _ <- JournalTableC ++= events
-        _ <- TagTableC ++= tagRows.flatten
+        _ <- TagTableC ++= tagInserts.flatten
       } yield ()
     }
   }

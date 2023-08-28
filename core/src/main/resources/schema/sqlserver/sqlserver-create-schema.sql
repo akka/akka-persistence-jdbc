@@ -22,7 +22,7 @@ CREATE TABLE event_tag (
     "persistence_id" NVARCHAR(255),
     "sequence_number" NUMERIC(10,0),
     "tag" NVARCHAR(255) NOT NULL
-    PRIMARY KEY ("persistence_id", "sequence_number","tag")
+    PRIMARY KEY ("persistence_id", "sequence_number","tag"),
     constraint "fk_event_journal"
         foreign key("persistence_id", "sequence_number")
         references "dbo"."event_journal"("persistence_id", "sequence_number")

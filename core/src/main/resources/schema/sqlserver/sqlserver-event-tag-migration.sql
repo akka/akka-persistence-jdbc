@@ -1,0 +1,55 @@
+-- >>>>>>>>>>> before rolling updates.
+
+ALTER TABLE EVENT_TAG
+    ADD PERSISTENCE_ID NVARCHAR(255),
+        SEQUENCE_NUMBER NUMERIC(10, 0);
+-- >>>>>>>>>>> after projection catch up.
+DELETE
+FROM EVENT_TAG
+WHERE PERSISTENCE_ID IS NULL
+  AND SEQUENCE_NUMBER IS NULL
+-- drop old FK constraint
+DECLARE @fkConstraintName NVARCHAR(MAX);
+DECLARE @dropFKConstraintQuery NVARCHAR(MAX);
+
+SELECT @fkConstraintName = CONSTRAINT_NAME
+FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+WHERE TABLE_NAME = 'EVENT_TAG'
+  AND CONSTRAINT_TYPE = 'FOREIGN KEY';
+
+IF @fkConstraintName IS NOT NULL
+BEGIN
+        SET @dropFKConstraintQuery = 'ALTER TABLE EVENT_TAG DROP CONSTRAINT ' + QUOTENAME(@fkConstraintName);
+EXEC sp_executesql @dropFKConstraintQuery;
+END
+-- drop old PK  constraint
+DECLARE @constraintName NVARCHAR(MAX);
+DECLARE @dropConstraintQuery NVARCHAR(MAX);
+
+SELECT @constraintName = CONSTRAINT_NAME
+FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+WHERE TABLE_NAME = 'EVENT_TAG'
+  AND CONSTRAINT_TYPE = 'PRIMARY KEY';
+
+IF @constraintName IS NOT NULL
+BEGIN
+        SET @dropConstraintQuery = 'ALTER TABLE EVENT_TAG DROP CONSTRAINT ' + QUOTENAME(@constraintName);
+EXEC sp_executesql @dropConstraintQuery;
+END
+-- create new PK constraint for PK column.
+ALTER TABLE EVENT_TAG
+ALTER COLUMN PERSISTENCE_ID NVARCHAR(255) NOT NULL
+ALTER TABLE EVENT_TAG
+ALTER COLUMN SEQUENCE_NUMBER NUMERIC(10, 0) NOT NULL
+ALTER TABLE EVENT_TAG
+    ADD CONSTRAINT "pk_event_tag"
+        PRIMARY KEY (PERSISTENCE_ID, SEQUENCE_NUMBER, TAG)
+-- create new FK constraint for PK column.
+ALTER TABLE EVENT_TAG
+    ADD CONSTRAINT "fk_event_journal_on_pk"
+        FOREIGN KEY (PERSISTENCE_ID, SEQUENCE_NUMBER)
+            REFERENCES EVENT_JOURNAL (PERSISTENCE_ID, SEQUENCE_NUMBER)
+            ON DELETE CASCADE
+-- alter the event_id to nullable, so we can skip the InsertAndReturn.
+ALTER TABLE EVENT_TAG
+ALTER COLUMN EVENT_ID BIGINT NULL

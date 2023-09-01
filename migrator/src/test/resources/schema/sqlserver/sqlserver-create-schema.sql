@@ -18,9 +18,11 @@ CREATE TABLE event_journal(
 CREATE UNIQUE INDEX event_journal_ordering_idx ON event_journal(ordering);
 
 CREATE TABLE event_tag (
-    "event_id" BIGINT NOT NULL,
-    "tag" VARCHAR(255) NOT NULL
-    PRIMARY KEY ("event_id","tag")
+    "event_id" BIGINT,
+    "persistence_id" VARCHAR(255),
+    "sequence_number" NUMERIC(10,0),
+    "tag" VARCHAR(255) NOT NULL,
+    PRIMARY KEY ("event_id", "tag"),
     constraint "fk_event_journal"
         foreign key("event_id")
         references "dbo"."event_journal"("ordering")

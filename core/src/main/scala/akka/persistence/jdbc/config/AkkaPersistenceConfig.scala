@@ -76,8 +76,7 @@ class EventJournalTableConfiguration(config: Config) {
 }
 class EventTagTableConfiguration(config: Config) {
   private val cfg = config.getConfig("tables.event_tag")
-  val writeRedundant: Boolean = cfg.getBoolean("redundant-write")
-  val readRedundant: Boolean = cfg.getBoolean("redundant-read")
+  val legacyTagKey: Boolean = cfg.getBoolean("legacy-tag-key")
   val tableName: String = cfg.getString("tableName")
   val schemaName: Option[String] = cfg.asStringOption("schemaName")
   val columnNames: EventTagTableColumnNames = new EventTagTableColumnNames(config)

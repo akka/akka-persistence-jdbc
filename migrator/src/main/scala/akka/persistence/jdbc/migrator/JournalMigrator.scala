@@ -141,11 +141,7 @@ final case class JournalMigrator(profile: JdbcProfile)(implicit system: ActorSys
     val tagInserts =
       newJournalQueries.TagTable ++= tags
         .map(tag =>
-          TagRow(
-            Some(journalSerializedRow.ordering),
-            Some(journalSerializedRow.persistenceId),
-            Some(journalSerializedRow.sequenceNumber),
-            tag))
+          TagRow(None, Some(journalSerializedRow.persistenceId), Some(journalSerializedRow.sequenceNumber), tag))
         .toSeq
 
     journalInsert.flatMap(_ => tagInserts.asInstanceOf[DBIO[Unit]])

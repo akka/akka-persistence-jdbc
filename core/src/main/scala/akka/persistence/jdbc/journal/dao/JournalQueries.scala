@@ -25,7 +25,7 @@ class JournalQueries(
 
   def writeJournalRows(xs: Seq[(JournalAkkaSerializationRow, Set[String])])(
       implicit ec: ExecutionContext): DBIOAction[Any, NoStream, Effect.Write] = {
-    val sorted = xs.sortBy((event => event._1.sequenceNumber))
+    val sorted = xs.sortBy(event => event._1.sequenceNumber)
     if (sorted.exists(_._2.nonEmpty)) {
       // only if there are any tags
       writeEventsAndTags(sorted)
@@ -39,7 +39,7 @@ class JournalQueries(
   private def writeEventsAndTags(sorted: Seq[(JournalAkkaSerializationRow, Set[String])])(
       implicit ec: ExecutionContext): DBIOAction[Any, NoStream, Effect.Write] = {
     val (events, _) = sorted.unzip
-    if (tagTableCfg.writeRedundant) {
+    if (tagTableCfg.legacyTagKey) {
       for {
         ids <- insertAndReturn ++= events
         tagInserts = ids.zip(sorted).flatMap { case (id, (e, tags)) =>

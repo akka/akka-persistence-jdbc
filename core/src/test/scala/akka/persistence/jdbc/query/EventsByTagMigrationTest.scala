@@ -7,7 +7,7 @@ package akka.persistence.jdbc.query
 
 import akka.actor.ActorSystem
 import akka.pattern.ask
-import akka.persistence.jdbc.query.EventsByTagMigrationTest.{ migrationConfigOverride, redundantConfigOverride }
+import akka.persistence.jdbc.query.EventsByTagMigrationTest.{ legacyTagKeyConfigOverride, migrationConfigOverride }
 import akka.persistence.query.{ EventEnvelope, NoOffset, Sequence }
 import com.typesafe.config.{ ConfigFactory, ConfigValue, ConfigValueFactory }
 
@@ -16,14 +16,12 @@ import scala.concurrent.duration._
 object EventsByTagMigrationTest {
   val maxBufferSize = 20
   val refreshInterval = 500.milliseconds
-  val redundantWrite = true
-  val redundantRead = true
+  val legacyTagKey = true
 
-  val redundantConfigOverride: Map[String, ConfigValue] = Map(
+  val legacyTagKeyConfigOverride: Map[String, ConfigValue] = Map(
     "jdbc-read-journal.max-buffer-size" -> ConfigValueFactory.fromAnyRef(maxBufferSize.toString),
     "jdbc-read-journal.refresh-interval" -> ConfigValueFactory.fromAnyRef(refreshInterval.toString),
-    "jdbc-journal.tables.event_tag.redundant-write" -> ConfigValueFactory.fromAnyRef(redundantWrite),
-    "jdbc-read-journal.tables.event_tag.redundant-read" -> ConfigValueFactory.fromAnyRef(redundantRead))
+    "jdbc-journal.tables.event_tag.legacy-tag-key" -> ConfigValueFactory.fromAnyRef(legacyTagKey))
 
   val migrationConfigOverride: Map[String, ConfigValue] = Map(
     "jdbc-read-journal.max-buffer-size" -> ConfigValueFactory.fromAnyRef(maxBufferSize.toString),
@@ -108,12 +106,12 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
 
   // override this, so we can reset the value.
   def withRollingUpdateActorSystem(f: ActorSystem => Unit): Unit = {
-    val redundantConfig = redundantConfigOverride.foldLeft(ConfigFactory.load(config)) {
+    val legacyTagKeyConfig = legacyTagKeyConfigOverride.foldLeft(ConfigFactory.load(config)) {
       case (conf, (path, configValue)) =>
         conf.withValue(path, configValue)
     }
 
-    implicit val system: ActorSystem = ActorSystem("migrator-test", redundantConfig)
+    implicit val system: ActorSystem = ActorSystem("migrator-test", legacyTagKeyConfig)
     f(system)
     system.terminate().futureValue
   }

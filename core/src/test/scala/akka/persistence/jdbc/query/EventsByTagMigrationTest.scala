@@ -34,6 +34,72 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
   val tagTableCfg = journalConfig.eventTagTableConfiguration
   val journalTableCfg = journalConfig.eventJournalTableConfiguration
 
+  def dropConstraint(
+      tableName: String = tagTableCfg.tableName,
+      constraintTableName: String = "INFORMATION_SCHEMA.TABLE_CONSTRAINTS",
+      constraintType: String,
+      constraintDialect: String = "CONSTRAINT",
+      constraintNameDialect: String = ""): Unit = {
+    withStatement { stmt =>
+      // SELECT AND DROP old CONSTRAINT
+      val constraintNameQuery =
+        s"""
+           |SELECT CONSTRAINT_NAME
+           |FROM $constraintTableName
+           |WHERE TABLE_NAME = '$tableName' AND CONSTRAINT_TYPE = '$constraintType'
+                  """.stripMargin
+      val resultSet = stmt.executeQuery(constraintNameQuery)
+      if (resultSet.next()) {
+        val constraintName = resultSet.getString("CONSTRAINT_NAME")
+        stmt.execute(s"ALTER TABLE $tableName DROP $constraintDialect $constraintName $constraintNameDialect")
+      }
+    }
+  }
+
+  def addPKConstraint(
+      tableName: String = tagTableCfg.tableName,
+      pidColumnName: String = tagTableCfg.columnNames.persistenceId,
+      seqNrColumnName: String = tagTableCfg.columnNames.sequenceNumber,
+      tagColumnName: String = tagTableCfg.columnNames.tag,
+      constraintNameDialect: String = "pk_event_tag"): Unit = {
+    withStatement { stmt =>
+      stmt.execute(s"""
+           |ALTER TABLE $tableName
+           |ADD CONSTRAINT $constraintNameDialect
+           |PRIMARY KEY ($pidColumnName, $seqNrColumnName, $tagColumnName)
+                      """.stripMargin)
+    }
+  }
+
+  def addFKConstraint(
+      tableName: String = tagTableCfg.tableName,
+      pidColumnName: String = tagTableCfg.columnNames.persistenceId,
+      seqNrColumnName: String = tagTableCfg.columnNames.sequenceNumber,
+      journalTableName: String = journalTableCfg.tableName,
+      journalPidColumnName: String = tagTableCfg.columnNames.persistenceId,
+      journalSeqNrColumnName: String = tagTableCfg.columnNames.sequenceNumber,
+      constraintNameDialect: String = "fk_event_journal_on_pk"): Unit = {
+    withStatement { stmt =>
+      stmt.execute(s"""
+                      |ALTER TABLE $tableName
+                      |ADD CONSTRAINT $constraintNameDialect
+                      |FOREIGN KEY ($pidColumnName, $seqNrColumnName)
+                      |REFERENCES $journalTableName ($journalPidColumnName, $journalSeqNrColumnName)
+                      |ON DELETE CASCADE
+                      """.stripMargin)
+    }
+  }
+
+  def alterColumn(
+      tableName: String = tagTableCfg.tableName,
+      alterDialect: String = "ALTER COLUMN",
+      columnName: String = tagTableCfg.columnNames.eventId,
+      changeToDialect: String = "BIGINT NULL"): Unit = {
+    withStatement { stmt =>
+      stmt.execute(s"ALTER TABLE $tableName $alterDialect $columnName $changeToDialect")
+    }
+  }
+
   /**
    * add new column to event_tag table.
    */
@@ -55,54 +121,32 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
   /**
    * drop old FK constraint
    */
-  def dropLegacyFKConstraint(): Unit = {
-    withStatement(stmt => stmt.execute(s"""ALTER TABLE ${tagTableCfg.tableName} DROP CONSTRAINT "fk_event_journal""""))
-
-  }
+  def dropLegacyFKConstraint(): Unit =
+    dropConstraint(constraintType = "FOREIGN KEY")
 
   /**
    * drop old PK  constraint
    */
-  def dropLegacyPKConstraint(): Unit = {
-    withStatement(stmt => stmt.execute(s"ALTER TABLE ${tagTableCfg.tableName} DROP PRIMARY KEY"))
-  }
+  def dropLegacyPKConstraint(): Unit =
+    dropConstraint(constraintType = "PRIMARY KEY")
 
   /**
    * create new PK constraint for PK column.
    */
-  def addNewPKConstraint(): Unit = {
-    withStatement { stmt =>
-      stmt.execute(s"""
-                      |ALTER TABLE ${tagTableCfg.tableName}
-                      |ADD CONSTRAINT "pk_event_tag"
-                      |PRIMARY KEY (${tagTableCfg.columnNames.persistenceId}, ${tagTableCfg.columnNames.sequenceNumber}, ${tagTableCfg.columnNames.tag})
-                      """.stripMargin)
-    }
-  }
+  def addNewPKConstraint(): Unit =
+    addPKConstraint()
 
   /**
    * create new FK constraint for PK column.
    */
-  def addNewFKConstraint(): Unit = {
-    withStatement { stmt =>
-      stmt.execute(s"""
-                      |ALTER TABLE ${tagTableCfg.tableName}
-                      |ADD CONSTRAINT "fk_event_journal_on_pk"
-                      |FOREIGN KEY (${tagTableCfg.columnNames.persistenceId}, ${tagTableCfg.columnNames.sequenceNumber})
-                      |REFERENCES ${journalTableCfg.tableName} (${journalTableCfg.columnNames.persistenceId}, ${journalTableCfg.columnNames.sequenceNumber})
-                      |ON DELETE CASCADE
-                      """.stripMargin)
-    }
-  }
+  def addNewFKConstraint(): Unit =
+    addFKConstraint()
 
   /**
    * alter the event_id to nullable, so we can skip the InsertAndReturn.
    */
-  def alterEventIdToNullable(): Unit = {
-    withStatement { stmt =>
-      stmt.execute(s"ALTER TABLE ${tagTableCfg.tableName} ALTER COLUMN ${tagTableCfg.columnNames.eventId} BIGINT NULL")
-    }
-  }
+  def alterEventIdToNullable(): Unit =
+    alterColumn()
 
   // override this, so we can reset the value.
   def withRollingUpdateActorSystem(f: ActorSystem => Unit): Unit = {
@@ -119,13 +163,15 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
   it should "migrate event tag to new way" in {
     // 1. Mock legacy data on here, but actually using redundant write and read.
     withRollingUpdateActorSystem { implicit system =>
+      pendingIfOracleWithLegacy()
+
       val journalOps = new ScalaJdbcReadJournalOperations(system)
       withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
         (actor1 ? withTags(1, "number")).futureValue
         (actor2 ? withTags(2, "number")).futureValue
         (actor3 ? withTags(3, "number")).futureValue
 
-        journalOps.withEventsByTag()("number", NoOffset) { tp =>
+        journalOps.withEventsByTag()("number", Sequence(Long.MinValue)) { tp =>
           tp.request(Int.MaxValue)
           tp.expectNext(EventEnvelope(Sequence(1), "my-1", 1, 1, timestamp = 0L))
           tp.expectNext(EventEnvelope(Sequence(2), "my-2", 1, 2, timestamp = 0L))
@@ -137,7 +183,9 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
 
     // Assume that the user has completed the addition of the new column, then we don't need to maintain
     // the legacy table schema creation.
-    addNewColumn();
+    if (newDao) {
+      addNewColumn();
+    }
 
     // 2. write and read redundancy
     withRollingUpdateActorSystem { implicit system =>
@@ -161,12 +209,14 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
     }
 
     // 3. Delete the rows inserted in the old way and alter the event_id to nullable so that we can migrate to the read and write from the new PK.
-    deleteLegacyRows();
-    dropLegacyFKConstraint();
-    dropLegacyPKConstraint()
-    addNewPKConstraint()
-    addNewFKConstraint()
-    alterEventIdToNullable();
+    if (newDao) {
+      deleteLegacyRows();
+      dropLegacyFKConstraint();
+      dropLegacyPKConstraint()
+      addNewPKConstraint()
+      addNewFKConstraint()
+      alterEventIdToNullable();
+    }
 
     // 4. check the migration completed.
     withActorSystem { implicit system =>

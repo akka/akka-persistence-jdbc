@@ -48,7 +48,6 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
   }
 
   it should "find all events by tag" in withActorSystem { implicit system =>
-    pendingIfOracleWithLegacy()
 
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
@@ -122,7 +121,6 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
   }
 
   it should "deliver EventEnvelopes non-zero timestamps" in withActorSystem { implicit system =>
-    pendingIfOracleWithLegacy()
 
     val testStartTime = System.currentTimeMillis()
     val journalOps = new ScalaJdbcReadJournalOperations(system)
@@ -159,7 +157,6 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
   }
 
   it should "select events by tag with exact match" in withActorSystem { implicit system =>
-    pendingIfOracleWithLegacy()
 
     val journalOps = new ScalaJdbcReadJournalOperations(system)
 
@@ -201,7 +198,6 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
 
   it should "find all events by tag even when lots of events are persisted concurrently" in withActorSystem {
     implicit system =>
-      pendingIfOracleWithLegacy()
 
       val journalOps = new ScalaJdbcReadJournalOperations(system)
       val msgCountPerActor = 20
@@ -232,7 +228,6 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
   }
 
   it should "find events by tag from an offset" in withActorSystem { implicit system =>
-    pendingIfOracleWithLegacy()
 
     val journalOps = new JavaDslJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
@@ -259,7 +254,6 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
   }
 
   it should "persist and find tagged event for one tag" in withActorSystem { implicit system =>
-    pendingIfOracleWithLegacy()
 
     val journalOps = new JavaDslJdbcReadJournalOperations(system)
     withTestActors() { (actor1, actor2, actor3) =>
@@ -306,7 +300,6 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
   }
 
   it should "persist and find tagged events when stored with multiple tags" in withActorSystem { implicit system =>
-    pendingIfOracleWithLegacy()
 
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
@@ -385,7 +378,6 @@ abstract class EventsByTagTest(config: String) extends QueryTestSpec(config, con
   def timeoutMultiplier: Int = 1
 
   it should "show the configured performance characteristics" in withActorSystem { implicit system =>
-    pendingIfOracleWithLegacy()
 
     import system.dispatcher
     val journalOps = new ScalaJdbcReadJournalOperations(system)

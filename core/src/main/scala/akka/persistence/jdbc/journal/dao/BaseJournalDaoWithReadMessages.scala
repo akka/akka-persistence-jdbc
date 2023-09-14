@@ -12,7 +12,6 @@ import akka.persistence.jdbc.journal.dao.FlowControl.{ Continue, ContinueDelayed
 import akka.stream.Materializer
 import akka.stream.scaladsl.{ Sink, Source }
 
-import scala.collection.immutable.Seq
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{ Failure, Success, Try }
@@ -67,7 +66,7 @@ trait BaseJournalDaoWithReadMessages extends JournalDaoWithReadMessages {
               akka.pattern.after(delay, scheduler)(retrieveNextBatch())
           }
       }
-      .mapConcat(identity(_))
+      .mapConcat(identity)
   }
 
 }

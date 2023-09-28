@@ -11,7 +11,7 @@ object Dependencies {
   val AkkaBinaryVersion = AkkaVersion.take(3)
 
   val SlickVersion = "3.4.1"
-  val ScalaTestVersion = "3.2.16"
+  val ScalaTestVersion = "3.2.17"
 
   val JdbcDrivers = Seq(
     "org.postgresql" % "postgresql" % "42.6.0",

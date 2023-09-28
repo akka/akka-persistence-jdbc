@@ -63,7 +63,7 @@ jobs:
         with:
           jvm: temurin:1.11.0
 
-      - name: Compile all code with fatal warnings for Java 11, Scala 2.12 and Scala 2.13
+      - name: Compile all code with fatal warnings for Java 11, Scala 2.13
         # Run locally with: sbt 'clean ; +Test/compile ; +It/compile'
         run: sbt "; Test/compile; It/compile"
 

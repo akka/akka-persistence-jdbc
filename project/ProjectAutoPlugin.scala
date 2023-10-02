@@ -46,10 +46,7 @@ object ProjectAutoPlugin extends AutoPlugin {
     Test / fork := false,
     Test / parallelExecution := false,
     Test / logBuffered := true,
-    javacOptions ++= Seq(
-      "--release",
-      "11"
-    ),
+    javacOptions ++= Seq("--release", "11"),
     scalacOptions ++= Seq(
       "-encoding",
       "UTF-8",

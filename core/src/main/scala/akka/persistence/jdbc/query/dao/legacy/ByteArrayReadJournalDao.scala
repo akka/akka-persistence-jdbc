@@ -122,7 +122,6 @@ trait OracleReadJournalDao extends ReadJournalDao {
     if (isOracleDriver(profile)) {
       val theOffset = Math.max(0, offset)
       val theTag = s"%$tag%"
-
       val selectStatement =
         sql"""
             SELECT "#$ordering", "#$deleted", "#$persistenceId", "#$sequenceNumber", "#$message", "#$tags"
@@ -131,7 +130,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
               WHERE "#$tags" LIKE $theTag
               AND "#$ordering" > $theOffset
               AND "#$ordering" <= $maxOffset
-              AND "#$deleted" = 'false'
+              AND "#$deleted" = 0
               ORDER BY "#$ordering"
             )
             WHERE rownum <= $max""".as[JournalRow]

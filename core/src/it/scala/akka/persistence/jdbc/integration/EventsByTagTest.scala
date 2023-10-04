@@ -6,8 +6,6 @@ class PostgresScalaEventsByTagTest extends EventsByTagTest("postgres-application
 
 class MySQLScalaEventByTagTest extends EventsByTagTest("mysql-application.conf") with MysqlCleaner
 
-class OracleScalaEventByTagTest extends EventsByTagTest("oracle-application.conf") with OracleCleaner {
-  override def timeoutMultiplier: Int = 4
-}
+class OracleScalaEventByTagTest extends EventsByTagTest("oracle-application.conf") with OracleCleaner
 
 class SqlServerScalaEventByTagTest extends EventsByTagTest("sqlserver-application.conf") with SqlServerCleaner

@@ -45,7 +45,6 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
   }
 
   it should "find all events by tag" in withActorSystem { implicit system =>
-    pendingIfOracleWithLegacy()
 
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
@@ -94,7 +93,6 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
   }
 
   it should "persist and find a tagged event with multiple tags" in withActorSystem { implicit system =>
-    pendingIfOracleWithLegacy()
 
     val journalOps = new ScalaJdbcReadJournalOperations(system)
     withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
@@ -169,7 +167,6 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
 
   it should "complete without any gaps in case events are being persisted when the query is executed" in withActorSystem {
     implicit system =>
-      pendingIfOracleWithLegacy()
 
       val journalOps = new JavaDslJdbcReadJournalOperations(system)
       import system.dispatcher

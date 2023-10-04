@@ -122,7 +122,6 @@ trait OracleReadJournalDao extends ReadJournalDao {
     if (isOracleDriver(profile)) {
       val theOffset = Math.max(0, offset)
       val theTag = s"%$tag%"
-      // fixes https://github.com/akka/akka-persistence-jdbc/issues/673, oracle do not support boolean type.
       val selectStatement =
         sql"""
             SELECT "#$ordering", "#$deleted", "#$persistenceId", "#$sequenceNumber", "#$message", "#$tags"

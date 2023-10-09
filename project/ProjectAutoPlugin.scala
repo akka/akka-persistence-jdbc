@@ -4,12 +4,12 @@ import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.{ headerLicense, Head
 import sbt.Keys._
 import sbt._
 import sbt.plugins.JvmPlugin
-import xerial.sbt.Sonatype.autoImport.sonatypeProfileName
+import sbtdynver.DynVerPlugin.autoImport.dynverSonatypeSnapshots
 
 object ProjectAutoPlugin extends AutoPlugin {
   object autoImport {}
 
-  override val requires = JvmPlugin && HeaderPlugin && CiReleasePlugin
+  override val requires = JvmPlugin && HeaderPlugin
 
   override def globalSettings =
     Seq(
@@ -43,6 +43,8 @@ object ProjectAutoPlugin extends AutoPlugin {
     crossVersion := CrossVersion.binary,
     crossScalaVersions := Dependencies.ScalaVersions,
     scalaVersion := Dependencies.Scala213,
+    // append -SNAPSHOT to version when isSnapshot
+    ThisBuild / dynverSonatypeSnapshots := true,
     Test / fork := false,
     Test / parallelExecution := false,
     Test / logBuffered := true,
@@ -91,8 +93,7 @@ object ProjectAutoPlugin extends AutoPlugin {
     headerLicense := Some(HeaderLicense.Custom("""|Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
            |Copyright (C) 2019 - 2023 Lightbend Inc. <https://www.lightbend.com>
            |""".stripMargin)),
-    resolvers += Resolver.jcenterRepo,
-    sonatypeProfileName := "com.lightbend")
+    resolvers += Resolver.jcenterRepo)
 
   val disciplineScalacOptions = Set(
 //    "-Xfatal-warnings",

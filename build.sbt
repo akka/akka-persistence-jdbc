@@ -1,19 +1,19 @@
 import com.lightbend.paradox.apidoc.ApidocPlugin.autoImport.apidocRootPackage
+import com.geirsson.CiReleasePlugin
 
-// FIXME remove switching to final Akka version
-ThisBuild / resolvers += "Akka Snapshots".at("https://oss.sonatype.org/content/repositories/snapshots/")
+ThisBuild / resolvers += "Akka library repository".at("https://repo.akka.io/maven")
 
 lazy val `akka-persistence-jdbc` = project
   .in(file("."))
   .enablePlugins(ScalaUnidocPlugin)
-  .disablePlugins(MimaPlugin, SitePlugin)
+  .disablePlugins(MimaPlugin, SitePlugin, CiReleasePlugin)
   .aggregate(core, docs, migrator)
   .settings(publish / skip := true)
 
 lazy val core = project
   .in(file("core"))
   .enablePlugins(MimaPlugin)
-  .disablePlugins(SitePlugin)
+  .disablePlugins(SitePlugin, CiReleasePlugin)
   .configs(IntegrationTest.extend(Test))
   .settings(Defaults.itSettings)
   .settings(
@@ -26,7 +26,7 @@ lazy val core = project
 
 lazy val migrator = project
   .in(file("migrator"))
-  .disablePlugins(SitePlugin, MimaPlugin)
+  .disablePlugins(SitePlugin, MimaPlugin, CiReleasePlugin)
   .configs(IntegrationTest.extend(Test))
   .settings(Defaults.itSettings)
   .settings(
@@ -38,7 +38,7 @@ lazy val migrator = project
 
 lazy val docs = project
   .enablePlugins(ProjectAutoPlugin, AkkaParadoxPlugin, ParadoxSitePlugin, PreprocessPlugin, PublishRsyncPlugin)
-  .disablePlugins(MimaPlugin)
+  .disablePlugins(MimaPlugin, CiReleasePlugin)
   .settings(
     name := "Akka Persistence JDBC",
     publish / skip := true,

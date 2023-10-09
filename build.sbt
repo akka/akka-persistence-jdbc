@@ -94,3 +94,10 @@ TaskKey[Unit]("verifyCodeFmt") := {
 }
 
 addCommandAlias("verifyCodeStyle", "headerCheck; verifyCodeFmt")
+
+val isJdk11orHigher: Boolean = {
+  val result = VersionNumber(sys.props("java.specification.version")).matchesSemVer(SemanticSelector(">=11"))
+  if (!result)
+    throw new IllegalArgumentException("JDK 11 or higher is required")
+  result
+}

@@ -46,6 +46,7 @@ object ProjectAutoPlugin extends AutoPlugin {
     Test / fork := false,
     Test / parallelExecution := false,
     Test / logBuffered := true,
+    javacOptions ++= Seq("--release", "11"),
     scalacOptions ++= Seq(
       "-encoding",
       "UTF-8",
@@ -53,7 +54,8 @@ object ProjectAutoPlugin extends AutoPlugin {
       "-Xlog-reflective-calls",
       "-language:higherKinds",
       "-language:implicitConversions",
-      "-target:jvm-1.8"),
+      "-release",
+      "11"),
     Compile / scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 13)) =>
         disciplineScalacOptions -- Set(

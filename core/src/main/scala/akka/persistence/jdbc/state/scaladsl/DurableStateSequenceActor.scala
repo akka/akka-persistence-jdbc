@@ -46,7 +46,7 @@ import akka.annotation.InternalApi
    * Efficient representation of missing elements using NumericRanges.
    * It can be seen as a collection of GlobalOffset
    */
-  private case class MissingElements(elements: Seq[NumericRange[GlobalOffset]]) {
+  case class MissingElements(elements: Seq[NumericRange[GlobalOffset]]) {
     def addRange(from: GlobalOffset, until: GlobalOffset): MissingElements = {
       val newRange = from.until(until)
       MissingElements(elements :+ newRange)

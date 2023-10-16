@@ -21,6 +21,9 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
       stateSerId: Int,
       stateSerManifest: Option[String],
       stateTimestamp: Long)
+  object DurableStateRow {
+    def tupled = (DurableStateRow.apply _).tupled
+  }
 }
 
 /**

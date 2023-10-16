@@ -38,7 +38,7 @@ object JournalSequenceActor {
    * Efficient representation of missing elements using NumericRanges.
    * It can be seen as a collection of OrderingIds
    */
-  private case class MissingElements(elements: Seq[NumericRange[OrderingId]]) {
+  case class MissingElements(elements: Seq[NumericRange[OrderingId]]) {
     def addRange(from: OrderingId, until: OrderingId): MissingElements = {
       val newRange = from.until(until)
       MissingElements(elements :+ newRange)
@@ -46,7 +46,7 @@ object JournalSequenceActor {
     def contains(id: OrderingId): Boolean = elements.exists(_.containsTyped(id))
     def isEmpty: Boolean = elements.forall(_.isEmpty)
   }
-  private object MissingElements {
+  object MissingElements {
     def empty: MissingElements = MissingElements(Vector.empty)
   }
 }

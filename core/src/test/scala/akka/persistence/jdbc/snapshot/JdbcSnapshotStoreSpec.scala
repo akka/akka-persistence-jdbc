@@ -18,6 +18,8 @@ import scala.concurrent.duration._
 import akka.persistence.jdbc.testkit.internal.H2
 import akka.persistence.jdbc.testkit.internal.SchemaType
 
+import scala.concurrent.ExecutionContext
+
 abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType)
     extends SnapshotStoreSpec(config)
     with BeforeAndAfterAll
@@ -26,7 +28,7 @@ abstract class JdbcSnapshotStoreSpec(config: Config, schemaType: SchemaType)
     with DropCreate {
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 10.seconds)
 
-  implicit lazy val ec = system.dispatcher
+  implicit lazy val ec: ExecutionContext = system.dispatcher
 
   lazy val cfg = system.settings.config.getConfig("jdbc-journal")
 

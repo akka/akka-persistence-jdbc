@@ -16,7 +16,6 @@ import akka.persistence.jdbc.snapshot.dao.legacy.SnapshotTables.SnapshotRow
 import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.scaladsl.{ Sink, Source }
 import akka.Done
-import akka.persistence.jdbc.migrator.JournalMigrator.ReadJournalConfig
 import akka.persistence.jdbc.migrator.SnapshotMigrator.{ NoParallelism, SnapshotStoreConfig }
 import org.slf4j.{ Logger, LoggerFactory }
 import slick.jdbc
@@ -38,13 +37,13 @@ case class SnapshotMigrator(profile: JdbcProfile)(implicit system: ActorSystem) 
 
   private val snapshotConfig: SnapshotConfig = new SnapshotConfig(system.settings.config.getConfig(SnapshotStoreConfig))
   private val readJournalConfig: ReadJournalConfig = new ReadJournalConfig(
-    system.settings.config.getConfig(ReadJournalConfig))
+    system.settings.config.getConfig(JournalMigrator.ReadJournalConfig))
 
   private val snapshotDB: jdbc.JdbcBackend.Database =
     SlickExtension(system).database(system.settings.config.getConfig(SnapshotStoreConfig)).database
 
   private val journalDB: JdbcBackend.Database =
-    SlickExtension(system).database(system.settings.config.getConfig(ReadJournalConfig)).database
+    SlickExtension(system).database(system.settings.config.getConfig(JournalMigrator.ReadJournalConfig)).database
 
   private val serialization: Serialization = SerializationExtension(system)
   private val queries: SnapshotQueries = new SnapshotQueries(profile, snapshotConfig.legacySnapshotTableConfiguration)

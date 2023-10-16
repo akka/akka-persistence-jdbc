@@ -11,7 +11,8 @@ import com.typesafe.config.Config
 
 class JdbcReadJournalProvider(system: ExtendedActorSystem, config: Config, configPath: String)
     extends ReadJournalProvider {
-  override val scaladslReadJournal = new scaladsl.JdbcReadJournal(config, configPath)(system)
+  override def scaladslReadJournal(): scaladsl.JdbcReadJournal =
+    new scaladsl.JdbcReadJournal(config, configPath)(system)
 
-  override val javadslReadJournal = new javadsl.JdbcReadJournal(scaladslReadJournal)
+  override def javadslReadJournal(): javadsl.JdbcReadJournal = new javadsl.JdbcReadJournal(scaladslReadJournal())
 }

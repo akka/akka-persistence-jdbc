@@ -21,6 +21,10 @@ object SnapshotTables {
       metaSerId: Option[Int],
       metaSerManifest: Option[String],
       metaPayload: Option[Array[Byte]])
+
+  object SnapshotRow {
+    def tupled = (SnapshotRow.apply _).tupled
+  }
 }
 
 trait SnapshotTables {

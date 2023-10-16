@@ -29,7 +29,14 @@ object JournalTables {
       metaSerId: Option[Int],
       metaSerManifest: Option[String])
 
+  object JournalAkkaSerializationRow {
+    def tupled = (JournalAkkaSerializationRow.apply _).tupled
+  }
+
   case class TagRow(eventId: Long, tag: String)
+  object TagRow {
+    def tupled = (TagRow.apply _).tupled
+  }
 }
 
 /**

@@ -7,6 +7,7 @@ package akka.persistence.jdbc.state.scaladsl
 
 import com.typesafe.config.{ Config, ConfigFactory }
 import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
 import scala.util.{ Failure, Success }
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -32,7 +33,7 @@ abstract class StateSpecBase(val config: Config, schemaType: SchemaType)
     with DataGenerationHelper {
   implicit def system: ActorSystem
 
-  implicit lazy val e = system.dispatcher
+  implicit lazy val e: ExecutionContext = system.dispatcher
 
   private[jdbc] def schemaTypeToProfile(s: SchemaType) = s match {
     case H2       => slick.jdbc.H2Profile

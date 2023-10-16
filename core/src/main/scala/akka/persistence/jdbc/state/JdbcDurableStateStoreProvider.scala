@@ -33,10 +33,10 @@ class JdbcDurableStateStoreProvider[A](system: ExtendedActorSystem) extends Dura
   lazy val serialization = SerializationExtension(system)
   val profile: JdbcProfile = slickDb.profile
 
-  override val scaladslDurableStateStore: DurableStateStore[Any] =
+  override def scaladslDurableStateStore(): DurableStateStore[Any] =
     new scaladsl.JdbcDurableStateStore[Any](db, profile, durableStateConfig, serialization)(system)
 
-  override val javadslDurableStateStore: JDurableStateStore[AnyRef] =
+  override def javadslDurableStateStore(): JDurableStateStore[AnyRef] =
     new javadsl.JdbcDurableStateStore[AnyRef](
       profile,
       durableStateConfig,

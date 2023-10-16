@@ -27,7 +27,7 @@ object TestProbeReadJournalDao {
  */
 class TestProbeReadJournalDao(val probe: TestProbe) extends ReadJournalDao {
   // Since the testprobe is instrumented by the test, it should respond very fast
-  implicit val askTimeout = Timeout(100.millis)
+  implicit val askTimeout: Timeout = Timeout(100.millis)
 
   /**
    * Returns distinct stream of persistenceIds

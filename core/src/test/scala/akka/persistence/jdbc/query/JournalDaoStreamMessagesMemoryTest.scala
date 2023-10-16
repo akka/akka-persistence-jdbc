@@ -43,7 +43,7 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
   val journalSequenceActorConfig = readJournalConfig.journalSequenceRetrievalConfiguration
   val journalTableCfg = journalConfig.journalTableConfiguration
 
-  implicit val askTimeout = 50.millis
+  implicit val askTimeout: FiniteDuration = 50.millis
 
   def generateId: Int = 0
 

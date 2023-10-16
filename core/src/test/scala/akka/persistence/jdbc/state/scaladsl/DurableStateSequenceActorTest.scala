@@ -26,7 +26,7 @@ abstract class DurableStateSequenceActorTest(config: Config, schemaType: SchemaT
 
   val durableStateSequenceActorConfig = durableStateConfig.stateSequenceConfig
 
-  implicit val askTimeout = 50.millis
+  implicit val askTimeout: FiniteDuration = 50.millis
   implicit val timeout: Timeout = Timeout(1.minute)
 
   "A DurableStateSequenceActor" must {

@@ -108,6 +108,7 @@ object ProjectAutoPlugin extends AutoPlugin {
     "-Ywarn-nullary-unit",
     "-Ywarn-unused:_",
     "-Ypartial-unification",
-    "-Ywarn-extra-implicit")
+    "-Ywarn-extra-implicit",
+    "-Xsource:3")
 
 }

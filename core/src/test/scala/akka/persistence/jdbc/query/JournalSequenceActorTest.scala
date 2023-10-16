@@ -75,7 +75,8 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
 
           val startTime = System.currentTimeMillis()
           withJournalSequenceActor(db, maxTries = 100) { actor =>
-            implicit val patienceConfig: PatienceConfig = PatienceConfig(10.seconds, Span(200, org.scalatest.time.Millis))
+            implicit val patienceConfig: PatienceConfig =
+              PatienceConfig(10.seconds, Span(200, org.scalatest.time.Millis))
             eventually {
               val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
               currentMax shouldBe elements
@@ -109,7 +110,8 @@ abstract class JournalSequenceActorTest(configFile: String, isOracle: Boolean)
 
           withJournalSequenceActor(db, maxTries = 2) { actor =>
             // Should normally recover after `maxTries` seconds
-            implicit val patienceConfig: PatienceConfig = PatienceConfig(10.seconds, Span(200, org.scalatest.time.Millis))
+            implicit val patienceConfig: PatienceConfig =
+              PatienceConfig(10.seconds, Span(200, org.scalatest.time.Millis))
             eventually {
               val currentMax = actor.ask(GetMaxOrderingId).mapTo[MaxOrderingId].futureValue.maxOrdering
               currentMax shouldBe lastElement

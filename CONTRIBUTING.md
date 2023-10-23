@@ -78,5 +78,5 @@ Example:
 
 ## How To Enforce These Guidelines?
 
-2. [Scalafmt](https://scalameta.org/scalafmt/) enforces some of the code style rules.
-3. [sbt-header plugin](https://github.com/sbt/sbt-header) manages consistent copyright headers in every source file.
+1. [Scalafmt](https://scalameta.org/scalafmt/) enforces some of the code style rules.
+2. [sbt-header plugin](https://github.com/sbt/sbt-header) manages consistent copyright headers in every source file.

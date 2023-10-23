@@ -78,6 +78,5 @@ Example:
 
 ## How To Enforce These Guidelines?
 
-1. [Travis CI](https://travis-ci.org/akka/akka-persistence-jdbc) automatically merges the code, builds it, runs the tests and sets Pull Request status accordingly of results in GitHub.
 2. [Scalafmt](https://scalameta.org/scalafmt/) enforces some of the code style rules.
 3. [sbt-header plugin](https://github.com/sbt/sbt-header) manages consistent copyright headers in every source file.

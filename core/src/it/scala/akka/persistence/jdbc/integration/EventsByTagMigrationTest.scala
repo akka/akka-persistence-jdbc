@@ -36,7 +36,7 @@ class MySQLScalaEventByTagMigrationTest extends EventsByTagMigrationTest("mysql-
       joinDialect = joinSQL,
       setDialect =
         s"""SET ${tagTableCfg.tableName}.${tagTableCfg.columnNames.persistenceId} = ${journalTableName}.${journalTableCfg.columnNames.persistenceId}
-         |${tagTableCfg.tableName}.${tagTableCfg.columnNames.sequenceNumber} = ${journalTableName}.${journalTableCfg.columnNames.sequenceNumber} |""".stripMargin)
+         |${tagTableCfg.tableName}.${tagTableCfg.columnNames.sequenceNumber} = ${journalTableName}.${journalTableCfg.columnNames.sequenceNumber}""".stripMargin)
 }
 
 class OracleScalaEventByTagMigrationTest

@@ -39,7 +39,7 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
     s"FROM ${journalTableName} WHERE ${tagTableCfg.tableName}.${tagTableCfg.columnNames.eventId} = ${journalTableName}.${journalTableCfg.columnNames.ordering}"
   val setSQL: String =
     s"""SET ${tagTableCfg.columnNames.persistenceId} = ${journalTableName}.${journalTableCfg.columnNames.persistenceId}
-       |${tagTableCfg.columnNames.sequenceNumber} = ${journalTableName}.${journalTableCfg.columnNames.sequenceNumber} |""".stripMargin
+       |${tagTableCfg.columnNames.sequenceNumber} = ${journalTableName}.${journalTableCfg.columnNames.sequenceNumber}""".stripMargin
 
   def dropConstraint(
       tableName: String = tagTableCfg.tableName,
@@ -252,7 +252,7 @@ class H2ScalaEventsByTagMigrationTest extends EventsByTagMigrationTest("h2-appli
     fillNewColumn(setDialect = s"""SET ${tagTableCfg.columnNames.persistenceId} = (
          |    SELECT ${journalTableCfg.columnNames.persistenceId}
          |    ${fromSQL}
-         |)
+         |),
          |${tagTableCfg.columnNames.sequenceNumber} = (
          |    SELECT ${journalTableCfg.columnNames.sequenceNumber}
          |    ${fromSQL}

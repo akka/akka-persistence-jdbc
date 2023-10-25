@@ -34,9 +34,10 @@ class MySQLScalaEventByTagMigrationTest extends EventsByTagMigrationTest("mysql-
   override def migrateLegacyRows(): Unit =
     fillNewColumn(
       joinDialect = joinSQL,
-      setDialect =
-        s"""SET ${tagTableCfg.tableName}.${tagTableCfg.columnNames.persistenceId} = ${journalTableName}.${journalTableCfg.columnNames.persistenceId}
-         |${tagTableCfg.tableName}.${tagTableCfg.columnNames.sequenceNumber} = ${journalTableName}.${journalTableCfg.columnNames.sequenceNumber}""".stripMargin)
+      pidSetDialect =
+        s"${tagTableCfg.tableName}.${tagTableCfg.columnNames.persistenceId} = ${journalTableName}.${journalTableCfg.columnNames.persistenceId}",
+      seqNrSetDialect =
+        s"${tagTableCfg.tableName}.${tagTableCfg.columnNames.sequenceNumber} = ${journalTableName}.${journalTableCfg.columnNames.sequenceNumber}")
 }
 
 class OracleScalaEventByTagMigrationTest

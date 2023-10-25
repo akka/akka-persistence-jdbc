@@ -8,7 +8,7 @@ package akka.persistence.jdbc.query
 import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.persistence.jdbc.query.EventsByTagMigrationTest.{ legacyTagKeyConfigOverride, migrationConfigOverride }
-import akka.persistence.query.{ EventEnvelope, NoOffset, Sequence }
+import akka.persistence.query.{ EventEnvelope, Sequence }
 import com.typesafe.config.{ ConfigFactory, ConfigValue, ConfigValueFactory }
 
 import scala.concurrent.duration._
@@ -37,9 +37,6 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
     s"JOIN ${journalTableName} ON ${tagTableCfg.tableName}.${tagTableCfg.columnNames.eventId} = ${journalTableName}.${journalTableCfg.columnNames.ordering}"
   val fromSQL: String =
     s"FROM ${journalTableName} WHERE ${tagTableCfg.tableName}.${tagTableCfg.columnNames.eventId} = ${journalTableName}.${journalTableCfg.columnNames.ordering}"
-  val setSQL: String =
-    s"""SET ${tagTableCfg.columnNames.persistenceId} = ${journalTableName}.${journalTableCfg.columnNames.persistenceId}
-       |${tagTableCfg.columnNames.sequenceNumber} = ${journalTableName}.${journalTableCfg.columnNames.sequenceNumber}""".stripMargin
 
   def dropConstraint(
       tableName: String = tagTableCfg.tableName,
@@ -107,11 +104,18 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
     }
   }
 
-  def fillNewColumn(joinDialect: String = "", setDialect: String = "", fromDialect: String = ""): Unit = {
+  def fillNewColumn(
+      joinDialect: String = "",
+      pidSetDialect: String =
+        s"${tagTableCfg.columnNames.persistenceId} = ${journalTableName}.${journalTableCfg.columnNames.persistenceId}",
+      seqNrSetDialect: String =
+        s"${tagTableCfg.columnNames.sequenceNumber} = ${journalTableName}.${journalTableCfg.columnNames.sequenceNumber}",
+      fromDialect: String = ""): Unit = {
     withStatement { stmt =>
       stmt.execute(s"""
                       |UPDATE ${tagTableCfg.tableName} ${joinDialect}
-                      |${setDialect}
+                      |SET ${pidSetDialect},
+                      |${seqNrSetDialect}
                       |${fromDialect}""".stripMargin)
     }
   }
@@ -125,7 +129,7 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
    * fill new column for exists rows.
    */
   def migrateLegacyRows(): Unit = {
-    fillNewColumn(setDialect = setSQL, fromDialect = fromSQL);
+    fillNewColumn(fromDialect = fromSQL);
   }
 
   /**
@@ -249,13 +253,14 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
 class H2ScalaEventsByTagMigrationTest extends EventsByTagMigrationTest("h2-application.conf") with H2Cleaner {
 
   override def migrateLegacyRows(): Unit = {
-    fillNewColumn(setDialect = s"""SET ${tagTableCfg.columnNames.persistenceId} = (
-         |    SELECT ${journalTableCfg.columnNames.persistenceId}
-         |    ${fromSQL}
-         |),
-         |${tagTableCfg.columnNames.sequenceNumber} = (
-         |    SELECT ${journalTableCfg.columnNames.sequenceNumber}
-         |    ${fromSQL}
-         |)""".stripMargin)
+    fillNewColumn(
+      pidSetDialect = s"""${tagTableCfg.columnNames.persistenceId} = (
+           |    SELECT ${journalTableCfg.columnNames.persistenceId}
+           |    ${fromSQL}
+           |)""".stripMargin,
+      seqNrSetDialect = s"""${tagTableCfg.columnNames.sequenceNumber} = (
+           |    SELECT ${journalTableCfg.columnNames.sequenceNumber}
+           |    ${fromSQL}
+           |)""".stripMargin)
   }
 }

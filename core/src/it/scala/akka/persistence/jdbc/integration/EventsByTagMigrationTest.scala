@@ -15,15 +15,9 @@ import akka.persistence.jdbc.query.{
 
 class PostgresScalaEventsByTagMigrationTest
     extends EventsByTagMigrationTest("postgres-application.conf")
-    with PostgresCleaner {
-
-  override def alterEventIdToNullable(): Unit =
-    alterColumn(changeToDialect = "DROP NOT NULL")
-}
+    with PostgresCleaner {}
 
 class MySQLScalaEventByTagMigrationTest extends EventsByTagMigrationTest("mysql-application.conf") with MysqlCleaner {
-  override def alterEventIdToNullable(): Unit =
-    alterColumn(alterDialect = "MODIFY COLUMN", changeToDialect = "BIGINT UNSIGNED NULL")
 
   override def dropLegacyFKConstraint(): Unit =
     dropConstraint(constraintType = "FOREIGN KEY", constraintDialect = "FOREIGN KEY")
@@ -46,9 +40,6 @@ class OracleScalaEventByTagMigrationTest
     // mock event_id not null, in order to change it to null later
     alterColumn(alterDialect = "MODIFY", changeToDialect = "NOT NULL")
   }
-
-  override def alterEventIdToNullable(): Unit =
-    alterColumn(alterDialect = "MODIFY", changeToDialect = "NULL")
 
   override def dropLegacyFKConstraint(): Unit =
     dropConstraint(constraintTableName = "USER_CONSTRAINTS", constraintType = "R")

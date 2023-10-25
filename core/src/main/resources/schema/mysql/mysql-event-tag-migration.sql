@@ -1,14 +1,12 @@
--- >>>>>>>>>>> before rolling updates.
-
+-- add new column
 ALTER TABLE event_tag
-    ADD PERSISTENCE_ID  VARCHAR(255),
-    ADD SEQUENCE_NUMBER BIGINT;
-
--- >>>>>>>>>>> after projection catch up.
-DELETE
-FROM event_tag
-WHERE PERSISTENCE_ID IS NULL
-  AND SEQUENCE_NUMBER IS NULL;
+    ADD persistence_id  VARCHAR(255),
+    ADD sequence_number BIGINT;
+-- migrate rows
+UPDATE event_tag
+JOIN event_journal ON event_tag.event_id = event_journal.ordering
+SET event_tag.persistence_id = event_journal.persistence_id,
+    event_tag.sequence_number = event_journal.sequence_number;
 -- drop old FK constraint
 SELECT CONSTRAINT_NAME
 INTO @fk_constraint_name
@@ -24,13 +22,13 @@ DROP PRIMARY KEY;
 -- create new PK constraint for PK column.
 ALTER TABLE event_tag
     ADD CONSTRAINT
-        PRIMARY KEY (PERSISTENCE_ID, SEQUENCE_NUMBER, TAG);
+        PRIMARY KEY (persistence_id, sequence_number, tag);
 -- create new FK constraint for PK column.
 ALTER TABLE event_tag
     ADD CONSTRAINT fk_event_journal_on_pk
-        FOREIGN KEY (PERSISTENCE_ID, SEQUENCE_NUMBER)
-            REFERENCES event_journal (PERSISTENCE_ID, SEQUENCE_NUMBER)
+        FOREIGN KEY (persistence_id, sequence_number)
+            REFERENCES event_journal (persistence_id, sequence_number)
             ON DELETE CASCADE;
 -- alter the event_id to nullable, so we can skip the InsertAndReturn.
 ALTER TABLE event_tag
-    MODIFY COLUMN EVENT_ID BIGINT UNSIGNED NULL;
+    MODIFY COLUMN event_id BIGINT UNSIGNED NULL;

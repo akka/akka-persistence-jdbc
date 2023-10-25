@@ -33,6 +33,10 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
 
   val tagTableCfg = journalConfig.eventTagTableConfiguration
   val journalTableCfg = journalConfig.eventJournalTableConfiguration
+  val joinSQL: String =
+    s"JOIN ${journalTableName} ON ${tagTableCfg.tableName}.${tagTableCfg.columnNames.eventId} = ${journalTableName}.${journalTableCfg.columnNames.ordering}"
+  val fromSQL: String =
+    s"FROM ${journalTableName} WHERE ${tagTableCfg.tableName}.${tagTableCfg.columnNames.eventId} = ${journalTableName}.${journalTableCfg.columnNames.ordering}"
 
   def dropConstraint(
       tableName: String = tagTableCfg.tableName,
@@ -100,6 +104,20 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
     }
   }
 
+  def fillNewColumn(
+      joinDialect: String = "",
+      pidValueDialect: String = s"${journalTableName}.${journalTableCfg.columnNames.persistenceId}",
+      seqNrValueDialect: String = s"${journalTableName}.${journalTableCfg.columnNames.sequenceNumber}",
+      fromDialect: String = ""): Unit = {
+    withStatement { stmt =>
+      stmt.execute(s"""
+                      |UPDATE ${tagTableCfg.tableName} ${joinDialect}
+                      |SET ${tagTableCfg.columnNames.persistenceId} = ${pidValueDialect},
+                      |    ${tagTableCfg.columnNames.sequenceNumber} = ${seqNrValueDialect}
+                      |${fromDialect}""".stripMargin)
+    }
+  }
+
   /**
    * add new column to event_tag table.
    */
@@ -109,15 +127,7 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
    * fill new column for exists rows.
    */
   def migrateLegacyRows(): Unit = {
-    withStatement { stmt =>
-      stmt.execute(s"""
-                      |UPDATE ${tagTableCfg.tableName}
-                      |SET ${tagTableCfg.columnNames.persistenceId} = ${journalTableName}.${journalTableCfg.columnNames.persistenceId},
-                      |    ${tagTableCfg.columnNames.sequenceNumber} = ${journalTableName}.${journalTableCfg.columnNames.sequenceNumber}
-                      |FROM ${journalTableName}
-                      |WHERE ${tagTableCfg.tableName}.${tagTableCfg.columnNames.eventId} = ${journalTableName}.${journalTableCfg.columnNames.ordering}
-                      |""".stripMargin)
-    }
+    fillNewColumn(fromDialect = fromSQL);
   }
 
   /**
@@ -238,4 +248,17 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
   }
 }
 
-class H2ScalaEventsByTagMigrationTest extends EventsByTagMigrationTest("h2-application.conf") with H2Cleaner
+class H2ScalaEventsByTagMigrationTest extends EventsByTagMigrationTest("h2-application.conf") with H2Cleaner {
+
+  override def migrateLegacyRows(): Unit = {
+    fillNewColumn(
+      pidValueDialect = s"""(
+         |    SELECT ${journalTableCfg.columnNames.persistenceId}
+         |    ${fromSQL}
+         |)""".stripMargin,
+      seqNrValueDialect = s"""(
+           |    SELECT ${journalTableCfg.columnNames.sequenceNumber}
+           |    ${fromSQL}
+           |)""".stripMargin)
+  }
+}

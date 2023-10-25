@@ -30,6 +30,9 @@ class MySQLScalaEventByTagMigrationTest extends EventsByTagMigrationTest("mysql-
 
   override def addNewFKConstraint(): Unit =
     addFKConstraint()
+
+  override def migrateLegacyRows(): Unit =
+    fillNewColumn(joinDialect = joinSQL)
 }
 
 class OracleScalaEventByTagMigrationTest
@@ -47,6 +50,18 @@ class OracleScalaEventByTagMigrationTest
   override def dropLegacyPKConstraint(): Unit =
     dropConstraint(constraintTableName = "USER_CONSTRAINTS", constraintType = "P")
 
+  override def migrateLegacyRows(): Unit =
+    withStatement { stmt =>
+      stmt.execute(s"""UPDATE ${tagTableCfg.tableName}
+                       |SET (${tagTableCfg.columnNames.persistenceId}, ${tagTableCfg.columnNames.sequenceNumber}) = (
+                       |    SELECT ${journalTableCfg.columnNames.persistenceId}, ${journalTableCfg.columnNames.sequenceNumber}
+                       |    ${fromSQL}
+                       |)
+                       |WHERE EXISTS (
+                       |    SELECT 1
+                       |    ${fromSQL}
+                       |)""".stripMargin)
+    }
 }
 
 class SqlServerScalaEventByTagMigrationTest

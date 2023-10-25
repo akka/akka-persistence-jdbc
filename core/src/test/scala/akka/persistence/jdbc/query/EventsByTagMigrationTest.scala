@@ -37,6 +37,9 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
     s"JOIN ${journalTableName} ON ${tagTableCfg.tableName}.${tagTableCfg.columnNames.eventId} = ${journalTableName}.${journalTableCfg.columnNames.ordering}"
   val fromSQL: String =
     s"FROM ${journalTableName} WHERE ${tagTableCfg.tableName}.${tagTableCfg.columnNames.eventId} = ${journalTableName}.${journalTableCfg.columnNames.ordering}"
+  val setSQL: String =
+    s"""SET ${tagTableCfg.columnNames.persistenceId} = ${journalTableName}.${journalTableCfg.columnNames.persistenceId}
+       |${tagTableCfg.columnNames.sequenceNumber} = ${journalTableName}.${journalTableCfg.columnNames.sequenceNumber} |""".stripMargin
 
   def dropConstraint(
       tableName: String = tagTableCfg.tableName,
@@ -104,16 +107,11 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
     }
   }
 
-  def fillNewColumn(
-      joinDialect: String = "",
-      pidValueDialect: String = s"${journalTableName}.${journalTableCfg.columnNames.persistenceId}",
-      seqNrValueDialect: String = s"${journalTableName}.${journalTableCfg.columnNames.sequenceNumber}",
-      fromDialect: String = ""): Unit = {
+  def fillNewColumn(joinDialect: String = "", setDialect: String = "", fromDialect: String = ""): Unit = {
     withStatement { stmt =>
       stmt.execute(s"""
                       |UPDATE ${tagTableCfg.tableName} ${joinDialect}
-                      |SET ${tagTableCfg.columnNames.persistenceId} = ${pidValueDialect},
-                      |    ${tagTableCfg.columnNames.sequenceNumber} = ${seqNrValueDialect}
+                      |${setDialect}
                       |${fromDialect}""".stripMargin)
     }
   }
@@ -127,7 +125,7 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
    * fill new column for exists rows.
    */
   def migrateLegacyRows(): Unit = {
-    fillNewColumn(fromDialect = fromSQL);
+    fillNewColumn(setDialect = setSQL, fromDialect = fromSQL);
   }
 
   /**
@@ -251,14 +249,13 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
 class H2ScalaEventsByTagMigrationTest extends EventsByTagMigrationTest("h2-application.conf") with H2Cleaner {
 
   override def migrateLegacyRows(): Unit = {
-    fillNewColumn(
-      pidValueDialect = s"""(
+    fillNewColumn(setDialect = s"""SET ${tagTableCfg.columnNames.persistenceId} = (
          |    SELECT ${journalTableCfg.columnNames.persistenceId}
          |    ${fromSQL}
-         |)""".stripMargin,
-      seqNrValueDialect = s"""(
-           |    SELECT ${journalTableCfg.columnNames.sequenceNumber}
-           |    ${fromSQL}
-           |)""".stripMargin)
+         |)
+         |${tagTableCfg.columnNames.sequenceNumber} = (
+         |    SELECT ${journalTableCfg.columnNames.sequenceNumber}
+         |    ${fromSQL}
+         |)""".stripMargin)
   }
 }

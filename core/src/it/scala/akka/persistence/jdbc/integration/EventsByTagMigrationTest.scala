@@ -32,7 +32,11 @@ class MySQLScalaEventByTagMigrationTest extends EventsByTagMigrationTest("mysql-
     addFKConstraint()
 
   override def migrateLegacyRows(): Unit =
-    fillNewColumn(joinDialect = joinSQL)
+    fillNewColumn(
+      joinDialect = joinSQL,
+      setDialect =
+        s"""SET ${tagTableCfg.tableName}.${tagTableCfg.columnNames.persistenceId} = ${journalTableName}.${journalTableCfg.columnNames.persistenceId}
+         |${tagTableCfg.tableName}.${tagTableCfg.columnNames.sequenceNumber} = ${journalTableName}.${journalTableCfg.columnNames.sequenceNumber} |""".stripMargin)
 }
 
 class OracleScalaEventByTagMigrationTest

@@ -1,5 +1,34 @@
 # Migration
 
+## Migrating to version 5.4.0
+
+Release `5.4.0` change the schema of `event_tag` table.
+
+The previous version was using auto increment column as a primary key and foreign key of `event_tag` table, this has resulted in we can no longer do a batch insert due to the insert returning the ordering.
+
+while in `5.4.0` the primary key and foreign key of `event_tag` table has been replaced with primary key of `event_journal` table. In order to migrate to the new schema, we made a [**migration script**](https://github.com/akka/akka-persistence-jdbc/tree/master/core/src/main/resources/schema) capable of the column creation, rows and constraint migration.
+
+The new "tag key" disable by default, If you want to use it, apply migration script and enable property via configuration:
+
+```config
+jdbc-journal {
+  tables {
+  
+    // ...
+    
+    event_tag {
+    
+      // ...
+      // enable the new tag key
+      legacy-tag-key = false
+    
+    }
+    
+  }
+}
+```
+
+
 ## Migrating to version 5.2.0
 
 **Release `5.2.0` updates H2 to version 2.1.214 which is not compatible to the previous 1.4.200***

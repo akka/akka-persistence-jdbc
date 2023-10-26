@@ -4,7 +4,7 @@ ALTER TABLE event_tag
     ADD sequence_number BIGINT;
 -- migrate rows
 UPDATE event_tag
-JOIN event_journal ON event_tag.event_id = event_journal.ordering
+INNER JOIN event_journal ON event_tag.event_id = event_journal.ordering
 SET event_tag.persistence_id = event_journal.persistence_id,
     event_tag.sequence_number = event_journal.sequence_number;
 -- drop old FK constraint

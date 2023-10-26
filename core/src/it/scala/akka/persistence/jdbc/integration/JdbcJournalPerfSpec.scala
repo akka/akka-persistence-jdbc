@@ -6,7 +6,6 @@ import akka.persistence.jdbc.testkit.internal.Oracle
 import akka.persistence.jdbc.testkit.internal.Postgres
 import akka.persistence.jdbc.testkit.internal.SqlServer
 import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigValueFactory
 
 class PostgresJournalPerfSpec extends JdbcJournalPerfSpec(ConfigFactory.load("postgres-application.conf"), Postgres) {
   override def eventsCount: Int = 100

@@ -6,7 +6,7 @@ ALTER TABLE public.event_tag
 UPDATE event_tag
 SET persistence_id = event_journal.persistence_id,
     sequence_number = event_journal.sequence_number
-    FROM event_journal
+FROM event_journal
 WHERE event_tag.event_id = event_journal.ordering;
 -- drop old FK constraint
 DECLARE @fkConstraintName NVARCHAR(MAX);

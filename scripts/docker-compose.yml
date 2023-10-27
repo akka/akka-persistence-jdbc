@@ -14,6 +14,7 @@ mysql:
   environment:
     - "TZ=Europe/Amsterdam"
     - "MYSQL_ROOT_PASSWORD=root"
+    - "MYSQL_DATABASE=docker"
   ports:
     - "3306:3306" # credentials (root:root)
 

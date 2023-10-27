@@ -29,7 +29,7 @@ object JournalTables {
       metaSerId: Option[Int],
       metaSerManifest: Option[String])
 
-  case class TagRow(eventId: Long, tag: String)
+  case class TagRow(eventId: Option[Long], persistenceId: Option[String], sequenceNumber: Option[Long], tag: String)
 }
 
 /**
@@ -91,13 +91,17 @@ trait JournalTables {
   lazy val JournalTable = new TableQuery(tag => new JournalEvents(tag))
 
   class EventTags(_tableTag: Tag) extends Table[TagRow](_tableTag, tagTableCfg.schemaName, tagTableCfg.tableName) {
-    override def * = (eventId, tag) <> (TagRow.tupled, TagRow.unapply)
-
-    val eventId: Rep[Long] = column[Long](tagTableCfg.columnNames.eventId)
+    override def * = (eventId, persistenceId, sequenceNumber, tag) <> (TagRow.tupled, TagRow.unapply)
+    // allow null value insert.
+    val eventId: Rep[Option[Long]] = column[Long](tagTableCfg.columnNames.eventId)
+    val persistenceId: Rep[Option[String]] = column[String](tagTableCfg.columnNames.persistenceId)
+    val sequenceNumber: Rep[Option[Long]] = column[Long](tagTableCfg.columnNames.sequenceNumber)
     val tag: Rep[String] = column[String](tagTableCfg.columnNames.tag)
 
-    val pk = primaryKey(s"${tagTableCfg.tableName}_pk", (eventId, tag))
-    val journalEvent = foreignKey(s"fk_${journalTableCfg.tableName}", eventId, JournalTable)(_.ordering)
+    val pk = primaryKey(s"${tagTableCfg.tableName}_pk", (persistenceId, sequenceNumber, tag))
+    val journalEvent =
+      foreignKey(s"fk_${journalTableCfg.tableName}", (persistenceId, sequenceNumber), JournalTable)(e =>
+        (e.persistenceId, e.sequenceNumber))
   }
 
   lazy val TagTable = new TableQuery(tag => new EventTags(tag))

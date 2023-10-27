@@ -28,7 +28,13 @@ class ReadJournalQueries(val profile: JdbcProfile, val readJournalConfig: ReadJo
     JournalTable.filter(_.deleted === false)
 
   private def baseTableWithTagsQuery() = {
-    baseTableQuery().join(TagTable).on(_.ordering === _.eventId)
+    if (tagTableCfg.legacyTagKey) {
+      baseTableQuery().join(TagTable).on(_.ordering === _.eventId)
+    } else {
+      baseTableQuery()
+        .join(TagTable)
+        .on((e, t) => e.persistenceId === t.persistenceId && e.sequenceNumber === t.sequenceNumber)
+    }
   }
 
   val allPersistenceIdsDistinct = Compiled(_allPersistenceIdsDistinct _)

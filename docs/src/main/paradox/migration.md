@@ -8,7 +8,7 @@ The previous version was using an auto-increment column as a primary key and for
 
 While in `5.4.0`, the primary key and foreign key on the `event_tag` table have been replaced with a primary key from the `event_journal` table. In order to migrate to the new schema, we made a [**migration script**](https://github.com/akka/akka-persistence-jdbc/tree/master/core/src/main/resources/schema) which is capable of creating the new column, migrate the rows and add the new constraints.
 
-The new "tag key" disable by default, If you want to use it, apply migration script and enable property via configuration:
+By default, the plugin will behave as in previous version. If you want to use the new `event_tag` keys, you need to first apply the migration script and then redeploy your application while setting `legacy-tag-key` to false:
 
 ```config
 jdbc-journal {

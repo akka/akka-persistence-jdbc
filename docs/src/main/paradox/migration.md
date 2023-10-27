@@ -10,7 +10,7 @@ While in `5.4.0`, the primary key and foreign key on the `event_tag` table have 
 
 By default, the plugin will behave as in previous version. If you want to use the new `event_tag` keys, you need to run a multiple-phase rollout:
 
-1. apply the first part of the migration script and then redeploy your application on default settings.
+1. apply the first part of the migration script and then redeploy your application with the default settings.
 2. apply the second part of the migration script that will migrate the rows and adapt the constraints.
 3. redeploy the application by disabling the legacy-mode:
 

@@ -1,7 +1,9 @@
+-- **************** first step ****************
 -- add new column
 ALTER TABLE event_tag
     ADD persistence_id  VARCHAR(255),
     ADD sequence_number BIGINT;
+-- **************** second step ****************
 -- migrate rows
 UPDATE event_tag
 INNER JOIN event_journal ON event_tag.event_id = event_journal.ordering

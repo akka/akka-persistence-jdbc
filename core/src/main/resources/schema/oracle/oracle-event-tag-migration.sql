@@ -1,19 +1,17 @@
+-- **************** first step ****************
 -- add new column
 ALTER TABLE EVENT_TAG
     ADD (PERSISTENCE_ID VARCHAR2(255),
          SEQUENCE_NUMBER NUMERIC);
+-- **************** second step ****************
 -- migrate rows
 UPDATE EVENT_TAG
-SET PERSISTENCE_ID = (
-    SELECT PERSISTENCE_ID
-    FROM EVENT_JOURNAL
-    WHERE EVENT_TAG.EVENT_ID = EVENT_JOURNAL.ORDERING
-),
-    SEQUENCE_NUMBER = (
-        SELECT SEQUENCE_NUMBER
-        FROM EVENT_JOURNAL
-        WHERE EVENT_TAG.EVENT_ID = EVENT_JOURNAL.ORDERING
-    )
+SET PERSISTENCE_ID  = (SELECT PERSISTENCE_ID
+                       FROM EVENT_JOURNAL
+                       WHERE EVENT_TAG.EVENT_ID = EVENT_JOURNAL.ORDERING),
+    SEQUENCE_NUMBER = (SELECT SEQUENCE_NUMBER
+                       FROM EVENT_JOURNAL
+                       WHERE EVENT_TAG.EVENT_ID = EVENT_JOURNAL.ORDERING)
 -- drop old FK constraint
 DECLARE
 v_constraint_name VARCHAR2(255);

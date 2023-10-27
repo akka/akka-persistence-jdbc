@@ -1,13 +1,15 @@
+-- **************** first step ****************
 -- add new column
 ALTER TABLE public.event_tag
     ADD persistence_id  VARCHAR(255),
     ADD sequence_number BIGINT;
+-- **************** second step ****************
 -- migrate rows
-UPDATE event_tag
-SET persistence_id = event_journal.persistence_id,
-    sequence_number = event_journal.sequence_number
+UPDATE public.event_tag
+SET persistence_id  = public.event_journal.persistence_id,
+    sequence_number = public.event_journal.sequence_number
 FROM event_journal
-WHERE event_tag.event_id = event_journal.ordering;
+WHERE public.event_tag.event_id = public.event_journal.ordering;
 -- drop old FK constraint
 ALTER TABLE public.event_tag
 DROP CONSTRAINT "fk_event_journal";

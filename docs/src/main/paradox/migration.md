@@ -4,7 +4,7 @@
 
 Release `5.4.0` change the schema of `event_tag` table.
 
-The previous version was using auto increment column as a primary key and foreign key of `event_tag` table, this has resulted in we can no longer do a batch insert due to the insert returning the ordering.
+The previous version was using an auto-increment column as a primary key and foreign key on the `event_tag` table. As a result, the insert of multiple events in batch was not performant.
 
 while in `5.4.0` the primary key and foreign key of `event_tag` table has been replaced with primary key of `event_journal` table. In order to migrate to the new schema, we made a [**migration script**](https://github.com/akka/akka-persistence-jdbc/tree/master/core/src/main/resources/schema) capable of the column creation, rows and constraint migration.
 

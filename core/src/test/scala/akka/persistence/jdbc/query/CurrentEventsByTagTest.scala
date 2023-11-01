@@ -171,13 +171,14 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
     implicit system =>
 
       val latch = new CountDownLatch(1)
+      val largeNumberOfMessage = 2000
       val journalOps = new JavaDslJdbcReadJournalOperations(system)
       import system.dispatcher
       withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
         def sendMessagesWithTag(tag: String, numberOfMessagesPerActor: Int): Future[Done] = {
           val futures = for (actor <- Seq(actor1, actor2, actor3); i <- 1 to numberOfMessagesPerActor) yield {
             // block the execution
-            if (i == numberOfMessagesPerActor / 2) {
+            if (i == largeNumberOfMessage) {
               Future {
                 latch.await()
                 actor ? TaggedAsyncEvent(Event(i.toString), tag)
@@ -193,7 +194,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         // send a batch of 3 * 200
         val batch1 = sendMessagesWithTag(tag, 200)
         // Try to persist a large batch of events per actor. Some of these may be returned, but not all!
-        val batch2 = sendMessagesWithTag(tag, 2000)
+        val batch2 = sendMessagesWithTag(tag, largeNumberOfMessage)
 
         // wait for acknowledgement of the first batch only
         batch1.futureValue

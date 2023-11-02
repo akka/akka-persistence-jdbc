@@ -173,7 +173,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
       val latch = new CountDownLatch(1)
       val largeNumberOfMessage = 2000
       val smallNumberOfMessage = 200
-      val diff = largeNumberOfMessage - smallNumberOfMessage
+      val diff = largeNumberOfMessage - (smallNumberOfMessage * 3)
       val journalOps = new JavaDslJdbcReadJournalOperations(system)
       import system.dispatcher
       withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>

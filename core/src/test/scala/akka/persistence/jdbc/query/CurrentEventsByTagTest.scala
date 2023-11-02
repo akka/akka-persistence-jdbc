@@ -179,9 +179,13 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
       withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
         def sendMessagesWithTag(tag: String, numberOfMessagesPerActor: Int): Future[Done] = {
           val futures = for (actor <- Seq(actor1, actor2, actor3); i <- 1 to numberOfMessagesPerActor) yield {
-            Future {
-              // block the remaining small batch events from being fired
-              if (i == diff) latch.await()
+            // block the remaining small batch events from being fired
+            if (i == diff) {
+              Future {
+                latch.await()
+                actor ? TaggedAsyncEvent(Event(i.toString), tag)
+              }
+            } else {
               actor ? TaggedAsyncEvent(Event(i.toString), tag)
             }
           }

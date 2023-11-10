@@ -16,8 +16,6 @@ import akka.persistence.jdbc.query.EventAdapterTest.{ Event, TaggedAsyncEvent }
 import scala.concurrent.Future
 import CurrentEventsByTagTest._
 
-import java.util.concurrent.CountDownLatch
-
 object CurrentEventsByTagTest {
   val maxBufferSize = 20
   val refreshInterval = 500.milliseconds
@@ -190,7 +188,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         journalOps.countJournal.futureValue should be >= 600L
 
         // Try to persist a large batch of events per actor. Some of these may be returned, but not all!
-        val batch2 = sendMessagesWithTag(tag, 200)
+        val batch2 = sendMessagesWithTag(tag, 5000)
         // start the query before the last batch completes
         journalOps.withCurrentEventsByTag()(tag, NoOffset) { tp =>
           // The stream must complete within the given amount of time

@@ -182,7 +182,7 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
             if (i > largeNumberOfMessage / 2) {
               Future {
                 latch.await()
-                actor ? TaggedAsyncEvent(Event(i.toString), tag)
+                (actor ? TaggedAsyncEvent(Event(i.toString), tag)) (20.seconds)
               }
             } else {
               actor ? TaggedAsyncEvent(Event(i.toString), tag)

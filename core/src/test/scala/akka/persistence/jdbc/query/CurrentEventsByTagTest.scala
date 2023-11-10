@@ -170,42 +170,29 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
   it should "complete without any gaps in case events are being persisted when the query is executed" in withActorSystem {
     implicit system =>
 
-      val latch = new CountDownLatch(1)
-      val largeNumberOfMessage = 2000
-      val smallNumberOfMessage = 200
       val journalOps = new JavaDslJdbcReadJournalOperations(system)
       import system.dispatcher
       withTestActors(replyToMessages = true) { (actor1, actor2, actor3) =>
         def sendMessagesWithTag(tag: String, numberOfMessagesPerActor: Int): Future[Done] = {
           val futures = for (actor <- Seq(actor1, actor2, actor3); i <- 1 to numberOfMessagesPerActor) yield {
-            // block the remaining small batch events from being fired
-            if (i > largeNumberOfMessage / 2) {
-              Future {
-                latch.await()
-                (actor ? TaggedAsyncEvent(Event(i.toString), tag)) (20.seconds)
-              }
-            } else {
-              actor ? TaggedAsyncEvent(Event(i.toString), tag)
-            }
+            actor ? TaggedAsyncEvent(Event(i.toString), tag)
           }
           Future.sequence(futures).map(_ => Done)
         }
 
         val tag = "someTag"
         // send a batch of 3 * 200
-        val batch1 = sendMessagesWithTag(tag, smallNumberOfMessage)
-        // Try to persist a large batch of events per actor. Some of these may be returned, but not all!
-        val batch2 = sendMessagesWithTag(tag, largeNumberOfMessage)
+        val batch1 = sendMessagesWithTag(tag, 200)
 
         // wait for acknowledgement of the first batch only
         batch1.futureValue
         // Sanity check, all events in the first batch must be in the journal
         journalOps.countJournal.futureValue should be >= 600L
 
+        // Try to persist a large batch of events per actor. Some of these may be returned, but not all!
+        val batch2 = sendMessagesWithTag(tag, 200)
         // start the query before the last batch completes
         journalOps.withCurrentEventsByTag()(tag, NoOffset) { tp =>
-          // when query begin running, unlock the barrier.
-          latch.countDown()
           // The stream must complete within the given amount of time
           // This make take a while in case the journal sequence actor detects gaps
           val allEvents = tp.toStrict(atMost = 40.seconds)

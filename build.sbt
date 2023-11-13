@@ -8,10 +8,7 @@ lazy val `akka-persistence-jdbc` = project
   .enablePlugins(ScalaUnidocPlugin)
   .disablePlugins(MimaPlugin, SitePlugin, CiReleasePlugin)
   .aggregate(core, docs, migrator)
-  .settings(
-    name := "akka-persistence-jdbc-root",
-    publish / skip := true
-  )
+  .settings(name := "akka-persistence-jdbc-root", publish / skip := true)
 
 lazy val core = project
   .in(file("core"))

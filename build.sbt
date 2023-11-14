@@ -8,7 +8,7 @@ lazy val `akka-persistence-jdbc` = project
   .enablePlugins(ScalaUnidocPlugin)
   .disablePlugins(MimaPlugin, SitePlugin, CiReleasePlugin)
   .aggregate(core, docs, migrator)
-  .settings(publish / skip := true)
+  .settings(name := "akka-persistence-jdbc-root", publish / skip := true)
 
 lazy val core = project
   .in(file("core"))
@@ -40,7 +40,7 @@ lazy val docs = project
   .enablePlugins(ProjectAutoPlugin, AkkaParadoxPlugin, ParadoxSitePlugin, PreprocessPlugin, PublishRsyncPlugin)
   .disablePlugins(MimaPlugin, CiReleasePlugin)
   .settings(
-    name := "Akka Persistence JDBC",
+    name := "Akka Persistence plugin for JDBC",
     publish / skip := true,
     makeSite := makeSite.dependsOn(LocalRootProject / ScalaUnidoc / doc).value,
     previewPath := (Paradox / siteSubdirName).value,

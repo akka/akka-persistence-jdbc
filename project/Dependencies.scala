@@ -22,7 +22,7 @@ object Dependencies {
     "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
     "com.typesafe.slick" %% "slick" % SlickVersion,
     "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
-    "ch.qos.logback" % "logback-classic" % "1.2.12" % Test,
+    "ch.qos.logback" % "logback-classic" % "1.2.13" % Test,
     "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-persistence-tck" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % AkkaVersion % Test,
@@ -31,7 +31,7 @@ object Dependencies {
 
   val Migration: Seq[ModuleID] = Seq(
     "com.typesafe" % "config" % "1.4.3",
-    "ch.qos.logback" % "logback-classic" % "1.2.12",
+    "ch.qos.logback" % "logback-classic" % "1.2.13",
     "org.testcontainers" % "postgresql" % "1.19.1" % Test,
     "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Provided)
 }

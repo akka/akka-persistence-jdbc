@@ -14,8 +14,6 @@ lazy val core = project
   .in(file("core"))
   .enablePlugins(MimaPlugin)
   .disablePlugins(SitePlugin, CiReleasePlugin)
-  .configs(IntegrationTest.extend(Test))
-  .settings(Defaults.itSettings)
   .settings(
     name := "akka-persistence-jdbc",
     libraryDependencies ++= Dependencies.Libraries,
@@ -24,17 +22,33 @@ lazy val core = project
       organization.value %% name.value % previousStableVersion.value.getOrElse(
         throw new Error("Unable to determine previous version for MiMa"))))
 
+lazy val integration = project
+  .in(file("integration"))
+  .settings(IntegrationTests.settings)
+  .settings(
+    name := "akka-persistence-jdbc-integration",
+    libraryDependencies ++= Dependencies.Libraries,
+  ).disablePlugins(MimaPlugin, SitePlugin, CiReleasePlugin)
+  .dependsOn(core)
+
 lazy val migrator = project
   .in(file("migrator"))
   .disablePlugins(SitePlugin, MimaPlugin, CiReleasePlugin)
-  .configs(IntegrationTest.extend(Test))
-  .settings(Defaults.itSettings)
   .settings(
     name := "akka-persistence-jdbc-migrator",
     libraryDependencies ++= Dependencies.Migration ++ Dependencies.Libraries,
     // TODO remove this when ready to publish it
     publish / skip := true)
   .dependsOn(core % "compile->compile;test->test")
+
+lazy val `migrator-integration` = project
+  .in(file("migrator-integration"))
+  .settings(IntegrationTests.settings)
+  .settings(
+    name := "akka-persistence-jdbc-migrator-integration",
+    libraryDependencies ++= Dependencies.Libraries,
+  ).disablePlugins(MimaPlugin, SitePlugin, CiReleasePlugin)
+  .dependsOn(migrator)
 
 lazy val docs = project
   .enablePlugins(ProjectAutoPlugin, AkkaParadoxPlugin, ParadoxSitePlugin, PreprocessPlugin, PublishRsyncPlugin)

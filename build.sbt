@@ -25,10 +25,8 @@ lazy val core = project
 lazy val integration = project
   .in(file("integration"))
   .settings(IntegrationTests.settings)
-  .settings(
-    name := "akka-persistence-jdbc-integration",
-    libraryDependencies ++= Dependencies.Libraries,
-  ).disablePlugins(MimaPlugin, SitePlugin, CiReleasePlugin)
+  .settings(name := "akka-persistence-jdbc-integration", libraryDependencies ++= Dependencies.Libraries)
+  .disablePlugins(MimaPlugin, SitePlugin, CiReleasePlugin)
   .dependsOn(core)
 
 lazy val migrator = project
@@ -44,10 +42,8 @@ lazy val migrator = project
 lazy val `migrator-integration` = project
   .in(file("migrator-integration"))
   .settings(IntegrationTests.settings)
-  .settings(
-    name := "akka-persistence-jdbc-migrator-integration",
-    libraryDependencies ++= Dependencies.Libraries,
-  ).disablePlugins(MimaPlugin, SitePlugin, CiReleasePlugin)
+  .settings(name := "akka-persistence-jdbc-migrator-integration", libraryDependencies ++= Dependencies.Libraries)
+  .disablePlugins(MimaPlugin, SitePlugin, CiReleasePlugin)
   .dependsOn(migrator)
 
 lazy val docs = project

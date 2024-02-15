@@ -21,9 +21,6 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
       stateSerId: Int,
       stateSerManifest: Option[String],
       stateTimestamp: Long)
-  object DurableStateRow {
-    def tupled = (DurableStateRow.apply _).tupled
-  }
 }
 
 /**
@@ -44,7 +41,7 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
 
     def * =
       (globalOffset, persistenceId, revision, statePayload, tag, stateSerId, stateSerManifest, stateTimestamp)
-        .<>(DurableStateRow.tupled, DurableStateRow.unapply)
+        .<>((DurableStateRow.apply _).tupled, DurableStateRow.unapply)
 
     val globalOffset: Rep[Long] = column[Long](durableStateTableCfg.columnNames.globalOffset, O.AutoInc)
     val persistenceId: Rep[String] =

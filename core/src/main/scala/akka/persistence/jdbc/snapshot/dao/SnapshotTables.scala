@@ -22,9 +22,6 @@ object SnapshotTables {
       metaSerManifest: Option[String],
       metaPayload: Option[Array[Byte]])
 
-  object SnapshotRow {
-    def tupled = (SnapshotRow.apply _).tupled
-  }
 }
 
 trait SnapshotTables {
@@ -47,7 +44,7 @@ trait SnapshotTables {
         snapshotPayload,
         metaSerId,
         metaSerManifest,
-        metaPayload) <> (SnapshotRow.tupled, SnapshotRow.unapply)
+        metaPayload) <> ((SnapshotRow.apply _).tupled, SnapshotRow.unapply)
 
     val persistenceId: Rep[String] =
       column[String](snapshotTableCfg.columnNames.persistenceId, O.Length(255, varying = true))

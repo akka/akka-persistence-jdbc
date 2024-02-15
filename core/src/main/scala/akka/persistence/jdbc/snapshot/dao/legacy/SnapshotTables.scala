@@ -12,9 +12,6 @@ import slick.jdbc.JdbcProfile
 
 object SnapshotTables {
   case class SnapshotRow(persistenceId: String, sequenceNumber: Long, created: Long, snapshot: Array[Byte])
-  object SnapshotRow {
-    def tupled = (SnapshotRow.apply _).tupled
-  }
   def isOracleDriver(profile: JdbcProfile): Boolean =
     profile match {
       case _: slick.jdbc.OracleProfile => true
@@ -34,7 +31,7 @@ trait SnapshotTables {
         _tableTag,
         _schemaName = snapshotTableCfg.schemaName,
         _tableName = snapshotTableCfg.tableName) {
-    def * = (persistenceId, sequenceNumber, created, snapshot) <> (SnapshotRow.tupled, SnapshotRow.unapply)
+    def * = (persistenceId, sequenceNumber, created, snapshot) <> ((SnapshotRow.apply _).tupled, SnapshotRow.unapply)
 
     val persistenceId: Rep[String] =
       column[String](snapshotTableCfg.columnNames.persistenceId, O.Length(255, varying = true))

@@ -53,7 +53,9 @@ class EventJournalTableColumnNames(config: Config) {
 
 class EventTagTableColumnNames(config: Config) {
   private val cfg = config.getConfig("tables.event_tag.columnNames")
-  val eventId: String = cfg.getString("eventId")
+  val eventId: String = cfg.getString("eventId") // for compatibility
+  val persistenceId: String = cfg.getString("persistenceId")
+  val sequenceNumber: String = cfg.getString("sequenceNumber")
   val tag: String = cfg.getString("tag")
 }
 
@@ -74,6 +76,7 @@ class EventJournalTableConfiguration(config: Config) {
 }
 class EventTagTableConfiguration(config: Config) {
   private val cfg = config.getConfig("tables.event_tag")
+  val legacyTagKey: Boolean = cfg.getBoolean("legacy-tag-key")
   val tableName: String = cfg.getString("tableName")
   val schemaName: Option[String] = cfg.asStringOption("schemaName")
   val columnNames: EventTagTableColumnNames = new EventTagTableColumnNames(config)

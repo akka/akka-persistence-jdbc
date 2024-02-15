@@ -7,23 +7,23 @@ object Dependencies {
 
   val ScalaVersions = Seq(Scala213, Scala3)
 
-  val AkkaVersion = "2.9.0-M3"
+  val AkkaVersion = "2.9.0"
   val AkkaBinaryVersion = AkkaVersion.take(3)
 
   val SlickVersion = "3.5.0-RC1"
   val ScalaTestVersion = "3.2.17"
 
   val JdbcDrivers = Seq(
-    "org.postgresql" % "postgresql" % "42.6.0",
+    "org.postgresql" % "postgresql" % "42.7.1",
     "com.h2database" % "h2" % "2.2.224",
-    "com.mysql" % "mysql-connector-j" % "8.1.0",
+    "com.mysql" % "mysql-connector-j" % "8.2.0",
     "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8")
 
   val Libraries: Seq[ModuleID] = Seq(
     "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
     "com.typesafe.slick" %% "slick" % SlickVersion,
     "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
-    "ch.qos.logback" % "logback-classic" % "1.2.12" % Test,
+    "ch.qos.logback" % "logback-classic" % "1.2.13" % Test,
     "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-persistence-tck" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % AkkaVersion % Test,
@@ -31,8 +31,8 @@ object Dependencies {
     "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Test)
 
   val Migration: Seq[ModuleID] = Seq(
-    "com.typesafe" % "config" % "1.4.2",
-    "ch.qos.logback" % "logback-classic" % "1.2.12",
-    "org.testcontainers" % "postgresql" % "1.19.1" % Test,
+    "com.typesafe" % "config" % "1.4.3",
+    "ch.qos.logback" % "logback-classic" % "1.2.13",
+    "org.testcontainers" % "postgresql" % "1.19.3" % Test,
     "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Provided)
 }

@@ -1,8 +1,6 @@
 # Akka Persistence JDBC
 ## Use JDBC-compatible databases with Akka Persistence
 
-[![Build Status](https://travis-ci.com/akka/akka-persistence-jdbc.svg?branch=master)](https://travis-ci.com/github/akka/akka-persistence-jdbc)
-
 akka-persistence-jdbc writes journal and snapshot entries to a configured JDBC store. It implements the full akka-persistence-query API and is therefore very useful for implementing DDD-style 
 application models using Akka for creating reactive applications.
 
@@ -25,7 +23,6 @@ For the change log prior to v3.2.0, visit [Version History Page (wiki)](https://
 You can join these groups and chats to discuss and ask Akka related questions:
 
 - Forums: [discuss.akka.io](https://discuss.lightbend.com/c/akka/)
-- Chat room about **Akka**: [![gitter: akka/akka](https://img.shields.io/badge/gitter%3A-akka%2Fakka-blue.svg?style=flat-square)](https://gitter.im/akka/akka)
 - Issue tracker: [![github: akka/akka-persistence-jdbc](https://img.shields.io/badge/github%3A-issues-blue.svg?style=flat-square)](https://github.com/akka/akka-persistence-jdbc/issues)
 
 In addition to that, you may enjoy following:

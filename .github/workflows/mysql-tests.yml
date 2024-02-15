@@ -46,7 +46,7 @@ jobs:
         run: ./scripts/launch-mysql.sh
 
       - name: Run Integration tests for  ${{ matrix.name }}
-        run: sbt "It/testOnly akka.persistence.jdbc.integration.MySQL*"  ${{ matrix.extraOpts }} -J-XX:+UnlockExperimentalVMOptions -J-XX:+UseJVMCICompiler
+        run: sbt "testOnly akka.persistence.jdbc.integration.MySQL*"  ${{ matrix.extraOpts }} -J-XX:+UnlockExperimentalVMOptions -J-XX:+UseJVMCICompiler
 
       - name: Print logs on failure
         if: ${{ failure() }}

@@ -19,7 +19,13 @@ trait JournalTables {
         _tableTag,
         _schemaName = journalTableCfg.schemaName,
         _tableName = journalTableCfg.tableName) {
-    def * = (ordering, deleted, persistenceId, sequenceNumber, message, tags) <> ((JournalRow.apply _).tupled, JournalRow.unapply)
+    def * = (
+      ordering,
+      deleted,
+      persistenceId,
+      sequenceNumber,
+      message,
+      tags) <> ((JournalRow.apply _).tupled, JournalRow.unapply)
 
     val ordering: Rep[Long] = column[Long](journalTableCfg.columnNames.ordering, O.AutoInc)
     val persistenceId: Rep[String] =

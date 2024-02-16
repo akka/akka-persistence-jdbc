@@ -34,5 +34,10 @@ ProblemFilters.exclude[IncompatibleMethTypeProblem]("akka.persistence.jdbc.snaps
 ProblemFilters.exclude[IncompatibleResultTypeProblem]("akka.persistence.jdbc.state.JdbcDurableStateStoreProvider.db")
 ProblemFilters.exclude[IncompatibleMethTypeProblem]("akka.persistence.jdbc.state.scaladsl.JdbcDurableStateStore.this")
 
+ProblemFilters.exclude[DirectMissingMethodProblem]("akka.persistence.jdbc.query.JournalSequenceActor.receive")
+ProblemFilters.exclude[DirectMissingMethodProblem]("akka.persistence.jdbc.query.JournalSequenceActor.receive$default$4")
+ProblemFilters.exclude[DirectMissingMethodProblem]("akka.persistence.jdbc.query.JournalSequenceActor.findGaps")
+
+
 
 

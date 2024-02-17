@@ -28,7 +28,7 @@ object EventsByTagMigrationTest {
     "jdbc-read-journal.refresh-interval" -> ConfigValueFactory.fromAnyRef(refreshInterval.toString))
 }
 
-abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(config, migrationConfigOverride) {
+abstract class EventsByTagMigrationTest(configS: String) extends QueryTestSpec(configS, migrationConfigOverride) {
   final val NoMsgTime: FiniteDuration = 100.millis
 
   val tagTableCfg = journalConfig.eventTagTableConfiguration
@@ -158,7 +158,7 @@ abstract class EventsByTagMigrationTest(config: String) extends QueryTestSpec(co
 
   // override this, so we can reset the value.
   def withRollingUpdateActorSystem(f: ActorSystem => Unit): Unit = {
-    val legacyTagKeyConfig = legacyTagKeyConfigOverride.foldLeft(ConfigFactory.load(config)) {
+    val legacyTagKeyConfig = legacyTagKeyConfigOverride.foldLeft(ConfigFactory.load(configS)) {
       case (conf, (path, configValue)) =>
         conf.withValue(path, configValue)
     }

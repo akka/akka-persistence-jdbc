@@ -11,12 +11,12 @@ object Dependencies {
   val AkkaBinaryVersion = AkkaVersion.take(3)
 
   val SlickVersion = "3.5.0-RC1"
-  val ScalaTestVersion = "3.2.17"
+  val ScalaTestVersion = "3.2.18"
 
   val JdbcDrivers = Seq(
     "org.postgresql" % "postgresql" % "42.7.1",
     "com.h2database" % "h2" % "2.2.224",
-    "com.mysql" % "mysql-connector-j" % "8.2.0",
+    "com.mysql" % "mysql-connector-j" % "8.3.0",
     "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8")
 
   val Libraries: Seq[ModuleID] = Seq(
@@ -33,6 +33,6 @@ object Dependencies {
   val Migration: Seq[ModuleID] = Seq(
     "com.typesafe" % "config" % "1.4.3",
     "ch.qos.logback" % "logback-classic" % "1.2.13",
-    "org.testcontainers" % "postgresql" % "1.19.3" % Test,
+    "org.testcontainers" % "postgresql" % "1.19.5" % Test,
     "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Provided)
 }

@@ -51,3 +51,19 @@ import slick.sql.SqlStreamingAction
 
   def getSequenceNextValueExpr() = sql"""#$nextValFetcher""".as[String]
 }
+
+/**
+ * INTERNAL API
+ */
+@InternalApi private[jdbc] class MySQLSequenceNextValUpdater(
+    profile: JdbcProfile,
+    val durableStateTableCfg: DurableStateTableConfiguration)
+    extends SequenceNextValUpdater {
+  import profile.api._
+  private val schema = durableStateTableCfg.schemaName.map(n => s"'$n'").getOrElse("DATABASE()")
+  // Note: for actual MySQL servers (i.e. not MariaDB) the variable information_schema_stats_expiry should be set to zero.
+  final val nextValFetcher = 
+    s"""(SELECT AUTO_INCREMENT FROM information_schema.tables WHERE table_name = '${durableStateTableCfg.tableName}' AND table_schema = ${schema})"""
+
+  def getSequenceNextValueExpr() = sql"""#$nextValFetcher""".as[String]
+}

@@ -6,6 +6,8 @@
 package akka.persistence.jdbc.db
 
 import akka.actor.ActorSystem
+import akka.annotation.InternalApi
+
 import javax.naming.InitialContext
 import akka.persistence.jdbc.config.SlickConfiguration
 import com.typesafe.config.Config
@@ -82,6 +84,7 @@ trait SlickDatabase {
   def allowShutdown: Boolean
 }
 
+@InternalApi
 case class EagerSlickDatabase(database: Database, profile: JdbcProfile) extends SlickDatabase {
   override def allowShutdown: Boolean = true
 }
@@ -90,6 +93,7 @@ case class EagerSlickDatabase(database: Database, profile: JdbcProfile) extends 
  * A LazySlickDatabase lazily initializes a database, it also manages the shutdown of the database
  * @param config The configuration used to create the database
  */
+@InternalApi
 class LazySlickDatabase(config: Config, system: ActorSystem) extends SlickDatabase {
   val profile: JdbcProfile = SlickDatabase.profile(config, path = "")
 

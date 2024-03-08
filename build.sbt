@@ -18,9 +18,15 @@ lazy val core = project
     name := "akka-persistence-jdbc",
     libraryDependencies ++= Dependencies.Libraries,
     mimaReportSignatureProblems := true,
-    mimaPreviousArtifacts := Set(
-      organization.value %% name.value % previousStableVersion.value.getOrElse(
-        throw new Error("Unable to determine previous version for MiMa"))))
+    mimaPreviousArtifacts := {
+      if (scalaVersion.value.startsWith("3")) {
+        Set.empty
+      } else {
+        Set(
+          organization.value %% name.value % previousStableVersion.value.getOrElse(
+            throw new Error("Unable to determine previous version for MiMa")))
+      }
+    })
 
 lazy val integration = project
   .in(file("integration"))

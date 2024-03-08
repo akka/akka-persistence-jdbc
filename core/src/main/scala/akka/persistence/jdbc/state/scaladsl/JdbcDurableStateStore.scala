@@ -25,7 +25,6 @@ import akka.serialization.Serialization
 import akka.stream.scaladsl.{ Sink, Source }
 import akka.stream.{ Materializer, SystemMaterializer }
 import akka.util.Timeout
-import DurableStateSequenceActor._
 import OffsetSyntax._
 import akka.annotation.ApiMayChange
 import akka.persistence.query.UpdatedDurableState
@@ -45,6 +44,7 @@ class JdbcDurableStateStore[A](
     serialization: Serialization)(implicit val system: ExtendedActorSystem)
     extends DurableStateUpdateStore[A]
     with DurableStateStoreQuery[A] {
+  import DurableStateSequenceActor._
   import FlowControl._
   import profile.api._
 
@@ -211,20 +211,16 @@ class JdbcDurableStateStore[A](
   }
 
   private def updateDurableState(row: DurableStateTables.DurableStateRow) = {
-    import queries._
-
     for {
-      s <- getSequenceNextValueExpr()
-      u <- updateDbWithDurableState(row, s.head)
+      s <- queries.getSequenceNextValueExpr()
+      u <- queries.updateDbWithDurableState(row, s.head)
     } yield u
   }
 
   private def insertDurableState(row: DurableStateTables.DurableStateRow) = {
-    import queries._
-
     for {
-      s <- getSequenceNextValueExpr()
-      u <- insertDbWithDurableState(row, s.head)
+      s <- queries.getSequenceNextValueExpr()
+      u <- queries.insertDbWithDurableState(row, s.head)
     } yield u
   }
 

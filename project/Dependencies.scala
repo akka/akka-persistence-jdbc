@@ -3,13 +3,14 @@ import sbt._
 object Dependencies {
 
   val Scala213 = "2.13.12"
+  val Scala3 = "3.3.1"
 
-  val ScalaVersions = Seq(Scala213)
+  val ScalaVersions = Seq(Scala213, Scala3)
 
   val AkkaVersion = "2.9.0"
   val AkkaBinaryVersion = AkkaVersion.take(3)
 
-  val SlickVersion = "3.4.1"
+  val SlickVersion = "3.5.0"
   val ScalaTestVersion = "3.2.18"
 
   val JdbcDrivers = Seq(

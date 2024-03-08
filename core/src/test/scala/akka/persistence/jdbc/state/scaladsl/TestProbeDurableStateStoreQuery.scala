@@ -32,7 +32,7 @@ class TestProbeDurableStateStoreQuery(
     serialization: Serialization)(override implicit val system: ExtendedActorSystem)
     extends JdbcDurableStateStore[String](db, profile, durableStateConfig, serialization)(system) {
 
-  implicit val askTimeout = Timeout(100.millis)
+  implicit val askTimeout: Timeout = Timeout(100.millis)
 
   override def getObject(persistenceId: String): Future[GetObjectResult[String]] = ???
   override def currentChanges(tag: String, offset: Offset): Source[DurableStateChange[String], NotUsed] = ???

@@ -14,7 +14,6 @@ import akka.persistence.jdbc.db.SlickExtension
 import akka.persistence.jdbc.journal.dao.JournalQueries
 import akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalSerializer
 import akka.persistence.jdbc.journal.dao.JournalTables.{ JournalAkkaSerializationRow, TagRow }
-import akka.persistence.jdbc.migrator.JournalMigrator.{ JournalConfig, ReadJournalConfig }
 import akka.persistence.jdbc.query.dao.legacy.ReadJournalQueries
 import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.scaladsl.Source
@@ -38,13 +37,14 @@ final case class JournalMigrator(profile: JdbcProfile)(implicit system: ActorSys
   val log: Logger = LoggerFactory.getLogger(getClass)
 
   // get the various configurations
-  private val journalConfig: JournalConfig = new JournalConfig(system.settings.config.getConfig(JournalConfig))
+  private val journalConfig: JournalConfig = new JournalConfig(
+    system.settings.config.getConfig(JournalMigrator.JournalConfig))
   private val readJournalConfig: ReadJournalConfig = new ReadJournalConfig(
-    system.settings.config.getConfig(ReadJournalConfig))
+    system.settings.config.getConfig(JournalMigrator.ReadJournalConfig))
 
   // the journal database
   private val journalDB: JdbcBackend.Database =
-    SlickExtension(system).database(system.settings.config.getConfig(ReadJournalConfig)).database
+    SlickExtension(system).database(system.settings.config.getConfig(JournalMigrator.ReadJournalConfig)).database
 
   // get an instance of the new journal queries
   private val newJournalQueries: JournalQueries =

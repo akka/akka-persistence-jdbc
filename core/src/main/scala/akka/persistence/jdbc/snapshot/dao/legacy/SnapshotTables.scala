@@ -31,7 +31,7 @@ trait SnapshotTables {
         _tableTag,
         _schemaName = snapshotTableCfg.schemaName,
         _tableName = snapshotTableCfg.tableName) {
-    def * = (persistenceId, sequenceNumber, created, snapshot) <> (SnapshotRow.tupled, SnapshotRow.unapply)
+    def * = (persistenceId, sequenceNumber, created, snapshot) <> ((SnapshotRow.apply _).tupled, SnapshotRow.unapply)
 
     val persistenceId: Rep[String] =
       column[String](snapshotTableCfg.columnNames.persistenceId, O.Length(255, varying = true))

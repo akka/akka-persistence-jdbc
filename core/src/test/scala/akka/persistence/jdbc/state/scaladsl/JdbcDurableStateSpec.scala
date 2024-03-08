@@ -17,6 +17,8 @@ import org.scalatest.time.Millis
 import org.scalatest.time.Seconds
 import org.scalatest.time.Span
 
+import scala.concurrent.Future
+
 abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) extends StateSpecBase(config, schemaType) {
 
   override implicit val defaultPatience =
@@ -284,7 +286,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
       whenReady {
         currentChanges("t1", NoOffset)
           .collect { case u: UpdatedDurableState[String] => u }
-          .runWith(Sink.seq[UpdatedDurableState[String]])
+          .runWith(Sink.seq): Future[Seq[UpdatedDurableState[String]]]
       } { chgs =>
         chgs.map(_.offset.value) shouldBe sorted
         chgs.map(_.offset.value).max shouldBe 3000
@@ -293,7 +295,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
       whenReady {
         currentChanges("t1", Sequence(2000))
           .collect { case u: UpdatedDurableState[String] => u }
-          .runWith(Sink.seq[UpdatedDurableState[String]])
+          .runWith(Sink.seq): Future[Seq[UpdatedDurableState[String]]]
       } { chgs =>
         chgs.map(_.offset.value) shouldBe sorted
         chgs.map(_.offset.value).max shouldBe 3000

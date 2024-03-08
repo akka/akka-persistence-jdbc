@@ -64,7 +64,7 @@ trait JournalTables {
         eventSerManifest,
         metaPayload,
         metaSerId,
-        metaSerManifest) <> (JournalAkkaSerializationRow.tupled, JournalAkkaSerializationRow.unapply)
+        metaSerManifest) <> ((JournalAkkaSerializationRow.apply _).tupled, JournalAkkaSerializationRow.unapply)
 
     val ordering: Rep[Long] = column[Long](journalTableCfg.columnNames.ordering, O.AutoInc)
     val persistenceId: Rep[String] =
@@ -91,17 +91,17 @@ trait JournalTables {
   lazy val JournalTable = new TableQuery(tag => new JournalEvents(tag))
 
   class EventTags(_tableTag: Tag) extends Table[TagRow](_tableTag, tagTableCfg.schemaName, tagTableCfg.tableName) {
-    override def * = (eventId, persistenceId, sequenceNumber, tag) <> (TagRow.tupled, TagRow.unapply)
+    override def * = (eventId, persistenceId, sequenceNumber, tag) <> ((TagRow.apply _).tupled, TagRow.unapply)
     // allow null value insert.
-    val eventId: Rep[Option[Long]] = column[Long](tagTableCfg.columnNames.eventId)
-    val persistenceId: Rep[Option[String]] = column[String](tagTableCfg.columnNames.persistenceId)
-    val sequenceNumber: Rep[Option[Long]] = column[Long](tagTableCfg.columnNames.sequenceNumber)
+    val eventId: Rep[Option[Long]] = column[Option[Long]](tagTableCfg.columnNames.eventId)
+    val persistenceId: Rep[Option[String]] = column[Option[String]](tagTableCfg.columnNames.persistenceId)
+    val sequenceNumber: Rep[Option[Long]] = column[Option[Long]](tagTableCfg.columnNames.sequenceNumber)
     val tag: Rep[String] = column[String](tagTableCfg.columnNames.tag)
 
     val pk = primaryKey(s"${tagTableCfg.tableName}_pk", (persistenceId, sequenceNumber, tag))
     val journalEvent =
       foreignKey(s"fk_${journalTableCfg.tableName}", (persistenceId, sequenceNumber), JournalTable)(e =>
-        (e.persistenceId, e.sequenceNumber))
+        (Rep.Some(e.persistenceId), Rep.Some(e.sequenceNumber)))
   }
 
   lazy val TagTable = new TableQuery(tag => new EventTags(tag))

@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 import org.scalatest.matchers.should.Matchers
 
 abstract class HardDeleteQueryTest(config: String) extends QueryTestSpec(config) with Matchers {
-  implicit val askTimeout = 500.millis
+  implicit val askTimeout: FiniteDuration = 500.millis
 
   it should "not return deleted events when using CurrentEventsByTag" in withActorSystem { implicit system =>
     val journalOps = new ScalaJdbcReadJournalOperations(system)

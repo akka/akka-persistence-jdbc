@@ -28,7 +28,7 @@ abstract class SharedActorSystemTestSpec(val config: Config) extends SimpleSpec 
 
   implicit lazy val ec: ExecutionContext = system.dispatcher
   implicit val pc: PatienceConfig = PatienceConfig(timeout = 1.minute)
-  implicit val timeout = Timeout(1.minute)
+  implicit val timeout: Timeout = Timeout(1.minute)
 
   lazy val serialization = SerializationExtension(system)
 

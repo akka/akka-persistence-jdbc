@@ -26,7 +26,7 @@ abstract class SingleActorSystemPerTestSpec(val config: Config)
       conf.withValue(path, configValue)
     })
 
-  implicit val pc: PatienceConfig = PatienceConfig(timeout = 1.minute)
+  override implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = 1.minute)
   implicit val timeout: Timeout = Timeout(1.minute)
 
   val cfg = config.getConfig("jdbc-journal")

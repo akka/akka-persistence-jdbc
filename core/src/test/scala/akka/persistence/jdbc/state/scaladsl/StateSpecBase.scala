@@ -6,19 +6,19 @@
 package akka.persistence.jdbc.state.scaladsl
 
 import com.typesafe.config.{ Config, ConfigFactory }
-import scala.concurrent.duration._
+
+import scala.concurrent.duration.*
 import scala.concurrent.ExecutionContext
 import scala.util.{ Failure, Success }
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time._
-
-import akka.actor._
+import org.scalatest.time.*
+import akka.actor.*
 import akka.persistence.jdbc.db.SlickDatabase
-import akka.persistence.jdbc.config._
-import akka.persistence.jdbc.testkit.internal.{ H2, Postgres, SchemaType }
+import akka.persistence.jdbc.config.*
+import akka.persistence.jdbc.testkit.internal.{ H2, MySQL, Postgres, SchemaType }
 import akka.persistence.jdbc.util.DropCreate
 import akka.serialization.SerializationExtension
 import akka.util.Timeout
@@ -38,6 +38,7 @@ abstract class StateSpecBase(val config: Config, schemaType: SchemaType)
   private[jdbc] def schemaTypeToProfile(s: SchemaType) = s match {
     case H2       => slick.jdbc.H2Profile
     case Postgres => slick.jdbc.PostgresProfile
+    case MySQL    => slick.jdbc.MySQLProfile
     case _        => ???
   }
 

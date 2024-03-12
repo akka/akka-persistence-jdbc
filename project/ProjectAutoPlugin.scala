@@ -49,45 +49,67 @@ object ProjectAutoPlugin extends AutoPlugin {
     Test / parallelExecution := false,
     Test / logBuffered := true,
     javacOptions ++= Seq("--release", "11"),
-    scalacOptions ++= Seq(
-      "-encoding",
-      "UTF-8",
-      "-unchecked",
-      "-Xlog-reflective-calls",
-      "-language:higherKinds",
-      "-language:implicitConversions",
-      "-release",
-      "11"),
+    scalacOptions ++=
+      (CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, _)) =>
+          Seq(
+            "-encoding",
+            "UTF-8",
+            "-unchecked",
+            "-Xlog-reflective-calls",
+            "-language:higherKinds",
+            "-language:implicitConversions",
+            "-Ydelambdafy:method",
+            "-release",
+            "11")
+        case Some((3, _)) =>
+          Seq(
+            "-encoding",
+            "UTF-8",
+            "-unchecked",
+            "-language:higherKinds",
+            "-language:implicitConversions",
+            "-release",
+            "11")
+        case _ => Seq.empty
+      }),
     Compile / scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) =>
-        disciplineScalacOptions -- Set(
-          "-Ywarn-inaccessible",
-          "-Ywarn-infer-any",
-          "-Ywarn-nullary-override",
-          "-Ywarn-nullary-unit",
-          "-Ypartial-unification",
-          "-Yno-adapted-args")
-      case Some((2, 12)) =>
-        disciplineScalacOptions
-      case _ =>
-        Nil
+      case Some((2, 13)) => disciplineScalacOptions
+      case _             => Nil
     }).toSeq,
-    scalacOptions += "-Ydelambdafy:method",
-    Compile / doc / scalacOptions := scalacOptions.value ++ Seq(
-      "-doc-title",
-      "Akka Persistence JDBC",
-      "-doc-version",
-      version.value,
-      "-sourcepath",
-      (ThisBuild / baseDirectory).value.toString,
-      "-skip-packages",
-      "akka.pattern", // for some reason Scaladoc creates this
-      "-doc-source-url", {
-        val branch = if (isSnapshot.value) "master" else s"v${version.value}"
-        s"https://github.com/akka/akka-persistence-jdbc/tree/${branch}€{FILE_PATH_EXT}#L€{FILE_LINE}"
-      },
-      "-doc-canonical-base-url",
-      "https://doc.akka.io/api/akka-persistence-jdbc/current/"),
+    Compile / doc / scalacOptions := scalacOptions.value ++ (CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, _)) =>
+        Seq(
+          "-doc-title",
+          "Akka Persistence JDBC",
+          "-doc-version",
+          version.value,
+          "-sourcepath",
+          (ThisBuild / baseDirectory).value.toString,
+          "-skip-packages",
+          "akka.pattern", // for some reason Scaladoc creates this
+          "-doc-source-url", {
+            val branch = if (isSnapshot.value) "master" else s"v${version.value}"
+            s"https://github.com/akka/akka-persistence-jdbc/tree/${branch}€{FILE_PATH_EXT}#L€{FILE_LINE}"
+          },
+          "-doc-canonical-base-url",
+          "https://doc.akka.io/api/akka-persistence-jdbc/current/")
+
+      case Some((3, _)) =>
+        Seq(
+          "-doc-title",
+          "Akka Persistence JDBC",
+          "-doc-version",
+          version.value,
+          "-sourcepath",
+          (ThisBuild / baseDirectory).value.toString,
+          "-doc-source-url", {
+            val branch = if (isSnapshot.value) "master" else s"v${version.value}"
+            s"https://github.com/akka/akka-persistence-jdbc/tree/${branch}€{FILE_PATH_EXT}#L€{FILE_LINE}"
+          },
+          "-doc-canonical-base-url",
+          "https://doc.akka.io/api/akka-persistence-jdbc/current/")
+    }),
     // show full stack traces and test case durations
     Test / testOptions += Tests.Argument("-oDF"),
     headerLicense := Some(HeaderLicense.Custom("""|Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
@@ -98,16 +120,10 @@ object ProjectAutoPlugin extends AutoPlugin {
   val disciplineScalacOptions = Set(
 //    "-Xfatal-warnings",
     "-feature",
-    "-Yno-adapted-args",
     "-deprecation",
     "-Xlint",
     "-Ywarn-dead-code",
-    "-Ywarn-inaccessible",
-    "-Ywarn-infer-any",
-    "-Ywarn-nullary-override",
-    "-Ywarn-nullary-unit",
     "-Ywarn-unused:_",
-    "-Ypartial-unification",
     "-Ywarn-extra-implicit",
     "-Xsource:3")
 

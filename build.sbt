@@ -33,7 +33,7 @@ lazy val integration = project
   .settings(IntegrationTests.settings)
   .settings(name := "akka-persistence-jdbc-integration", libraryDependencies ++= Dependencies.Libraries)
   .disablePlugins(MimaPlugin, SitePlugin, CiReleasePlugin)
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val migrator = project
   .in(file("migrator"))

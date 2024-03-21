@@ -23,7 +23,7 @@ import akka.stream.{ Materializer, SystemMaterializer }
 import com.typesafe.config.ConfigValue
 
 import scala.concurrent.Future
-import scala.concurrent.duration.{ *, FiniteDuration }
+import scala.concurrent.duration._
 import akka.persistence.jdbc.testkit.internal.H2
 import akka.persistence.jdbc.testkit.internal.MySQL
 import akka.persistence.jdbc.testkit.internal.Oracle

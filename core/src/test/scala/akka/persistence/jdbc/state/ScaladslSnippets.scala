@@ -11,6 +11,9 @@ import akka.Done
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 
+import scala.annotation.nowarn
+
+@nowarn("msg=never used")
 object ScaladslSnippets extends ScalaFutures with Matchers {
 
   def create(): Unit = {
@@ -90,7 +93,7 @@ object ScaladslSnippets extends ScalaFutures with Matchers {
       .get(system)
       .durableStateStoreFor[JdbcDurableStateStore[String]](JdbcDurableStateStore.Identifier)
 
-    store.deleteObject("p123").futureValue shouldBe Done
+    store.deleteObject("p123", 0L).futureValue shouldBe Done
     store.getObject("p123").futureValue.value shouldBe None
     // #delete-object
   }

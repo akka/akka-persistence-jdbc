@@ -5,16 +5,18 @@
 
 package akka.persistence.jdbc.configuration
 
-import akka.persistence.jdbc.config._
+import akka.persistence.jdbc.config.*
 import com.typesafe.config.{ Config, ConfigFactory }
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
+import scala.annotation.nowarn
 import scala.concurrent.duration._
 
 class AkkaPersistenceConfigTest extends AnyFlatSpec with Matchers {
   private val referenceConfig: Config = ConfigFactory.load("reference")
 
+  @nowarn("msg=possible missing interpolator")
   val config: Config = ConfigFactory
     .parseString("""
           |akka-persistence-jdbc.slick.db {

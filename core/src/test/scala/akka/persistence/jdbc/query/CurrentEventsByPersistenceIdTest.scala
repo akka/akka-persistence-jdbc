@@ -125,6 +125,7 @@ abstract class CurrentEventsByPersistenceIdTest(config: String) extends QueryTes
         val env3 = tp.expectNext(ExpectNextTimeout)
         val ordering3 = env3.offset match {
           case Sequence(value) => value
+          case _               => fail()
         }
 
         val env6 = tp.expectNext(ExpectNextTimeout)

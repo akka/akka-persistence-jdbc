@@ -6,9 +6,9 @@
 package akka.persistence.jdbc.state.scaladsl
 
 import com.typesafe.config.{ Config, ConfigFactory }
-import akka.actor._
+import akka.actor.*
 import akka.persistence.jdbc.state.{ MyPayload, OffsetSyntax }
-import OffsetSyntax._
+import OffsetSyntax.*
 import akka.persistence.jdbc.testkit.internal.{ H2, Postgres, SchemaType }
 import akka.persistence.query.UpdatedDurableState
 import akka.persistence.query.{ NoOffset, Offset, Sequence }
@@ -17,8 +17,10 @@ import org.scalatest.time.Millis
 import org.scalatest.time.Seconds
 import org.scalatest.time.Span
 
+import scala.annotation.nowarn
 import scala.concurrent.Future
 
+@nowarn("msg=deprecated")
 abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) extends StateSpecBase(config, schemaType) {
 
   override implicit val defaultPatience: PatienceConfig =

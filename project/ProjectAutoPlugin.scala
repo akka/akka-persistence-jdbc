@@ -125,7 +125,6 @@ object ProjectAutoPlugin extends AutoPlugin {
     "-Xlint",
     "-Ywarn-dead-code",
     "-Ywarn-unused:_",
-    "-Ywarn-extra-implicit",
-    "-Xsource:3-cross")
+    "-Ywarn-extra-implicit")
 
 }

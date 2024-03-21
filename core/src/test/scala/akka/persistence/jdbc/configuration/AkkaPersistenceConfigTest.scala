@@ -5,7 +5,7 @@
 
 package akka.persistence.jdbc.configuration
 
-import akka.persistence.jdbc.config.*
+import akka.persistence.jdbc.config._
 import com.typesafe.config.{ Config, ConfigFactory }
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers

@@ -16,11 +16,11 @@ import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.{ Flow, Source }
-import slick.jdbc.JdbcBackend.*
+import slick.jdbc.JdbcBackend._
 import slick.jdbc.{ GetResult, JdbcProfile }
 
 import scala.annotation.nowarn
-import scala.collection.immutable.*
+import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
 

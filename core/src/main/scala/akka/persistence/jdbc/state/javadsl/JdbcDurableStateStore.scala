@@ -7,7 +7,7 @@ package akka.persistence.jdbc.state.javadsl
 
 import java.util.Optional
 import java.util.concurrent.CompletionStage
-import scala.compat.java8.FutureConverters.*
+import scala.compat.java8.FutureConverters._
 import scala.concurrent.ExecutionContext
 import akka.annotation.ApiMayChange
 import slick.jdbc.JdbcProfile

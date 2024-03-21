@@ -11,7 +11,7 @@ import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 
 import scala.annotation.nowarn
-import scala.collection.immutable.*
+import scala.collection.immutable._
 import scala.util.Try
 
 @nowarn("msg=deprecated")

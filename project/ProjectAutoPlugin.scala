@@ -126,6 +126,6 @@ object ProjectAutoPlugin extends AutoPlugin {
     "-Ywarn-dead-code",
     "-Ywarn-unused:_",
     "-Ywarn-extra-implicit",
-    "-Xsource:3")
+    "-Xsource:3-cross")
 
 }

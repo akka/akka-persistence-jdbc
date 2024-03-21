@@ -6,9 +6,9 @@
 package akka.persistence.jdbc.state.scaladsl
 
 import com.typesafe.config.{ Config, ConfigFactory }
-import akka.actor.*
+import akka.actor._
 import akka.persistence.jdbc.state.{ MyPayload, OffsetSyntax }
-import OffsetSyntax.*
+import OffsetSyntax._
 import akka.persistence.jdbc.testkit.internal.{ H2, Postgres, SchemaType }
 import akka.persistence.query.UpdatedDurableState
 import akka.persistence.query.{ NoOffset, Offset, Sequence }

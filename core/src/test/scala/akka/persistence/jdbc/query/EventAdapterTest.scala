@@ -7,7 +7,7 @@ package akka.persistence.jdbc.query
 
 import akka.persistence.query.{ EventEnvelope, NoOffset, Sequence }
 
-import scala.concurrent.duration.*
+import scala.concurrent.duration._
 import akka.pattern.ask
 import akka.persistence.journal.{ EventSeq, ReadEventAdapter, Tagged, WriteEventAdapter }
 import org.scalatest.Assertions.fail

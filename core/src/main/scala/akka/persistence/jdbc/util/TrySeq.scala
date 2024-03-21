@@ -6,7 +6,7 @@
 package akka.persistence.jdbc.util
 
 import scala.annotation.nowarn
-import scala.collection.immutable.*
+import scala.collection.immutable._
 import scala.util.{ Failure, Success, Try }
 
 object TrySeq {

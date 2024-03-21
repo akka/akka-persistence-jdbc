@@ -16,10 +16,10 @@ package object legacy {
 
 package legacy {
   final case class JournalRow(
-                               ordering: Long,
-                               deleted: Boolean,
-                               persistenceId: String,
-                               sequenceNumber: Long,
-                               message: Array[Byte],
-                               tags: Option[String] = None)
+      ordering: Long,
+      deleted: Boolean,
+      persistenceId: String,
+      sequenceNumber: Long,
+      message: Array[Byte],
+      tags: Option[String] = None)
 }

@@ -8,21 +8,21 @@ package akka.persistence.jdbc.query.dao.legacy
 import akka.NotUsed
 import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.config.ReadJournalConfig
-import akka.persistence.jdbc.journal.dao.{BaseJournalDaoWithReadMessages, H2Compat}
-import akka.persistence.jdbc.journal.dao.legacy.{ByteArrayJournalSerializer, JournalRow}
+import akka.persistence.jdbc.journal.dao.{ BaseJournalDaoWithReadMessages, H2Compat }
+import akka.persistence.jdbc.journal.dao.legacy.{ ByteArrayJournalSerializer, JournalRow }
 import akka.persistence.jdbc.query.dao.ReadJournalDao
 import akka.persistence.jdbc.query.dao.legacy.TagFilterFlow.perfectlyMatchTag
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 import akka.stream.Materializer
-import akka.stream.scaladsl.{Flow, Source}
+import akka.stream.scaladsl.{ Flow, Source }
 import slick.jdbc.JdbcBackend.*
-import slick.jdbc.{GetResult, JdbcProfile}
+import slick.jdbc.{ GetResult, JdbcProfile }
 
 import scala.annotation.nowarn
 import scala.collection.immutable.*
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success, Try }
 
 trait BaseByteArrayReadJournalDao extends ReadJournalDao with BaseJournalDaoWithReadMessages with H2Compat {
   def db: Database

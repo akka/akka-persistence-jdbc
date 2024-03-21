@@ -11,12 +11,12 @@ import scala.compat.java8.FutureConverters.*
 import scala.concurrent.ExecutionContext
 import akka.annotation.ApiMayChange
 import slick.jdbc.JdbcProfile
-import akka.{Done, NotUsed}
-import akka.persistence.state.javadsl.{DurableStateUpdateStore, GetObjectResult}
+import akka.{ Done, NotUsed }
+import akka.persistence.state.javadsl.{ DurableStateUpdateStore, GetObjectResult }
 import akka.persistence.jdbc.state.DurableStateQueries
 import akka.persistence.jdbc.config.DurableStateTableConfiguration
-import akka.persistence.jdbc.state.scaladsl.JdbcDurableStateStore as ScalaJdbcDurableStateStore
-import akka.persistence.query.{DurableStateChange, Offset}
+import akka.persistence.jdbc.state.scaladsl.{ JdbcDurableStateStore => ScalaJdbcDurableStateStore }
+import akka.persistence.query.{ DurableStateChange, Offset }
 import akka.persistence.query.javadsl.DurableStateStoreQuery
 import akka.stream.javadsl.Source
 

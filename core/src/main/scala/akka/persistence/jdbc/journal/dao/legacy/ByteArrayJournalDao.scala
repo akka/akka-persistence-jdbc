@@ -5,22 +5,22 @@
 
 package akka.persistence.jdbc.journal.dao.legacy
 
-import akka.persistence.jdbc.config.{BaseDaoConfig, JournalConfig}
-import akka.persistence.jdbc.journal.dao.{BaseDao, BaseJournalDaoWithReadMessages, H2Compat, JournalDaoWithUpdates}
+import akka.persistence.jdbc.config.{ BaseDaoConfig, JournalConfig }
+import akka.persistence.jdbc.journal.dao.{ BaseDao, BaseJournalDaoWithReadMessages, H2Compat, JournalDaoWithUpdates }
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
-import akka.persistence.{AtomicWrite, PersistentRepr}
+import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-import akka.{Done, NotUsed}
+import akka.{ Done, NotUsed }
 import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.JdbcProfile
 
 import scala.annotation.nowarn
-import scala.collection.immutable.{Nil, Seq}
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.collection.immutable.{ Nil, Seq }
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success, Try }
 
 class ByteArrayJournalDao(
     val db: Database,

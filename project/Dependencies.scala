@@ -3,7 +3,7 @@ import sbt._
 object Dependencies {
 
   val Scala213 = "2.13.13"
-  val Scala3 = "3.3.1"
+  val Scala3 = "3.3.3"
 
   val ScalaVersions = Seq(Scala213, Scala3)
 
@@ -14,7 +14,7 @@ object Dependencies {
   val ScalaTestVersion = "3.2.18"
 
   val JdbcDrivers = Seq(
-    "org.postgresql" % "postgresql" % "42.7.2",
+    "org.postgresql" % "postgresql" % "42.7.3",
     "com.h2database" % "h2" % "2.2.224",
     "com.mysql" % "mysql-connector-j" % "8.3.0",
     "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8")
@@ -33,6 +33,6 @@ object Dependencies {
   val Migration: Seq[ModuleID] = Seq(
     "com.typesafe" % "config" % "1.4.3",
     "ch.qos.logback" % "logback-classic" % "1.2.13",
-    "org.testcontainers" % "postgresql" % "1.19.5" % Test,
+    "org.testcontainers" % "postgresql" % "1.19.7" % Test,
     "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Provided)
 }

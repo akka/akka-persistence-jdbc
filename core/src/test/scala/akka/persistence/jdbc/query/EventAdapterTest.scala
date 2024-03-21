@@ -10,6 +10,7 @@ import akka.persistence.query.{ EventEnvelope, NoOffset, Sequence }
 import scala.concurrent.duration._
 import akka.pattern.ask
 import akka.persistence.journal.{ EventSeq, ReadEventAdapter, Tagged, WriteEventAdapter }
+import org.scalatest.Assertions.fail
 
 object EventAdapterTest {
   case class Event(value: String) {
@@ -30,6 +31,7 @@ object EventAdapterTest {
     override def fromJournal(event: Any, manifest: String): EventSeq =
       event match {
         case e: EventAdapted => EventSeq.single(e.restored)
+        case _               => fail()
       }
   }
 

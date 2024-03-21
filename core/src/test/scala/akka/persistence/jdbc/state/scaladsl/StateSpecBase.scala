@@ -7,17 +7,17 @@ package akka.persistence.jdbc.state.scaladsl
 
 import com.typesafe.config.{ Config, ConfigFactory }
 
-import scala.concurrent.duration.*
+import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import scala.util.{ Failure, Success }
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.*
-import akka.actor.*
+import org.scalatest.time._
+import akka.actor._
 import akka.persistence.jdbc.db.SlickDatabase
-import akka.persistence.jdbc.config.*
+import akka.persistence.jdbc.config._
 import akka.persistence.jdbc.testkit.internal.{ H2, MySQL, Postgres, SchemaType }
 import akka.persistence.jdbc.util.DropCreate
 import akka.serialization.SerializationExtension
@@ -84,7 +84,7 @@ abstract class StateSpecBase(val config: Config, schemaType: SchemaType)
   lazy val durableStateConfig = new DurableStateTableConfiguration(cfg)
   lazy val serialization = SerializationExtension(system)
 
-  implicit val defaultPatience =
+  implicit val defaultPatience: PatienceConfig =
     PatienceConfig(timeout = Span(60, Seconds), interval = Span(100, Millis))
 
   def withActorSystem(f: ExtendedActorSystem => Unit): Unit = {

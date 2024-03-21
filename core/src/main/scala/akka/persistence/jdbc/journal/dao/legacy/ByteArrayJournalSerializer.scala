@@ -10,9 +10,11 @@ import akka.persistence.PersistentRepr
 import akka.persistence.jdbc.serialization.FlowPersistentReprSerializer
 import akka.serialization.Serialization
 
+import scala.annotation.nowarn
 import scala.collection.immutable._
 import scala.util.Try
 
+@nowarn("msg=deprecated")
 class ByteArrayJournalSerializer(serialization: Serialization, separator: String)
     extends FlowPersistentReprSerializer[JournalRow] {
   override def serialize(persistentRepr: PersistentRepr, tags: Set[String]): Try[JournalRow] = {

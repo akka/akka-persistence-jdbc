@@ -10,9 +10,12 @@ import com.typesafe.config.ConfigFactory
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
+import scala.annotation.nowarn
+
 abstract class TablesTestSpec extends AnyFlatSpec with Matchers {
   def toColumnName[A](tableName: String)(columnName: String): String = s"$tableName.$columnName"
 
+  @nowarn("msg=possible missing interpolator")
   val config = ConfigFactory
     .parseString("""
       |akka-persistence-jdbc.slick.db {

@@ -1,6 +1,6 @@
 import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.headerSettings
-import sbt.*
-import sbt.Keys.*
+import sbt._
+import sbt.Keys._
 
 object IntegrationTests {
 

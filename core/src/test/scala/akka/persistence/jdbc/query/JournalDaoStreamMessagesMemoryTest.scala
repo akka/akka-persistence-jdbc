@@ -80,7 +80,7 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
 
         val lastInsert =
           Source
-            .fromIterator(() => (1 to numberOfInsertBatches).toIterator)
+            .fromIterator(() => (1 to numberOfInsertBatches).iterator)
             .mapAsync(1) { i =>
               val end = i * eventsPerBatch
               val start = end - (eventsPerBatch - 1)
@@ -117,7 +117,7 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
               case Failure(exception) =>
                 log.error("Failure when reading messages.", exception)
             }
-            .runWith(TestSink.probe)
+            .runWith(TestSink())
 
         probe.request(10)
         probe.within(20.seconds) {

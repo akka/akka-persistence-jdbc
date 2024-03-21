@@ -109,6 +109,7 @@ object ProjectAutoPlugin extends AutoPlugin {
           },
           "-doc-canonical-base-url",
           "https://doc.akka.io/api/akka-persistence-jdbc/current/")
+      case _ => throw new IllegalArgumentException("Unsupported Major Scala Version")
     }),
     // show full stack traces and test case durations
     Test / testOptions += Tests.Argument("-oDF"),
@@ -124,7 +125,6 @@ object ProjectAutoPlugin extends AutoPlugin {
     "-Xlint",
     "-Ywarn-dead-code",
     "-Ywarn-unused:_",
-    "-Ywarn-extra-implicit",
-    "-Xsource:3")
+    "-Ywarn-extra-implicit")
 
 }

@@ -8,8 +8,10 @@ package akka.persistence.jdbc
 import akka.{ Done, NotUsed }
 import akka.actor.ActorSystem
 
+import scala.annotation.nowarn
 import scala.concurrent.Future
 
+@nowarn("msg=never used")
 object ScaladslSnippets {
 
   def create(): Unit = {

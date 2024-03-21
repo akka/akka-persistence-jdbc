@@ -19,6 +19,7 @@ import akka.stream.scaladsl.{ Flow, Source }
 import slick.jdbc.JdbcBackend._
 import slick.jdbc.{ GetResult, JdbcProfile }
 
+import scala.annotation.nowarn
 import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
@@ -27,6 +28,7 @@ trait BaseByteArrayReadJournalDao extends ReadJournalDao with BaseJournalDaoWith
   def db: Database
   val profile: JdbcProfile
   def queries: ReadJournalQueries
+  @nowarn("msg=deprecated")
   def serializer: FlowPersistentReprSerializer[JournalRow]
   def readJournalConfig: ReadJournalConfig
 
@@ -87,6 +89,7 @@ trait OracleReadJournalDao extends ReadJournalDao {
   val profile: JdbcProfile
   val readJournalConfig: ReadJournalConfig
   val queries: ReadJournalQueries
+  @nowarn("msg=deprecated")
   val serializer: FlowPersistentReprSerializer[JournalRow]
 
   import readJournalConfig.journalTableConfiguration._

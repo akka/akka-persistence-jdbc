@@ -205,7 +205,7 @@ object MigratorSpec {
 
   final case class Withdraw(amount: Int) extends AccountCommand
 
-  final object State extends AccountCommand
+  object State extends AccountCommand
 
   /** Events */
   sealed trait AccountEvent extends Serializable {

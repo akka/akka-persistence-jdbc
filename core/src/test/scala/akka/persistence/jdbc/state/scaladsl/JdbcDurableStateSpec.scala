@@ -17,11 +17,13 @@ import org.scalatest.time.Millis
 import org.scalatest.time.Seconds
 import org.scalatest.time.Span
 
+import scala.annotation.nowarn
 import scala.concurrent.Future
 
+@nowarn("msg=deprecated")
 abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) extends StateSpecBase(config, schemaType) {
 
-  override implicit val defaultPatience =
+  override implicit val defaultPatience: PatienceConfig =
     PatienceConfig(timeout = Span(60, Seconds), interval = Span(100, Millis))
 
   "A durable state store" must withActorSystem { implicit system =>

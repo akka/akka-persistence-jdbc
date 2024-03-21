@@ -5,9 +5,8 @@
 
 package akka.persistence.jdbc.journal.dao
 
-import scala.collection.immutable.Set
-
 package object legacy {
+
   final case class JournalRow(
       ordering: Long,
       deleted: Boolean,

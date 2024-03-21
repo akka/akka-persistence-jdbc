@@ -7,10 +7,8 @@ package akka.persistence.jdbc.state.javadsl
 
 import java.util.Optional
 import java.util.concurrent.CompletionStage
-
 import scala.compat.java8.FutureConverters._
 import scala.concurrent.ExecutionContext
-
 import akka.annotation.ApiMayChange
 import slick.jdbc.JdbcProfile
 import akka.{ Done, NotUsed }
@@ -21,6 +19,8 @@ import akka.persistence.jdbc.state.scaladsl.{ JdbcDurableStateStore => ScalaJdbc
 import akka.persistence.query.{ DurableStateChange, Offset }
 import akka.persistence.query.javadsl.DurableStateStoreQuery
 import akka.stream.javadsl.Source
+
+import scala.annotation.nowarn
 
 object JdbcDurableStateStore {
   val Identifier = ScalaJdbcDurableStateStore.Identifier
@@ -52,6 +52,7 @@ class JdbcDurableStateStore[A](
   override def deleteObject(persistenceId: String): CompletionStage[Done] =
     deleteObject(persistenceId, revision = 0)
 
+  @nowarn("msg=deprecated")
   override def deleteObject(persistenceId: String, revision: Long): CompletionStage[Done] =
     toJava(scalaStore.deleteObject(persistenceId))
 

@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.JdbcProfile
 
+import scala.annotation.nowarn
 import scala.collection.immutable.{ Nil, Seq }
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
@@ -45,6 +46,7 @@ trait BaseByteArrayJournalDao
   val queries: JournalQueries
   val journalConfig: JournalConfig
   override def baseDaoConfig: BaseDaoConfig = journalConfig.daoConfig
+  @nowarn("msg=deprecated")
   val serializer: FlowPersistentReprSerializer[JournalRow]
   implicit val ec: ExecutionContext
   implicit val mat: Materializer

@@ -12,7 +12,7 @@ import akka.actor.ActorSystem;
 import akka.persistence.jdbc.testkit.javadsl.SchemaUtils;
 // #create
 // #read-journal
-import akka.persistence.query._;
+import akka.persistence.query.*;
 import akka.persistence.jdbc.query.javadsl.JdbcReadJournal;
 // #read-journal
 // #persistence-ids

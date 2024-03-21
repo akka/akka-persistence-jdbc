@@ -46,7 +46,7 @@ abstract class EventsByUnfrequentTagTest(config: String) extends QueryTestSpec(c
           }
           journalOps.withEventsByTag()(often, NoOffset) { tp =>
             tp.request(Int.MaxValue)
-            (0 until 100).foreach { i =>
+            (1 until 100).foreach { i =>
               tp.expectNextPF { case EventEnvelope(Sequence(`i`), _, _, _) => }
             }
             tp.cancel()

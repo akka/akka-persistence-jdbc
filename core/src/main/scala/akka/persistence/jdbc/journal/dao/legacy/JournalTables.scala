@@ -25,7 +25,7 @@ trait JournalTables {
       persistenceId,
       sequenceNumber,
       message,
-      tags) <> ((JournalRow.apply _).tupled, JournalRow.unapply)
+      tags).<>((JournalRow.apply _).tupled, JournalRow.unapply)
 
     val ordering: Rep[Long] = column[Long](journalTableCfg.columnNames.ordering, O.AutoInc)
     val persistenceId: Rep[String] =

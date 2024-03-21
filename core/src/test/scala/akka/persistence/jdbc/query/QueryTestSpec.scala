@@ -5,30 +5,32 @@
 
 package akka.persistence.jdbc.query
 
-import akka.actor.{ ActorRef, ActorSystem, Props, Stash, Status }
+import akka.actor.{ActorRef, ActorSystem, Props, Stash, Status}
 import akka.pattern.ask
 import akka.event.LoggingReceive
-import akka.persistence.{ DeleteMessagesFailure, DeleteMessagesSuccess, PersistentActor }
+import akka.persistence.{DeleteMessagesFailure, DeleteMessagesSuccess, PersistentActor}
 import akka.persistence.jdbc.SingleActorSystemPerTestSpec
-import akka.persistence.jdbc.query.EventAdapterTest.{ Event, TaggedAsyncEvent, TaggedEvent }
-import akka.persistence.jdbc.query.javadsl.{ JdbcReadJournal => JavaJdbcReadJournal }
+import akka.persistence.jdbc.query.EventAdapterTest.{Event, TaggedAsyncEvent, TaggedEvent}
+import akka.persistence.jdbc.query.javadsl.JdbcReadJournal as JavaJdbcReadJournal
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 import akka.persistence.journal.Tagged
-import akka.persistence.query.{ EventEnvelope, Offset, PersistenceQuery }
+import akka.persistence.query.{EventEnvelope, Offset, PersistenceQuery}
 import akka.stream.scaladsl.Sink
 import akka.stream.testkit.TestSubscriber
-import akka.stream.testkit.javadsl.{ TestSink => JavaSink }
+import akka.stream.testkit.javadsl.TestSink as JavaSink
 import akka.stream.testkit.scaladsl.TestSink
-import akka.stream.{ Materializer, SystemMaterializer }
+import akka.stream.{Materializer, SystemMaterializer}
 import com.typesafe.config.ConfigValue
-import scala.concurrent.Future
-import scala.concurrent.duration.{ FiniteDuration, _ }
 
+import scala.concurrent.Future
+import scala.concurrent.duration.{FiniteDuration, *}
 import akka.persistence.jdbc.testkit.internal.H2
 import akka.persistence.jdbc.testkit.internal.MySQL
 import akka.persistence.jdbc.testkit.internal.Oracle
 import akka.persistence.jdbc.testkit.internal.Postgres
 import akka.persistence.jdbc.testkit.internal.SqlServer
+
+import scala.concurrent.ExecutionContext
 
 trait ReadJournalOperations {
   def withCurrentPersistenceIds(within: FiniteDuration = 60.second)(f: TestSubscriber.Probe[String] => Unit): Unit
@@ -58,12 +60,12 @@ class ScalaJdbcReadJournalOperations(readJournal: JdbcReadJournal)(implicit syst
   import system.dispatcher
 
   def withCurrentPersistenceIds(within: FiniteDuration)(f: TestSubscriber.Probe[String] => Unit): Unit = {
-    val tp = readJournal.currentPersistenceIds().runWith(TestSink.probe[String])
+    val tp = readJournal.currentPersistenceIds().runWith(TestSink[String]())
     tp.within(within)(f(tp))
   }
 
   def withPersistenceIds(within: FiniteDuration)(f: TestSubscriber.Probe[String] => Unit): Unit = {
-    val tp = readJournal.persistenceIds().runWith(TestSink.probe[String])
+    val tp = readJournal.persistenceIds().runWith(TestSink[String]())
     tp.within(within)(f(tp))
   }
 
@@ -72,7 +74,7 @@ class ScalaJdbcReadJournalOperations(readJournal: JdbcReadJournal)(implicit syst
       f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
     val tp = readJournal
       .currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr)
-      .runWith(TestSink.probe[EventEnvelope])
+      .runWith(TestSink[EventEnvelope]())
     tp.within(within)(f(tp))
   }
 
@@ -81,19 +83,19 @@ class ScalaJdbcReadJournalOperations(readJournal: JdbcReadJournal)(implicit syst
       f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
     val tp = readJournal
       .eventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr)
-      .runWith(TestSink.probe[EventEnvelope])
+      .runWith(TestSink[EventEnvelope]())
     tp.within(within)(f(tp))
   }
 
   def withCurrentEventsByTag(within: FiniteDuration)(tag: String, offset: Offset)(
       f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
-    val tp = readJournal.currentEventsByTag(tag, offset).runWith(TestSink.probe[EventEnvelope])
+    val tp = readJournal.currentEventsByTag(tag, offset).runWith(TestSink[EventEnvelope]())
     tp.within(within)(f(tp))
   }
 
   def withEventsByTag(within: FiniteDuration)(tag: String, offset: Offset)(
       f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
-    val tp = readJournal.eventsByTag(tag, offset).runWith(TestSink.probe[EventEnvelope])
+    val tp = readJournal.eventsByTag(tag, offset).runWith(TestSink[EventEnvelope]())
     tp.within(within)(f(tp))
   }
 
@@ -121,13 +123,13 @@ class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)(
   import system.dispatcher
 
   def withCurrentPersistenceIds(within: FiniteDuration)(f: TestSubscriber.Probe[String] => Unit): Unit = {
-    val sink: akka.stream.javadsl.Sink[String, TestSubscriber.Probe[String]] = JavaSink.probe(system)
+    val sink: akka.stream.javadsl.Sink[String, TestSubscriber.Probe[String]] = JavaSink.create[String](system)
     val tp = readJournal.currentPersistenceIds().runWith(sink, mat)
     tp.within(within)(f(tp))
   }
 
   def withPersistenceIds(within: FiniteDuration)(f: TestSubscriber.Probe[String] => Unit): Unit = {
-    val sink: akka.stream.javadsl.Sink[String, TestSubscriber.Probe[String]] = JavaSink.probe(system)
+    val sink: akka.stream.javadsl.Sink[String, TestSubscriber.Probe[String]] = JavaSink.create[String](system)
     val tp = readJournal.persistenceIds().runWith(sink, mat)
     tp.within(within)(f(tp))
   }
@@ -135,7 +137,7 @@ class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)(
   def withCurrentEventsByPersistenceId(
       within: FiniteDuration)(persistenceId: String, fromSequenceNr: Long = 0, toSequenceNr: Long = Long.MaxValue)(
       f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
-    val sink: akka.stream.javadsl.Sink[EventEnvelope, TestSubscriber.Probe[EventEnvelope]] = JavaSink.probe(system)
+    val sink: akka.stream.javadsl.Sink[EventEnvelope, TestSubscriber.Probe[EventEnvelope]] = JavaSink.create[EventEnvelope](system)
     val tp = readJournal.currentEventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).runWith(sink, mat)
     tp.within(within)(f(tp))
   }
@@ -143,21 +145,21 @@ class JavaDslJdbcReadJournalOperations(readJournal: javadsl.JdbcReadJournal)(
   def withEventsByPersistenceId(
       within: FiniteDuration)(persistenceId: String, fromSequenceNr: Long, toSequenceNr: Long)(
       f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
-    val sink: akka.stream.javadsl.Sink[EventEnvelope, TestSubscriber.Probe[EventEnvelope]] = JavaSink.probe(system)
+    val sink: akka.stream.javadsl.Sink[EventEnvelope, TestSubscriber.Probe[EventEnvelope]] = JavaSink.create[EventEnvelope](system)
     val tp = readJournal.eventsByPersistenceId(persistenceId, fromSequenceNr, toSequenceNr).runWith(sink, mat)
     tp.within(within)(f(tp))
   }
 
   def withCurrentEventsByTag(within: FiniteDuration)(tag: String, offset: Offset)(
       f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
-    val sink: akka.stream.javadsl.Sink[EventEnvelope, TestSubscriber.Probe[EventEnvelope]] = JavaSink.probe(system)
+    val sink: akka.stream.javadsl.Sink[EventEnvelope, TestSubscriber.Probe[EventEnvelope]] = JavaSink.create[EventEnvelope](system)
     val tp = readJournal.currentEventsByTag(tag, offset).runWith(sink, mat)
     tp.within(within)(f(tp))
   }
 
   def withEventsByTag(within: FiniteDuration)(tag: String, offset: Offset)(
       f: TestSubscriber.Probe[EventEnvelope] => Unit): Unit = {
-    val sink: akka.stream.javadsl.Sink[EventEnvelope, TestSubscriber.Probe[EventEnvelope]] = JavaSink.probe(system)
+    val sink: akka.stream.javadsl.Sink[EventEnvelope, TestSubscriber.Probe[EventEnvelope]] = JavaSink.create[EventEnvelope](system)
     val tp = readJournal.eventsByTag(tag, offset).runWith(sink, mat)
     tp.within(within)(f(tp))
   }
@@ -311,7 +313,7 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
   def expectAllStarted(refs: Seq[ActorRef])(implicit system: ActorSystem): Unit = {
     // make sure we notice early if the actors failed to start (because of issues with journal) makes debugging
     // failing tests easier as we know it is not the actual interaction from the test that is the problem
-    implicit val ec = system.dispatcher
+    implicit val ec: ExecutionContext = system.dispatcher
     Future.sequence(refs.map(_ ? "state")).futureValue
   }
 
@@ -393,7 +395,7 @@ trait SqlServerCleaner extends QueryTestSpec {
     }
   }
 
-  override def beforeAll() = {
+  override def beforeAll(): Unit = {
     dropAndCreate(SqlServer)
     super.beforeAll()
   }

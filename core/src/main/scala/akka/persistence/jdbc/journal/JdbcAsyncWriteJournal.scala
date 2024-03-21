@@ -102,7 +102,7 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
     def fetchHighestSeqNr() = journalDao.highestSequenceNr(persistenceId, fromSequenceNr)
     writeInProgress.get(persistenceId) match {
       case null => fetchHighestSeqNr()
-      case f    =>
+      case f: Future[Any @unchecked]    =>
         // we must fetch the highest sequence number after the previous write has completed
         // If the previous write failed then we can ignore this
         f.recover { case _ => () }.flatMap(_ => fetchHighestSeqNr())

@@ -84,7 +84,7 @@ abstract class StateSpecBase(val config: Config, schemaType: SchemaType)
   lazy val durableStateConfig = new DurableStateTableConfiguration(cfg)
   lazy val serialization = SerializationExtension(system)
 
-  implicit val defaultPatience =
+  implicit val defaultPatience: PatienceConfig =
     PatienceConfig(timeout = Span(60, Seconds), interval = Span(100, Millis))
 
   def withActorSystem(f: ExtendedActorSystem => Unit): Unit = {

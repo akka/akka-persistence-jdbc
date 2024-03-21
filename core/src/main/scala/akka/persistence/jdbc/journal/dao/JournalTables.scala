@@ -64,7 +64,7 @@ trait JournalTables {
         eventSerManifest,
         metaPayload,
         metaSerId,
-        metaSerManifest) <> ((JournalAkkaSerializationRow.apply _).tupled, JournalAkkaSerializationRow.unapply)
+        metaSerManifest).<>((JournalAkkaSerializationRow.apply _).tupled, JournalAkkaSerializationRow.unapply)
 
     val ordering: Rep[Long] = column[Long](journalTableCfg.columnNames.ordering, O.AutoInc)
     val persistenceId: Rep[String] =
@@ -91,7 +91,7 @@ trait JournalTables {
   lazy val JournalTable = new TableQuery(tag => new JournalEvents(tag))
 
   class EventTags(_tableTag: Tag) extends Table[TagRow](_tableTag, tagTableCfg.schemaName, tagTableCfg.tableName) {
-    override def * = (eventId, persistenceId, sequenceNumber, tag) <> ((TagRow.apply _).tupled, TagRow.unapply)
+    override def * = (eventId, persistenceId, sequenceNumber, tag).<>((TagRow.apply _).tupled, TagRow.unapply)
     // allow null value insert.
     val eventId: Rep[Option[Long]] = column[Option[Long]](tagTableCfg.columnNames.eventId)
     val persistenceId: Rep[Option[String]] = column[Option[String]](tagTableCfg.columnNames.persistenceId)

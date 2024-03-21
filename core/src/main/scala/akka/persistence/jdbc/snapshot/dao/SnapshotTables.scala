@@ -44,7 +44,7 @@ trait SnapshotTables {
         snapshotPayload,
         metaSerId,
         metaSerManifest,
-        metaPayload) <> ((SnapshotRow.apply _).tupled, SnapshotRow.unapply)
+        metaPayload).<>((SnapshotRow.apply _).tupled, SnapshotRow.unapply)
 
     val persistenceId: Rep[String] =
       column[String](snapshotTableCfg.columnNames.persistenceId, O.Length(255, varying = true))

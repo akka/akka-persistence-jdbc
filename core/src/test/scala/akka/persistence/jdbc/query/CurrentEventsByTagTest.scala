@@ -181,14 +181,14 @@ abstract class CurrentEventsByTagTest(config: String) extends QueryTestSpec(conf
         val tag = "someTag"
         // send a batch of 3 * 200
         val batch1 = sendMessagesWithTag(tag, 200)
-        // Try to persist a large batch of events per actor. Some of these may be returned, but not all!
-        val batch2 = sendMessagesWithTag(tag, 5000)
 
         // wait for acknowledgement of the first batch only
         batch1.futureValue
         // Sanity check, all events in the first batch must be in the journal
         journalOps.countJournal.futureValue should be >= 600L
 
+        // Try to persist a large batch of events per actor. Some of these may be returned, but not all!
+        val batch2 = sendMessagesWithTag(tag, 5000)
         // start the query before the last batch completes
         journalOps.withCurrentEventsByTag()(tag, NoOffset) { tp =>
           // The stream must complete within the given amount of time

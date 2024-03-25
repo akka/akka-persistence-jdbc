@@ -63,7 +63,7 @@ jobs:
           ./scripts/${{ matrix.db.script }}
 
       - name: Run Integration tests for  ${{ matrix.db.name }} ${{ matrix.old-dao.label }}
-        run: sbt "$${ matrix.db.test }}" ${{ matrix.old-dao.extraOpts }}
+        run: sbt \"$${ matrix.db.test }}\" ${{ matrix.old-dao.extraOpts }}
 
       - name: Print logs on failure
         if: ${{ failure() }}

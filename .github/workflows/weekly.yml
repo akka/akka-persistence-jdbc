@@ -57,7 +57,7 @@ jobs:
           ./scripts/${{ matrix.db.script }}
 
       - name: Run Integration tests for  ${{ matrix.db.name }}
-        run: sbt "$${ matrix.db.test }}"
+        run: sbt \"$${ matrix.db.test }}\"
 
       - name: Print logs on failure
         if: ${{ failure() }}

@@ -21,7 +21,7 @@ jobs:
           - name: "H2"
             test: "test"
           - name: "MySQL"
-            test: 'integration/testOnly akka.persistence.jdbc.integration.MySQL*'
+            test: '"integration/testOnly akka.persistence.jdbc.integration.MySQL*"'
             script: 'launch-mysql.sh'
           - name: "Oracle"
             test: 'integration/testOnly akka.persistence.jdbc.integration.Oracle*'
@@ -63,7 +63,7 @@ jobs:
           ./scripts/${{ matrix.db.script }}
 
       - name: Run Integration tests for  ${{ matrix.db.name }} ${{ matrix.old-dao.label }}
-        run: sbt \"$${ matrix.db.test }}\" ${{ matrix.old-dao.extraOpts }}
+        run: sbt ${{ matrix.db.test }} ${{ matrix.old-dao.extraOpts }}
 
       - name: Print logs on failure
         if: ${{ failure() }}

@@ -34,9 +34,9 @@ jobs:
             script: 'launch-sqlserver.sh'
         old-dao:
           - extraOpts: ''
-            oldDaoLabel: ''
+            label: ''
           - extraOpts: '-Djdbc-journal.dao=akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao -Djdbc-snapshot-store.dao=akka.persistence.jdbc.snapshot.dao.legacy.ByteArraySnapshotDao -Djdbc-read-journal.dao=akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao'
-            oldDaoLabel: '(old dao)'
+            label: '(old dao)'
     steps:
       - name: Checkout
         uses: actions/checkout@v3.1.0
@@ -58,12 +58,12 @@ jobs:
           jvm: temurin:1.11.0
 
       - name: Start DB in docker container
-        if: ${{ matrix.script }}
+        if: ${{ matrix.db.script }}
         run: |-
-          ./scripts/${{ matrix.script }}
+          ./scripts/${{ matrix.db.script }}
 
-      - name: Run Integration tests for  ${{ matrix.name }} ${{ matrix.oldDaoLabel }}
-        run: sbt "$${ matrix.test }}" ${{ matrix.extraOpts }}
+      - name: Run Integration tests for  ${{ matrix.db.name }} ${{ matrix.old-dao.label }}
+        run: sbt "$${ matrix.db.test }}" ${{ matrix.old-dao.extraOpts }}
 
       - name: Print logs on failure
         if: ${{ failure() }}

@@ -52,12 +52,12 @@ jobs:
           jvm: temurin:1.21
 
       - name: Start DB in docker container
-        if: ${{ matrix.script }}
+        if: ${{ matrix.db.script }}
         run: |-
-          ./scripts/${{ matrix.script }}
+          ./scripts/${{ matrix.db.script }}
 
-      - name: Run Integration tests for  ${{ matrix.name }}
-        run: sbt "$${ matrix.test }}"
+      - name: Run Integration tests for  ${{ matrix.db.name }}
+        run: sbt "$${ matrix.db.test }}"
 
       - name: Print logs on failure
         if: ${{ failure() }}

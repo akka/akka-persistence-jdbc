@@ -18,25 +18,25 @@ jobs:
       fail-fast: false
       matrix:
         db:
-          - name: "H2"
-            test: "test"
-          - name: "MySQL"
-            test: '"integration/testOnly akka.persistence.jdbc.integration.MySQL*"'
-            script: 'launch-mysql.sh'
-          - name: "Oracle"
-            test: 'integration/testOnly akka.persistence.jdbc.integration.Oracle*'
-            script: 'launch-oracle.sh'
-          - name: "Postgres"
-            test: 'integration/testOnly akka.persistence.jdbc.integration.Postgres*'
-            script: 'launch-postgres.sh'
-          - name: "SqlServer"
-            test: 'integration/testOnly akka.persistence.jdbc.integration.SqlServer*'
-            script: 'launch-sqlserver.sh'
-        old-dao:
-          - extraOpts: ''
-            label: ''
-          - extraOpts: '-Djdbc-journal.dao=akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao -Djdbc-snapshot-store.dao=akka.persistence.jdbc.snapshot.dao.legacy.ByteArraySnapshotDao -Djdbc-read-journal.dao=akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao'
-            label: '(old dao)'
+        - name: "H2"
+          test: "test"
+        - name: "MySQL"
+          test: '"integration/testOnly akka.persistence.jdbc.integration.MySQL*"'
+          script: 'launch-mysql.sh'
+          hasOldDao: true
+        - name: "Oracle"
+          test: 'integration/testOnly akka.persistence.jdbc.integration.Oracle*'
+          script: 'launch-oracle.sh'
+          hasOldDao: true
+        - name: "Postgres"
+          test: 'integration/testOnly akka.persistence.jdbc.integration.Postgres*'
+          script: 'launch-postgres.sh'
+          hasOldDao: true
+        - name: "SqlServer"
+          test: 'integration/testOnly akka.persistence.jdbc.integration.SqlServer*'
+          script: 'launch-sqlserver.sh'
+          hasOldDao: true
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3.1.0
@@ -62,8 +62,13 @@ jobs:
         run: |-
           ./scripts/${{ matrix.db.script }}
 
-      - name: Run Integration tests for  ${{ matrix.db.name }} ${{ matrix.old-dao.label }}
+      - name: Run Integration tests for  ${{ matrix.db.name }}
         run: sbt ${{ matrix.db.test }} ${{ matrix.old-dao.extraOpts }}
+
+      - name: Run Integration tests for  ${{ matrix.db.name }} (old dao)
+        if: ${{ matrix.db.hasOldDao }}
+        run: sbt ${{ matrix.db.test }} ${{ matrix.old-dao.extraOpts }} -Djdbc-journal.dao=akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao -Djdbc-snapshot-store.dao=akka.persistence.jdbc.snapshot.dao.legacy.ByteArraySnapshotDao -Djdbc-read-journal.dao=akka.persistence.jdbc.query.dao.legacy.ByteArrayReadJournalDao
+
 
       - name: Print logs on failure
         if: ${{ failure() }}

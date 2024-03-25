@@ -21,7 +21,9 @@ object Dependencies {
 
   val Libraries: Seq[ModuleID] = Seq(
     "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
-    "com.typesafe.slick" %% "slick" % SlickVersion,
+    // Slick 3.5 pulls in slf4j-api 2.2 which doesn't work with Akka
+    ("com.typesafe.slick" %% "slick" % SlickVersion).exclude("org.slf4j", "slf4j-api"),
+    "org.slf4j" % "slf4j-api" % "1.7.36",
     "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
     "ch.qos.logback" % "logback-classic" % "1.2.13" % Test,
     "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Test,

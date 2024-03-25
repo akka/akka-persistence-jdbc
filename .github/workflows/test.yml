@@ -24,19 +24,19 @@ jobs:
           script: 'launch-mysql.sh'
           hasOldDao: true
         - name: "Oracle"
-          test: 'integration/testOnly akka.persistence.jdbc.integration.Oracle*'
+          test: '"integration/testOnly akka.persistence.jdbc.integration.Oracle*"'
           script: 'launch-oracle.sh'
           hasOldDao: true
         - name: "Postgres"
-          test: 'integration/testOnly akka.persistence.jdbc.integration.Postgres*'
+          test: '"integration/testOnly akka.persistence.jdbc.integration.Postgres*"'
           script: 'launch-postgres.sh'
           hasOldDao: true
         - name: "SqlServer"
-          test: 'integration/testOnly akka.persistence.jdbc.integration.SqlServer*'
+          test: '"integration/testOnly akka.persistence.jdbc.integration.SqlServer*"'
           script: 'launch-sqlserver.sh'
           hasOldDao: true
     name: Integration Test ${{ matrix.db.name }}
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3.1.0

@@ -19,16 +19,16 @@ jobs:
           - name: "H2"
             test: "test"
           - name: "MySQL"
-            test: 'integration/testOnly akka.persistence.jdbc.integration.MySQL*'
+            test: '"integration/testOnly akka.persistence.jdbc.integration.MySQL*"'
             script: 'launch-mysql.sh'
           - name: "Oracle"
-            test: 'integration/testOnly akka.persistence.jdbc.integration.Oracle*'
+            test: '"integration/testOnly akka.persistence.jdbc.integration.Oracle*"'
             script: 'launch-oracle.sh'
           - name: "Postgres"
-            test: 'integration/testOnly akka.persistence.jdbc.integration.Postgres*'
+            test: '"integration/testOnly akka.persistence.jdbc.integration.Postgres*"'
             script: 'launch-postgres.sh'
           - name: "SqlServer"
-            test: 'integration/testOnly akka.persistence.jdbc.integration.SqlServer*'
+            test: '"integration/testOnly akka.persistence.jdbc.integration.SqlServer*"'
             script: 'launch-sqlserver.sh'
 
     steps:

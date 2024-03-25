@@ -67,7 +67,7 @@ jobs:
         # Run locally with: sbt 'clean ; +Test/compile ; +It/compile'
         run: sbt "; Test/compile"
 
-      - name: Compile all code with fatal warnings for Java 11 and Scala 3.3
+      - name: Compile all code with Scala 3.3
         run: sbt "++3.3; Test/compile"
 
   check-docs:

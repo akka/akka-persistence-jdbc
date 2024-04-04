@@ -1,5 +1,6 @@
 # Akka Persistence JDBC
-## Use JDBC-compatible databases with Akka Persistence
+
+The Akka family of projects is managed by teams at [Lightbend](https://lightbend.com/) with help from the community.
 
 akka-persistence-jdbc writes journal and snapshot entries to a configured JDBC store. It implements the full akka-persistence-query API and is therefore very useful for implementing DDD-style 
 application models using Akka for creating reactive applications.
@@ -44,6 +45,6 @@ Refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file for more details about the 
 
 You can also ask for clarifications or guidance in GitHub issues directly, or in the [akka/dev](https://gitter.im/akka/dev) chat if a more real time communication would be of benefit.
 
-Akka Persistence JDBC is licensed under the Business Source License 1.1, see LICENSE.
+## License
 
-[Lightbend](https://www.lightbend.com/) is backing Akka, Akka Persistence and other Reactive technologies.
+Akka is licensed under the Business Source License 1.1, please see the [Akka License FAQ](https://www.lightbend.com/akka/license-faq).

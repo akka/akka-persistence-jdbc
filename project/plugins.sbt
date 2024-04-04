@@ -11,7 +11,7 @@ addDependencyTreePlugin
 addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.5.12")
 addSbtPlugin("com.github.sbt" % "sbt-dynver" % "5.0.1")
 // docs
-addSbtPlugin("com.lightbend.akka" % "sbt-paradox-akka" % "0.54")
+addSbtPlugin("com.lightbend.akka" % "sbt-paradox-akka" % "0.55")
 addSbtPlugin("com.github.sbt" % "sbt-site" % "1.5.0")
 addSbtPlugin("com.github.sbt" % "sbt-site-paradox" % "1.5.0")
 addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.5.0")

@@ -23,6 +23,10 @@ class JournalQueries(
   private val insertAndReturn = JournalTable.returning(JournalTable.map(_.ordering))
   private val TagTableC = Compiled(TagTable)
 
+  val highestSequenceNrForPersistenceId = Compiled(_highestSequenceNrForPersistenceId _)
+  val highestSequenceNrForPersistenceIdBefore = Compiled(_highestSequenceNrForPersistenceIdBefore _)
+  val messagesQuery = Compiled(_messagesQuery _)
+
   def writeJournalRows(xs: Seq[(JournalAkkaSerializationRow, Set[String])])(
       implicit ec: ExecutionContext): DBIOAction[Any, NoStream, Effect.Write] = {
     val sorted = xs.sortBy(event => event._1.sequenceNumber)
@@ -59,9 +63,6 @@ class JournalQueries(
     }
   }
 
-  private def selectAllJournalForPersistenceIdDesc(persistenceId: Rep[String]) =
-    selectAllJournalForPersistenceId(persistenceId).sortBy(_.sequenceNumber.desc)
-
   private def selectAllJournalForPersistenceId(persistenceId: Rep[String]) =
     JournalTable.filter(_.persistenceId === persistenceId).sortBy(_.sequenceNumber.desc)
 
@@ -69,10 +70,10 @@ class JournalQueries(
     JournalTable.filter(_.persistenceId === persistenceId).filter(_.sequenceNumber <= toSequenceNr).delete
   }
 
-  def markJournalMessagesAsDeleted(persistenceId: String, maxSequenceNr: Long) =
+  def markJournalMessageAsDeleted(persistenceId: String, sequenceNr: Long) =
     JournalTable
       .filter(_.persistenceId === persistenceId)
-      .filter(_.sequenceNumber <= maxSequenceNr)
+      .filter(_.sequenceNumber === sequenceNr)
       .filter(_.deleted === false)
       .map(_.deleted)
       .update(true)
@@ -80,28 +81,15 @@ class JournalQueries(
   private def _highestSequenceNrForPersistenceId(persistenceId: Rep[String]): Rep[Option[Long]] =
     selectAllJournalForPersistenceId(persistenceId).take(1).map(_.sequenceNumber).max
 
-  private def _highestMarkedSequenceNrForPersistenceId(persistenceId: Rep[String]): Rep[Option[Long]] =
-    selectAllJournalForPersistenceId(persistenceId).filter(_.deleted === true).take(1).map(_.sequenceNumber).max
-
-  val highestSequenceNrForPersistenceId = Compiled(_highestSequenceNrForPersistenceId _)
-
-  val highestMarkedSequenceNrForPersistenceId = Compiled(_highestMarkedSequenceNrForPersistenceId _)
-
-  private def _selectByPersistenceIdAndMaxSequenceNumber(persistenceId: Rep[String], maxSequenceNr: Rep[Long]) =
-    selectAllJournalForPersistenceIdDesc(persistenceId).filter(_.sequenceNumber <= maxSequenceNr)
-
-  val selectByPersistenceIdAndMaxSequenceNumber = Compiled(_selectByPersistenceIdAndMaxSequenceNumber _)
-
-  private def _allPersistenceIdsDistinct: Query[Rep[String], String, Seq] =
-    JournalTable.map(_.persistenceId).distinct
-
-  val allPersistenceIdsDistinct = Compiled(_allPersistenceIdsDistinct)
-
-  def journalRowByPersistenceIds(persistenceIds: Iterable[String]): Query[Rep[String], String, Seq] =
-    for {
-      query <- JournalTable.map(_.persistenceId)
-      if query.inSetBind(persistenceIds)
-    } yield query
+  private def _highestSequenceNrForPersistenceIdBefore(
+      persistenceId: Rep[String],
+      maxSequenceNr: Rep[Long]): Rep[Long] =
+    selectAllJournalForPersistenceId(persistenceId)
+      .filter(_.sequenceNumber <= maxSequenceNr)
+      .take(1)
+      .map(_.sequenceNumber)
+      .max
+      .getOrElse(0L)
 
   private def _messagesQuery(
       persistenceId: Rep[String],
@@ -115,7 +103,5 @@ class JournalQueries(
       .filter(_.sequenceNumber <= toSequenceNr)
       .sortBy(_.sequenceNumber.asc)
       .take(max)
-
-  val messagesQuery = Compiled(_messagesQuery _)
 
 }

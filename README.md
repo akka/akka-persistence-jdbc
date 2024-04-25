@@ -48,3 +48,5 @@ You can also ask for clarifications or guidance in GitHub issues directly, or in
 ## License
 
 Akka is licensed under the Business Source License 1.1, please see the [Akka License FAQ](https://www.lightbend.com/akka/license-faq).
+
+Tests and documentation are under a separate license, see the LICENSE file in each documentation and test root directory for details.

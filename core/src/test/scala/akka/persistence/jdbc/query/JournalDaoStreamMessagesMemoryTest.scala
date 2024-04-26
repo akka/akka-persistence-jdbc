@@ -5,29 +5,30 @@
 
 package akka.persistence.jdbc.query
 
-import java.lang.management.ManagementFactory
-import java.lang.management.MemoryMXBean
-import java.util.UUID
-import akka.actor.ActorSystem
+import akka.actor.{ ActorSystem, ExtendedActorSystem }
+import akka.persistence.jdbc.config.JournalConfig
+import akka.persistence.jdbc.journal.dao.JournalDao
 import akka.persistence.{ AtomicWrite, PersistentRepr }
-import akka.persistence.jdbc.journal.dao.legacy.{ ByteArrayJournalDao, JournalTables }
-import akka.serialization.SerializationExtension
+import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.scaladsl.{ Sink, Source }
+import akka.stream.testkit.scaladsl.TestSink
+import akka.stream.{ Materializer, SystemMaterializer }
 import com.typesafe.config.{ ConfigValue, ConfigValueFactory }
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.slf4j.LoggerFactory
+import slick.jdbc.JdbcBackend.Database
+import slick.jdbc.JdbcProfile
 
+import java.lang.management.{ ManagementFactory, MemoryMXBean }
+import java.util.UUID
 import scala.collection.immutable
-import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
+import scala.concurrent.{ ExecutionContext, ExecutionContextExecutor }
 import scala.util.{ Failure, Success }
-import akka.stream.testkit.scaladsl.TestSink
 
 object JournalDaoStreamMessagesMemoryTest {
 
-  val configOverrides: Map[String, ConfigValue] = Map(
-    "jdbc-journal.fetch-size" -> ConfigValueFactory.fromAnyRef("100"),
-    "jdbc-journal.dao" -> ConfigValueFactory.fromAnyRef("akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao"))
+  val configOverrides: Map[String, ConfigValue] = Map("jdbc-journal.fetch-size" -> ConfigValueFactory.fromAnyRef("100"))
 
   val MB = 1024 * 1024
 }
@@ -41,14 +42,25 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
   val memoryMBean: MemoryMXBean = ManagementFactory.getMemoryMXBean
 
   it should "stream events" in {
-    if (newDao)
-      pending
     withActorSystem { implicit system: ActorSystem =>
       withDatabase { db =>
         implicit val ec: ExecutionContextExecutor = system.dispatcher
+        implicit val mat: Materializer = SystemMaterializer(system).materializer
 
         val persistenceId = UUID.randomUUID().toString
-        val dao = new ByteArrayJournalDao(db, profile, journalConfig, SerializationExtension(system))
+        val fqcn = journalConfig.pluginConfig.dao
+        val args = Seq(
+          (classOf[Database], db),
+          (classOf[JdbcProfile], profile),
+          (classOf[JournalConfig], journalConfig),
+          (classOf[Serialization], SerializationExtension(system)),
+          (classOf[ExecutionContext], ec),
+          (classOf[Materializer], mat))
+        val dao: JournalDao =
+          system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[JournalDao](fqcn, args) match {
+            case Success(dao)   => dao
+            case Failure(cause) => throw cause
+          }
 
         val payloadSize = 5000 // 5000 bytes
         val eventsPerBatch = 1000
@@ -128,3 +140,7 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
     }
   }
 }
+
+class H2JournalDaoStreamMessagesMemoryTest
+    extends JournalDaoStreamMessagesMemoryTest("h2-application.conf")
+    with H2Cleaner

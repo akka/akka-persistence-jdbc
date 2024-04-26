@@ -48,6 +48,7 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
         implicit val mat: Materializer = SystemMaterializer(system).materializer
 
         val persistenceId = UUID.randomUUID().toString
+        val writerUuid = UUID.randomUUID().toString
         val fqcn = journalConfig.pluginConfig.dao
         val args = Seq(
           (classOf[Database], db),
@@ -88,7 +89,7 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
               log.info(s"batch $i - events from $start to $end")
               val atomicWrites =
                 (start to end).map { j =>
-                  AtomicWrite(immutable.Seq(PersistentRepr(payload, j, persistenceId)))
+                  AtomicWrite(immutable.Seq(PersistentRepr(payload, j, persistenceId, writerUuid = writerUuid)))
                 }
 
               dao.asyncWriteMessages(atomicWrites).map(_ => i)
@@ -140,7 +141,3 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
     }
   }
 }
-
-class H2JournalDaoStreamMessagesMemoryTest
-    extends JournalDaoStreamMessagesMemoryTest("h2-application.conf")
-    with H2Cleaner

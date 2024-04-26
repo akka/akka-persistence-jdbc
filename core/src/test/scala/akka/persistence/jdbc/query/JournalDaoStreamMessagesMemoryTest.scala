@@ -8,7 +8,6 @@ package akka.persistence.jdbc.query
 import java.lang.management.ManagementFactory
 import java.lang.management.MemoryMXBean
 import java.util.UUID
-
 import akka.actor.ActorSystem
 import akka.persistence.{ AtomicWrite, PersistentRepr }
 import akka.persistence.jdbc.journal.dao.legacy.{ ByteArrayJournalDao, JournalTables }
@@ -23,33 +22,23 @@ import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success }
 import akka.stream.testkit.scaladsl.TestSink
-import org.scalatest.matchers.should.Matchers
 
 object JournalDaoStreamMessagesMemoryTest {
 
-  val configOverrides: Map[String, ConfigValue] = Map("jdbc-journal.fetch-size" -> ConfigValueFactory.fromAnyRef("100"))
+  val configOverrides: Map[String, ConfigValue] = Map(
+    "jdbc-journal.fetch-size" -> ConfigValueFactory.fromAnyRef("100"),
+    "jdbc-journal.dao" -> ConfigValueFactory.fromAnyRef("akka.persistence.jdbc.journal.dao.legacy.ByteArrayJournalDao"))
 
   val MB = 1024 * 1024
 }
 
 abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
-    extends QueryTestSpec(configFile, JournalDaoStreamMessagesMemoryTest.configOverrides)
-    with JournalTables
-    with Matchers {
+    extends QueryTestSpec(configFile, JournalDaoStreamMessagesMemoryTest.configOverrides) {
   import JournalDaoStreamMessagesMemoryTest.MB
 
   private val log = LoggerFactory.getLogger(this.getClass)
 
-  val journalSequenceActorConfig = readJournalConfig.journalSequenceRetrievalConfiguration
-  val journalTableCfg = journalConfig.journalTableConfiguration
-
-  implicit val askTimeout: FiniteDuration = 50.millis
-
-  def generateId: Int = 0
-
   val memoryMBean: MemoryMXBean = ManagementFactory.getMemoryMXBean
-
-  behavior.of("Replaying Persistence Actor")
 
   it should "stream events" in {
     if (newDao)
@@ -88,7 +77,7 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
               val atomicWrites =
                 (start to end).map { j =>
                   AtomicWrite(immutable.Seq(PersistentRepr(payload, j, persistenceId)))
-                }.toSeq
+                }
 
               dao.asyncWriteMessages(atomicWrites).map(_ => i)
             }

@@ -8,11 +8,12 @@ Akka Persistence JDBC requires Akka $akka.version$ or later. It uses @extref:[Sl
 
 ## Version history
 
-| Description | Version | Akka version |
-|-------------|---------|--------------|
-| New database schema, see @ref:[Migration](migration.md) | [5.0.0](https://github.com/akka/akka-persistence-jdbc/releases) | Akka 2.6.+ |
-| First release within the Akka organization | [4.0.0](https://github.com/akka/akka-persistence-jdbc/releases/tag/v4.0.0) | Akka 2.6.+ |
-| Requires Akka 2.5.0 | [3.5.3+](https://github.com/akka/akka-persistence-jdbc/releases/tag/v3.5.3) | Akka 2.5.23+ or 2.6.x |
+| Description                                                                                       | Version                                                                     | Akka version |
+|---------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|--------------|
+| Required database schema migration, see @ref:[Migration](migration.md#migrating-to-version-5-4-0) | [5.4.0](https://github.com/akka/akka-persistence-jdbc/releases/tag/v5.4.0)  | Akka 2.6.+ |
+| New database schema, see @ref:[Migration](migration.md#migrating-to-version-5-0-0)                | [5.0.0](https://github.com/akka/akka-persistence-jdbc/releases/tag/v5.0.0)  | Akka 2.6.+ |
+| First release within the Akka organization                                                        | [4.0.0](https://github.com/akka/akka-persistence-jdbc/releases/tag/v4.0.0)  | Akka 2.6.+ |
+| Requires Akka 2.5.0                                                                               | [3.5.3+](https://github.com/akka/akka-persistence-jdbc/releases/tag/v3.5.3) | Akka 2.5.23+ or 2.6.x |
 
 See the full release history at [GitHub releases](https://github.com/akka/akka-persistence-jdbc/releases).
 

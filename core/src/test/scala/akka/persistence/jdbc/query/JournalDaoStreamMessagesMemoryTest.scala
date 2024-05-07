@@ -141,3 +141,7 @@ abstract class JournalDaoStreamMessagesMemoryTest(configFile: String)
     }
   }
 }
+
+class H2JournalDaoStreamMessagesMemoryTest
+  extends JournalDaoStreamMessagesMemoryTest("h2-application.conf")
+    with H2Cleaner

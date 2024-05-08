@@ -84,7 +84,7 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
     JournalSequenceActor.props(readJournalDao, readJournalConfig.journalSequenceRetrievalConfiguration),
     s"$configPath.akka-persistence-jdbc-journal-sequence-actor")
   private val delaySource =
-    Source.tick(readJournalConfig.refreshInterval, 0.seconds, 0).take(1)
+    Source.single(0).initialDelay(readJournalConfig.refreshInterval)
 
   /**
    * Same type of query as `persistenceIds` but the event stream

@@ -105,7 +105,9 @@ class JdbcReadJournal(config: Config, configPath: String)(implicit val system: E
    * known `persistenceId`s is provided by `currentPersistenceIds`.
    */
   override def persistenceIds(): Source[String, NotUsed] =
-    Source.single(0).concat(Source.tick(readJournalConfig.refreshInterval, readJournalConfig.refreshInterval, 0))
+    Source
+      .single(0)
+      .concat(Source.tick(readJournalConfig.refreshInterval, readJournalConfig.refreshInterval, 0))
       .flatMapConcat(_ => currentPersistenceIds())
       .statefulMapConcat[String] { () =>
         var knownIds = Set.empty[String]

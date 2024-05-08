@@ -20,7 +20,7 @@ lazy val core = project
     // Workaround for https://github.com/slick/slick/issues/2933
     libraryDependencies ++=
       (if (scalaVersion.value.startsWith("2.13")) Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
-      else Nil),
+       else Nil),
     mimaReportSignatureProblems := true,
     mimaPreviousArtifacts := {
       if (scalaVersion.value.startsWith("3")) {

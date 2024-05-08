@@ -18,7 +18,9 @@ lazy val core = project
     name := "akka-persistence-jdbc",
     libraryDependencies ++= Dependencies.Libraries,
     // Workaround for https://github.com/slick/slick/issues/2933
-    libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+    libraryDependencies ++=
+      (if (scalaVersion.value.startsWith("2.13")) Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
+      else Nil),
     mimaReportSignatureProblems := true,
     mimaPreviousArtifacts := {
       if (scalaVersion.value.startsWith("3")) {

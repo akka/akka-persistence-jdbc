@@ -50,9 +50,10 @@ class DefaultJournalDao(
 
   override def delete(persistenceId: String, maxSequenceNr: Long): Future[Unit] = {
     val actions: DBIOAction[Unit, NoStream, Effect.Write with Effect.Read] = for {
-      _ <- queries.markJournalMessagesAsDeleted(persistenceId, maxSequenceNr)
-      highestMarkedSequenceNr <- highestMarkedSequenceNr(persistenceId)
-      _ <- queries.delete(persistenceId, highestMarkedSequenceNr.getOrElse(0L) - 1)
+      highestMarkedSequenceNrOpt <- highestMarkedSequenceNr(persistenceId)
+      highestMarkedSequenceNr = highestMarkedSequenceNrOpt.getOrElse(0L)
+      _ <- queries.delete(persistenceId, highestMarkedSequenceNr - 1)
+      _ <- queries.markAsDeleted(persistenceId, highestMarkedSequenceNr)
     } yield ()
 
     db.run(actions.transactionally)

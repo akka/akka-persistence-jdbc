@@ -58,11 +58,8 @@ class DefaultJournalDao(
     db.run(actions.transactionally)
   }
 
-  override def highestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] = {
-    for {
-      maybeHighestSeqNo <- db.run(queries.highestSequenceNrForPersistenceId(persistenceId).result)
-    } yield maybeHighestSeqNo.getOrElse(0L)
-  }
+  override def highestSequenceNr(persistenceId: String, fromSequenceNr: Long): Future[Long] =
+    db.run(highestSequenceNrAction(persistenceId))
 
   private def highestSequenceNrAction(persistenceId: String): DBIOAction[Long, NoStream, Effect.Read] =
     queries.highestSequenceNrForPersistenceId(persistenceId).result.map(_.getOrElse(0))

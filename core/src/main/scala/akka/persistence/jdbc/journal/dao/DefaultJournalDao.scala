@@ -64,7 +64,7 @@ class DefaultJournalDao(
     } yield maybeHighestSeqNo.getOrElse(0L)
   }
 
-  private def highestSequenceNrAction(persistenceId: String) =
+  private def highestSequenceNrAction(persistenceId: String): DBIOAction[Long, NoStream, Effect.Read] =
     queries.highestSequenceNrForPersistenceId(persistenceId).result.map(_.getOrElse(0))
 
   private def highestMarkedSequenceNr(persistenceId: String) =

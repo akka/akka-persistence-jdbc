@@ -50,8 +50,7 @@ class DefaultJournalDao(
 
   override def delete(persistenceId: String, maxSequenceNr: Long): Future[Unit] = {
     val actions: DBIOAction[Unit, NoStream, Effect.Write with Effect.Read] = for {
-      highestMarkedSequenceNrOpt <- highestMarkedSequenceNr(persistenceId)
-      highestMarkedSequenceNr = highestMarkedSequenceNrOpt.getOrElse(0L)
+      highestMarkedSequenceNr <- highestSequenceNrAction(persistenceId)
       _ <- queries.delete(persistenceId, highestMarkedSequenceNr - 1)
       _ <- queries.markAsDeleted(persistenceId, highestMarkedSequenceNr)
     } yield ()
@@ -64,6 +63,9 @@ class DefaultJournalDao(
       maybeHighestSeqNo <- db.run(queries.highestSequenceNrForPersistenceId(persistenceId).result)
     } yield maybeHighestSeqNo.getOrElse(0L)
   }
+
+  private def highestSequenceNrAction(persistenceId: String) =
+    queries.highestSequenceNrForPersistenceId(persistenceId).result.map(_.getOrElse(0))
 
   private def highestMarkedSequenceNr(persistenceId: String) =
     queries.highestMarkedSequenceNrForPersistenceId(persistenceId).result

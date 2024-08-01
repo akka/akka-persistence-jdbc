@@ -69,6 +69,15 @@ class JournalQueries(
     JournalTable.filter(_.persistenceId === persistenceId).filter(_.sequenceNumber <= toSequenceNr).delete
   }
 
+  private[akka] def markAsDeleted(persistenceId: String, seqNr: Long) =
+    JournalTable
+      .filter(_.persistenceId === persistenceId)
+      .filter(_.sequenceNumber === seqNr)
+      .filter(_.deleted === false)
+      .map(_.deleted)
+      .update(true)
+
+  @deprecated(message = "Intended to be internal API", since = "5.4.2")
   def markJournalMessagesAsDeleted(persistenceId: String, maxSequenceNr: Long) =
     JournalTable
       .filter(_.persistenceId === persistenceId)

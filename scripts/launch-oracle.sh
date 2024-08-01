@@ -20,7 +20,7 @@ while true; do
 done;
 }
 
-docker-compose -f scripts/docker-compose.yml kill oracle
-docker-compose -f scripts/docker-compose.yml rm -f oracle
-docker-compose -f scripts/docker-compose.yml up -d oracle
+docker compose -f scripts/docker-compose.yml kill oracle
+docker compose -f scripts/docker-compose.yml rm -f oracle
+docker compose -f scripts/docker-compose.yml up -d oracle
 wait 1521 Oracle

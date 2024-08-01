@@ -77,6 +77,7 @@ class JournalQueries(
       .map(_.deleted)
       .update(true)
 
+  @deprecated(message = "Intended to be internal API", since = "5.4.2")
   def markJournalMessagesAsDeleted(persistenceId: String, maxSequenceNr: Long) =
     JournalTable
       .filter(_.persistenceId === persistenceId)

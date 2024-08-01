@@ -69,10 +69,10 @@ class JournalQueries(
     JournalTable.filter(_.persistenceId === persistenceId).filter(_.sequenceNumber <= toSequenceNr).delete
   }
 
-  private[akka] def markAsDeleted(persistenceId: String, highestMarkedSequenceNr: Long) =
+  private[akka] def markAsDeleted(persistenceId: String, seqNr: Long) =
     JournalTable
       .filter(_.persistenceId === persistenceId)
-      .filter(_.sequenceNumber === highestMarkedSequenceNr)
+      .filter(_.sequenceNumber === seqNr)
       .filter(_.deleted === false)
       .map(_.deleted)
       .update(true)

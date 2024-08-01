@@ -5,23 +5,27 @@
 
 package akka.persistence.jdbc.journal.dao
 
+import scala.collection.immutable
+import scala.collection.immutable.Nil
+import scala.collection.immutable.Seq
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.util.Try
+
 import akka.NotUsed
 import akka.dispatch.ExecutionContexts
 import akka.persistence.jdbc.AkkaSerialization
-import akka.persistence.jdbc.config.{ BaseDaoConfig, JournalConfig }
+import akka.persistence.jdbc.config.BaseDaoConfig
+import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.journal.dao.JournalTables.JournalAkkaSerializationRow
 import akka.persistence.journal.Tagged
-import akka.persistence.{ AtomicWrite, PersistentRepr }
+import akka.persistence.AtomicWrite
+import akka.persistence.PersistentRepr
 import akka.serialization.Serialization
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.JdbcProfile
-
-import scala.collection.immutable
-import scala.collection.immutable.{ Nil, Seq }
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.Try
 
 /**
  * A [[JournalDao]] that uses Akka serialization to serialize the payload and store
@@ -48,12 +52,25 @@ class DefaultJournalDao(
   val queries =
     new JournalQueries(profile, journalConfig.eventJournalTableConfiguration, journalConfig.eventTagTableConfiguration)
 
-  override def delete(persistenceId: String, maxSequenceNr: Long): Future[Unit] = {
-    val actions: DBIOAction[Unit, NoStream, Effect.Write with Effect.Read] = for {
-      highestMarkedSequenceNr <- highestSequenceNrAction(persistenceId)
-      _ <- queries.delete(persistenceId, highestMarkedSequenceNr - 1)
-      _ <- queries.markAsDeleted(persistenceId, highestMarkedSequenceNr)
-    } yield ()
+  override def delete(persistenceId: String, toSequenceNr: Long): Future[Unit] = {
+
+    // note: the passed toSequenceNr will be Long.MaxValue when doing a 'full' journal clean-up
+    // see JournalSpec's test: 'not reset highestSequenceNr after journal cleanup'
+    val actions: DBIOAction[Unit, NoStream, Effect.Write with Effect.Read] =
+      highestSequenceNrAction(persistenceId)
+        .flatMap {
+          // are we trying to delete the highest or even higher seqNr ?
+          case highestSeqNr if highestSeqNr <= toSequenceNr =>
+            // if so, we delete up to the before last and
+            // mark the last as logically deleted preserving highestSeqNr
+            queries
+              .delete(persistenceId, highestSeqNr - 1)
+              .flatMap(_ => queries.markAsDeleted(persistenceId, highestSeqNr))
+          case _ =>
+            // if not, we delete up to the requested seqNr
+            queries.delete(persistenceId, toSequenceNr)
+        }
+        .map(_ => ())
 
     db.run(actions.transactionally)
   }

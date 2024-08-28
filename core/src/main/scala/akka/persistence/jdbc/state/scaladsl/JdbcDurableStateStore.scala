@@ -59,15 +59,14 @@ class JdbcDurableStateStore[A](
     s"akka-persistence-jdbc-durable-state-sequence-actor")
 
   def getObject(persistenceId: String): Future[GetObjectResult[A]] = {
-    db.run(queries.selectFromDbByPersistenceId(persistenceId).result).map { rows =>
+    db.run(queries.selectFromDbByPersistenceId(persistenceId).result).flatMap { rows =>
       rows.headOption match {
+        case None => Future.successful(GetObjectResult(None, 0))
         case Some(row) =>
-          GetObjectResult(
-            AkkaSerialization.fromDurableStateRow(serialization)(row).toOption.asInstanceOf[Option[A]],
-            row.revision)
-
-        case None =>
-          GetObjectResult(None, 0)
+          Future.fromTry(
+            AkkaSerialization.fromDurableStateRow(serialization)(row).map { anyRef =>
+              GetObjectResult(Some(anyRef.asInstanceOf[A]), row.revision)
+            })
       }
     }
   }

@@ -63,10 +63,9 @@ class JdbcDurableStateStore[A](
       rows.headOption match {
         case None => Future.successful(GetObjectResult(None, 0))
         case Some(row) =>
-          Future.fromTry(
-            AkkaSerialization.fromDurableStateRow(serialization)(row).map { anyRef =>
-              GetObjectResult(Some(anyRef.asInstanceOf[A]), row.revision)
-            })
+          Future.fromTry(AkkaSerialization.fromDurableStateRow(serialization)(row).map { anyRef =>
+            GetObjectResult(Some(anyRef.asInstanceOf[A]), row.revision)
+          })
       }
     }
   }

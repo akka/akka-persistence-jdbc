@@ -13,7 +13,6 @@ import scala.concurrent.Future
 import scala.util.Try
 
 import akka.NotUsed
-import akka.dispatch.ExecutionContexts
 import akka.persistence.jdbc.AkkaSerialization
 import akka.persistence.jdbc.config.BaseDaoConfig
 import akka.persistence.jdbc.config.JournalConfig
@@ -46,7 +45,7 @@ class DefaultJournalDao(
   override def baseDaoConfig: BaseDaoConfig = journalConfig.daoConfig
 
   override def writeJournalRows(xs: immutable.Seq[(JournalAkkaSerializationRow, Set[String])]): Future[Unit] = {
-    db.run(queries.writeJournalRows(xs).transactionally).map(_ => ())(ExecutionContexts.parasitic)
+    db.run(queries.writeJournalRows(xs).transactionally).map(_ => ())(ExecutionContext.parasitic)
   }
 
   val queries =

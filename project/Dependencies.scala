@@ -7,7 +7,7 @@ object Dependencies {
 
   val ScalaVersions = Seq(Scala213, Scala3)
 
-  val AkkaVersion = "2.9.3"
+  val AkkaVersion = "2.10.0-M1"
   val AkkaBinaryVersion = AkkaVersion.take(3)
 
   val SlickVersion = "3.5.1"
@@ -21,11 +21,10 @@ object Dependencies {
 
   val Libraries: Seq[ModuleID] = Seq(
     "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
-    // Slick 3.5 pulls in slf4j-api 2.2 which doesn't work with Akka
-    ("com.typesafe.slick" %% "slick" % SlickVersion).exclude("org.slf4j", "slf4j-api"),
-    "org.slf4j" % "slf4j-api" % "1.7.36",
+    ("com.typesafe.slick" %% "slick" % SlickVersion),
+    "org.slf4j" % "slf4j-api" % "2.0.16",
     "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
-    "ch.qos.logback" % "logback-classic" % "1.2.13" % Test,
+    "ch.qos.logback" % "logback-classic" % "1.5.7" % Test,
     "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-persistence-tck" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % AkkaVersion % Test,
@@ -34,7 +33,7 @@ object Dependencies {
 
   val Migration: Seq[ModuleID] = Seq(
     "com.typesafe" % "config" % "1.4.3",
-    "ch.qos.logback" % "logback-classic" % "1.2.13",
+    "ch.qos.logback" % "logback-classic" % "1.5.7",
     "org.testcontainers" % "postgresql" % "1.20.1" % Test,
     "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Provided)
 }

@@ -10,7 +10,7 @@ import akka.persistence.jdbc.config.{ ConfigKeys, SlickConfiguration }
 import akka.persistence.jdbc.util.ConfigOps._
 import com.typesafe.config.{ Config, ConfigObject }
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.{ Failure, Success }
 
 object SlickExtension extends ExtensionId[SlickExtensionImpl] with ExtensionIdProvider {

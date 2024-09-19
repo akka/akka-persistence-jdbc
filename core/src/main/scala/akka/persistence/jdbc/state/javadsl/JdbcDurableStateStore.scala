@@ -7,7 +7,7 @@ package akka.persistence.jdbc.state.javadsl
 
 import java.util.Optional
 import java.util.concurrent.CompletionStage
-import scala.compat.java8.FutureConverters._
+import scala.jdk.FutureConverters._
 import scala.concurrent.ExecutionContext
 import akka.annotation.ApiMayChange
 import slick.jdbc.JdbcProfile
@@ -40,13 +40,12 @@ class JdbcDurableStateStore[A](
   val queries = new DurableStateQueries(profile, durableStateConfig)
 
   def getObject(persistenceId: String): CompletionStage[GetObjectResult[A]] =
-    toJava(
       scalaStore
         .getObject(persistenceId)
-        .map(x => GetObjectResult(Optional.ofNullable(x.value.getOrElse(null.asInstanceOf[A])), x.revision)))
+        .map(x => GetObjectResult(Optional.ofNullable(x.value.getOrElse(null.asInstanceOf[A])), x.revision)).asJava
 
   def upsertObject(persistenceId: String, revision: Long, value: A, tag: String): CompletionStage[Done] =
-    toJava(scalaStore.upsertObject(persistenceId, revision, value, tag))
+    scalaStore.upsertObject(persistenceId, revision, value, tag).asJava
 
   @deprecated(message = "Use the deleteObject overload with revision instead.", since = "1.0.0")
   override def deleteObject(persistenceId: String): CompletionStage[Done] =
@@ -54,7 +53,7 @@ class JdbcDurableStateStore[A](
 
   @nowarn("msg=deprecated")
   override def deleteObject(persistenceId: String, revision: Long): CompletionStage[Done] =
-    toJava(scalaStore.deleteObject(persistenceId))
+    scalaStore.deleteObject(persistenceId).asJava
 
   def currentChanges(tag: String, offset: Offset): Source[DurableStateChange[A], NotUsed] =
     scalaStore.currentChanges(tag, offset).asJava

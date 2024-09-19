@@ -40,9 +40,10 @@ class JdbcDurableStateStore[A](
   val queries = new DurableStateQueries(profile, durableStateConfig)
 
   def getObject(persistenceId: String): CompletionStage[GetObjectResult[A]] =
-      scalaStore
-        .getObject(persistenceId)
-        .map(x => GetObjectResult(Optional.ofNullable(x.value.getOrElse(null.asInstanceOf[A])), x.revision)).asJava
+    scalaStore
+      .getObject(persistenceId)
+      .map(x => GetObjectResult(Optional.ofNullable(x.value.getOrElse(null.asInstanceOf[A])), x.revision))
+      .asJava
 
   def upsertObject(persistenceId: String, revision: Long, value: A, tag: String): CompletionStage[Done] =
     scalaStore.upsertObject(persistenceId, revision, value, tag).asJava

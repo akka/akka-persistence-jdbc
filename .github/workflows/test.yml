@@ -31,10 +31,11 @@ jobs:
           test: '"integration/testOnly akka.persistence.jdbc.integration.Postgres*"'
           script: 'launch-postgres.sh'
           hasOldDao: true
-        - name: "SqlServer"
-          test: '"integration/testOnly akka.persistence.jdbc.integration.SqlServer*"'
-          script: 'launch-sqlserver.sh'
-          hasOldDao: true
+# FIXME disabled because of broken docker image, https://github.com/akka/akka-persistence-jdbc/issues/860
+#        - name: "SqlServer"
+#          test: '"integration/testOnly akka.persistence.jdbc.integration.SqlServer*"'
+#          script: 'launch-sqlserver.sh'
+#          hasOldDao: true
     name: Integration Test ${{ matrix.db.name }}
 
     steps:

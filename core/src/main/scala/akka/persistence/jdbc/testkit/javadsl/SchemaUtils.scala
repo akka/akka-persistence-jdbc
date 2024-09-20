@@ -7,7 +7,7 @@ package akka.persistence.jdbc.testkit.javadsl
 
 import java.util.concurrent.CompletionStage
 
-import scala.compat.java8.FutureConverters._
+import scala.jdk.FutureConverters._
 
 import akka.Done
 import akka.actor.ClassicActorSystemProvider
@@ -53,7 +53,7 @@ object SchemaUtils {
    */
   @ApiMayChange
   def dropIfExists(configKey: String, actorSystem: ClassicActorSystemProvider): CompletionStage[Done] =
-    SchemaUtilsImpl.dropIfExists(configKey, logger)(actorSystem).toJava
+    SchemaUtilsImpl.dropIfExists(configKey, logger)(actorSystem).asJava
 
   /**
    * Creates the schema for both the journal and the snapshot table using the default schema definition.
@@ -89,7 +89,7 @@ object SchemaUtils {
    */
   @ApiMayChange
   def createIfNotExists(configKey: String, actorSystem: ClassicActorSystemProvider): CompletionStage[Done] =
-    SchemaUtilsImpl.createIfNotExists(configKey, logger)(actorSystem).toJava
+    SchemaUtilsImpl.createIfNotExists(configKey, logger)(actorSystem).asJava
 
   /**
    * This method can be used to load alternative DDL scripts.
@@ -125,5 +125,5 @@ object SchemaUtils {
       separator: String,
       configKey: String,
       actorSystem: ClassicActorSystemProvider): CompletionStage[Done] =
-    SchemaUtilsImpl.applyScript(script, separator, configKey, logger)(actorSystem).toJava
+    SchemaUtilsImpl.applyScript(script, separator, configKey, logger)(actorSystem).asJava
 }

@@ -67,11 +67,11 @@ lazy val docs = project
     Preprocess / siteSubdirName := s"api/akka-persistence-jdbc/${if (isSnapshot.value) "snapshot"
     else version.value}",
     Preprocess / sourceDirectory := (LocalRootProject / ScalaUnidoc / unidoc / target).value,
-    Paradox / siteSubdirName := s"docs/akka-persistence-jdbc/${if (isSnapshot.value) "snapshot" else version.value}",
+    Paradox / siteSubdirName := s"libraries/akka-persistence-jdbc/${if (isSnapshot.value) "snapshot" else version.value}",
     Compile / paradoxProperties ++= Map(
-      "project.url" -> "https://doc.akka.io/docs/akka-persistence-jdbc/current/",
+      "project.url" -> "https://doc.akka.io/libraries/akka-persistence-jdbc/current/",
       "github.base_url" -> "https://github.com/akka/akka-persistence-jdbc/",
-      "canonical.base_url" -> "https://doc.akka.io/docs/akka-persistence-jdbc/current",
+      "canonical.base_url" -> "https://doc.akka.io/libraries/akka-persistence-jdbc/current",
       "akka.version" -> Dependencies.AkkaVersion,
       "slick.version" -> Dependencies.SlickVersion,
       "extref.github.base_url" -> s"https://github.com/akka/akka-persistence-jdbc/blob/${if (isSnapshot.value) "master"
@@ -79,9 +79,9 @@ lazy val docs = project
       // Slick
       "extref.slick.base_url" -> s"https://scala-slick.org/doc/${Dependencies.SlickVersion}/%s",
       // Akka
-      "extref.akka.base_url" -> s"https://doc.akka.io/docs/akka/${Dependencies.AkkaBinaryVersion}/%s",
-      "scaladoc.akka.base_url" -> s"https://doc.akka.io/api/akka/${Dependencies.AkkaBinaryVersion}/",
-      "javadoc.akka.base_url" -> s"https://doc.akka.io/japi/akka/${Dependencies.AkkaBinaryVersion}/",
+      "extref.akka.base_url" -> s"https://doc.akka.io/libraries/akka-core/${Dependencies.AkkaBinaryVersion}/%s",
+      "scaladoc.akka.base_url" -> s"https://doc.akka.io/api/akka-core/${Dependencies.AkkaBinaryVersion}/",
+      "javadoc.akka.base_url" -> s"https://doc.akka.io/japi/akka-core/${Dependencies.AkkaBinaryVersion}/",
       "javadoc.akka.link_style" -> "direct",
       // Java
       "javadoc.base_url" -> "https://docs.oracle.com/javase/8/docs/api/",

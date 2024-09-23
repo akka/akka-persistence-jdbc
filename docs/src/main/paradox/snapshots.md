@@ -41,5 +41,5 @@ Gradle
 
 ## Documentation
 
-The [snapshot documentation](https://doc.akka.io/docs/akka-persistence-jdbc/snapshot) is updated with every snapshot build.
+The [snapshot documentation](https://doc.akka.io/libraries/akka-persistence-jdbc/snapshot) is updated with every snapshot build.
 

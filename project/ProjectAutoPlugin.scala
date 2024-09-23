@@ -16,7 +16,7 @@ object ProjectAutoPlugin extends AutoPlugin {
       organization := "com.lightbend.akka",
       organizationName := "Lightbend Inc.",
       organizationHomepage := Some(url("https://www.lightbend.com/")),
-      homepage := Some(url("https://doc.akka.io/docs/akka-persistence-jdbc/current/")),
+      homepage := Some(url("https://doc.akka.io/libraries/akka-persistence-jdbc/current/")),
       scmInfo := Some(
         ScmInfo(url("https://github.com/akka/akka-persistence-jdbc"), "git@github.com:akka/akka-persistence-jdbc.git")),
       developers += Developer(

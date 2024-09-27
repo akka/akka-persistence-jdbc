@@ -29,14 +29,11 @@ services:
       - "1521:1521" # DB_CONN: credentials (system:oracle)
 
   sqlserver:
-    image: topaztechnology/mssql-server-linux
+    image: mcr.microsoft.com/mssql/server:2019-latest
     container_name: sqlserver-test
     environment:
       - "TZ=Europe/Amsterdam"
-      - "DBCA_TOTAL_MEMORY=1024"
       - "ACCEPT_EULA=Y"
-      - "SQL_USER=docker"
-      - "SQL_PASSWORD=docker"
-      - "SQL_DB=docker"
+      - "MSSQL_SA_PASSWORD=docker123abc#"
     ports:
-      - "1433:1433" # credentials (docker:docker)
+      - "1433:1433" # credentials (sa:docker123abc#)

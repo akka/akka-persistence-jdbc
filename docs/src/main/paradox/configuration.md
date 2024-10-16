@@ -152,4 +152,4 @@ The `jdbc-read-journal.journal-sequence-retrieval.query-delay` configuration con
 
 Similarly, `jdbc-read-journal.refresh-interval` dictates how often the system polls for new events when idle, also defaulting to `1s`. In mostly idle applications that still require low latencies, it is important to adjust both `query-delay` and `refresh-interval` to achieve optimal performance. Lowering just one of these values might not be sufficient for reducing latency.
 
-As with any performance tuning, it’s important to test these settings in your environment to find the right balance. Reducing these intervals will increase the load on your database, as each node in the cluster will be querying the read journal more frequently.
+As with any performance tuning, it’s important to test these settings in your environment to find the right balance. Reducing these intervals will increase the load on your database, as each node in the cluster will be querying the journal more frequently.

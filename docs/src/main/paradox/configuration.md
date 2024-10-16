@@ -145,3 +145,11 @@ akka-persistence-jdbc {
 
 The plugin automatically shuts down the HikariCP connection pool when the ActorSystem is terminated.
 This is done using @apidoc[ActorSystem.registerOnTermination](ActorSystem).
+
+## Tuning for Lower Latency
+
+The `jdbc-read-journal.journal-sequence-retrieval.query-delay` configuration controls how often the actor queries for new data. The default is `1s`, but this can be set lower for latency-sensitive applications to reduce the time between data retrievals.
+
+Similarly, `jdbc-read-journal.refresh-interval` dictates how often the system polls for new events when idle, also defaulting to `1s`. In mostly idle applications that still require low latencies, it is important to adjust both `query-delay` and `refresh-interval` to achieve optimal performance. Lowering just one of these values might not be sufficient for reducing latency.
+
+As with any performance tuning, it’s important to test these settings in your environment to find the right balance. Reducing these intervals will increase the load on your database, as each node in the cluster will be querying the read journal more frequently.

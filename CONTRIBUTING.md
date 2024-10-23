@@ -12,7 +12,7 @@ This is the process for committing code into master.
 6. After the review you should fix the issues (review comments, CI failures) by pushing a new commit for new review, iterating until the reviewers give their thumbs up and CI tests pass.
 7. If the branch merge conflicts with its target, rebase your branch onto the target branch.
 
-In case of questions about the contribution process or for discussion of specific issues please visit the [akka/dev gitter chat](https://gitter.im/akka/dev).
+In case of questions about the contribution process or for discussion of specific issues please visit the [akka forum](https://discuss.lightbend.com/c/akka/).
 
 ## Pull Request Requirements
 

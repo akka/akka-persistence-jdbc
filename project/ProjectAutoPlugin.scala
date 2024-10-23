@@ -114,7 +114,7 @@ object ProjectAutoPlugin extends AutoPlugin {
     // show full stack traces and test case durations
     Test / testOptions += Tests.Argument("-oDF"),
     headerLicense := Some(HeaderLicense.Custom("""|Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
-           |Copyright (C) 2019 - 2023 Lightbend Inc. <https://www.lightbend.com>
+           |Copyright (C) 2019 - 2024 Lightbend Inc. <https://www.lightbend.com>
            |""".stripMargin)),
     resolvers += Resolver.jcenterRepo)
 

@@ -1,3 +1,6 @@
+// for sbt-paradox-akka
+resolvers += "Akka library repository".at("https://repo.akka.io/maven")
+
 // compliance
 addSbtPlugin("de.heikoseeberger" % "sbt-header" % "5.10.0")
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.6")
@@ -11,7 +14,7 @@ addDependencyTreePlugin
 addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.6.1")
 addSbtPlugin("com.github.sbt" % "sbt-dynver" % "5.0.1")
 // docs
-addSbtPlugin("com.lightbend.akka" % "sbt-paradox-akka" % "0.57")
+addSbtPlugin("io.akka" % "sbt-paradox-akka" % "24.10.3")
 addSbtPlugin("com.github.sbt" % "sbt-site" % "1.7.0")
 addSbtPlugin("com.github.sbt" % "sbt-site-paradox" % "1.7.0")
 addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.5.0")

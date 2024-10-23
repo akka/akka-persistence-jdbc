@@ -22,7 +22,7 @@ object ProjectAutoPlugin extends AutoPlugin {
       developers += Developer(
         "contributors",
         "Contributors",
-        "https://gitter.im/akka/dev",
+        "akka.official@gmail.com",
         url("https://github.com/akka/akka-persistence-jdbc/graphs/contributors")),
       releaseNotesURL := (
         if ((ThisBuild / isSnapshot).value) None

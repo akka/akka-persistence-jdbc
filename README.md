@@ -23,7 +23,7 @@ For the change log prior to v3.2.0, visit [Version History Page (wiki)](https://
 
 You can join these groups and chats to discuss and ask Akka related questions:
 
-- Forums: [discuss.akka.io](https://discuss.lightbend.com/c/akka/)
+- Forums: [discuss.akka.io](https://discuss.akka.io/c/akka/)
 - Issue tracker: [![github: akka/akka-persistence-jdbc](https://img.shields.io/badge/github%3A-issues-blue.svg?style=flat-square)](https://github.com/akka/akka-persistence-jdbc/issues)
 
 In addition to that, you may enjoy following:
@@ -43,7 +43,7 @@ If you find an issue that you'd like to see fixed, the quickest way to make that
 
 Refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file for more details about the workflow, and general hints on how to prepare your pull request.
 
-You can also ask for clarifications or guidance in GitHub issues directly, or in the [akka/dev](https://gitter.im/akka/dev) chat if a more real time communication would be of benefit.
+You can also ask for clarifications or guidance in GitHub issues directly, or in the [akka forum](https://discuss.akka.io/c/akka/).
 
 ## License
 

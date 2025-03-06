@@ -16,8 +16,10 @@ import akka.persistence.state.DurableStateStoreProvider
 import akka.persistence.jdbc.db.{ SlickDatabase, SlickExtension }
 import akka.serialization.SerializationExtension
 import akka.stream.{ Materializer, SystemMaterializer }
+import com.typesafe.config.Config
 
-class JdbcDurableStateStoreProvider[A](system: ExtendedActorSystem) extends DurableStateStoreProvider {
+class JdbcDurableStateStoreProvider[A](system: ExtendedActorSystem, cfg: Config, cfgPath: String)
+    extends DurableStateStoreProvider {
 
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val mat: Materializer = SystemMaterializer(system).materializer
@@ -25,20 +27,22 @@ class JdbcDurableStateStoreProvider[A](system: ExtendedActorSystem) extends Dura
   val config = system.settings.config
 
   val slickDb: SlickDatabase =
-    SlickExtension(system).database(config.getConfig(scaladsl.JdbcDurableStateStore.Identifier))
+    SlickExtension(system).database(config.getConfig(cfgPath))
   def db: Database = slickDb.database
 
-  lazy val durableStateConfig = new DurableStateTableConfiguration(
-    config.getConfig(scaladsl.JdbcDurableStateStore.Identifier))
+  lazy val durableStateConfig = new DurableStateTableConfiguration(config.getConfig(cfgPath))
   lazy val serialization = SerializationExtension(system)
   val profile: JdbcProfile = slickDb.profile
 
+  private lazy val _scaladslDurableStateStore: DurableStateStore[Any] =
+    new scaladsl.JdbcDurableStateStore[Any](cfgPath, db, profile, durableStateConfig, serialization)(system)
+
   override def scaladslDurableStateStore(): DurableStateStore[Any] =
-    new scaladsl.JdbcDurableStateStore[Any](db, profile, durableStateConfig, serialization)(system)
+    _scaladslDurableStateStore
 
   override def javadslDurableStateStore(): JDurableStateStore[AnyRef] =
     new javadsl.JdbcDurableStateStore[AnyRef](
       profile,
       durableStateConfig,
-      new scaladsl.JdbcDurableStateStore[AnyRef](db, profile, durableStateConfig, serialization)(system))
+      _scaladslDurableStateStore.asInstanceOf[scaladsl.JdbcDurableStateStore[AnyRef]])
 }

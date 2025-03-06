@@ -33,7 +33,12 @@ abstract class DurableStateSequenceActorTest(config: Config, schemaType: SchemaT
     "recover normally" in {
       withActorSystem { implicit system =>
         val store =
-          new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
+          new JdbcDurableStateStore[String](
+            JdbcDurableStateStore.Identifier,
+            db,
+            schemaTypeToProfile(schemaType),
+            durableStateConfig,
+            serialization)
         upsertForManyDifferentPersistenceIds(store, "pid", 1, "t1", 1, 400).size shouldBe 400
 
         withDurableStateSequenceActor(store, maxTries = 100) { actor =>

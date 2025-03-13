@@ -94,15 +94,19 @@ abstract class StateSpecBase(val config: Config, schemaType: SchemaType)
     try {
       f(system)
     } finally {
-      system.actorSelection("system/" + "akka-persistence-jdbc-durable-state-sequence-actor").resolveOne().onComplete {
-        case Success(actorRef) => {
-          system.stop(actorRef)
-          Thread.sleep(1000)
-          system.log.debug(s"Is terminated: ${actorRef.isTerminated}")
+      system
+        .actorSelection(
+          "system/" + s"${JdbcDurableStateStore.Identifier}.akka-persistence-jdbc-durable-state-sequence-actor")
+        .resolveOne()
+        .onComplete {
+          case Success(actorRef) => {
+            system.stop(actorRef)
+            Thread.sleep(1000)
+            system.log.debug(s"Is terminated: ${actorRef.isTerminated}")
+          }
+          case Failure(_) =>
+            system.log.warning("system/" + "-persistence-jdbc-durable-state-sequence-actorsomename" + " does not exist")
         }
-        case Failure(_) =>
-          system.log.warning("system/" + "-persistence-jdbc-durable-state-sequence-actorsomename" + " does not exist")
-      }
       system.terminate().futureValue
     }
   }

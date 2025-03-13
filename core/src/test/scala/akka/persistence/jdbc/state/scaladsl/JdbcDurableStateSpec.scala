@@ -28,7 +28,12 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
 
   "A durable state store" must withActorSystem { implicit system =>
     val stateStoreString =
-      new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
+      new JdbcDurableStateStore[String](
+        JdbcDurableStateStore.Identifier,
+        db,
+        schemaTypeToProfile(schemaType),
+        durableStateConfig,
+        serialization)
 
     "not load a state given an invalid persistenceId" in {
       whenReady {
@@ -112,7 +117,12 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
 
   "A durable state store with payload that needs custom serializer" must withActorSystem { implicit system =>
     val stateStorePayload =
-      new JdbcDurableStateStore[MyPayload](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
+      new JdbcDurableStateStore[MyPayload](
+        JdbcDurableStateStore.Identifier,
+        db,
+        schemaTypeToProfile(schemaType),
+        durableStateConfig,
+        serialization)
 
     "not load a state given an invalid persistenceId" in {
       whenReady {
@@ -163,7 +173,12 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
 
     "find all states by tag either from the beginning or from a specific offset" in withActorSystem { implicit system =>
       val stateStoreString =
-        new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
+        new JdbcDurableStateStore[String](
+          JdbcDurableStateStore.Identifier,
+          db,
+          schemaTypeToProfile(schemaType),
+          durableStateConfig,
+          serialization)
 
       import stateStoreString._
 
@@ -194,7 +209,12 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
     "find the max offset after a series of upserts with multiple persistence ids" in withActorSystem {
       implicit system =>
         val stateStoreString =
-          new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
+          new JdbcDurableStateStore[String](
+            JdbcDurableStateStore.Identifier,
+            db,
+            schemaTypeToProfile(schemaType),
+            durableStateConfig,
+            serialization)
 
         import stateStoreString._
         upsertRandomlyShuffledPersistenceIds(stateStoreString, List("p1", "p2", "p3"), "t1", 3)
@@ -206,7 +226,12 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
     "find all states by tags with offsets sorted and proper max and min offsets when starting offset is specified" in withActorSystem {
       implicit system =>
         val stateStoreString =
-          new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
+          new JdbcDurableStateStore[String](
+            JdbcDurableStateStore.Identifier,
+            db,
+            schemaTypeToProfile(schemaType),
+            durableStateConfig,
+            serialization)
 
         import stateStoreString._
         upsertRandomlyShuffledPersistenceIds(stateStoreString, List("p1", "p2", "p3"), "t1", 3)
@@ -218,7 +243,12 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
 
     "find all states by tags returning a live source with no offset specified" in withActorSystem { implicit system =>
       val stateStoreString =
-        new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
+        new JdbcDurableStateStore[String](
+          JdbcDurableStateStore.Identifier,
+          db,
+          schemaTypeToProfile(schemaType),
+          durableStateConfig,
+          serialization)
 
       import stateStoreString._
       upsertRandomlyShuffledPersistenceIds(stateStoreString, List("p1", "p2", "p3"), "t1", 3)
@@ -249,7 +279,12 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
     "find all states by tags returning a live source with a starting offset specified" in withActorSystem {
       implicit system =>
         val stateStoreString =
-          new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
+          new JdbcDurableStateStore[String](
+            JdbcDurableStateStore.Identifier,
+            db,
+            schemaTypeToProfile(schemaType),
+            durableStateConfig,
+            serialization)
 
         import stateStoreString._
         upsertRandomlyShuffledPersistenceIds(stateStoreString, List("p1", "p2", "p3"), "t1", 3)
@@ -280,7 +315,12 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
 
     "fetch proper values of offsets with currentChanges()" in withActorSystem { implicit system =>
       val stateStoreString =
-        new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
+        new JdbcDurableStateStore[String](
+          JdbcDurableStateStore.Identifier,
+          db,
+          schemaTypeToProfile(schemaType),
+          durableStateConfig,
+          serialization)
 
       import stateStoreString._
 
@@ -307,7 +347,12 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
     "fetch proper values of offsets from beginning with changes() and phased upserts" in withActorSystem {
       implicit system =>
         val stateStoreString =
-          new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
+          new JdbcDurableStateStore[String](
+            JdbcDurableStateStore.Identifier,
+            db,
+            schemaTypeToProfile(schemaType),
+            durableStateConfig,
+            serialization)
 
         import stateStoreString._
 
@@ -338,7 +383,12 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
     "fetch proper values of offsets from beginning for a larger dataset with changes() and phased upserts" in withActorSystem {
       implicit system =>
         val stateStoreString =
-          new JdbcDurableStateStore[String](db, schemaTypeToProfile(schemaType), durableStateConfig, serialization)
+          new JdbcDurableStateStore[String](
+            JdbcDurableStateStore.Identifier,
+            db,
+            schemaTypeToProfile(schemaType),
+            durableStateConfig,
+            serialization)
 
         import stateStoreString._
 

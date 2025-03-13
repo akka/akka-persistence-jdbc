@@ -38,6 +38,7 @@ object JdbcDurableStateStore {
  */
 @ApiMayChange
 class JdbcDurableStateStore[A](
+    val configPath: String,
     db: JdbcBackend#Database,
     val profile: JdbcProfile,
     durableStateConfig: DurableStateTableConfiguration,
@@ -56,7 +57,7 @@ class JdbcDurableStateStore[A](
   // Started lazily to prevent the actor for querying the db if no changesByTag queries are used
   private[jdbc] lazy val stateSequenceActor = system.systemActorOf(
     DurableStateSequenceActor.props(this, durableStateConfig.stateSequenceConfig),
-    s"akka-persistence-jdbc-durable-state-sequence-actor")
+    s"$configPath.akka-persistence-jdbc-durable-state-sequence-actor")
 
   def getObject(persistenceId: String): Future[GetObjectResult[A]] = {
     db.run(queries.selectFromDbByPersistenceId(persistenceId).result).flatMap { rows =>

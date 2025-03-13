@@ -30,7 +30,12 @@ class TestProbeDurableStateStoreQuery(
     profile: JdbcProfile,
     durableStateConfig: DurableStateTableConfiguration,
     serialization: Serialization)(override implicit val system: ExtendedActorSystem)
-    extends JdbcDurableStateStore[String](db, profile, durableStateConfig, serialization)(system) {
+    extends JdbcDurableStateStore[String](
+      JdbcDurableStateStore.Identifier,
+      db,
+      profile,
+      durableStateConfig,
+      serialization)(system) {
 
   implicit val askTimeout: Timeout = Timeout(100.millis)
 

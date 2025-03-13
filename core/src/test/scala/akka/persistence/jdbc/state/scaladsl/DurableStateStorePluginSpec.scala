@@ -34,6 +34,19 @@ abstract class DurableStateStorePluginSpec(config: Config, profile: JdbcProfile)
       store.system.settings.config shouldBe system.settings.config
       store.profile shouldBe profile
     }
+
+    "instantiate another JdbcDurableDataStore successfully" in {
+      val store1 = DurableStateStoreRegistry
+        .get(system)
+        .durableStateStoreFor[JdbcDurableStateStore[String]](JdbcDurableStateStore.Identifier)
+
+      val store2 = DurableStateStoreRegistry
+        .get(system)
+        .durableStateStoreFor[JdbcDurableStateStore[String]]("another-jdbc-durable-state-store")
+
+      store1.configPath shouldBe JdbcDurableStateStore.Identifier
+      store2.configPath shouldBe "another-jdbc-durable-state-store"
+    }
   }
 
   override def afterAll(): Unit = {

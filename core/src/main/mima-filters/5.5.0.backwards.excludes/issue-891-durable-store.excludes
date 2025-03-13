@@ -1,0 +1,3 @@
+# internal api changes
+ProblemFilters.exclude[DirectMissingMethodProblem]("akka.persistence.jdbc.state.JdbcDurableStateStoreProvider.this")
+ProblemFilters.exclude[DirectMissingMethodProblem]("akka.persistence.jdbc.state.scaladsl.JdbcDurableStateStore.this")

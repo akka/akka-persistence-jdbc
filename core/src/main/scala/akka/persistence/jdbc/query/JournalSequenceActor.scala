@@ -154,7 +154,8 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
                 currentElement
               } else currentMax
             } else {
-              // we can't iterate over this... assume not (the AssumeMaxOrderingId will come)
+              // we can't iterate over this... assume that forall failed
+              // the AssumeMaxOrderingId will advance the currentMaxOrdering
               currentMax
             }
           }

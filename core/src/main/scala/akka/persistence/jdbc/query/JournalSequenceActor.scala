@@ -144,13 +144,20 @@ class JournalSequenceActor(readJournalDao: ReadJournalDao, config: JournalSequen
         (currentMaxOrdering, currentMaxOrdering, MissingElements.empty)) {
         case ((currentMax, previousElement, missing), currentElement) =>
           // we must decide if we move the cursor forward
-          val newMax =
-            if ((currentMax + 1).until(currentElement).forall(givenUp.contains)) {
-              // we move the cursor forward when:
-              // 1) they have been detected as missing on previous iteration, it's time now to give up
-              // 2) current + 1 == currentElement (meaning no gap). Note that `forall` on an empty range always returns true
-              currentElement
-            } else currentMax
+          val newMax = {
+            val maxCandidate = currentMax + 1
+            if ((currentElement - maxCandidate) < Int.MaxValue) {
+              if ((currentMax + 1).until(currentElement).forall(givenUp.contains)) {
+                // we move the cursor forward when:
+                // 1) they have been detected as missing on previous iteration, it's time now to give up
+                // 2) current + 1 == currentElement (meaning no gap). Note that `forall` on an empty range always returns true
+                currentElement
+              } else currentMax
+            } else {
+              // we can't iterate over this... assume not (the AssumeMaxOrderingId will come)
+              currentMax
+            }
+          }
 
           // we accumulate in newMissing the gaps we detect on each iteration
           val newMissing =

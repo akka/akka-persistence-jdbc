@@ -145,12 +145,11 @@ class JdbcDurableStateStore[A](
       terminateAfterOffset: Option[Long]): Source[DurableStateChange[A], NotUsed] = {
 
     val batchSize = durableStateConfig.batchSize
-    val startingOffsets = List.empty[Long]
     implicit val askTimeout: Timeout = Timeout(durableStateConfig.stateSequenceConfig.askTimeout)
 
     Source
-      .unfoldAsync[(Long, FlowControl, List[Long]), Seq[DurableStateChange[A]]]((offset, Continue, startingOffsets)) {
-        case (from, control, s) =>
+      .unfoldAsync[(Long, FlowControl), Seq[DurableStateChange[A]]]((offset, Continue)) {
+        case (from, control) =>
           def retrieveNextBatch() = {
             for {
               queryUntil <- stateSequenceActor.ask(GetMaxGlobalOffset).mapTo[MaxGlobalOffset]
@@ -177,7 +176,7 @@ class JdbcDurableStateStore[A](
                 // Continue querying from the largest offset
                 xs.map(_.offset.value).max
               }
-              Some(((nextStartingOffset, nextControl, s :+ nextStartingOffset), xs))
+              Some(((nextStartingOffset, nextControl), xs))
             }
           }
 

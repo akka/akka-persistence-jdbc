@@ -148,44 +148,43 @@ class JdbcDurableStateStore[A](
     implicit val askTimeout: Timeout = Timeout(durableStateConfig.stateSequenceConfig.askTimeout)
 
     Source
-      .unfoldAsync[(Long, FlowControl), Seq[DurableStateChange[A]]]((offset, Continue)) {
-        case (from, control) =>
-          def retrieveNextBatch() = {
-            for {
-              queryUntil <- stateSequenceActor.ask(GetMaxGlobalOffset).mapTo[MaxGlobalOffset]
-              xs <- currentChangesByTag(tag, from, batchSize, queryUntil).runWith(Sink.seq)
-            } yield {
+      .unfoldAsync[(Long, FlowControl), Seq[DurableStateChange[A]]]((offset, Continue)) { case (from, control) =>
+        def retrieveNextBatch() = {
+          for {
+            queryUntil <- stateSequenceActor.ask(GetMaxGlobalOffset).mapTo[MaxGlobalOffset]
+            xs <- currentChangesByTag(tag, from, batchSize, queryUntil).runWith(Sink.seq)
+          } yield {
 
-              val hasMoreEvents = xs.size == batchSize
-              val nextControl: FlowControl =
-                terminateAfterOffset match {
-                  // we may stop if target is behind queryUntil and we don't have more events to fetch
-                  case Some(target) if !hasMoreEvents && target <= queryUntil.maxOffset => Stop
+            val hasMoreEvents = xs.size == batchSize
+            val nextControl: FlowControl =
+              terminateAfterOffset match {
+                // we may stop if target is behind queryUntil and we don't have more events to fetch
+                case Some(target) if !hasMoreEvents && target <= queryUntil.maxOffset => Stop
 
-                  // We may also stop if we have found an event with an offset >= target
-                  case Some(target) if xs.exists(_.offset.value >= target) => Stop
+                // We may also stop if we have found an event with an offset >= target
+                case Some(target) if xs.exists(_.offset.value >= target) => Stop
 
-                  // otherwise, disregarding if Some or None, we must decide how to continue
-                  case _ =>
-                    if (hasMoreEvents) Continue
-                    else ContinueDelayed
-                }
-              val nextStartingOffset = if (xs.isEmpty) {
-                math.max(from.value, queryUntil.maxOffset)
-              } else {
-                // Continue querying from the largest offset
-                xs.map(_.offset.value).max
+                // otherwise, disregarding if Some or None, we must decide how to continue
+                case _ =>
+                  if (hasMoreEvents) Continue
+                  else ContinueDelayed
               }
-              Some(((nextStartingOffset, nextControl), xs))
+            val nextStartingOffset = if (xs.isEmpty) {
+              math.max(from.value, queryUntil.maxOffset)
+            } else {
+              // Continue querying from the largest offset
+              xs.map(_.offset.value).max
             }
+            Some(((nextStartingOffset, nextControl), xs))
           }
+        }
 
-          control match {
-            case Stop     => Future.successful(None)
-            case Continue => retrieveNextBatch()
-            case ContinueDelayed =>
-              akka.pattern.after(durableStateConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
-          }
+        control match {
+          case Stop     => Future.successful(None)
+          case Continue => retrieveNextBatch()
+          case ContinueDelayed =>
+            akka.pattern.after(durableStateConfig.refreshInterval, system.scheduler)(retrieveNextBatch())
+        }
       }
       .mapConcat(identity)
   }

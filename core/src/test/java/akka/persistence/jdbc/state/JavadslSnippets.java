@@ -5,47 +5,26 @@
 
 package akka.persistence.jdbc.state;
 
-import java.util.concurrent.CompletionStage;
-import akka.actor.ActorSystem;
 import akka.Done;
 import akka.NotUsed;
 // #create
+import akka.actor.ActorSystem;
+import akka.persistence.jdbc.state.javadsl.JdbcDurableStateStore;
+// #jdbc-durable-state-store
+// #get-object
 import akka.persistence.jdbc.testkit.javadsl.SchemaUtils;
 // #create
 // #jdbc-durable-state-store
-import akka.persistence.state.DurableStateStoreRegistry;
-import akka.persistence.jdbc.state.javadsl.JdbcDurableStateStore;
-// #jdbc-durable-state-store
-// #get-object
-import akka.persistence.state.DurableStateStoreRegistry;
-import akka.persistence.jdbc.state.javadsl.JdbcDurableStateStore;
-import akka.persistence.state.javadsl.GetObjectResult;
-// #get-object
-// #upsert-get-object
-import akka.persistence.state.DurableStateStoreRegistry;
-import akka.persistence.jdbc.state.javadsl.JdbcDurableStateStore;
-import akka.persistence.state.javadsl.GetObjectResult;
-// #upsert-get-object
-// #delete-object
-import akka.persistence.state.DurableStateStoreRegistry;
-import akka.persistence.jdbc.state.javadsl.JdbcDurableStateStore;
-// #delete-object
-// #current-changes
-import akka.NotUsed;
-import akka.stream.javadsl.Source;
-import akka.persistence.state.DurableStateStoreRegistry;
-import akka.persistence.jdbc.state.javadsl.JdbcDurableStateStore;
 import akka.persistence.query.DurableStateChange;
 import akka.persistence.query.NoOffset;
 // #current-changes
 // #changes
-import akka.NotUsed;
-import akka.stream.javadsl.Source;
 import akka.persistence.state.DurableStateStoreRegistry;
-import akka.persistence.jdbc.state.javadsl.JdbcDurableStateStore;
-import akka.persistence.query.DurableStateChange;
-import akka.persistence.query.NoOffset;
-// #changes
+import akka.persistence.state.javadsl.GetObjectResult;
+// #get-object
+// #upsert-get-object
+import akka.stream.javadsl.Source;
+import java.util.concurrent.CompletionStage;
 
 final class JavadslSnippets {
   void create() {

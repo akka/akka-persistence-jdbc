@@ -9,30 +9,16 @@ import akka.Done;
 import akka.NotUsed;
 import akka.actor.ActorSystem;
 // #create
+import akka.persistence.jdbc.query.javadsl.JdbcReadJournal;
+// #read-journal
+// #persistence-ids
 import akka.persistence.jdbc.testkit.javadsl.SchemaUtils;
 // #create
 // #read-journal
 import akka.persistence.query.*;
-import akka.persistence.jdbc.query.javadsl.JdbcReadJournal;
-// #read-journal
-// #persistence-ids
-import akka.stream.javadsl.Source;
-import akka.persistence.query.PersistenceQuery;
-import akka.persistence.jdbc.query.javadsl.JdbcReadJournal;
-// #persistence-ids
-// #events-by-persistence-id
-import akka.stream.javadsl.Source;
-import akka.persistence.query.PersistenceQuery;
 import akka.persistence.query.EventEnvelope;
-import akka.persistence.jdbc.query.javadsl.JdbcReadJournal;
-// #events-by-persistence-id
-// #events-by-tag
-import akka.stream.javadsl.Source;
 import akka.persistence.query.PersistenceQuery;
-import akka.persistence.query.EventEnvelope;
-import akka.persistence.jdbc.query.javadsl.JdbcReadJournal;
-// #events-by-tag
-
+import akka.stream.javadsl.Source;
 import java.util.concurrent.CompletionStage;
 
 final class JavadslSnippets {

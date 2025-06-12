@@ -5,7 +5,7 @@ resolvers += "Akka library repository".at("https://repo.akka.io/maven")
 addSbtPlugin("de.heikoseeberger" % "sbt-header" % "5.10.0")
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.6")
 addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "1.1.4")
-addSbtPlugin("com.lightbend.sbt" % "sbt-java-formatter" % "0.8.0")
+addSbtPlugin("com.github.sbt" % "sbt-java-formatter" % "0.10.0")
 
 // for dependency analysis
 addDependencyTreePlugin

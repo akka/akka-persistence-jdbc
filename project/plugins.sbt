@@ -12,7 +12,7 @@ addDependencyTreePlugin
 
 // release
 addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.9.3")
-addSbtPlugin("com.github.sbt" % "sbt-dynver" % "5.1.0")
+addSbtPlugin("com.github.sbt" % "sbt-dynver" % "5.1.1")
 
 // docs
 addSbtPlugin("io.akka" % "sbt-paradox-akka" % "25.10.0")

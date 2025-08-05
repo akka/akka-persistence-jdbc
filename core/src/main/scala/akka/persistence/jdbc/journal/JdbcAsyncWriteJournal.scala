@@ -6,19 +6,16 @@
 package akka.persistence.jdbc.journal
 
 import java.util.{ HashMap => JHMap, Map => JMap }
-
 import akka.Done
-import akka.actor.{ ActorSystem, ExtendedActorSystem }
+import akka.actor.ActorSystem
 import akka.persistence.jdbc.config.JournalConfig
 import akka.persistence.jdbc.journal.JdbcAsyncWriteJournal.{ InPlaceUpdateEvent, WriteFinished }
-import akka.persistence.jdbc.journal.dao.{ JournalDao, JournalDaoWithUpdates }
+import akka.persistence.jdbc.journal.dao.{ JournalDao, JournalDaoInstantiation, JournalDaoWithUpdates }
 import akka.persistence.jdbc.db.{ SlickDatabase, SlickExtension }
 import akka.persistence.journal.AsyncWriteJournal
 import akka.persistence.{ AtomicWrite, PersistentRepr }
-import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.{ Materializer, SystemMaterializer }
 import com.typesafe.config.Config
-import slick.jdbc.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
 import scala.collection.immutable._
@@ -51,22 +48,8 @@ class JdbcAsyncWriteJournal(config: Config) extends AsyncWriteJournal {
 
   val slickDb: SlickDatabase = SlickExtension(system).database(config)
   def db: Database = slickDb.database
+  val journalDao: JournalDao = JournalDaoInstantiation.journalDao(journalConfig, slickDb)
 
-  val journalDao: JournalDao = {
-    val fqcn = journalConfig.pluginConfig.dao
-    val profile: JdbcProfile = slickDb.profile
-    val args = Seq(
-      (classOf[Database], db),
-      (classOf[JdbcProfile], profile),
-      (classOf[JournalConfig], journalConfig),
-      (classOf[Serialization], SerializationExtension(system)),
-      (classOf[ExecutionContext], ec),
-      (classOf[Materializer], mat))
-    system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[JournalDao](fqcn, args) match {
-      case Success(dao)   => dao
-      case Failure(cause) => throw cause
-    }
-  }
   // only accessed if we need to perform Updates -- which is very rarely
   def journalDaoWithUpdates: JournalDaoWithUpdates =
     journalDao match {

@@ -77,14 +77,21 @@ trait BaseByteArrayJournalDao
     queueWriteJournalRows(rowsToWrite).map(_ => resultWhenWriteComplete)
   }
 
-  override def delete(persistenceId: String, maxSequenceNr: Long): Future[Unit] = {
-    // We should keep journal record with highest sequence number in order to be compliant
-    // with @see [[akka.persistence.journal.JournalSpec]]
-    val actions: DBIOAction[Unit, NoStream, Effect.Write with Effect.Read] = for {
-      _ <- queries.markJournalMessagesAsDeleted(persistenceId, maxSequenceNr)
-      highestMarkedSequenceNr <- highestMarkedSequenceNr(persistenceId)
-      _ <- queries.delete(persistenceId, highestMarkedSequenceNr.getOrElse(0L) - 1)
-    } yield ()
+  override def deleteEventsTo(
+      persistenceId: String,
+      maxSequenceNr: Long,
+      resetSequenceNumber: Boolean): Future[Unit] = {
+    val actions: DBIOAction[Unit, NoStream, Effect.Write with Effect.Read] = if (resetSequenceNumber) {
+      queries.delete(persistenceId, maxSequenceNr).map(_ => ())
+    } else {
+      // We should keep journal record with highest sequence number in order to be compliant
+      // with @see [[akka.persistence.journal.JournalSpec]]
+      for {
+        _ <- queries.markJournalMessagesAsDeleted(persistenceId, maxSequenceNr)
+        highestMarkedSequenceNr <- highestMarkedSequenceNr(persistenceId)
+        _ <- queries.delete(persistenceId, highestMarkedSequenceNr.getOrElse(0L) - 1)
+      } yield ()
+    }
 
     db.run(actions.transactionally)
   }

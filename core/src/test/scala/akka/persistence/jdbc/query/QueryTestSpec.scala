@@ -8,9 +8,16 @@ package akka.persistence.jdbc.query
 import akka.actor.{ ActorRef, ActorSystem, Props, Stash, Status }
 import akka.pattern.ask
 import akka.event.LoggingReceive
-import akka.persistence.{ DeleteMessagesFailure, DeleteMessagesSuccess, PersistentActor }
+import akka.persistence.{
+  DeleteMessagesFailure,
+  DeleteMessagesSuccess,
+  PersistentActor,
+  SaveSnapshotFailure,
+  SaveSnapshotSuccess,
+  SnapshotOffer
+}
 import akka.persistence.jdbc.SingleActorSystemPerTestSpec
-import akka.persistence.jdbc.query.EventAdapterTest.{ Event, TaggedAsyncEvent, TaggedEvent }
+import akka.persistence.jdbc.query.EventAdapterTest.{ Event, Snapshot, TaggedAsyncEvent, TaggedEvent }
 import akka.persistence.jdbc.query.javadsl.{ JdbcReadJournal => JavaJdbcReadJournal }
 import akka.persistence.jdbc.query.scaladsl.JdbcReadJournal
 import akka.persistence.journal.Tagged
@@ -225,6 +232,7 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
     override val persistenceId: String = "my-" + id
 
     var state: Int = 0
+    var snapshotSender: Option[ActorRef] = None
 
     override def receiveCommand: Receive = idle
 
@@ -263,6 +271,20 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
           persistAsync(event) { _ =>
             if (replyToMessages) sender() ! akka.actor.Status.Success((payload, tag))
           }
+
+        case SaveSnapshotSuccess(_) =>
+          snapshotSender.foreach { sender =>
+            sender ! akka.actor.Status.Success(state)
+          }
+
+        case SaveSnapshotFailure(_, reason) =>
+          snapshotSender.foreach { sender =>
+            sender ! akka.actor.Status.Failure(reason)
+          }
+
+        case Snapshot =>
+          saveSnapshot(state)
+          if (replyToMessages) snapshotSender = Some(sender())
       }
 
     def awaitingDeleting(origSender: ActorRef): Receive =
@@ -286,8 +308,11 @@ abstract class QueryTestSpec(config: String, configOverrides: Map[String, Config
     }
 
     override def receiveRecover: Receive =
-      LoggingReceive { case event: Int =>
-        updateState(event)
+      LoggingReceive {
+        case event: Int =>
+          updateState(event)
+        case SnapshotOffer(_, offeredSnapshot) =>
+          state = offeredSnapshot.asInstanceOf[Int]
       }
   }
 

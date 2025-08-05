@@ -1,0 +1,3 @@
+# internal api changes
+ProblemFilters.exclude[ReversedMissingMethodProblem]("akka.persistence.jdbc.journal.dao.JournalDao.deleteEventsTo")
+ProblemFilters.exclude[NewMixinForwarderProblem]("akka.persistence.jdbc.journal.dao.legacy.BaseByteArrayJournalDao.delete")

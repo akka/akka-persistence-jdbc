@@ -5,21 +5,17 @@
 
 package akka.persistence.jdbc.snapshot
 
-import akka.actor.{ ActorSystem, ExtendedActorSystem }
+import akka.actor.ActorSystem
 import akka.persistence.jdbc.config.SnapshotConfig
-import akka.persistence.jdbc.snapshot.dao.SnapshotDao
+import akka.persistence.jdbc.snapshot.dao.{ SnapshotDao, SnapshotDaoInstantiation }
 import akka.persistence.jdbc.db.{ SlickDatabase, SlickExtension }
 import akka.persistence.snapshot.SnapshotStore
 import akka.persistence.{ SelectedSnapshot, SnapshotMetadata, SnapshotSelectionCriteria }
-import akka.serialization.{ Serialization, SerializationExtension }
 import akka.stream.{ Materializer, SystemMaterializer }
 import com.typesafe.config.Config
-import slick.jdbc.JdbcProfile
 import slick.jdbc.JdbcBackend._
 
-import scala.collection.immutable._
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success }
 
 object JdbcSnapshotStore {
   def toSelectedSnapshot(tupled: (SnapshotMetadata, Any)): SelectedSnapshot =
@@ -39,21 +35,7 @@ class JdbcSnapshotStore(config: Config) extends SnapshotStore {
   val slickDb: SlickDatabase = SlickExtension(system).database(config)
   def db: Database = slickDb.database
 
-  val snapshotDao: SnapshotDao = {
-    val fqcn = snapshotConfig.pluginConfig.dao
-    val profile: JdbcProfile = slickDb.profile
-    val args = Seq(
-      (classOf[Database], db),
-      (classOf[JdbcProfile], profile),
-      (classOf[SnapshotConfig], snapshotConfig),
-      (classOf[Serialization], SerializationExtension(system)),
-      (classOf[ExecutionContext], ec),
-      (classOf[Materializer], mat))
-    system.asInstanceOf[ExtendedActorSystem].dynamicAccess.createInstanceFor[SnapshotDao](fqcn, args) match {
-      case Success(dao)   => dao
-      case Failure(cause) => throw cause
-    }
-  }
+  val snapshotDao: SnapshotDao = SnapshotDaoInstantiation.snapshotDao(snapshotConfig, slickDb)
 
   override def loadAsync(
       persistenceId: String,

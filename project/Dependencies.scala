@@ -16,7 +16,7 @@ object Dependencies {
   val JdbcDrivers = Seq(
     "org.postgresql" % "postgresql" % "42.7.7",
     "com.h2database" % "h2" % "2.3.232",
-    "com.mysql" % "mysql-connector-j" % "9.3.0",
+    "com.mysql" % "mysql-connector-j" % "9.4.0",
     "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8")
 
   val Libraries: Seq[ModuleID] = Seq(

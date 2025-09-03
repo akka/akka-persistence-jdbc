@@ -27,6 +27,8 @@ object EventAdapterTest {
 
   case class EventRestored(value: String)
 
+  case object Snapshot
+
   class TestReadEventAdapter extends ReadEventAdapter {
     override def fromJournal(event: Any, manifest: String): EventSeq =
       event match {

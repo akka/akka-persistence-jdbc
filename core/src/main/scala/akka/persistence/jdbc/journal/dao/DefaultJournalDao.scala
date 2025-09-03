@@ -51,25 +51,31 @@ class DefaultJournalDao(
   val queries =
     new JournalQueries(profile, journalConfig.eventJournalTableConfiguration, journalConfig.eventTagTableConfiguration)
 
-  override def delete(persistenceId: String, toSequenceNr: Long): Future[Unit] = {
+  override def deleteEventsTo(persistenceId: String, toSequenceNr: Long, resetSequenceNumber: Boolean): Future[Unit] = {
 
     // note: the passed toSequenceNr will be Long.MaxValue when doing a 'full' journal clean-up
     // see JournalSpec's test: 'not reset highestSequenceNr after journal cleanup'
-    val actions: DBIOAction[Unit, NoStream, Effect.Write with Effect.Read] =
-      highestSequenceNrAction(persistenceId)
-        .flatMap {
-          // are we trying to delete the highest or even higher seqNr ?
-          case highestSeqNr if highestSeqNr <= toSequenceNr =>
-            // if so, we delete up to the before last and
-            // mark the last as logically deleted preserving highestSeqNr
-            queries
-              .delete(persistenceId, highestSeqNr - 1)
-              .flatMap(_ => queries.markAsDeleted(persistenceId, highestSeqNr))
-          case _ =>
-            // if not, we delete up to the requested seqNr
-            queries.delete(persistenceId, toSequenceNr)
-        }
-        .map(_ => ())
+    val actions: DBIOAction[Unit, NoStream, Effect.Write with Effect.Read] = {
+      // If we're resetting the sequence number, no need to determine the highest sequence number.
+      if (resetSequenceNumber) {
+        queries.delete(persistenceId, toSequenceNr).map(_ => ())
+      } else {
+        highestSequenceNrAction(persistenceId)
+          .flatMap {
+            // are we trying to delete the highest or even higher seqNr ?
+            case highestSeqNr if highestSeqNr <= toSequenceNr =>
+              // if so, we delete up to the before last and
+              // mark the last as logically deleted preserving highestSeqNr
+              queries
+                .delete(persistenceId, highestSeqNr - 1)
+                .flatMap(_ => queries.markAsDeleted(persistenceId, highestSeqNr))
+            case _ =>
+              // if not, we delete up to the requested seqNr
+              queries.delete(persistenceId, toSequenceNr)
+          }
+          .map(_ => ())
+      }
+    }
 
     db.run(actions.transactionally)
   }

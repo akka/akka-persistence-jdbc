@@ -15,7 +15,7 @@ addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.9.3")
 addSbtPlugin("com.github.sbt" % "sbt-dynver" % "5.1.1")
 
 // docs
-addSbtPlugin("io.akka" % "sbt-paradox-akka" % "25.10.0")
+addSbtPlugin("io.akka" % "sbt-paradox-akka" % "25.10.1")
 addSbtPlugin("com.github.sbt" % "sbt-site" % "1.7.0")
 addSbtPlugin("com.github.sbt" % "sbt-site-paradox" % "1.7.0")
 addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.5.0")

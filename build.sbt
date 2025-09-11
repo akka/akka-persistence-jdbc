@@ -16,6 +16,7 @@ lazy val core = project
   .disablePlugins(SitePlugin, CiReleasePlugin)
   .settings(
     name := "akka-persistence-jdbc",
+    AutomaticModuleName.settings("akka.persistence.jdbc"),
     libraryDependencies ++= Dependencies.Libraries,
     // Workaround for https://github.com/slick/slick/issues/2933
     libraryDependencies ++=
@@ -44,6 +45,7 @@ lazy val migrator = project
   .disablePlugins(SitePlugin, MimaPlugin, CiReleasePlugin)
   .settings(
     name := "akka-persistence-jdbc-migrator",
+    AutomaticModuleName.settings("akka.persistence.jdbc.migrator"),
     libraryDependencies ++= Dependencies.Migration ++ Dependencies.Libraries,
     // TODO remove this when ready to publish it
     publish / skip := true)

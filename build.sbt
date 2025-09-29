@@ -1,7 +1,7 @@
 import com.lightbend.paradox.apidoc.ApidocPlugin.autoImport.apidocRootPackage
 import com.geirsson.CiReleasePlugin
 
-ThisBuild / resolvers += "Akka library repository".at("https://repo.akka.io/maven")
+ThisBuild / resolvers += "Akka library repository".at("https://repo.akka.io/github_actions")
 
 lazy val `akka-persistence-jdbc` = project
   .in(file("."))

@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   integration-test:
-    runs-on: ubuntu-22.04
+    runs-on: Akka-Default
     strategy:
       fail-fast: false
       matrix:

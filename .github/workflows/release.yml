@@ -17,7 +17,7 @@ jobs:
     # the release environment provides access to secrets required in the release process
     # https://github.com/akka/akka-persistence-jdbc/settings/environments/164872635/edit
     environment: release
-    runs-on: ubuntu-22.04
+    runs-on: Akka-Default
     steps:
       - name: Checkout
         # https://github.com/actions/checkout/releases
@@ -55,7 +55,7 @@ jobs:
 
   documentation:
     name: Documentation
-    runs-on: ubuntu-22.04
+    runs-on: Akka-Default
     if: github.event.repository.fork == false
     steps:
       - name: Checkout

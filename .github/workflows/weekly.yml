@@ -11,7 +11,7 @@ permissions:
 jobs:
   integration-test:
     name: Weekly Integration Test ${{ matrix.db.name }}
-    runs-on: ubuntu-22.04
+    runs-on: Akka-Default
     strategy:
       fail-fast: false
       matrix:

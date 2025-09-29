@@ -1,5 +1,5 @@
 // for sbt-paradox-akka
-resolvers += "Akka library repository".at("https://repo.akka.io/maven")
+resolvers += "Akka library repository".at("https://repo.akka.io/maven/github_actions")
 
 // compliance
 addSbtPlugin("de.heikoseeberger" % "sbt-header" % "5.10.0")

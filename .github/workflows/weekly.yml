@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   integration-test:
-    name: Weekly Integration Test ${{ matrix.db.name }}
+    name: Weekly Integration Test ${{ matrix.db.name }}, ${{ matrix.db.jdk }}
     runs-on: Akka-Default
     strategy:
       fail-fast: false

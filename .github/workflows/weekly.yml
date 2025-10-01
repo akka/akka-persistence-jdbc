@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   integration-test:
-    name: Weekly Integration Test ${{ matrix.db.name }}
+    name: Weekly Integration Test ${{ matrix.db.name }}, ${{ matrix.db.jdk }}
     runs-on: Akka-Default
     strategy:
       fail-fast: false
@@ -18,18 +18,26 @@ jobs:
         db:
           - name: "H2"
             test: "test"
+            jdk: 'temurin:1.21'
+          - name: "H2"
+            test: "test"
+            jdk: 'temurin:1.25'
           - name: "MySQL"
             test: '"integration/testOnly akka.persistence.jdbc.integration.MySQL*"'
             script: 'launch-mysql.sh'
+            jdk: 'temurin:1.21'
           - name: "Oracle"
             test: '"integration/testOnly akka.persistence.jdbc.integration.Oracle*"'
             script: 'launch-oracle.sh'
+            jdk: 'temurin:1.21'
           - name: "Postgres"
             test: '"integration/testOnly akka.persistence.jdbc.integration.Postgres*"'
             script: 'launch-postgres.sh'
+            jdk: 'temurin:1.21'
           - name: "SqlServer"
             test: '"integration/testOnly akka.persistence.jdbc.integration.SqlServer*"'
             script: 'launch-sqlserver.sh'
+            jdk: 'temurin:1.21'
 
     steps:
       - name: Checkout
@@ -50,12 +58,12 @@ jobs:
         # v6.4.5
         uses: coursier/cache-action@1ff273bff02a8787bc9f1877d347948af647956d
 
-      - name: Set up JDK 21
+      - name: Set up ${{ matrix.db.jdk }}
         # https://github.com/coursier/setup-action/releases
         # v1.3.5
         uses: coursier/setup-action@7bde40eee928896f074dbb76d22dd772eed5c65f
         with:
-          jvm: temurin:1.21
+          jvm: ${{ matrix.db.jdk }}
 
       - name: Start DB in docker container
         if: ${{ matrix.db.script }}

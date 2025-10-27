@@ -95,8 +95,7 @@ object ProjectAutoPlugin extends AutoPlugin {
           "-doc-canonical-base-url",
           "https://doc.akka.io/api/akka-persistence-jdbc/current/",
           "-jdk-api-doc-base",
-          s"https://docs.oracle.com/en/java/javase/${Dependencies.JavaDocLinkVersion}/docs/api",
-        )
+          s"https://docs.oracle.com/en/java/javase/${Dependencies.JavaDocLinkVersion}/docs/api")
 
       case Some((3, _)) =>
         Seq(

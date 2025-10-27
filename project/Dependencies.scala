@@ -2,6 +2,9 @@ import sbt._
 
 object Dependencies {
 
+  // Java Platform version for JavaDoc creation
+  lazy val JavaDocLinkVersion = scala.util.Properties.javaSpecVersion
+
   val Scala213 = "2.13.17"
   val Scala3 = "3.3.7"
 

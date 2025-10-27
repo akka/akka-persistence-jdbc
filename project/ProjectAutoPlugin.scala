@@ -93,7 +93,10 @@ object ProjectAutoPlugin extends AutoPlugin {
             s"https://github.com/akka/akka-persistence-jdbc/tree/${branch}€{FILE_PATH_EXT}#L€{FILE_LINE}"
           },
           "-doc-canonical-base-url",
-          "https://doc.akka.io/api/akka-persistence-jdbc/current/")
+          "https://doc.akka.io/api/akka-persistence-jdbc/current/",
+          "-jdk-api-doc-base",
+          s"https://docs.oracle.com/en/java/javase/${Dependencies.JavaDocLinkVersion}/docs/api",
+        )
 
       case Some((3, _)) =>
         Seq(
@@ -108,7 +111,8 @@ object ProjectAutoPlugin extends AutoPlugin {
             s"https://github.com/akka/akka-persistence-jdbc/tree/${branch}€{FILE_PATH_EXT}#L€{FILE_LINE}"
           },
           "-doc-canonical-base-url",
-          "https://doc.akka.io/api/akka-persistence-jdbc/current/")
+          "https://doc.akka.io/api/akka-persistence-jdbc/current/",
+          s"-external-mappings:https://docs.oracle.com/en/java/javase/${Dependencies.JavaDocLinkVersion}/docs/api")
       case _ => throw new IllegalArgumentException("Unsupported Major Scala Version")
     }),
     // show full stack traces and test case durations

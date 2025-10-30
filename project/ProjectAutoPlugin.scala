@@ -15,7 +15,7 @@ object ProjectAutoPlugin extends AutoPlugin {
     Seq(
       organization := "com.lightbend.akka",
       organizationName := "Lightbend Inc.",
-      organizationHomepage := Some(url("https://www.lightbend.com/")),
+      organizationHomepage := Some(url("https://akka.io")),
       homepage := Some(url("https://doc.akka.io/libraries/akka-persistence-jdbc/current/")),
       scmInfo := Some(
         ScmInfo(url("https://github.com/akka/akka-persistence-jdbc"), "git@github.com:akka/akka-persistence-jdbc.git")),
@@ -117,7 +117,7 @@ object ProjectAutoPlugin extends AutoPlugin {
     // show full stack traces and test case durations
     Test / testOptions += Tests.Argument("-oDF"),
     headerLicense := Some(HeaderLicense.Custom("""|Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
-           |Copyright (C) 2019 - 2024 Lightbend Inc. <https://www.lightbend.com>
+           |Copyright (C) 2019 - 2025 Lightbend Inc. <https://akka.io>
            |""".stripMargin)),
     resolvers += Resolver.jcenterRepo)
 

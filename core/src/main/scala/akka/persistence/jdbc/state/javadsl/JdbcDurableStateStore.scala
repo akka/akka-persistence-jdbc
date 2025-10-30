@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2014 - 2019 Dennis Vriend <https://github.com/dnvriend>
- * Copyright (C) 2019 - 2024 Lightbend Inc. <https://www.lightbend.com>
+ * Copyright (C) 2019 - 2025 Lightbend Inc. <https://akka.io>
  */
 
 package akka.persistence.jdbc.state.javadsl

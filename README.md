@@ -1,38 +1,32 @@
-# Akka Persistence JDBC
+Akka
+====
+*Akka is a powerful platform that simplifies building and operating highly responsive, resilient, and scalable services.*
 
-The Akka family of projects is managed by teams at [Lightbend](https://lightbend.com/) with help from the community.
+
+The platform consists of
+* the [**Akka SDK**](https://doc.akka.io/java/index.html) for straightforward, rapid development with AI assist and automatic clustering. Services built with the Akka SDK are automatically clustered and can be deployed on any infrastructure.
+* and [**Akka Automated Operations**](https://doc.akka.io/operations/akka-platform.html), a managed solution that handles everything for Akka SDK services from auto-elasticity to multi-region high availability running safely within your VPC.
+
+The **Akka SDK** and **Akka Automated Operations** are built upon the foundational [**Akka libraries**](https://doc.akka.io/libraries/akka-dependencies/current/), providing the building blocks for distributed systems.
+
+
+JDBC plugin for Akka Persistence
+================================
 
 akka-persistence-jdbc writes journal and snapshot entries to a configured JDBC store. It implements the full akka-persistence-query API and is therefore very useful for implementing DDD-style 
 application models using Akka for creating reactive applications.
 
 Please note that the H2 database is not recommended to be used as a production database, and support for H2 is primarily for testing purposes.
 
-## Documentation
+The Akka Persistence JDBC was originally created by @dnvriend.
 
-* [current Akka Persistence JDBC documentation](https://doc.akka.io/libraries/akka-persistence-jdbc/current/)
-* [Akka Persistence JDBC 3.5.x documentation](https://doc.akka.io/libraries/akka-persistence-jdbc/3.5/)
-* [Snapshot documentation](https://doc.akka.io/libraries/akka-persistence-jdbc/snapshot/)
+Reference Documentation
+-----------------------
 
-## Release notes
+The reference documentation for all Akka libraries is available via [doc.akka.io/libraries/](https://doc.akka.io/libraries/), details for the Akka JDBC plugin
+for [Scala](https://doc.akka.io/libraries/akka-persistence-jdbc/current/?language=scala) and [Java](https://doc.akka.io/libraries/akka-persistence-jdbc/current/?language=java).
 
-The release notes can be found [here](https://github.com/akka/akka-persistence-jdbc/releases).
-
-For the change log prior to v3.2.0, visit [Version History Page (wiki)](https://github.com/akka/akka-persistence-jdbc/wiki/Version-History).
-
-## Community
-
-You can join these groups and chats to discuss and ask Akka related questions:
-
-- Forums: [discuss.akka.io](https://discuss.akka.io/c/akka/)
-- Issue tracker: [![github: akka/akka-persistence-jdbc](https://img.shields.io/badge/github%3A-issues-blue.svg?style=flat-square)](https://github.com/akka/akka-persistence-jdbc/issues)
-
-In addition to that, you may enjoy following:
-
-- The [Akka Team Blog](https://akka.io/blog/)
-- [@akkateam](https://twitter.com/akkateam) on Twitter
-- Questions tagged [#akka on StackOverflow](https://stackoverflow.com/questions/tagged/akka)
-
-The Akka Peristence JDBC was originally created by @dnvriend.
+The current versions of all Akka libraries are listed on the [Akka Dependencies](https://doc.akka.io/libraries/akka-dependencies/current/) page. Releases of the Akka JDBC plugin in this repository are listed on the [GitHub releases](https://github.com/akka/akka-persistence-jdbc/releases) page.
 
 
 ## Contributing

@@ -61,3 +61,13 @@ Scala
 
 Java
 :  @@snip[snip](/core/src/test/java/akka/persistence/jdbc/JavadslSnippets.java) { #events-by-tag }
+
+### Performance
+
+To increase the performance of `eventsByTag` please consider adding a dedicated index for the `tag` column in the `event_tag` table.
+
+For postgres, the following index can be used:
+
+```
+CREATE INDEX CONCURRENTLY event_tag_tag_idx ON public.event_tag (tag);
+```

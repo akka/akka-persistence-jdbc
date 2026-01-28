@@ -64,7 +64,7 @@ Java
 
 ### Performance
 
-To increase the performance of `eventsByTag` please consider adding a dedicated index for the `tag` column in the `event_tag` table.
+If you see slow database queries for `eventsByTag`, please consider adding a dedicated index for the `tag` column in the `event_tag` table.
 
 For postgres, the following index can be used:
 

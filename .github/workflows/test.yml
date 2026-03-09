@@ -65,6 +65,9 @@ jobs:
         with:
           jvm: temurin:1.11.0
 
+      - name: Run akka/github-actions-scripts
+        uses: akka/github-actions-scripts/setup_global_resolver@main
+
       - name: Start DB in docker container
         if: ${{ matrix.db.script }}
         run: |-

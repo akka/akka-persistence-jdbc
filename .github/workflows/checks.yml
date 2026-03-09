@@ -41,6 +41,9 @@ jobs:
         with:
           jvm: temurin:1.11.0
 
+      - name: Run akka/github-actions-scripts
+        uses: akka/github-actions-scripts/setup_global_resolver@main
+
       - name: Code style check and binary-compatibility check
         # Run locally with: sbt 'verifyCodeStyle ; mimaReportBinaryIssues'
         run: sbt "; verifyCodeStyle; mimaReportBinaryIssues"
@@ -73,6 +76,9 @@ jobs:
         uses: coursier/setup-action@7bde40eee928896f074dbb76d22dd772eed5c65f
         with:
           jvm: temurin:1.11.0
+
+      - name: Run akka/github-actions-scripts
+        uses: akka/github-actions-scripts/setup_global_resolver@main
 
       - name: Compile all code with fatal warnings for Java 11 and Scala 2.13
         # Run locally with: sbt 'clean ; +Test/compile ; +It/compile'
@@ -109,6 +115,9 @@ jobs:
         uses: coursier/setup-action@7bde40eee928896f074dbb76d22dd772eed5c65f
         with:
           jvm: temurin:1.11.0
+
+      - name: Run akka/github-actions-scripts
+        uses: akka/github-actions-scripts/setup_global_resolver@main
 
       - name: Create all API docs for artifacts/website and all reference docs
         run: sbt docs/paradox

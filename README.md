@@ -29,6 +29,13 @@ for [Scala](https://doc.akka.io/libraries/akka-persistence-jdbc/current/?languag
 The current versions of all Akka libraries are listed on the [Akka Dependencies](https://doc.akka.io/libraries/akka-dependencies/current/) page. Releases of the Akka JDBC plugin in this repository are listed on the [GitHub releases](https://github.com/akka/akka-persistence-jdbc/releases) page.
 
 
+## Build Token
+
+To build locally, you need to fetch a token at https://account.akka.io/token that you have to place into `~/.sbt/1.0/akka-commercial.sbt` file like this:
+```
+ThisBuild / resolvers += "lightbend-akka".at("your token resolver here")
+```
+
 ## Contributing
 
 Contributions are *very* welcome! The Akka team appreciates community contributions by both those new to Akka and those more experienced.

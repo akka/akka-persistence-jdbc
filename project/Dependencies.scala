@@ -13,7 +13,7 @@ object Dependencies {
   val AkkaVersion = "2.10.11"
   val AkkaBinaryVersion = VersionNumber(AkkaVersion).numbers match { case Seq(major, minor, _*) => s"$major.$minor" }
 
-  val SlickVersion = "3.5.1"
+  val SlickVersion = "3.6.1"
   val ScalaTestVersion = "3.2.19"
 
   val JdbcDrivers = Seq(

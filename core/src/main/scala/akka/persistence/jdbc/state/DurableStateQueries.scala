@@ -27,8 +27,9 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
   // same quoting as Slick's typed-query SELECT path. Without this, e.g. H2 in default mode
   // uppercases unquoted identifiers, which doesn't match the lowercase quoted identifiers
   // used by the schema and Slick's typed queries.
-  lazy val tableAndSchema = durableStateTableCfg.schemaName.fold(profile.quoteIdentifier(durableStateTableCfg.tableName))(
-    schema => s"${profile.quoteIdentifier(schema)}.${profile.quoteIdentifier(durableStateTableCfg.tableName)}")
+  lazy val tableAndSchema =
+    durableStateTableCfg.schemaName.fold(profile.quoteIdentifier(durableStateTableCfg.tableName))(schema =>
+      s"${profile.quoteIdentifier(schema)}.${profile.quoteIdentifier(durableStateTableCfg.tableName)}")
 
   private lazy val persistenceIdColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.persistenceId)
   private lazy val globalOffsetColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.globalOffset)

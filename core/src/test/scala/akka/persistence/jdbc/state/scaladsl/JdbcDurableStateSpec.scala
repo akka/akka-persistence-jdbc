@@ -423,8 +423,8 @@ class H2DurableStateSpec extends JdbcDurableStateSpec(ConfigFactory.load("h2-app
     ActorSystem("test", config.withFallback(customSerializers))
 }
 
-// Regression coverage for #969: in H2's default mode unquoted identifiers are uppercased,
-// so raw-SQL paths in DurableStateQueries must quote identifiers via the profile.
+// In H2's default mode unquoted identifiers are uppercased, so raw-SQL paths in
+// DurableStateQueries must quote identifiers via the profile to match the schema.
 class H2DefaultModeDurableStateSpec
     extends JdbcDurableStateSpec(ConfigFactory.load("h2-default-mode-application.conf"), H2) {
   implicit lazy val system: ActorSystem =

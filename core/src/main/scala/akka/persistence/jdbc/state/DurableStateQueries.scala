@@ -27,18 +27,18 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
   // same quoting as Slick's typed-query SELECT path. Without this, e.g. H2 in default mode
   // uppercases unquoted identifiers, which doesn't match the lowercase quoted identifiers
   // used by the schema and Slick's typed queries.
-  lazy val tableAndSchema =
+  val tableAndSchema =
     durableStateTableCfg.schemaName.fold(profile.quoteIdentifier(durableStateTableCfg.tableName))(schema =>
       s"${profile.quoteIdentifier(schema)}.${profile.quoteIdentifier(durableStateTableCfg.tableName)}")
 
-  private lazy val persistenceIdColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.persistenceId)
-  private lazy val globalOffsetColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.globalOffset)
-  private lazy val revisionColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.revision)
-  private lazy val statePayloadColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.statePayload)
-  private lazy val stateSerIdColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.stateSerId)
-  private lazy val stateSerManifestColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.stateSerManifest)
-  private lazy val tagColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.tag)
-  private lazy val stateTimestampColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.stateTimestamp)
+  private val persistenceIdColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.persistenceId)
+  private val globalOffsetColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.globalOffset)
+  private val revisionColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.revision)
+  private val statePayloadColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.statePayload)
+  private val stateSerIdColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.stateSerId)
+  private val stateSerManifestColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.stateSerManifest)
+  private val tagColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.tag)
+  private val stateTimestampColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.stateTimestamp)
 
   private def slickProfileToSchemaType(profile: JdbcProfile): String =
     profile match {

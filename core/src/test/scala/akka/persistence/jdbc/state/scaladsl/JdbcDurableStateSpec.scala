@@ -422,3 +422,11 @@ class H2DurableStateSpec extends JdbcDurableStateSpec(ConfigFactory.load("h2-app
   implicit lazy val system: ActorSystem =
     ActorSystem("test", config.withFallback(customSerializers))
 }
+
+// In H2's default mode unquoted identifiers are uppercased, so raw-SQL paths in
+// DurableStateQueries must quote identifiers via the profile to match the schema.
+class H2DefaultModeDurableStateSpec
+    extends JdbcDurableStateSpec(ConfigFactory.load("h2-default-mode-application.conf"), H2) {
+  implicit lazy val system: ActorSystem =
+    ActorSystem("test", config.withFallback(customSerializers))
+}

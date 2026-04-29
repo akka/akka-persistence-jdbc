@@ -23,8 +23,22 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
     extends DurableStateTables {
   import profile.api._
 
-  lazy val tableAndSchema = durableStateTableCfg.schemaName.fold(durableStateTableCfg.tableName)(schema =>
-    s"$schema.${durableStateTableCfg.tableName}")
+  // Identifiers must be quoted via the profile so the raw-SQL INSERT/UPDATE paths use the
+  // same quoting as Slick's typed-query SELECT path. Without this, e.g. H2 in default mode
+  // uppercases unquoted identifiers, which doesn't match the lowercase quoted identifiers
+  // used by the schema and Slick's typed queries.
+  val tableAndSchema =
+    durableStateTableCfg.schemaName.fold(profile.quoteIdentifier(durableStateTableCfg.tableName))(schema =>
+      s"${profile.quoteIdentifier(schema)}.${profile.quoteIdentifier(durableStateTableCfg.tableName)}")
+
+  private val persistenceIdColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.persistenceId)
+  private val globalOffsetColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.globalOffset)
+  private val revisionColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.revision)
+  private val statePayloadColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.statePayload)
+  private val stateSerIdColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.stateSerId)
+  private val stateSerManifestColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.stateSerManifest)
+  private val tagColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.tag)
+  private val stateTimestampColumn = profile.quoteIdentifier(durableStateTableCfg.columnNames.stateTimestamp)
 
   private def slickProfileToSchemaType(profile: JdbcProfile): String =
     profile match {
@@ -52,14 +66,14 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
   private[jdbc] def insertDbWithDurableState(row: DurableStateTables.DurableStateRow, seqNextValue: String) = {
     sqlu"""INSERT INTO #$tableAndSchema
             (
-             #${durableStateTableCfg.columnNames.persistenceId},
-             #${durableStateTableCfg.columnNames.globalOffset},
-             #${durableStateTableCfg.columnNames.revision},
-             #${durableStateTableCfg.columnNames.statePayload},
-             #${durableStateTableCfg.columnNames.stateSerId},
-             #${durableStateTableCfg.columnNames.stateSerManifest},
-             #${durableStateTableCfg.columnNames.tag},
-             #${durableStateTableCfg.columnNames.stateTimestamp}
+             #$persistenceIdColumn,
+             #$globalOffsetColumn,
+             #$revisionColumn,
+             #$statePayloadColumn,
+             #$stateSerIdColumn,
+             #$stateSerManifestColumn,
+             #$tagColumn,
+             #$stateTimestampColumn
             )
             VALUES
             (
@@ -77,15 +91,15 @@ import akka.persistence.jdbc.config.DurableStateTableConfiguration
 
   private[jdbc] def updateDbWithDurableState(row: DurableStateTables.DurableStateRow, seqNextValue: String) = {
     sqlu"""UPDATE #$tableAndSchema
-           SET #${durableStateTableCfg.columnNames.globalOffset} = #${seqNextValue},
-               #${durableStateTableCfg.columnNames.revision} = ${row.revision},
-               #${durableStateTableCfg.columnNames.statePayload} = ${row.statePayload},
-               #${durableStateTableCfg.columnNames.stateSerId} = ${row.stateSerId},
-               #${durableStateTableCfg.columnNames.stateSerManifest} = ${row.stateSerManifest},
-               #${durableStateTableCfg.columnNames.tag} = ${row.tag},
-               #${durableStateTableCfg.columnNames.stateTimestamp} = ${System.currentTimeMillis}
-           WHERE #${durableStateTableCfg.columnNames.persistenceId} = ${row.persistenceId}
-             AND #${durableStateTableCfg.columnNames.revision} = ${row.revision} - 1
+           SET #$globalOffsetColumn = #${seqNextValue},
+               #$revisionColumn = ${row.revision},
+               #$statePayloadColumn = ${row.statePayload},
+               #$stateSerIdColumn = ${row.stateSerId},
+               #$stateSerManifestColumn = ${row.stateSerManifest},
+               #$tagColumn = ${row.tag},
+               #$stateTimestampColumn = ${System.currentTimeMillis}
+           WHERE #$persistenceIdColumn = ${row.persistenceId}
+             AND #$revisionColumn = ${row.revision} - 1
         """
   }
 

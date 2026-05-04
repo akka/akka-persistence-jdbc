@@ -64,10 +64,23 @@ Java
 
 ### Performance
 
-If you see slow database queries for `eventsByTag`, please consider adding a dedicated index for the `tag` column in the `event_tag` table.
+If you see slow database queries for `eventsByTag`, please consider adding a dedicated index for the `event_tag` table.
 
-For postgres, the following index can be used:
+To achieve maximum performance (ideally "Index Only Scans"), composite indexes should be used. The structure of the index depends on whether the system is using the legacy tag mapping or the modern composite key mapping.
 
+#### Modern Mapping (`legacy-tag-key = false`)
+
+In this mode, `event_tag` joins to `event_journal` via the composite key `(persistence_id, sequence_number)`.
+
+Recommended index:
+```sql
+CREATE INDEX event_tag_tag_composite_idx ON public.event_tag (tag, persistence_id, sequence_number);
 ```
-CREATE INDEX CONCURRENTLY event_tag_tag_idx ON public.event_tag (tag);
+#### Legacy Mapping (`legacy-tag-key = true`)
+
+In this mode, `event_tag` joins to `event_journal` via the `event_id` column (which maps to the journal's `ordering`).
+
+Recommended index:
+```sql
+CREATE INDEX event_tag_tag_event_id_idx ON public.event_tag (tag, event_id);
 ```

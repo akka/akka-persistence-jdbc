@@ -33,6 +33,13 @@ CREATE TABLE EVENT_TAG (
     )
 /
 
+-- The following indexes are recommended for performance of eventsByTag queries.
+-- Use the one that matches your legacy-tag-key configuration.
+-- For legacy-tag-key = false:
+-- CREATE INDEX event_tag_tag_composite_idx ON EVENT_TAG (TAG, PERSISTENCE_ID, SEQUENCE_NUMBER);
+-- For legacy-tag-key = true:
+-- CREATE INDEX event_tag_tag_event_id_idx ON EVENT_TAG (TAG, EVENT_ID);
+
 CREATE TABLE SNAPSHOT (
     PERSISTENCE_ID VARCHAR(255) NOT NULL,
     SEQUENCE_NUMBER NUMERIC NOT NULL,

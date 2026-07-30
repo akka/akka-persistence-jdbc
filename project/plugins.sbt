@@ -6,6 +6,8 @@ addSbtPlugin("com.lightbend.sbt" % "sbt-java-formatter" % "0.8.0")
 
 // for dependency analysis
 addDependencyTreePlugin
+// create pom.xml for scanning tools
+addSbtPlugin("io.akka.sbt" % "sbt-artifact-bom" % "0.2.0")
 
 // release
 addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.9.3")

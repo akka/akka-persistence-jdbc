@@ -1,6 +1,8 @@
 import com.lightbend.paradox.apidoc.ApidocPlugin.autoImport.apidocRootPackage
 import com.geirsson.CiReleasePlugin
 
+ThisBuild / makeBomIncludeDependencies := true
+
 lazy val `akka-persistence-jdbc` = project
   .in(file("."))
   .enablePlugins(ScalaUnidocPlugin)
@@ -10,7 +12,7 @@ lazy val `akka-persistence-jdbc` = project
 
 lazy val core = project
   .in(file("core"))
-  .enablePlugins(MimaPlugin)
+  .enablePlugins(MimaPlugin, ArtifactBomPlugin)
   .disablePlugins(SitePlugin, CiReleasePlugin)
   .settings(
     name := "akka-persistence-jdbc",

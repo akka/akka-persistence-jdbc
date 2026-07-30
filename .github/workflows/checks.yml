@@ -81,6 +81,9 @@ jobs:
       - name: Compile all code with Scala 3.3
         run: sbt "++3.3; Test/compile"
 
+      - name: Artifact BOM validation
+        uses: akka/github-actions-scripts/artifact_bom_validation@main
+
   check-docs:
     name: Check Docs
     runs-on: Akka-Default

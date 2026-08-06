@@ -6,7 +6,7 @@ object Dependencies {
   lazy val JavaDocLinkVersion = scala.util.Properties.javaSpecVersion
 
   val Scala213 = "2.13.17"
-  val Scala3 = "3.3.7"
+  val Scala3 = "3.3.8"
 
   val ScalaVersions = Seq(Scala213, Scala3)
 
@@ -35,7 +35,7 @@ object Dependencies {
     "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Test)
 
   val Migration: Seq[ModuleID] = Seq(
-    "com.typesafe" % "config" % "1.4.5",
+    "com.typesafe" % "config" % "1.4.9",
     "ch.qos.logback" % "logback-classic" % "1.5.18",
     "org.testcontainers" % "postgresql" % "1.21.3" % Test,
     "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Provided)

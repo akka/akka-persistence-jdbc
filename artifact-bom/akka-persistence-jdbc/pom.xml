@@ -9,7 +9,7 @@
             <dependency>
                 <groupId>com.typesafe</groupId>
                 <artifactId>config</artifactId>
-                <version>1.4.5</version>
+                <version>1.4.9</version>
             </dependency>
             <dependency>
                 <groupId>com.typesafe.akka</groupId>
@@ -59,12 +59,12 @@
             <dependency>
                 <groupId>org.scala-lang</groupId>
                 <artifactId>scala-library</artifactId>
-                <version>2.13.17</version>
+                <version>2.13.18</version>
             </dependency>
             <dependency>
                 <groupId>org.scala-lang</groupId>
                 <artifactId>scala-reflect</artifactId>
-                <version>2.13.17</version>
+                <version>2.13.18</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -77,7 +77,7 @@
         <dependency>
             <groupId>com.typesafe</groupId>
             <artifactId>config</artifactId>
-            <version>1.4.5</version>
+            <version>1.4.9</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
@@ -127,12 +127,12 @@
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
-            <version>2.13.17</version>
+            <version>2.13.18</version>
         </dependency>
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-reflect</artifactId>
-            <version>2.13.17</version>
+            <version>2.13.18</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

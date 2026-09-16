@@ -17,10 +17,10 @@ object Dependencies {
   val ScalaTestVersion = "3.2.19"
 
   val JdbcDrivers = Seq(
-    "org.postgresql" % "postgresql" % "42.7.7",
-    "com.h2database" % "h2" % "2.3.232",
-    "com.mysql" % "mysql-connector-j" % "9.4.0",
-    "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8")
+    "org.postgresql" % "postgresql" % "42.7.13",
+    "com.h2database" % "h2" % "2.4.240",
+    "com.mysql" % "mysql-connector-j" % "9.7.0",
+    "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre12")
 
   val Libraries: Seq[ModuleID] = Seq(
     "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,

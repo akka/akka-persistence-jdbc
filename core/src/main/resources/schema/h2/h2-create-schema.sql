@@ -29,6 +29,13 @@ CREATE TABLE IF NOT EXISTS "event_tag" (
       ON DELETE CASCADE
 );
 
+-- The following indexes are recommended for performance of eventsByTag queries.
+-- Use the one that matches your legacy-tag-key configuration.
+-- For legacy-tag-key = false:
+-- CREATE INDEX "event_tag_tag_composite_idx" ON "event_tag" ("tag", "persistence_id", "sequence_number");
+-- For legacy-tag-key = true:
+-- CREATE INDEX "event_tag_tag_event_id_idx" ON "event_tag" ("tag", "event_id");
+
 CREATE TABLE IF NOT EXISTS "snapshot" (
     "persistence_id" VARCHAR(255) NOT NULL,
     "sequence_number" BIGINT NOT NULL,

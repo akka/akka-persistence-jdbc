@@ -25,7 +25,7 @@ object Dependencies {
   val Libraries: Seq[ModuleID] = Seq(
     "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
     "com.typesafe.slick" %% "slick" % SlickVersion,
-    "org.slf4j" % "slf4j-api" % "2.0.19",
+    "org.slf4j" % "slf4j-api" % "2.0.20",
     "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
     "ch.qos.logback" % "logback-classic" % "1.6.4" % Test,
     "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Test,

@@ -17,10 +17,8 @@ import org.scalatest.time.Millis
 import org.scalatest.time.Seconds
 import org.scalatest.time.Span
 
-import scala.annotation.nowarn
 import scala.concurrent.Future
 
-@nowarn("msg=deprecated")
 abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) extends StateSpecBase(config, schemaType) {
 
   override implicit val defaultPatience: PatienceConfig =
@@ -103,7 +101,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
     }
     "delete an existing state" in {
       whenReady {
-        stateStoreString.deleteObject("p123")
+        stateStoreString.deleteObject("p123", revision = 2L)
       } { v =>
         v shouldBe akka.Done
         whenReady {
@@ -157,7 +155,7 @@ abstract class JdbcDurableStateSpec(config: Config, schemaType: SchemaType) exte
     }
     "delete an existing state" in {
       whenReady {
-        stateStorePayload.deleteObject("p234")
+        stateStorePayload.deleteObject("p234", revision = 3L)
       } { v =>
         v shouldBe akka.Done
         whenReady {

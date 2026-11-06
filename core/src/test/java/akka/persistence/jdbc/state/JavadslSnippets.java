@@ -127,7 +127,7 @@ final class JavadslSnippets {
             .getDurableStateStoreFor(
                 JdbcDurableStateStore.class, JdbcDurableStateStore.Identifier());
 
-    CompletionStage<Done> futureResult = store.deleteObject("p123");
+    CompletionStage<Done> futureResult = store.deleteObject("p123", 0L);
     try {
       assert futureResult.toCompletableFuture().get().equals(Done.getInstance());
     } catch (Exception e) {

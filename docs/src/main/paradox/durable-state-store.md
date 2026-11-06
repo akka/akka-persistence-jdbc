@@ -39,7 +39,7 @@ Java
 
 ### deleteObject
 
-`deleteObject(persistenceId)` deletes the record with the input `persistenceId`.
+`deleteObject(persistenceId, revision)` deletes the record with the input `persistenceId`.
 
 Scala
 :  @@snip[snip](/core/src/test/scala/akka/persistence/jdbc/state/ScaladslSnippets.scala) { #delete-object }

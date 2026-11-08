@@ -29,6 +29,13 @@ CREATE TABLE event_tag (
         on delete CASCADE
 );
 
+-- The following indexes are recommended for performance of eventsByTag queries.
+-- Use the one that matches your legacy-tag-key configuration.
+-- For legacy-tag-key = false:
+-- CREATE INDEX event_tag_tag_composite_idx ON event_tag ("tag", "persistence_id", "sequence_number");
+-- For legacy-tag-key = true:
+-- CREATE INDEX event_tag_tag_event_id_idx ON event_tag ("tag", "event_id");
+
 CREATE TABLE "snapshot" (
     "persistence_id" NVARCHAR(255) NOT NULL,
     "sequence_number" NUMERIC(10,0) NOT NULL,
@@ -41,4 +48,3 @@ CREATE TABLE "snapshot" (
     "meta_payload" VARBINARY(MAX),
     PRIMARY KEY ("persistence_id", "sequence_number")
   )
-

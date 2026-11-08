@@ -1,5 +1,13 @@
 # Migration
 
+## Tag Index Optimization for performance
+
+Regardless of which version you are migrating from, if you have a large journal and use `eventsByTag` queries, you should consider using composite indexes on the `event_tag` table.
+
+Previous documentation recommended a single-column index on the `tag` column, which is often insufficient for large-scale journals as it requires the database to perform table lookups and does not assist in sorting.
+
+For detailed recommendations on composite indexes for both legacy and modern mapping modes, please refer to the @ref:[Persistence Query Performance](query.md#performance) documentation.
+
 ## Migrating to version 5.4.0
 
 Release `5.4.0` change the schema of `event_tag` table.

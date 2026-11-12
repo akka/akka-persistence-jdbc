@@ -1,6 +1,7 @@
 import com.geirsson.CiReleasePlugin
-import de.heikoseeberger.sbtheader.HeaderPlugin
-import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.{ headerLicense, HeaderLicense }
+import com.github.sbt.JavaFormatterPlugin.autoImport.{ javafmtRemoveUnusedImports, javafmtSortImports }
+import sbtheader.HeaderPlugin
+import sbtheader.HeaderPlugin.autoImport.{ headerLicense, HeaderLicense }
 import sbt.Keys._
 import sbt._
 import sbt.plugins.JvmPlugin
@@ -45,6 +46,9 @@ object ProjectAutoPlugin extends AutoPlugin {
     scalaVersion := Dependencies.Scala213,
     // append -SNAPSHOT to version when isSnapshot
     ThisBuild / dynverSonatypeSnapshots := true,
+    // keep duplicated imports grouped in paradox snippet sections (e.g. JavadslSnippets.java)
+    javafmtSortImports := false,
+    javafmtRemoveUnusedImports := false,
     Test / fork := false,
     Test / parallelExecution := false,
     Test / logBuffered := true,

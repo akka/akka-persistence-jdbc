@@ -81,9 +81,9 @@ lazy val docs = project
       // Slick
       "extref.slick.base_url" -> s"https://scala-slick.org/doc/${Dependencies.SlickVersion}/%s",
       // Akka
-      "extref.akka.base_url" -> s"https://doc.akka.io/libraries/akka-core/${Dependencies.AkkaBinaryVersion}/%s",
-      "scaladoc.akka.base_url" -> s"https://doc.akka.io/api/akka-core/${Dependencies.AkkaBinaryVersion}/",
-      "javadoc.akka.base_url" -> s"https://doc.akka.io/japi/akka-core/${Dependencies.AkkaBinaryVersion}/",
+      "extref.akka.base_url" -> s"https://doc.akka.io/libraries/akka-core/${Dependencies.AkkaVersion}/%s",
+      "scaladoc.akka.base_url" -> s"https://doc.akka.io/api/akka-core/${Dependencies.AkkaVersion}/",
+      "javadoc.akka.base_url" -> s"https://doc.akka.io/japi/akka-core/${Dependencies.AkkaVersion}/",
       "javadoc.akka.link_style" -> "direct",
       // Java
       "javadoc.base_url" -> "https://docs.oracle.com/javase/8/docs/api/",

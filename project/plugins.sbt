@@ -15,7 +15,7 @@ addSbtPlugin("com.github.sbt" % "sbt-dynver" % "5.1.1")
 
 // docs
 addSbtPlugin("io.akka" % "sbt-paradox-akka" % "25.10.2")
-addSbtPlugin("com.github.sbt" % "sbt-site" % "1.7.0")
+addSbtPlugin("com.github.sbt" % "sbt-site" % "1.8.0")
 addSbtPlugin("com.github.sbt" % "sbt-site-paradox" % "1.7.0")
 addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.6.1")
 addSbtPlugin("com.lightbend.sbt" % "sbt-publish-rsync" % "0.3")

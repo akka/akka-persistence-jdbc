@@ -1,7 +1,7 @@
 // compliance
 addSbtPlugin("com.github.sbt" % "sbt-header" % "5.11.0")
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.6")
-addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "1.1.6")
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "1.2.1")
 addSbtPlugin("com.github.sbt" % "sbt-java-formatter" % "0.14.0")
 
 // for dependency analysis

@@ -7,7 +7,7 @@ addSbtPlugin("com.github.sbt" % "sbt-java-formatter" % "0.14.0")
 // for dependency analysis
 addDependencyTreePlugin
 // create pom.xml for scanning tools
-addSbtPlugin("io.akka.sbt" % "sbt-artifact-bom" % "0.2.0")
+addSbtPlugin("io.akka.sbt" % "sbt-artifact-bom" % "0.4.0")
 
 // release
 addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.12.1")

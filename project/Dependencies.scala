@@ -25,6 +25,8 @@ object Dependencies {
   val Libraries: Seq[ModuleID] = Seq(
     "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
     "com.typesafe.slick" %% "slick" % SlickVersion,
+    // Override for the transitive dependency from Slick, which Maven would pick over the newer one from akka-actor
+    "com.typesafe" % "config" % "1.4.10",
     "org.slf4j" % "slf4j-api" % "2.0.20",
     "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
     "ch.qos.logback" % "logback-classic" % "1.6.4" % Test,
@@ -35,7 +37,6 @@ object Dependencies {
     "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Test)
 
   val Migration: Seq[ModuleID] = Seq(
-    "com.typesafe" % "config" % "1.4.9",
     "ch.qos.logback" % "logback-classic" % "1.6.4",
     "org.testcontainers" % "postgresql" % "1.21.4" % Test,
     "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Provided)

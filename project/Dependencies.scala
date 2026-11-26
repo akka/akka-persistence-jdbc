@@ -29,7 +29,7 @@ object Dependencies {
     "com.typesafe" % "config" % "1.4.10",
     "org.slf4j" % "slf4j-api" % "2.0.20",
     "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion,
-    "ch.qos.logback" % "logback-classic" % "1.6.4" % Test,
+    "ch.qos.logback" % "logback-classic" % "1.6.6" % Test,
     "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-persistence-tck" % AkkaVersion % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % AkkaVersion % Test,
@@ -37,7 +37,7 @@ object Dependencies {
     "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Test)
 
   val Migration: Seq[ModuleID] = Seq(
-    "ch.qos.logback" % "logback-classic" % "1.6.4",
+    "ch.qos.logback" % "logback-classic" % "1.6.6",
     "org.testcontainers" % "postgresql" % "1.21.4" % Test,
     "org.scalatest" %% "scalatest" % ScalaTestVersion % Test) ++ JdbcDrivers.map(_ % Provided)
 }

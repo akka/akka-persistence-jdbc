@@ -20,7 +20,7 @@ object Dependencies {
     "org.postgresql" % "postgresql" % "42.7.14",
     "com.h2database" % "h2" % "2.5.252",
     "com.mysql" % "mysql-connector-j" % "26.10.0",
-    "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre12")
+    "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8")
 
   val Libraries: Seq[ModuleID] = Seq(
     "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
